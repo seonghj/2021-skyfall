@@ -172,6 +172,10 @@ void IOCPServer::WorkerFunc()
         retval = GetQueuedCompletionStatus(hcp, &cbTransferred,
             (PULONG_PTR)&id, (LPOVERLAPPED*)&lpover_ex, INFINITE);
 
+        std::thread::id Thread_id = std::this_thread::get_id();
+
+        printf("thread id: %d\n", Thread_id);
+
         // 비동기 입출력 결과 확인
         if (FALSE == retval)
             err_display("WSAGetOverlappedResult()");

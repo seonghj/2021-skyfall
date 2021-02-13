@@ -13,8 +13,8 @@ int main(int argc, char* argv[])
 {
    //db->Connection();
 
-   /*s->Init();
-   s->Run();*/
+   s->Init();
+   s->Run();
 
    //mysql_close(db->connection);
 
