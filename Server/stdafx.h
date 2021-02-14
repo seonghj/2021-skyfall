@@ -33,6 +33,7 @@
 #define MAX_MAP_BLOCK 9
 #define MAP_SIZE 3000
 #define MAP_BLOCK_SIZE 1000
+#define MAP_BREAK_TIME 10
 
 class Vector2D
 {

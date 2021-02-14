@@ -29,6 +29,7 @@ void Map::init_Map()
 			atm[i] -= 100;
 		else if (Map_num[i] == terrain::Snowy_field)
 			atm[i] += 100;
+		isMap_block[i] = TRUE;
 	}
 
 	for (int i = 0; i < 12; i++)
@@ -48,6 +49,8 @@ void Map::init_Map()
 		}
 	}
 
+
+	collapse_count = 0;
 	Cloud.x = rand() % 3000;
 	Cloud.y = rand() % 3000;
 }
@@ -117,6 +120,53 @@ void Map::cloud_move()
 			}
 		}
 		printf("x: %f | y: %f\n", Cloud.x, Cloud.y);
+		collapse_count++;
+		if (collapse_count % MAP_BREAK_TIME == 0)
+			Map_collapse();
 		Sleep(1000);
 	}
+}
+
+void Map::Map_collapse()
+{
+	srand((unsigned int)time(NULL));
+	int num = 0;
+	while (1)
+	{
+		num = rand() % 9;
+
+		if (isMap_block[num] == TRUE)
+		{
+			isMap_block[num] = FALSE;
+			break;
+		}
+	}
+
+	printf("collapse block: %d\n", num);
+
+	if (num%2 == 0)
+	{
+		if (num == 0)
+			wind[0] = 0.f, wind[6] = 0.f;
+		else if (num == 2)
+			wind[1] = 0.f, wind[8] = 0.f;
+		else if (num == 4)
+			wind[2] = 0.f, wind[3] = 0.f, wind[7] = 0.f, wind[10] = 0.f;
+		else if (num == 6)
+			wind[4] = 0.f, wind[9] = 0.f;
+		else if (num == 8)
+			wind[5] = 0.f, wind[11] = 0.f;
+	}
+	else
+	{
+		if (num == 1)
+			wind[0] = 0.f, wind[1] = 0.f, wind[7] = 0.f;
+		else if (num == 3)
+			wind[2] = 0.f, wind[6] = 0.f, wind[9] = 0.f;
+		else if (num == 5)
+			wind[3] = 0.f, wind[8] = 0.f, wind[11] = 0.f;
+		else if (num == 7)
+			wind[4] = 0.f, wind[5] = 0.f, wind[10] = 0.f;
+	}
+	print_Map();
 }

@@ -13,16 +13,14 @@ int main(int argc, char* argv[])
 {
    //db->Connection();
 
-   s->Init();
-   s->Run();
+   /*s->Init();
+   s->Run();*/
 
    //mysql_close(db->connection);
 
-   /*m->init_Map();
+   m->init_Map();
    m->print_Map();
-
-   Sleep(1000);
-   m->cloud_move();*/
+   m->cloud_move();
 
    return 0;
 }
