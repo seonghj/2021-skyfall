@@ -146,108 +146,6 @@ void IOCPServer::Disconnect(int id)
         , ntohs(clients[id].clientaddr.sin_port));
 }
 
-void IOCPServer::process_packet(char id, char* buf)
-{
-    // InputPacket* Packet = reinterpret_cast<InputPacket*>(buf);
-    // 입력받은 패킷 처리
-    for (int i = 0; i < MAX_CLIENT; i++)
-    {
-        if (clients[i].connected)
-            do_send(i, buf);
-    }
-}
-
-void IOCPServer::WorkerFunc()
-{
-    int retval = 0;
-
-    while (1) {
-        DWORD cbTransferred;
-        SOCKET client_sock;
-        ULONG id;
-        SOCKETINFO* ptr;
-
-        OVER_EX* lpover_ex;
-
-        retval = GetQueuedCompletionStatus(hcp, &cbTransferred,
-            (PULONG_PTR)&id, (LPOVERLAPPED*)&lpover_ex, INFINITE);
-
-        std::thread::id Thread_id = std::this_thread::get_id();
-
-        printf("thread id: %d\n", Thread_id);
-
-        // 비동기 입출력 결과 확인
-        if (FALSE == retval)
-            err_display("WSAGetOverlappedResult()");
-        if (0 == cbTransferred)
-            Disconnect(id);
-
-        if (lpover_ex->is_recv) {
-            do_recv(id);
-            int rest_size = cbTransferred;
-            char* buf_ptr = lpover_ex->messageBuffer;
-            char packet_size = 0;
-            if (0 < clients[id].prev_size)
-                packet_size = sizeof(clients[id].packet_buf);
-            /*while (rest_size > 0) {
-                if (0 == packet_size) packet_size = sizeof(buf_ptr);
-                int required = packet_size - clients[id].prev_size;
-                printf("required: %d\n", required);
-                if (rest_size >= required) {
-                    memcpy(clients[id].packet_buf + clients[id].
-                        prev_size, buf_ptr, required);
-                    process_packet(id, clients[id].packet_buf);
-                    rest_size -= required;
-                    buf_ptr += required;
-                    packet_size = 0;
-                }
-                else {
-                    memcpy(clients[id].packet_buf + clients[id].prev_size,
-                        buf_ptr, rest_size);
-                    rest_size = 0;
-                }
-            }*/
-            process_packet(id, clients[id].packet_buf);
-        }
-        else {
-            delete lpover_ex;
-        }
-    }
-}
-
-bool IOCPServer::Init()
-{
-    //std::vector <std::thread> working_threads;
-
-    for (int i = 0; i < MAX_CLIENT; ++i)
-        clients[i].connected = false;
-
-    // 입출력 완료 포트 생성
-    hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
-    if (hcp == NULL) return 0;
-
-    // CPU 개수 확인
-    SYSTEM_INFO si;
-    GetSystemInfo(&si);
-
-    // (CPU 개수 * 2)개의 작업자 스레드 생성
-    for (int i = 0; i < (int)si.dwNumberOfProcessors * 2; i++)
-        working_threads.emplace_back(std::thread(&IOCPServer::WorkerFunc, this));
-
-    accept_thread = std::thread(&IOCPServer::do_accept, this);
-
-    return 1;
-}
-
-void IOCPServer::Run()
-{
-    accept_thread.join();
-    for (auto& t : working_threads)
-        t.join();
-
-    CloseHandle(hcp);
-}
-
 void IOCPServer::do_recv(char id)
 {
     DWORD flags = 0;
@@ -309,4 +207,163 @@ void IOCPServer::do_send(int to, char* packet)
             std::cout << WSAGetLastError() << ")\n";
         }
     }
+}
+
+void IOCPServer::send_login_player_packet(char to, char id)
+{
+    player_login p;
+
+    p.id = id;
+    p.size = sizeof(player_login);
+    p.type = PacketType::T_player_login;
+
+    for (int i = 0; i < MAX_CLIENT; i++)
+    {
+        if (clients[i].connected)
+            do_send(i, reinterpret_cast<char*>(&p));
+    }
+}
+
+void IOCPServer::send_disconnect_player_packet(char to, char id)
+{
+
+}
+
+void IOCPServer::send_player_pos_packet(char id)
+{
+    for (int i = 0; i < MAX_CLIENT; i++)
+    {
+        if (clients[i].connected)
+            do_send(i, clients[id].packet_buf);
+    }
+}
+
+void IOCPServer::send_player_attack_packet(char id)
+{
+    for (int i = 0; i < MAX_CLIENT; i++)
+    {
+        if (clients[i].connected)
+            do_send(i, clients[id].packet_buf);
+    }
+}
+
+void IOCPServer::send_map_collapse_packet(int num)
+{
+
+}
+
+void IOCPServer::send_cloud_move_packet(int x, int y)
+{
+
+}
+
+void IOCPServer::process_packet(char id, char* buf)
+{
+    // InputPacket* Packet = reinterpret_cast<InputPacket*>(buf);
+    // 입력받은 패킷 처리
+    if (buf[1] == PacketType::T_player_pos)
+    {
+        send_player_pos_packet(id);
+    }
+    else if (buf[1] == PacketType::T_player_attack)
+    {
+        send_player_attack_packet(id);
+    }
+
+    for (int i = 0; i < MAX_CLIENT; i++)
+    {
+        if (clients[i].connected)
+            do_send(i, buf);
+    }
+}
+
+void IOCPServer::WorkerFunc()
+{
+    int retval = 0;
+
+    while (1) {
+        DWORD cbTransferred;
+        SOCKET client_sock;
+        ULONG id;
+        SOCKETINFO* ptr;
+
+        OVER_EX* lpover_ex;
+
+        retval = GetQueuedCompletionStatus(hcp, &cbTransferred,
+            (PULONG_PTR)&id, (LPOVERLAPPED*)&lpover_ex, INFINITE);
+
+        std::thread::id Thread_id = std::this_thread::get_id();
+
+        printf("thread id: %d\n", Thread_id);
+
+        // 비동기 입출력 결과 확인
+        if (FALSE == retval)
+            err_display("WSAGetOverlappedResult()");
+        if (0 == cbTransferred)
+            Disconnect(id);
+
+        if (lpover_ex->is_recv) {
+            do_recv(id);
+            int rest_size = cbTransferred;
+            char* buf_ptr = lpover_ex->messageBuffer;
+            char packet_size = 0;
+            if (0 < clients[id].prev_size)
+                packet_size = clients[id].packet_buf[0];
+            /*while (rest_size > 0) {
+                if (0 == packet_size) packet_size = sizeof(buf_ptr);
+                int required = packet_size - clients[id].prev_size;
+                printf("required: %d\n", required);
+                if (rest_size >= required) {
+                    memcpy(clients[id].packet_buf + clients[id].
+                        prev_size, buf_ptr, required);
+                    process_packet(id, clients[id].packet_buf);
+                    rest_size -= required;
+                    buf_ptr += required;
+                    packet_size = 0;
+                }
+                else {
+                    memcpy(clients[id].packet_buf + clients[id].prev_size,
+                        buf_ptr, rest_size);
+                    rest_size = 0;
+                }
+            }*/
+            process_packet(id, clients[id].packet_buf);
+        }
+        else {
+            delete lpover_ex;
+        }
+    }
+}
+
+bool IOCPServer::Init()
+{
+    //std::vector <std::thread> working_threads;
+
+    for (int i = 0; i < MAX_CLIENT; ++i)
+        clients[i].connected = false;
+
+    // 입출력 완료 포트 생성
+    hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
+    if (hcp == NULL) return 0;
+
+    // CPU 개수 확인
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+
+    // (CPU 개수 * 2)개의 작업자 스레드 생성
+    for (int i = 0; i < (int)si.dwNumberOfProcessors * 2; i++)
+        working_threads.emplace_back(std::thread(&IOCPServer::WorkerFunc, this));
+
+    accept_thread = std::thread(&IOCPServer::do_accept, this);
+
+    return 1;
+}
+
+void IOCPServer::Run()
+{
+    accept_thread.join();
+    for (auto& t : working_threads)
+        t.join();
+
+    CloseHandle(hcp);
 }

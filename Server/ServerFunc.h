@@ -43,6 +43,13 @@ public:
     void do_send(int to, char* packet);
     void process_packet(char id, char* buf);
 
+    void send_login_player_packet(char to, char id);
+    void send_disconnect_player_packet(char to, char id);
+    void send_player_pos_packet(char id);
+    void send_player_attack_packet(char id);
+    void send_map_collapse_packet(int num);
+    void send_cloud_move_packet(int x, int y);
+
 private:
     HANDLE hcp;
     SOCKETINFO clients[MAX_CLIENT];

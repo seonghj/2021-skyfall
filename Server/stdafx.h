@@ -27,13 +27,15 @@
 #define FALSE 0
 
 #define SERVERPORT 9000
-#define BUFSIZE    512
+#define BUFSIZE    1024
 #define MAX_CLIENT 100
 
 #define MAX_MAP_BLOCK 9
 #define MAP_SIZE 3000
 #define MAP_BLOCK_SIZE 1000
 #define MAP_BREAK_TIME 10
+
+using _packet = unsigned char;
 
 class Vector2D
 {
