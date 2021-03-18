@@ -491,9 +491,12 @@ void CGameFramework::ProcessInput()
 
 
 		if (pKeysBuffer[VK_SPACE] & 0xF0)
-			m_fSpeedWhirl = m_fSpeedWhirl + 120 * fTimeElapsed < MAX_WHIRL_SPEED ? m_fSpeedWhirl + 120 * fTimeElapsed : MAX_WHIRL_SPEED;
-		else
-			m_fSpeedWhirl = m_fSpeedWhirl - 60 * fTimeElapsed > 0 ? m_fSpeedWhirl - 60 * fTimeElapsed : 0;
+		{
+			if (m_pPlayer->GetGround())
+			{
+				m_pPlayer->SetJump(true);
+			}
+		}
 
 		if (((pKeysBuffer[VK_LCONTROL] & 0xF0) && m_pCamera->GetMode() == THIRD_PERSON_CAMERA) ||
 			((pKeysBuffer[VK_LBUTTON] & 0xF0) && m_pCamera->GetMode() == SPACESHIP_CAMERA)) {

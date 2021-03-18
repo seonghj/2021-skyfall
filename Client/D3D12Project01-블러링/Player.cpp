@@ -29,6 +29,10 @@ CPlayer::CPlayer()
 	m_fRoll = 0.0f;
 	m_fYaw = 0.0f;
 
+	m_iSpeedJump = 100;
+	m_isJump = false;
+	m_isGround = true;
+
 	m_pPlayerUpdatedContext = NULL;
 	m_pCameraUpdatedContext = NULL;
 }
@@ -149,8 +153,14 @@ void CPlayer::Rotate(float x, float y, float z)
 void CPlayer::Update(float fTimeElapsed)
 {
 	// velocity
-	if (m_iSpeedWhirl > 30)
-		m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Up, (fTimeElapsed  * m_iSpeedWhirl) );
+	if (GetJump() && GetGround())
+	{
+		m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Up, m_iSpeedJump);
+		SetJump(false);
+	}
+	else
+		SetJump(false);
+
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Gravity, fTimeElapsed);
 	
 	float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
@@ -389,17 +399,26 @@ void CAirplanePlayer::OnPlayerUpdateCallback(float fDeltaTime)
 		patch[i].y = pTerrain->GetHeight(patch[i].x, patch[i].z, bReverseQuad);
 	}
 	float fHeight = CubicBezierSum5x5(patch).y + 6.0f;
-	if (xmf3PlayerPosition.y < fHeight)
+	SetFriction(25.f);
+	if (xmf3PlayerPosition.y <= fHeight)
 	{
-		SetFriction(1000);
 		XMFLOAT3 xmf3PlayerVelocity = GetVelocity();
 		xmf3PlayerVelocity.y = 0.0f;
 		SetVelocity(xmf3PlayerVelocity);
 		xmf3PlayerPosition.y = fHeight;
 		SetPosition(xmf3PlayerPosition);
+		if (!GetGround())
+		{
+			SetGround(true);
+		}
 	}
 	else
-		SetFriction(25.f);
+	{
+		if (GetGround())
+		{
+			SetGround(false);
+		}
+	}
 }
 
 void CAirplanePlayer::OnCameraUpdateCallback(float fDeltaTime)
