@@ -498,6 +498,15 @@ void CGameFramework::ProcessInput()
 			}
 		}
 
+		else if (pKeysBuffer[VK_SHIFT] & 0xF0)
+		{
+			m_pPlayer->SetRunning(true);
+		}
+		if (!(pKeysBuffer[VK_SHIFT] & 0xF0) && m_pPlayer->GetRunning())
+		{
+			m_pPlayer->SetRunning(false);
+		}
+
 		if (((pKeysBuffer[VK_LCONTROL] & 0xF0) && m_pCamera->GetMode() == THIRD_PERSON_CAMERA) ||
 			((pKeysBuffer[VK_LBUTTON] & 0xF0) && m_pCamera->GetMode() == SPACESHIP_CAMERA)) {
 			m_pScene->Shot(fTimeElapsed);

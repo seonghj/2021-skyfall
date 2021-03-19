@@ -152,7 +152,7 @@ void CPlayer::Rotate(float x, float y, float z)
 
 void CPlayer::Update(float fTimeElapsed)
 {
-	// velocity
+	// jump
 	if (GetJump() && GetGround())
 	{
 		m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Up, m_iSpeedJump);
@@ -163,8 +163,15 @@ void CPlayer::Update(float fTimeElapsed)
 
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Gravity, fTimeElapsed);
 	
+	// running
+	if (GetRunning())
+	{
+		m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Velocity,fTimeElapsed);
+		SetMaxVelocityXZ(m_fMaxVelocityXZ * 3.3);
+	}
 	float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
 	float fMaxVelocityXZ = m_fMaxVelocityXZ;
+
 	if (fLength > m_fMaxVelocityXZ)
 	{
 		m_xmf3Velocity.x *= (fMaxVelocityXZ / fLength);
@@ -190,7 +197,6 @@ void CPlayer::Update(float fTimeElapsed)
 	float fDeceleration = (m_fFriction * fTimeElapsed);
 	if (fDeceleration > fLength) fDeceleration = fLength;
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, Vector3::ScalarProduct(m_xmf3Velocity, -fDeceleration, true));
-
 }
 
 CCamera *CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
