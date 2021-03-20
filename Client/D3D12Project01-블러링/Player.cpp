@@ -80,7 +80,14 @@ void CPlayer::Move(const XMFLOAT3& xmf3Shift, bool bUpdateVelocity)
 {
 	if (bUpdateVelocity)
 	{
+		m_xmf3Velocity.x = 0;
+		m_xmf3Velocity.z = 0;
 		m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, xmf3Shift);
+		if (m_isRunning)
+		{
+			m_xmf3Velocity.x *= 3.3;
+			m_xmf3Velocity.z *= 3.3;
+		}
 	}
 	else
 	{
@@ -163,16 +170,6 @@ void CPlayer::Update(float fTimeElapsed)
 
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Gravity, fTimeElapsed);
 	
-	// running
-	if (GetRunning())
-	{
-		m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Look, 3.3);
-		SetMaxVelocityXZ(m_fMaxVelocityXZ * 3.3);
-	}
-	else
-	{
-		SetMaxVelocityXZ(m_fMaxVelocityXZ);
-	}
 	float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
 	float fMaxVelocityXZ = m_fMaxVelocityXZ;
 
