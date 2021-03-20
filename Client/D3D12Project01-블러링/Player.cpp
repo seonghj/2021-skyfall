@@ -166,8 +166,12 @@ void CPlayer::Update(float fTimeElapsed)
 	// running
 	if (GetRunning())
 	{
-		m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Velocity,fTimeElapsed);
+		m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Look, 3.3);
 		SetMaxVelocityXZ(m_fMaxVelocityXZ * 3.3);
+	}
+	else
+	{
+		SetMaxVelocityXZ(m_fMaxVelocityXZ);
 	}
 	float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
 	float fMaxVelocityXZ = m_fMaxVelocityXZ;
