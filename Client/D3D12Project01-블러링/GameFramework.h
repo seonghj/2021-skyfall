@@ -3,6 +3,7 @@
 #include "Timer.h"
 #include "Player.h"
 #include "Scene.h"
+#include "CPacket.h"
 
 struct CB_FRAMEWORK_INFO
 {
@@ -48,6 +49,7 @@ public:
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	LRESULT CALLBACK OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 
+	void Set_m_pPacket(PacketFunc* t) { m_pPacket = t; };
 
 	void CreateShaderVariables();
 	void UpdateShaderVariables();
@@ -92,6 +94,7 @@ private:
 	CScene						*m_pScene = NULL;
 	CPlayer						*m_pPlayer = NULL;
 	CCamera						*m_pCamera = NULL;
+	PacketFunc					*m_pPacket = NULL;
 
 	POINT						m_ptOldCursorPos;
 

@@ -4,6 +4,9 @@
 #include "stdafx.h"
 #include "D3D12Project01.h"
 #include "GameFramework.h"
+#include "CPacket.h"
+
+#pragma warning(disable : 4996)
 
 #define MAX_LOADSTRING 100
 
@@ -12,11 +15,14 @@ TCHAR							szTitle[MAX_LOADSTRING];
 TCHAR							szWindowClass[MAX_LOADSTRING];
 
 CGameFramework					gGameFramework;
+PacketFunc*						gPacketFunc = new PacketFunc;
 
 ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
+
+DWORD WINAPI ServerConnect(LPVOID lpParam);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
@@ -34,6 +40,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 	hAccelTable = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_D3D12PROJECT01));
 
+	if (AllocConsole())
+	{
+		freopen("CONIN$", "rb", stdin);
+		freopen("CONOUT$", "wb", stdout);
+		freopen("CONOUT$", "wb", stderr);
+	}
+
+	CreateThread(NULL, 0, ServerConnect, NULL, 0, NULL);
+
 	while (1)
 	{
 		if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -47,11 +62,14 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 		}
 		else
 		{
+			gGameFramework.Set_m_pPacket(gPacketFunc);
 			gGameFramework.FrameAdvance();
 		}
 	}
 	gGameFramework.OnDestroy();
 
+	closesocket(gPacketFunc->sock);
+	delete gPacketFunc;
 	return((int)msg.wParam);
 }
 
@@ -161,4 +179,39 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	return((INT_PTR)FALSE);
+}
+
+
+DWORD WINAPI ServerConnect(LPVOID lpParam)
+{
+	int retval;
+
+
+	// 윈속 초기화
+	WSADATA wsa;
+	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+		return 1;
+
+	// socket()
+	gPacketFunc->sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+	if (gPacketFunc->sock == INVALID_SOCKET) gPacketFunc->err_quit("socket()");
+
+	// connect()
+	SOCKADDR_IN serveraddr;
+	ZeroMemory(&serveraddr, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
+	serveraddr.sin_port = htons(SERVERPORT);
+	retval = connect(gPacketFunc->sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
+	if (retval == SOCKET_ERROR) gPacketFunc->err_quit("connect()");
+
+	gPacketFunc->SendEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+	//gPacketFunc[num]->Set_clientid(num);
+
+	std::thread Recv_thread = std::thread(&PacketFunc::RecvPacket, gPacketFunc);
+
+	Recv_thread.join();
+
+	return 0;
 }

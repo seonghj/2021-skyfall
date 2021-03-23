@@ -25,6 +25,15 @@
 
 #include <thread>
 
+#pragma comment(lib, "ws2_32")
+#include <WS2tcpip.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#define SERVERIP   "127.0.0.1"
+#define SERVERPORT 9000
+#define BUFSIZE    1024
+
 using namespace std;
 
 #include <d3d12.h>
