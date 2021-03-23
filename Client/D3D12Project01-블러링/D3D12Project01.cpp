@@ -207,8 +207,6 @@ DWORD WINAPI ServerConnect(LPVOID lpParam)
 
 	gPacketFunc->SendEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-	//gPacketFunc[num]->Set_clientid(num);
-
 	std::thread Recv_thread = std::thread(&PacketFunc::RecvPacket, gPacketFunc);
 
 	Recv_thread.join();

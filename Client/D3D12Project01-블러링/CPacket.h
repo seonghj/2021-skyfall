@@ -95,7 +95,7 @@ public:
 	int recvn(SOCKET s, char* buf, int len, int flags);
 
 	void RecvPacket();
-	void SendPacket();
+	void SendPacket(char *buf);
 	void ProcessPacket(char* buf);
 
 	void Set_clientid(int n);

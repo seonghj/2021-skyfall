@@ -3,51 +3,11 @@
 #include "ServerFunc.h"
 #include "CPacket.h"
 
-// 사용자 정의 데이터 수신 함수
-int recvn(SOCKET s, char* buf, int len, int flags)
+bool CASfloat(std::atomic<float>* addr, float expected, float new_val)
 {
-    int received;
-    char* ptr = buf;
-    int left = len;
-
-    while (left > 0) {
-        received = recv(s, ptr, left, flags);
-        if (received == SOCKET_ERROR)
-            return SOCKET_ERROR;
-        else if (received == 0)
-            break;
-        left -= received;
-        ptr += received;
-    }
-
-    return (len - left);
+    return std::atomic_compare_exchange_strong(addr, &expected, new_val);
 }
 
-void err_quit(char* msg)
-{
-    LPVOID lpMsgBuf;
-    FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-        NULL, WSAGetLastError(),
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR)&lpMsgBuf, 0, NULL);
-    MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONERROR);
-    LocalFree(lpMsgBuf);
-    exit(1);
-}
-
-// 소켓 함수 오류 출력
-void err_display(char* msg)
-{
-    LPVOID lpMsgBuf;
-    FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-        NULL, WSAGetLastError(),
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR)&lpMsgBuf, 0, NULL);
-    printf("[%s] %s", msg, (char*)lpMsgBuf);
-    LocalFree(lpMsgBuf);
-}
 
 IOCPServer::IOCPServer()
 {
@@ -59,9 +19,20 @@ IOCPServer::~IOCPServer()
 
 }
 
+void IOCPServer::display_error(const char* msg, int err_no)
+{
+    WCHAR* lpMsgBuf;
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+        NULL, err_no, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR)&lpMsgBuf, 0, NULL);
+    std::cout << msg;
+    std::wcout << L"에러 " << lpMsgBuf << std::endl;
+    while (true);
+    LocalFree(lpMsgBuf);
+}
+
 int IOCPServer::get_new_id()
 {
-    // 접속한 클라이언트에 id 부여
     while (true)
         for (int i = 0; i < MAX_CLIENT; ++i)
             if (clients[i].connected == false) {
@@ -79,7 +50,6 @@ void IOCPServer::do_accept()
 
     // socket()
     SOCKET listen_sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-    if (listen_sock == INVALID_SOCKET) err_quit("socket()");
 
     // bind()
     SOCKADDR_IN serveraddr;
@@ -88,27 +58,30 @@ void IOCPServer::do_accept()
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
     serveraddr.sin_port = htons(SERVERPORT);
     int retval = bind(listen_sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
-    if (retval == SOCKET_ERROR) err_quit("bind()");
-
+  
     // listen()
     retval = listen(listen_sock, MAX_CLIENT);
-    if (retval == SOCKET_ERROR) err_quit("listen()");
 
     // 데이터 통신에 사용할 변수
     SOCKET client_sock;
     SOCKADDR_IN clientaddr;
     int addrlen = sizeof(SOCKADDR_IN);
-    DWORD recvbytes, flags;
+    DWORD flags;
+
+    printf("ready\n");
 
     while (1) {
         client_sock = accept(listen_sock, (struct sockaddr*)&clientaddr, &addrlen);
         if (client_sock == INVALID_SOCKET) {
-            err_display("accept()");
+            display_error("accept error: ", WSAGetLastError());
             break;
         }
 
         int new_id = get_new_id();
         memset(&clients[new_id], 0x00, sizeof(struct SOCKETINFO));
+        clients[new_id].sock = client_sock;
+        clients[new_id].clientaddr = clientaddr;
+
         getpeername(client_sock, (SOCKADDR*)&clients[new_id].clientaddr
             , &clients[new_id].addrlen);
 
@@ -116,7 +89,6 @@ void IOCPServer::do_accept()
             inet_ntoa(clients[new_id].clientaddr.sin_addr)
             , ntohs(clients[new_id].clientaddr.sin_port), new_id);
 
-        clients[new_id].sock = client_sock;
         clients[new_id].over.dataBuffer.len = BUFSIZE;
         clients[new_id].over.dataBuffer.buf =
             clients[client_sock].over.messageBuffer;
@@ -127,11 +99,24 @@ void IOCPServer::do_accept()
         CreateIoCompletionPort((HANDLE)client_sock, hcp, new_id, 0);
         clients[new_id].connected = true;
 
+        send_ID_player_packet(new_id);
+
+        // 로그인한 클라이언트에 다른 클라이언트 정보 전달
+        for (int i = 0; i < MAX_CLIENT; ++i) {
+            if (clients[i].connected && i != new_id)
+                send_login_player_packet(i, new_id);
+        }
+
+        // 다른 클라이언트에 로그인정보 전달
+        for (int i = 0; i < MAX_CLIENT; ++i) {
+            if (clients[i].connected && i != new_id)
+                send_login_player_packet(new_id, i);
+        }
         do_recv(new_id);
     }
 
     // closesocket()
-    closesocket(listen_sock);
+    closesocket(listen_sock); 
 
     // 윈속 종료
     WSACleanup();
@@ -139,7 +124,7 @@ void IOCPServer::do_accept()
 
 void IOCPServer::Disconnect(int id)
 {
-    closesocket(clients[id].sock);
+    send_disconnect_player_packet(id);
     clients[id].connected = false;
     printf("[TCP 서버] 클라이언트 종료: IP 주소=%s, 포트 번호=%d\n",
         inet_ntoa(clients[id].clientaddr.sin_addr)
@@ -157,123 +142,196 @@ void IOCPServer::do_recv(char id)
     over->dataBuffer.buf = over->messageBuffer;
     ZeroMemory(&(over->overlapped), sizeof(WSAOVERLAPPED));
 
-    //InputPacket* Packet = reinterpret_cast<InputPacket*>(over->dataBuffer.buf);
-
-    int retval = WSARecv(client_s, &over->dataBuffer, 1, (LPDWORD)clients[id].prev_size,
-        &flags, &(over->overlapped), NULL);
-
-    printf("Recv %d: %s\n", id, over->dataBuffer.buf);
-    if (retval == SOCKET_ERROR)
+    //printf("Recv id: %d: type:%d / size: %d\n", id, over->dataBuffer.buf[1], over->dataBuffer.buf[0]);
+    if (WSARecv(client_s, &over->dataBuffer, 1, (LPDWORD)clients[id].prev_size,
+        &flags, &(over->overlapped), NULL))
     {
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING)
         {
-            err_display("WSARecv()");
+            display_error("recv error: ", err_no);
         }
     }
-    memcpy(clients[id].packet_buf, over->dataBuffer.buf, over->dataBuffer.len);
-    //memcpy(clients[id].packet_buf, reinterpret_cast<char*>(Packet), sizeof(InputPacket));
-    //clients[id].prev_size = retval;
+    //memcpy(clients[id].packet_buf, over->dataBuffer.buf, over->dataBuffer.buf[0]);
 }
 
 void IOCPServer::do_send(int to, char* packet)
 {
     SOCKET client_s = clients[to].sock;
-
-    int retval = 0;
-
     OVER_EX* over = reinterpret_cast<OVER_EX*>(malloc(sizeof(OVER_EX)));
 
-    over->dataBuffer.len = strlen(packet);
+    over->dataBuffer.len = BUFSIZE;
     over->dataBuffer.buf = packet;
 
-    memcpy(over->messageBuffer, packet, sizeof(packet));
+    memcpy(over->messageBuffer, packet, packet[0]);
 
     ZeroMemory(&(over->overlapped), sizeof(WSAOVERLAPPED));
     over->is_recv = false;
 
-    //InputPacket* Packet = reinterpret_cast<InputPacket*>(over->dataBuffer.buf);
-    //printf("Send -> type: %d, x: %d, y: %d\n", Packet->type, Packet->x, Packet->y);
+    //printf("Send %d: %d/%d\n", to, over->dataBuffer.buf[1], over->dataBuffer.len);
 
-    retval = WSASend(client_s, &over->dataBuffer, 1, NULL,
-        0, &(over->overlapped), NULL);
-    printf("Send %d: %s/%d\n", to, over->dataBuffer.buf, over->dataBuffer.len);
-
-    if (retval == SOCKET_ERROR)
+    if (WSASend(client_s, &over->dataBuffer, 1, NULL,
+        0, &(over->overlapped), NULL))
     {
-        if (WSAGetLastError() != WSA_IO_PENDING)
+        int err_no = WSAGetLastError();
+        if (err_no != WSA_IO_PENDING)
         {
-            std::cout << "Error - Fail WSASend(error_code : ";
-            std::cout << WSAGetLastError() << ")\n";
+            display_error("send error: ", err_no);
         }
     }
 }
 
-void IOCPServer::send_login_player_packet(char to, char id)
+void IOCPServer::send_ID_player_packet(char id)
 {
-    player_login p;
+    player_ID_packet p;
 
     p.id = id;
-    p.size = sizeof(player_login);
+    p.size = sizeof(player_login_packet);
+    p.type = PacketType::T_player_ID;
+
+    do_send(id, reinterpret_cast<char*>(&p));
+}
+
+void IOCPServer::send_login_player_packet(char id, int to)
+{
+    player_login_packet p;
+
+    p.id = id;
+    p.size = sizeof(player_login_packet);
     p.type = PacketType::T_player_login;
+
+    //printf("%d: login\n",id);
+
+    do_send(to, reinterpret_cast<char*>(&p));
+}
+
+void IOCPServer::send_disconnect_player_packet(char id)
+{
+    player_remove_packet p;
+
+    p.id = id;
+    p.size = sizeof(player_remove_packet);
+    p.type = PacketType::T_player_remove;
 
     for (int i = 0; i < MAX_CLIENT; i++)
     {
         if (clients[i].connected)
             do_send(i, reinterpret_cast<char*>(&p));
     }
+    closesocket(clients[id].sock);
 }
 
-void IOCPServer::send_disconnect_player_packet(char to, char id)
+void IOCPServer::send_player_move_packet(char id)
 {
-
-}
-
-void IOCPServer::send_player_pos_packet(char id)
-{
-    for (int i = 0; i < MAX_CLIENT; i++)
-    {
-        if (clients[i].connected)
-            do_send(i, clients[id].packet_buf);
+    for (int i = 0; i < MAX_CLIENT; i++) {
+        if (clients[i].connected) {
+            if (calc_distance(id, i) <= VIEWING_DISTANCE) {
+                do_send(i, clients[id].packet_buf);
+            }
+        }
     }
 }
 
-void IOCPServer::send_player_attack_packet(char id)
+void IOCPServer::send_player_attack_packet(char id, char* buf)
 {
-    for (int i = 0; i < MAX_CLIENT; i++)
-    {
-        if (clients[i].connected)
-            do_send(i, clients[id].packet_buf);
+    for (int i = 0; i < MAX_CLIENT; i++){
+        if (clients[i].connected) {
+            if (calc_distance(id, i) <= VIEWING_DISTANCE) {
+                do_send(i, clients[id].packet_buf);
+            }
+        }
     }
 }
 
 void IOCPServer::send_map_collapse_packet(int num)
 {
-
-}
-
-void IOCPServer::send_cloud_move_packet(int x, int y)
-{
-
-}
-
-void IOCPServer::process_packet(char id, char* buf)
-{
-    // InputPacket* Packet = reinterpret_cast<InputPacket*>(buf);
-    // 입력받은 패킷 처리
-    if (buf[1] == PacketType::T_player_pos)
-    {
-        send_player_pos_packet(id);
-    }
-    else if (buf[1] == PacketType::T_player_attack)
-    {
-        send_player_attack_packet(id);
-    }
+    map_collapse_packet packet;
+    packet.size = sizeof(map_collapse_packet);
+    packet.type = PacketType::T_map_collapse;
+    packet.block_num = num;
 
     for (int i = 0; i < MAX_CLIENT; i++)
     {
         if (clients[i].connected)
-            do_send(i, buf);
+            do_send(i, reinterpret_cast<char*>(&packet));
+    }
+}
+
+
+void IOCPServer::send_cloud_move_packet(float x, float z)
+{
+    cloud_move_packet packet;
+    packet.size = sizeof(cloud_move_packet);
+    packet.type = PacketType::T_cloud_move;
+    packet.x = x;
+    packet.z = z;
+
+
+
+    for (int i = 0; i < MAX_CLIENT; i++)
+    {
+        if (clients[i].connected)
+        {
+            printf("Send %d: %f/%f\n", i, packet.x, packet.z);
+            do_send(i, reinterpret_cast<char*>(&packet));
+        }
+    }
+}
+
+float IOCPServer::calc_distance(int a, int b)
+{
+    float value = pow((player_info[a].x.load(std::memory_order_relaxed) - player_info[b].x.load(std::memory_order_relaxed)), 2)
+        + pow((player_info[a].z.load(std::memory_order_relaxed) - player_info[b].z.load(std::memory_order_relaxed)), 2);
+
+    if (value < 0)
+        return sqrt(-value);
+    else
+        return sqrt(value);
+}
+
+void IOCPServer::process_packet(char id, char* buf)
+{
+    // 클라이언트에서 받은 패킷 처리
+    switch (buf[1]) {
+    case PacketType::T_player_login:{
+        break;
+    }
+    case PacketType::T_player_remove:{
+        break;
+    }
+    case PacketType::T_player_info:{
+        break;
+    }
+    case PacketType::T_player_move: {
+        player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
+
+        float degree = player_info[p->id].degree.load();
+        float x = player_info[p->id].x.load();
+        float y = player_info[p->id].y.load();
+        float z = player_info[p->id].z.load();
+
+        float f = 1.f;
+
+        while (!player_info[p->id].degree.compare_exchange_strong(degree, p->degree)) { printf("tlqkf\n"); };
+        while (!player_info[p->id].x.compare_exchange_strong(x, p->x)) { printf("tlqkf\n"); };
+        while (!player_info[p->id].y.compare_exchange_strong(y, p->y)) { printf("tlqkf\n"); };
+        while (!player_info[p->id].z.compare_exchange_strong(z, p->z)) { printf("tlqkf\n"); };
+
+        if (p->id == 5)
+            printf("%d: %f, %f, %f\n", p->id, player_info[p->id].x.load(), player_info[p->id].y.load(), player_info[p->id].z.load());
+
+        send_player_move_packet(id);
+        break;
+    }
+    case PacketType::T_player_attack:{
+        break;
+    }
+    case PacketType::T_map_collapse:{
+        break;
+    }
+    case PacketType::T_cloud_move:{
+        break;
+    }
     }
 }
 
@@ -294,25 +352,24 @@ void IOCPServer::WorkerFunc()
 
         std::thread::id Thread_id = std::this_thread::get_id();
 
-        printf("thread id: %d\n", Thread_id);
+        //printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
 
         // 비동기 입출력 결과 확인
         if (FALSE == retval)
-            err_display("WSAGetOverlappedResult()");
+            display_error("GQCS ", WSAGetLastError());
         if (0 == cbTransferred)
             Disconnect(id);
 
         if (lpover_ex->is_recv) {
-            do_recv(id);
+            //printf("thread id: %d\n", Thread_id);
             int rest_size = cbTransferred;
             char* buf_ptr = lpover_ex->messageBuffer;
             char packet_size = 0;
             if (0 < clients[id].prev_size)
                 packet_size = clients[id].packet_buf[0];
-            /*while (rest_size > 0) {
-                if (0 == packet_size) packet_size = sizeof(buf_ptr);
+            while (rest_size > 0) {
+                if (0 == packet_size) packet_size = buf_ptr[0];
                 int required = packet_size - clients[id].prev_size;
-                printf("required: %d\n", required);
                 if (rest_size >= required) {
                     memcpy(clients[id].packet_buf + clients[id].
                         prev_size, buf_ptr, required);
@@ -326,8 +383,9 @@ void IOCPServer::WorkerFunc()
                         buf_ptr, rest_size);
                     rest_size = 0;
                 }
-            }*/
-            process_packet(id, clients[id].packet_buf);
+            }
+            do_recv(id);
+            //printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
         }
         else {
             delete lpover_ex;
@@ -337,8 +395,6 @@ void IOCPServer::WorkerFunc()
 
 bool IOCPServer::Init()
 {
-    //std::vector <std::thread> working_threads;
-
     for (int i = 0; i < MAX_CLIENT; ++i)
         clients[i].connected = false;
 
@@ -359,7 +415,7 @@ bool IOCPServer::Init()
     return 1;
 }
 
-void IOCPServer::Run()
+void IOCPServer::Thread_join()
 {
     accept_thread.join();
     for (auto& t : working_threads)

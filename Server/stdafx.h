@@ -8,12 +8,16 @@
 #include <fstream>
 #include <time.h>
 #include <windows.h>
+#include <random>
+#include <cmath>
 
 #include <thread>
 #include <map>
 #include <vector>
 #include <mysql.h>
 #include <functional>
+#include <mutex>
+#include <atomic>
 
 #pragma comment(lib, "libmySQL.lib")
 
@@ -29,11 +33,14 @@
 #define SERVERPORT 9000
 #define BUFSIZE    1024
 #define MAX_CLIENT 100
+#define MAX_PLAYER 20
 
 #define MAX_MAP_BLOCK 9
 #define MAP_SIZE 3000
 #define MAP_BLOCK_SIZE 1000
-#define MAP_BREAK_TIME 10
+#define MAP_BREAK_TIME 30
+
+#define VIEWING_DISTANCE 500
 
 using _packet = unsigned char;
 

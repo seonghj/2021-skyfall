@@ -11,16 +11,17 @@ Map* m = new Map;
 
 int main(int argc, char* argv[])
 {
+	std::wcout.imbue(std::locale("korean"));
    //db->Connection();
 
-   /*s->Init();
-   s->Run();*/
+	s->Init();
+
+	//std::thread map_thread = std::thread(&Map::init_Map, m, s);
+
+	s->Thread_join();
 
    //mysql_close(db->connection);
 
-   m->init_Map();
-   m->print_Map();
-   m->cloud_move();
 
-   return 0;
+	return 0;
 }

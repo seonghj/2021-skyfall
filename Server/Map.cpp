@@ -1,11 +1,10 @@
 #include "Map.h"
 
-void Map::init_Map()
+
+void Map::init_Map(IOCPServer* s)
 {
 	int num_count[3] = { 0 };
 	int n;
-
-	srand((unsigned int)time(NULL));
 
 	for (int i = 0; i < MAX_MAP_BLOCK; i++)
 	{
@@ -32,6 +31,17 @@ void Map::init_Map()
 		isMap_block[i] = TRUE;
 	}
 
+
+	collapse_count = 0;
+
+	Set_wind();
+	Set_cloudpos();
+	print_Map();
+	cloud_move(s);
+}
+
+void Map::Set_wind()
+{
 	for (int i = 0; i < 12; i++)
 	{
 		if (i < 6)
@@ -48,11 +58,15 @@ void Map::init_Map()
 			wind[i] = -calc_windpower(atm[i - 6], atm[i - 3]);
 		}
 	}
+}
 
-
-	collapse_count = 0;
-	Cloud.x = rand() % 3000;
-	Cloud.y = rand() % 3000;
+void Map::Set_cloudpos()
+{
+	std::random_device rd;
+	std::mt19937_64 gen(rd());
+	std::uniform_int_distribution<int> dis(10, 2990);
+	Cloud.x = dis(gen);
+	Cloud.y = dis(gen);
 }
 
 void Map::print_Map()
@@ -75,10 +89,10 @@ void Map::print_Map()
 
 float Map::calc_windpower(float a, float b)
 {
-	return (a - b) / 5.f;
+	return (a - b) / 5;
 }
 
-void Map::cloud_move()
+void Map::cloud_move(IOCPServer* s)
 {
 	while (1)
 	{
@@ -86,17 +100,17 @@ void Map::cloud_move()
 		{
 			if (MAP_BLOCK_SIZE * i < Cloud.y && Cloud.y <= MAP_BLOCK_SIZE * (i+1))
 			{
-				if (MAP_BLOCK_SIZE < Cloud.x && Cloud.x <= MAP_BLOCK_SIZE * 1.5f)
+				if (0 < Cloud.x && Cloud.x <= MAP_BLOCK_SIZE * 1.5f)
 				{
 					Cloud.x += wind[i * 2];
-					printf("%d", i * 2);
-					break;
+					//printf("%d", i * 2);
+					
 				}
 				else if (MAP_BLOCK_SIZE * 1.5f < Cloud.x && Cloud.x < MAP_BLOCK_SIZE * 3)
 				{
 					Cloud.x += wind[i * 2 + 1];
-					printf("%d", i * 2 + 1);
-					break;
+					//printf("%d", i * 2 + 1);
+					
 				}
 			}
 		}
@@ -105,29 +119,38 @@ void Map::cloud_move()
 		{
 			if (MAP_BLOCK_SIZE * i < Cloud.x && Cloud.x <= MAP_BLOCK_SIZE * (i + 1))
 			{
-				if (MAP_BLOCK_SIZE < Cloud.y && Cloud.y <= MAP_BLOCK_SIZE * 1.5f)
+				if (0 < Cloud.y && Cloud.y <= MAP_BLOCK_SIZE * 1.5f)
 				{
 					Cloud.y += wind[i + 6];
-					printf("%d", i + 6);
-					break;
+					//printf("%d", i + 6);
+
 				}
 				else if (MAP_BLOCK_SIZE * 1.5f < Cloud.y && Cloud.y < MAP_BLOCK_SIZE * 3)
 				{
 					Cloud.y += wind[i + 9];
-					printf("%d", i + 9);
-					break;
+					//printf("%d", i + 9);
+
 				}
 			}
 		}
-		printf("x: %f | y: %f\n", Cloud.x, Cloud.y);
+
+		if(Cloud.x < 0 || Cloud.y < 0){ 
+			Set_cloudpos();
+		}
+
+		//printf("cloud x: %f | y: %f\n\n", Cloud.x, Cloud.y);
+
+		s->send_cloud_move_packet(Cloud.x, Cloud.y);
+
 		collapse_count++;
 		if (collapse_count % MAP_BREAK_TIME == 0)
-			Map_collapse();
-		Sleep(1000);
+			Map_collapse(s);
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		//printf("%d\n", collapse_count);
 	}
 }
 
-void Map::Map_collapse()
+void Map::Map_collapse(IOCPServer* s)
 {
 	srand((unsigned int)time(NULL));
 	int num = 0;
@@ -143,30 +166,34 @@ void Map::Map_collapse()
 	}
 
 	printf("collapse block: %d\n", num);
+	//printf("cloud x: %f | y: %f\n\n", Cloud.x, Cloud.y);
+	atm[num] = 1000;
+	Set_wind();
 
-	if (num%2 == 0)
+	/*if (num%2 == 0)
 	{
 		if (num == 0)
-			wind[0] = 0.f, wind[6] = 0.f;
+			wind[0] = 0, wind[6] = 0;
 		else if (num == 2)
-			wind[1] = 0.f, wind[8] = 0.f;
+			wind[1] = 0, wind[8] = 0;
 		else if (num == 4)
-			wind[2] = 0.f, wind[3] = 0.f, wind[7] = 0.f, wind[10] = 0.f;
+			wind[2] = 0, wind[3] = 0, wind[7] = 0, wind[10] = 0;
 		else if (num == 6)
-			wind[4] = 0.f, wind[9] = 0.f;
+			wind[4] = 0, wind[9] = 0;
 		else if (num == 8)
-			wind[5] = 0.f, wind[11] = 0.f;
+			wind[5] = 0, wind[11] = 0;
 	}
 	else
 	{
 		if (num == 1)
-			wind[0] = 0.f, wind[1] = 0.f, wind[7] = 0.f;
+			wind[0] = 0, wind[1] = 0, wind[7] = 0;
 		else if (num == 3)
-			wind[2] = 0.f, wind[6] = 0.f, wind[9] = 0.f;
+			wind[2] = 0, wind[6] = 0, wind[9] = 0;
 		else if (num == 5)
-			wind[3] = 0.f, wind[8] = 0.f, wind[11] = 0.f;
+			wind[3] = 0, wind[8] = 0, wind[11] = 0;
 		else if (num == 7)
-			wind[4] = 0.f, wind[5] = 0.f, wind[10] = 0.f;
-	}
+			wind[4] = 0, wind[5] = 0, wind[10] = 0;
+	}*/
+	s->send_map_collapse_packet(num);
 	print_Map();
 }

@@ -110,12 +110,12 @@ void PacketFunc::RecvPacket()
     }
 }
 
-void PacketFunc::SendPacket()
+void PacketFunc::SendPacket(char* buf)
 {
     int retval = 0;
 
-    wsabuf.len = Sendbuf[0];
-    wsabuf.buf = Sendbuf;
+    wsabuf.len = buf[0];
+    wsabuf.buf = buf;
 
     retval = WSASend(sock, &wsabuf, 1, &sendbytes, 0, NULL, NULL);
     if (retval == SOCKET_ERROR) {

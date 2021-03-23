@@ -21,19 +21,34 @@ struct SOCKETINFO
     int prev_size;
 };
 
-int recvn(SOCKET s, char* buf, int len, int flags);
-void err_quit(char* msg);
-void err_display(char* msg);
+struct player_infomation {
+    std::atomic<float> x = 0;
+    std::atomic<float> y = 0;
+    std::atomic<float> z = 0;
+    std::atomic<float> degree = 0;
+    std::atomic<int> weapon = 0;
+
+    // 0 Á×À½ / 1 »ýÁ¸
+    std::atomic<bool> state = 0;
+
+    std::atomic<float> hp = 0;
+    std::atomic<float> speed = 10;
+};
+
+bool CASfloat(std::atomic<float>* addr, int expected, int new_val);
+
 
 class IOCPServer {
 public:
     IOCPServer();
     ~IOCPServer();
 
+    void display_error(const char* msg, int err_no);
+
     int get_new_id();
 
     bool Init();
-    void Run();
+    void Thread_join();
     void Disconnect(int id);
 
     void do_accept();
@@ -43,16 +58,21 @@ public:
     void do_send(int to, char* packet);
     void process_packet(char id, char* buf);
 
-    void send_login_player_packet(char to, char id);
-    void send_disconnect_player_packet(char to, char id);
-    void send_player_pos_packet(char id);
-    void send_player_attack_packet(char id);
+    void send_ID_player_packet(char id);
+    void send_login_player_packet(char id, int to);
+    void send_disconnect_player_packet(char id);
+    void send_player_move_packet(char id);
+    void send_player_attack_packet(char id, char* buf);
     void send_map_collapse_packet(int num);
-    void send_cloud_move_packet(int x, int y);
+    void send_cloud_move_packet(float x, float z);
+
+    float calc_distance(int a, int b);
 
 private:
     HANDLE hcp;
+
     SOCKETINFO clients[MAX_CLIENT];
+    player_infomation player_info[MAX_CLIENT];
 
     std::vector <std::thread> working_threads;
     std::thread accept_thread;
