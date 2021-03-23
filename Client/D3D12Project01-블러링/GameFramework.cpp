@@ -513,14 +513,16 @@ void CGameFramework::ProcessInput()
 			m_pScene->Shot(fTimeElapsed);
 		}
 		float cxDelta = 0.0f, cyDelta = 0.0f;
-		POINT ptCursorPos;
-		if (GetCapture() == m_hWnd)
+
+
+		if (GetCapture() == m_hWnd || m_pCamera->GetMode() == FIRST_PERSON_CAMERA)
 		{
-			SetCursor(NULL);
-			GetCursorPos(&ptCursorPos);
+			::SetCursor(NULL);
+			POINT ptCursorPos;
+			::GetCursorPos(&ptCursorPos);
 			cxDelta = (float)(ptCursorPos.x - m_ptOldCursorPos.x) / 3.0f;
 			cyDelta = (float)(ptCursorPos.y - m_ptOldCursorPos.y) / 3.0f;
-			SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
+			::SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
 		}
 
 		if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
