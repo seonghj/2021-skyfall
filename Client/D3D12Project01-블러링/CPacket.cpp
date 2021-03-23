@@ -116,7 +116,7 @@ void PacketFunc::SendPacket(char* buf)
 
     wsabuf.len = buf[0];
     wsabuf.buf = buf;
-
+    printf("send %d data\n", sizeof(buf));
     retval = WSASend(sock, &wsabuf, 1, &sendbytes, 0, NULL, NULL);
     if (retval == SOCKET_ERROR) {
         err_display("send()");

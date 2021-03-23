@@ -30,8 +30,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define SERVERIP   "127.0.0.1"
-#define SERVERPORT 9000
+#define SERVERIP   "39.120.192.92"
+#define SERVERPORT 3500
 #define BUFSIZE    1024
 
 using namespace std;

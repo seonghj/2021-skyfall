@@ -541,6 +541,18 @@ void CGameFramework::ProcessInput()
 
 	m_pScene->Update(fTimeElapsed);
 	m_pPlayer->Update(fTimeElapsed);
+
+	player_move_packet p;
+	XMFLOAT3 test = m_pPlayer->GetPosition();
+	p.x = test.x;
+	p.y = test.y;
+	p.z = test.z;
+	p.type = T_player_move;
+	p.degree = 0;
+	p.MoveType = 0;
+	p.id = m_pPacket->Get_clientid();
+	p.size = sizeof(player_move_packet);
+	m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 }
 
 void CGameFramework::AnimateObjects()
