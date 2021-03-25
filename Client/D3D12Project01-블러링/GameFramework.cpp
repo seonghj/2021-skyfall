@@ -35,6 +35,8 @@ CGameFramework::CGameFramework()
 	m_pPlayer = NULL;
 	m_pPacket = NULL;
 
+	m_ptOldCursorPos.x = FRAME_BUFFER_WIDTH / 2;
+	m_ptOldCursorPos.y = FRAME_BUFFER_HEIGHT / 2;
 	_tcscpy_s(m_pszFrameRate, _T("2015182013 º¯Áø¹è ("));
 }
 
@@ -480,8 +482,20 @@ void CGameFramework::ProcessInput()
 	static UCHAR pKeysBuffer[256];
 	bool bProcessedByScene = false;
 	if (GetKeyboardState(pKeysBuffer) && m_pScene) bProcessedByScene = m_pScene->ProcessInput(pKeysBuffer);
-	if (!bProcessedByScene)
+	if (!bProcessedByScene) 
 	{
+		player_move_packet p;
+		XMFLOAT3 test = m_pPlayer->GetPosition();
+		p.x = test.x;
+		p.y = test.y;
+		p.z = test.z;
+		p.type = T_player_move;
+		p.degree = 0;
+		p.MoveType = 0;
+		p.id = m_pPacket->Get_clientid();
+		p.size = sizeof(player_move_packet);
+		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+
 		DWORD dwDirection = 0;
 		if (pKeysBuffer[VK_UP] & 0xF0 || pKeysBuffer['W'] & 0xF0) dwDirection |= DIR_FORWARD;
 		if (pKeysBuffer[VK_DOWN] & 0xF0 || pKeysBuffer['S'] & 0xF0) dwDirection |= DIR_BACKWARD;
@@ -515,7 +529,7 @@ void CGameFramework::ProcessInput()
 		float cxDelta = 0.0f, cyDelta = 0.0f;
 
 
-		if (GetCapture() == m_hWnd || m_pCamera->GetMode() == FIRST_PERSON_CAMERA)
+		if (GetCapture() == m_hWnd || m_pCamera->GetMode() == FIRST_PERSON_CAMERA || m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
 		{
 			::SetCursor(NULL);
 			POINT ptCursorPos;
@@ -542,17 +556,6 @@ void CGameFramework::ProcessInput()
 	m_pScene->Update(fTimeElapsed);
 	m_pPlayer->Update(fTimeElapsed);
 
-	player_move_packet p;
-	XMFLOAT3 test = m_pPlayer->GetPosition();
-	p.x = test.x;
-	p.y = test.y;
-	p.z = test.z;
-	p.type = T_player_move;
-	p.degree = 0;
-	p.MoveType = 0;
-	p.id = m_pPacket->Get_clientid();
-	p.size = sizeof(player_move_packet);
-	m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 }
 
 void CGameFramework::AnimateObjects()
