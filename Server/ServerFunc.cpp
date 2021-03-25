@@ -26,17 +26,18 @@ void IOCPServer::display_error(const char* msg, int err_no)
     LocalFree(lpMsgBuf);
 }
 
-int IOCPServer::get_new_id()
+int IOCPServer::SetClientId()
 {
-    while (true)
+    while (true) {
         for (int i = 0; i < MAX_CLIENT; ++i)
             if (clients[i].connected == false) {
                 clients[i].connected = true;
                 return i;
             }
+    }
 }
 
-void IOCPServer::do_accept()
+void IOCPServer::Accept()
 {
     // 윈속 초기화
     WSADATA wsa;
@@ -72,42 +73,42 @@ void IOCPServer::do_accept()
             break;
         }
 
-        int new_id = get_new_id();
-        memset(&clients[new_id], 0x00, sizeof(struct SOCKETINFO));
-        clients[new_id].sock = client_sock;
-        clients[new_id].clientaddr = clientaddr;
+        int client_id = SetClientId();
+        memset(&clients[client_id], 0x00, sizeof(struct SOCKETINFO));
+        clients[client_id].sock = client_sock;
+        clients[client_id].clientaddr = clientaddr;
 
-        getpeername(client_sock, (SOCKADDR*)&clients[new_id].clientaddr
-            , &clients[new_id].addrlen);
+        getpeername(client_sock, (SOCKADDR*)&clients[client_id].clientaddr
+            , &clients[client_id].addrlen);
 
         printf("[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d, key=%d\n",
-            inet_ntoa(clients[new_id].clientaddr.sin_addr)
-            , ntohs(clients[new_id].clientaddr.sin_port), new_id);
+            inet_ntoa(clients[client_id].clientaddr.sin_addr)
+            , ntohs(clients[client_id].clientaddr.sin_port), client_id);
 
-        clients[new_id].over.dataBuffer.len = BUFSIZE;
-        clients[new_id].over.dataBuffer.buf =
+        clients[client_id].over.dataBuffer.len = BUFSIZE;
+        clients[client_id].over.dataBuffer.buf =
             clients[client_sock].over.messageBuffer;
-        clients[new_id].over.is_recv = true;
+        clients[client_id].over.is_recv = true;
         flags = 0;
 
         // 소켓과 입출력 완료 포트 연결
-        CreateIoCompletionPort((HANDLE)client_sock, hcp, new_id, 0);
-        clients[new_id].connected = true;
+        CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
+        clients[client_id].connected = true;
 
-        send_ID_player_packet(new_id);
+        send_ID_player_packet(client_id);
 
         // 로그인한 클라이언트에 다른 클라이언트 정보 전달
         for (int i = 0; i < MAX_CLIENT; ++i) {
-            if (clients[i].connected && i != new_id)
-                send_login_player_packet(i, new_id);
+            if (clients[i].connected && i != client_id)
+                send_login_player_packet(i, client_id);
         }
 
         // 다른 클라이언트에 로그인정보 전달
         for (int i = 0; i < MAX_CLIENT; ++i) {
-            if (clients[i].connected && i != new_id)
-                send_login_player_packet(new_id, i);
+            if (clients[i].connected && i != client_id)
+                send_login_player_packet(client_id, i);
         }
-        do_recv(new_id);
+        do_recv(client_id);
     }
 
     // closesocket()
@@ -117,7 +118,7 @@ void IOCPServer::do_accept()
     WSACleanup();
 }
 
-void IOCPServer::Disconnect(int id)
+void IOCPServer::Disconnected(int id)
 {
     clients[id].connected = false;
     printf("[TCP 서버] 클라이언트 종료: IP 주소=%s, 포트 번호=%d key = %d\n",
@@ -304,8 +305,6 @@ void IOCPServer::process_packet(char id, char* buf)
         float y = clients[p->id].y.load();
         float z = clients[p->id].z.load();
 
-        //float f = 1.f;
-
         while (!clients[p->id].degree.compare_exchange_strong(degree, p->degree)) {};
         while (!clients[p->id].x.compare_exchange_strong(x, p->x)) { };
         while (!clients[p->id].y.compare_exchange_strong(y, p->y)) {  };
@@ -333,53 +332,49 @@ void IOCPServer::WorkerFunc()
     while (1) {
         DWORD Transferred;
         SOCKET client_sock;
-        ULONG id;
+        ULONG client_id;
         SOCKETINFO* ptr;
 
         OVER_EX* over_ex;
 
         retval = GetQueuedCompletionStatus(hcp, &Transferred,
-            (PULONG_PTR)&id, (LPOVERLAPPED*)&over_ex, INFINITE);
+            (PULONG_PTR)&client_id, (LPOVERLAPPED*)&over_ex, INFINITE);
 
-        std::thread::id Thread_id = std::this_thread::get_id();
-
-        //printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
+        //std::thread::id Thread_id = std::this_thread::get_id();
 
         // 비동기 입출력 결과 확인
         if (FALSE == retval)
         {
-            //display_error("GQCS", WSAGetLastError());
-            Disconnect(id);
+            display_error("GQCS", WSAGetLastError());
+            Disconnected(client_id);
         }
 
-        /*if (0 == cbTransferred)
-            Disconnect(id);*/
 
         if (over_ex->is_recv) {
             //printf("thread id: %d\n", Thread_id);
             int rest_size = Transferred;
             char* buf_ptr = over_ex->messageBuffer;
             char packet_size = 0;
-            if (0 < clients[id].prev_size)
-                packet_size = clients[id].packet_buf[0];
+            if (0 < clients[client_id].prev_size)
+                packet_size = clients[client_id].packet_buf[0];
             while (rest_size > 0) {
                 if (0 == packet_size) packet_size = buf_ptr[0];
-                int required = packet_size - clients[id].prev_size;
+                int required = packet_size - clients[client_id].prev_size;
                 if (rest_size >= required) {
-                    memcpy(clients[id].packet_buf + clients[id].
+                    memcpy(clients[client_id].packet_buf + clients[client_id].
                         prev_size, buf_ptr, required);
-                    process_packet(id, clients[id].packet_buf);
+                    process_packet(client_id, clients[client_id].packet_buf);
                     rest_size -= required;
                     buf_ptr += required;
                     packet_size = 0;
                 }
                 else {
-                    memcpy(clients[id].packet_buf + clients[id].prev_size,
+                    memcpy(clients[client_id].packet_buf + clients[client_id].prev_size,
                         buf_ptr, rest_size);
                     rest_size = 0;
                 }
             }
-            do_recv(id);
+            do_recv(client_id);
             //printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
         }
         else {
@@ -405,7 +400,7 @@ bool IOCPServer::Init()
     for (int i = 0; i < (int)si.dwNumberOfProcessors * 2; i++)
         working_threads.emplace_back(std::thread(&IOCPServer::WorkerFunc, this));
 
-    accept_thread = std::thread(&IOCPServer::do_accept, this);
+    accept_thread = std::thread(&IOCPServer::Accept, this);
 
     return 1;
 }

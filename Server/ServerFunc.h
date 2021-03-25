@@ -12,12 +12,12 @@ struct OVER_EX
 
 struct SOCKETINFO
 {
-    bool	connected;
     OVER_EX over;
     SOCKET sock;
     SOCKADDR_IN clientaddr;
     int addrlen;
     char packet_buf[BUFSIZE];
+    bool connected;
     int prev_size;
 
     std::atomic<float> x = 0;
@@ -42,13 +42,13 @@ public:
 
     void display_error(const char* msg, int err_no);
 
-    int get_new_id();
+    int SetClientId();
 
     bool Init();
     void Thread_join();
-    void Disconnect(int id);
+    void Disconnected(int id);
 
-    void do_accept();
+    void Accept();
     void WorkerFunc();
 
     void do_recv(char id);
