@@ -19,9 +19,7 @@ struct SOCKETINFO
     int addrlen;
     char packet_buf[BUFSIZE];
     int prev_size;
-};
 
-struct player_infomation {
     std::atomic<float> x = 0;
     std::atomic<float> y = 0;
     std::atomic<float> z = 0;
@@ -35,7 +33,6 @@ struct player_infomation {
     std::atomic<float> speed = 10;
 };
 
-bool CASfloat(std::atomic<float>* addr, int expected, int new_val);
 
 
 class IOCPServer {
@@ -72,7 +69,6 @@ private:
     HANDLE hcp;
 
     SOCKETINFO clients[MAX_CLIENT];
-    player_infomation player_info[MAX_CLIENT];
 
     std::vector <std::thread> working_threads;
     std::thread accept_thread;
