@@ -40,25 +40,6 @@ void PacketFunc::err_display(char* msg)
     LocalFree(lpMsgBuf);
 }
 
-int PacketFunc::recvn(SOCKET s, char* buf, int len, int flags)
-{
-    int received;
-    char* ptr = buf;
-    int left = len;
-
-    while (left > 0) {
-        received = recv(s, ptr, left, flags);
-        if (received == SOCKET_ERROR)
-            return SOCKET_ERROR;
-        else if (received == 0)
-            break;
-        left -= received;
-        ptr += received;
-    }
-
-    return (len - left);
-}
-
 void PacketFunc::RecvPacket()
 {
     DWORD flags = 0;
@@ -77,13 +58,12 @@ void PacketFunc::RecvPacket()
 
     // 데이터 받기
     while (1) {
-        retval = recvn(sock, recv_buffer, BUFSIZE, flags);
+        retval = WSARecv(sock, &wsabuf, 1, &recvbytes, &flags, NULL, NULL);
         if (retval == SOCKET_ERROR) {
             err_display("recv()");
             printf("server disconnect\n");
             break;
         }
-        std::printf("[TCP 클라이언트] %d바이트를 받았습니다.\r\n", retval);
         int rest_size = sizeof(recv_buffer);
         BYTE* buf_ptr = reinterpret_cast<BYTE*>(recv_buffer);
 
@@ -116,7 +96,6 @@ void PacketFunc::SendPacket(char* buf)
 
     wsabuf.len = buf[0];
     wsabuf.buf = buf;
-    printf("send %d data\n", sizeof(buf));
     retval = WSASend(sock, &wsabuf, 1, &sendbytes, 0, NULL, NULL);
     if (retval == SOCKET_ERROR) {
         err_display("send()");
