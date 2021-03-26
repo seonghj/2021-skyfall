@@ -10,29 +10,45 @@ struct OVER_EX
     bool			is_recv;
 };
 
-struct SOCKETINFO
+class SESSION
 {
-    OVER_EX over;
-    SOCKET sock;
-    SOCKADDR_IN clientaddr;
-    int addrlen;
-    char packet_buf[BUFSIZE];
-    bool connected;
-    int prev_size;
+public:
 
-    std::atomic<float> x = 0;
-    std::atomic<float> y = 0;
-    std::atomic<float> z = 0;
-    std::atomic<float> degree = 0;
-    std::atomic<int> weapon = 0;
+    SESSION() {}
+    SESSION(const SESSION& s) {}
+    ~SESSION() {}
+
+    OVER_EX     over;
+    SOCKET      sock;
+    SOCKADDR_IN clientaddr;
+    int         addrlen;
+    char        packet_buf[BUFSIZE];
+    bool        connected = false;
+    int         prev_size;
+    int         id;
+
+    std::atomic<float>      x = 0;
+    std::atomic<float>      y = 0;
+    std::atomic<float>      z = 0;
+    std::atomic<float>      degree = 0;
+    std::atomic<int>        weapon = 0;
 
     // 0 Á×À½ / 1 »ýÁ¸
-    std::atomic<bool> state = 0;
+    std::atomic<bool>       state = 0;
 
-    std::atomic<float> hp = 0;
-    std::atomic<float> speed = 10;
+    std::atomic<float>      hp = 0;
+    std::atomic<float>      speed = 10;
 };
 
+//namespace std {
+//    template<>
+//    class hash<SESSION> {
+//    public:
+//        size_t operator() (const SESSION& s) const { 
+//            return std::hash<int>()(s.id);
+//        }
+//    };
+//}
 
 
 class IOCPServer {
@@ -68,7 +84,9 @@ public:
 private:
     HANDLE hcp;
 
-    SOCKETINFO clients[MAX_CLIENT];
+    //SESSION players[MAX_CLIENT];
+
+    std::unordered_map <int, SESSION> players;
 
     std::vector <std::thread> working_threads;
     std::thread accept_thread;

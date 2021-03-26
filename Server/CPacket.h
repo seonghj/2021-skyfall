@@ -1,23 +1,16 @@
 #pragma once
 #include"stdafx.h"
 
-
-struct Packet {
-public:
-	char size;
-	char type;
-};
-
 enum PacketType {
-	T_player_ID,
-	T_player_login,
-	T_player_remove,
-	T_player_info,
-	T_player_move,
-	T_player_pos,
-	T_player_attack,
-	T_map_collapse,
-	T_cloud_move
+	Type_player_ID,
+	Type_player_login,
+	Type_player_remove,
+	Type_player_info,
+	Type_player_move,
+	Type_player_pos,
+	Type_player_attack,
+	Type_map_collapse,
+	Type_cloud_move
 };
 
 enum MoveType {
@@ -26,6 +19,16 @@ enum MoveType {
 	LEFT,
 	BACK,
 	STOP
+};
+
+#pragma pack(push, 1)
+
+// 0: size // 1: type // 2: id
+
+struct Packet {
+public:
+	char size;
+	char type;
 };
 
 struct player_ID_packet :public Packet {
@@ -68,3 +71,5 @@ struct map_collapse_packet : public Packet {
 struct cloud_move_packet : public Packet {
 	float x, z;
 };
+
+#pragma pack(pop)

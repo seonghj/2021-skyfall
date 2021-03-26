@@ -12,7 +12,7 @@
 #include <cmath>
 
 #include <thread>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <mysql.h>
 #include <functional>
