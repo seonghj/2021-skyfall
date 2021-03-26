@@ -12,7 +12,7 @@
 #include <cmath>
 
 #include <thread>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <mysql.h>
 #include <functional>
@@ -30,7 +30,7 @@
 #define TRUE 1
 #define FALSE 0
 
-#define SERVERPORT 9000
+#define SERVERPORT 3500
 #define BUFSIZE    1024
 #define MAX_CLIENT 100
 #define MAX_PLAYER 20
