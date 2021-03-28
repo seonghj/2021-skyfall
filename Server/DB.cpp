@@ -1,5 +1,10 @@
 #include "DB.h"
 
+#define DB_HOST "database-1.cjfrzsztpm1z.ap-northeast-2.rds.amazonaws.com"
+#define DB_USER "admin"
+#define DB_PW "tjdwo104"
+#define DB_NAME "sys"
+
 bool DB::Connection()
 {
     printf("MySQL Ver. %s\n", mysql_get_client_info());

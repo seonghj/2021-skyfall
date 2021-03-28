@@ -1,10 +1,10 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS // 최신 VC++ 컴파일 시 경고 방지
 #include "stdafx.h"
-#include "ServerFunc.h"
+#include "Server.h"
 #include "CPacket.h"
 #include "Map.h"
 
-IOCPServer* s = new IOCPServer;
+Server* s = new Server;
 DB* db = new DB;
 Map* m = new Map;
 
@@ -25,3 +25,5 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+
+// TO DO

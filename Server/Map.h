@@ -1,6 +1,6 @@
 #pragma once
 #include "stdafx.h"
-#include "ServerFunc.h"
+#include "Server.h"
 
 class Map{
 public:
@@ -12,12 +12,12 @@ public:
 
 	bool isMap_block[9];
 
-	void init_Map(IOCPServer* s);
+	void init_Map(Server* s);
 	void Set_wind();
 	void Set_cloudpos();
 	void print_Map();
 	float calc_windpower(float a, float b);
-	void cloud_move(IOCPServer* s);
+	void cloud_move(Server* s);
 
-	void Map_collapse(IOCPServer* s);
+	void Map_collapse(Server* s);
 };

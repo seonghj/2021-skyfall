@@ -2,6 +2,18 @@
 #include"stdafx.h"
 #include "DB.h"
 
+#define SERVERPORT 3500
+#define BUFSIZE    1024
+#define MAX_CLIENT 100
+#define MAX_PLAYER 20
+
+#define MAX_MAP_BLOCK 9
+#define MAP_SIZE 3000
+#define MAP_BLOCK_SIZE 1000
+#define MAP_BREAK_TIME 30
+
+#define VIEWING_DISTANCE 500
+
 struct OVER_EX
 {
     WSAOVERLAPPED	overlapped;
@@ -51,10 +63,10 @@ public:
 //}
 
 
-class IOCPServer {
+class Server {
 public:
-    IOCPServer();
-    ~IOCPServer();
+    Server();
+    ~Server();
 
     void display_error(const char* msg, int err_no);
 

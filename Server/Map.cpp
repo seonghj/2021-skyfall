@@ -1,7 +1,7 @@
 #include "Map.h"
 
 
-void Map::init_Map(IOCPServer* s)
+void Map::init_Map(Server* s)
 {
 	int num_count[3] = { 0 };
 	int n;
@@ -92,7 +92,7 @@ float Map::calc_windpower(float a, float b)
 	return (a - b) / 5;
 }
 
-void Map::cloud_move(IOCPServer* s)
+void Map::cloud_move(Server* s)
 {
 	while (1)
 	{
@@ -150,7 +150,7 @@ void Map::cloud_move(IOCPServer* s)
 	}
 }
 
-void Map::Map_collapse(IOCPServer* s)
+void Map::Map_collapse(Server* s)
 {
 	srand((unsigned int)time(NULL));
 	int num = 0;
