@@ -35,9 +35,14 @@ public:
     SOCKADDR_IN clientaddr;
     int         addrlen;
     char        packet_buf[BUFSIZE];
+
+    char*       packet_start;
+    char*       recv_start;
+
     bool        connected = false;
     int         prev_size;
     int         id;
+    bool        isready = false;
 
     std::atomic<float>      x = 0;
     std::atomic<float>      y = 0;
@@ -49,6 +54,7 @@ public:
     std::atomic<bool>       state = 0;
 
     std::atomic<float>      hp = 0;
+    std::atomic<float>      lv = 0;
     std::atomic<float>      speed = 10;
 };
 

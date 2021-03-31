@@ -146,11 +146,9 @@ void Server::do_recv(char id)
     ZeroMemory(&(over->overlapped), sizeof(WSAOVERLAPPED));
 
     if (WSARecv(client_s, &over->dataBuffer, 1, (LPDWORD)players[id].prev_size,
-        &flags, &(over->overlapped), NULL))
-    {
+        &flags, &(over->overlapped), NULL)){
         int err_no = WSAGetLastError();
-        if (err_no != WSA_IO_PENDING)
-        {
+        if (err_no != WSA_IO_PENDING){
             display_error("recv error: ", err_no);
         }
     }
@@ -172,15 +170,12 @@ void Server::do_send(int to, char* packet)
     over->is_recv = false;
 
     if (WSASend(client_s, &over->dataBuffer, 1, NULL,
-        0, &(over->overlapped), NULL))
-    {
+        0, &(over->overlapped), NULL)) {
         int err_no = WSAGetLastError();
-        if (err_no != WSA_IO_PENDING)
-        {
+        if (err_no != WSA_IO_PENDING){
             display_error("send error: ", err_no);
         }
     }
-    printf("Send %d: %d/%d\n", to, over->dataBuffer.buf[1], over->dataBuffer.len);
 }
 
 void Server::send_ID_player_packet(char id)
@@ -190,8 +185,6 @@ void Server::send_ID_player_packet(char id)
     p.id = id;
     p.size = sizeof(player_login_packet);
     p.type = PacketType::Type_player_ID;
-
-    printf("%d\n", id);
     do_send(id, reinterpret_cast<char*>(&p));
 }
 
@@ -215,20 +208,19 @@ void Server::send_disconnect_player_packet(char id)
     p.size = sizeof(player_remove_packet);
     p.type = PacketType::Type_player_remove;
 
-    for (int i = 0; i < MAX_CLIENT; i++)
-    {
-        if (players[i].connected)
-            do_send(i, reinterpret_cast<char*>(&p));
+    for (auto &iter: players){
+        if (iter.second.connected)
+            do_send(iter.first, reinterpret_cast<char*>(&p));
     }
     closesocket(players[id].sock);
 }
 
 void Server::send_player_move_packet(char id)
 {
-    for (int i = 0; i < MAX_CLIENT; i++) {
-        if (players[i].connected) {
-            if (calc_distance(id, i) <= VIEWING_DISTANCE) {
-                do_send(i, players[id].packet_buf);
+    for (auto& iter : players) {
+        if (iter.second.connected){
+            if (calc_distance(id, iter.first) <= VIEWING_DISTANCE) {
+                do_send(iter.first, players[id].packet_buf);
             }
         }
     }
@@ -236,10 +228,10 @@ void Server::send_player_move_packet(char id)
 
 void Server::send_player_attack_packet(char id, char* buf)
 {
-    for (int i = 0; i < MAX_CLIENT; i++){
-        if (players[i].connected) {
-            if (calc_distance(id, i) <= VIEWING_DISTANCE) {
-                do_send(i, players[id].packet_buf);
+    for (auto& iter : players) {
+        if (iter.second.connected) {
+            if (calc_distance(id, iter.first) <= VIEWING_DISTANCE) {
+                do_send(iter.first, players[id].packet_buf);
             }
         }
     }
@@ -252,10 +244,9 @@ void Server::send_map_collapse_packet(int num)
     packet.type = PacketType::Type_map_collapse;
     packet.block_num = num;
 
-    for (int i = 0; i < MAX_CLIENT; i++)
-    {
-        if (players[i].connected)
-            do_send(i, reinterpret_cast<char*>(&packet));
+    for (auto& iter : players) {
+        if (iter.second.connected)
+            do_send(iter.first, reinterpret_cast<char*>(&packet));
     }
 }
 
@@ -268,12 +259,11 @@ void Server::send_cloud_move_packet(float x, float z)
     packet.x = x;
     packet.z = z;
 
-    for (int i = 0; i < MAX_CLIENT; i++)
-    {
-        if (players[i].connected)
-        {
-            printf("Send %d: %f/%f\n", i, packet.x, packet.z);
-            do_send(i, reinterpret_cast<char*>(&packet));
+
+    for (auto& iter : players) {
+        if (iter.second.connected) {
+            //printf("Send %d: %f/%f\n", iter.first, packet.x, packet.z);
+            do_send(iter.first, reinterpret_cast<char*>(&packet));
         }
     }
 }
@@ -293,8 +283,30 @@ void Server::process_packet(char id, char* buf)
 {
     // 클라이언트에서 받은 패킷 처리
     switch (buf[1]) {
-    
+    case PacketType::Type_game_ready: {
+        players[buf[2]].isready = true;
+        break;
+    }
+    case PacketType::Type_game_start: {
+        start_ok_packet* sop = new start_ok_packet;
+        sop->size = sizeof(sop);
+        sop->type = Type_start_ok;
+        for (auto i = players.begin(); i != players.end(); ++i) {
+            if (!i->second.isready) {
+                sop->value = false;
+                break;
+            }
+            else
+                sop->value = true;
+        }
+        for (auto& iter : players) {
+            if (iter.second.connected)
+                do_send(iter.first, reinterpret_cast<char*>(&sop));
+        }
+        break;
+    }
     case PacketType::Type_player_info:{
+
         break;
     }
     case PacketType::Type_player_move: {
@@ -314,12 +326,6 @@ void Server::process_packet(char id, char* buf)
         break;
     }
     case PacketType::Type_player_attack:{
-        break;
-    }
-    case PacketType::Type_map_collapse:{
-        break;
-    }
-    case PacketType::Type_cloud_move:{
         break;
     }
     }
@@ -352,32 +358,46 @@ void Server::WorkerFunc()
 
         if (over_ex->is_recv) {
 
+            /*char* next_recv_ptr = players[client_id].recv_start + Transferred;
+            int packet_size = *players[client_id].packet_start;
+            while (packet_size <= (players[client_id].recv_start - players[client_id].packet_start)) {
+                process_packet(client_id, players[client_id].packet_start);
+                players[client_id].packet_start += packet_size;
+                if (players[client_id].recv_start > players[client_id].packet_start)
+                    packet_size = *players[client_id].packet_start;
+                else break;
+            }
 
-
+            if (players[client_id].recv_start - players[client_id].packet_buf < 3) {
+                memcpy(players[client_id].packet_start, players[client_id].packet_buf,
+                    (next_recv_ptr - players[client_id].packet_start));
+                players[client_id].packet_start = players[client_id].packet_buf;
+                players[client_id].recv_start = players[client_id].packet_buf;
+            }*/
 
             ////printf("thread id: %d\n", Thread_id);
-            //int rest_size = Transferred;
-            //char* buf_ptr = over_ex->messageBuffer;
-            //char packet_size = 0;
-            //if (0 < players[client_id].prev_size)
-            //    packet_size = players[client_id].packet_buf[0];
-            //while (rest_size > 0) {
-            //    if (0 == packet_size) packet_size = buf_ptr[0];
-            //    int required = packet_size - players[client_id].prev_size;
-            //    if (rest_size >= required) {
-            //        memcpy(players[client_id].packet_buf + players[client_id].
-            //            prev_size, buf_ptr, required);
-            //        process_packet(client_id, players[client_id].packet_buf);
-            //        rest_size -= required;
-            //        buf_ptr += required;
-            //        packet_size = 0;
-            //    }
-            //    else {
-            //        memcpy(players[client_id].packet_buf + players[client_id].prev_size,
-            //            buf_ptr, rest_size);
-            //        rest_size = 0;
-            //    }
-            //}
+            int rest_size = Transferred;
+            char* buf_ptr = over_ex->messageBuffer;
+            char packet_size = 0;
+            if (0 < players[client_id].prev_size)
+                packet_size = players[client_id].packet_buf[0];
+            while (rest_size > 0) {
+                if (0 == packet_size) packet_size = buf_ptr[0];
+                int required = packet_size - players[client_id].prev_size;
+                if (rest_size >= required) {
+                    memcpy(players[client_id].packet_buf + players[client_id].
+                        prev_size, buf_ptr, required);
+                    process_packet(client_id, players[client_id].packet_buf);
+                    rest_size -= required;
+                    buf_ptr += required;
+                    packet_size = 0;
+                }
+                else {
+                    memcpy(players[client_id].packet_buf + players[client_id].prev_size,
+                        buf_ptr, rest_size);
+                    rest_size = 0;
+                }
+            }
             do_recv(client_id);
             //printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
         }
@@ -401,7 +421,7 @@ bool Server::Init()
     GetSystemInfo(&si);
 
     // (CPU 개수 * 2)개의 작업자 스레드 생성
-    for (int i = 0; i < (int)si.dwNumberOfProcessors * 2; i++)
+    for (int i = 0; i < (int)si.dwNumberOfProcessors; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
     accept_thread = std::thread(&Server::Accept, this);

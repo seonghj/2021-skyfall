@@ -151,7 +151,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Bot.cpp" />
-    <ClCompile Include="CPacket.cpp" />
     <ClCompile Include="DB.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="main.cpp" />

@@ -2,15 +2,25 @@
 #include"stdafx.h"
 
 enum PacketType {
-	Type_player_ID,
-	Type_player_login,
-	Type_player_remove,
-	Type_player_info,
-	Type_player_move,
-	Type_player_pos,
-	Type_player_attack,
-	Type_map_collapse,
-	Type_cloud_move
+	Type_player_ID,			// S->C
+	Type_player_login,		// S->C
+	Type_player_remove,		// S->C
+	Type_game_ready,		// C->S
+	Type_game_start,		// C->S
+	Type_start_ok,			// S->C
+	Type_game_end,			// S->C
+	Type_player_info,		//	
+	Type_player_move,		// C->S
+	Type_player_pos,		//
+	Type_player_attack,		//
+	Type_map_collapse,		// S->C
+	Type_cloud_move,		// S->C
+	Type_bot_ID,			//	
+	Type_bot_remove,
+	Type_bot_info,
+	Type_bot_move,
+	Type_bot_pos,
+	Type_bot_attack,
 };
 
 enum MoveType {
@@ -39,6 +49,19 @@ struct player_login_packet : public Packet {
 	char id;
 };
 
+struct game_ready_packet :public Packet {
+	char id;
+};
+
+struct game_start_packet :public Packet {
+	char id;
+};
+
+struct start_ok_packet :public Packet {
+	// 0 = no / 1 = ok
+	char value;
+};
+
 struct player_remove_packet : public Packet {
 	char id;
 };
@@ -47,6 +70,9 @@ struct player_info_packet : public Packet {
 	char id;
 	char state;
 	char weapon;
+	char armor;
+	char helmet;
+	char shoes;
 	float hp;
 	float speed;
 };
