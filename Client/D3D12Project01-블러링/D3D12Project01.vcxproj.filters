@@ -126,4 +126,7 @@
     <FxCompile Include="Light.hlsl" />
     <FxCompile Include="Shaders.hlsl" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+  </ItemGroup>
 </Project>
