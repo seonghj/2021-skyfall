@@ -1,18 +1,7 @@
 #pragma once
 #include"stdafx.h"
 #include "DB.h"
-
-#define SERVERPORT 3500
-#define BUFSIZE    1024
-#define MAX_CLIENT 100
-#define MAX_PLAYER 20
-
-#define MAX_MAP_BLOCK 9
-#define MAP_SIZE 3000
-#define MAP_BLOCK_SIZE 1000
-#define MAP_BREAK_TIME 30
-
-#define VIEWING_DISTANCE 500
+#include "CPacket.h"
 
 struct OVER_EX
 {
@@ -78,6 +67,8 @@ public:
 
     int SetClientId();
 
+    void ConnectLobby();
+
     bool Init();
     void Thread_join();
     void Disconnected(int id);
@@ -102,7 +93,7 @@ public:
 private:
     HANDLE hcp;
 
-    //SESSION players[MAX_CLIENT];
+    SESSION lobbyserver;
 
     std::unordered_map <int, SESSION> players;
 

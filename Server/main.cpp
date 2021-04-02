@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 
 	s->Init();
 
-	std::thread map_thread = std::thread(&Map::init_Map, m, s);
+	//std::thread map_thread = std::thread(&Map::init_Map, m, s);
 
 	s->Thread_join();
 

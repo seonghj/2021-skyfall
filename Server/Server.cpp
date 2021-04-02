@@ -1,7 +1,6 @@
 #pragma once
 #pragma warning(disable : 4996)
 #include "Server.h"
-#include "CPacket.h"
 
 Server::Server()
 {
@@ -27,7 +26,7 @@ void Server::display_error(const char* msg, int err_no)
 
 int Server::SetClientId()
 {
-    int count = 0;
+    int count = LOBBY_ID + 1;
     auto iter = players.begin();
     while (true) {
         if (!iter->second.connected) {
@@ -41,12 +40,34 @@ int Server::SetClientId()
     }
 }
 
-void Server::Accept()
+void Server::ConnectLobby()
 {
     // 윈속 초기화
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
         return;
+
+    // socket()
+    lobbyserver.sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+
+    // connect()
+    SOCKADDR_IN serveraddr;
+    ZeroMemory(&serveraddr, sizeof(serveraddr));
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
+    serveraddr.sin_port = htons(LOBBYSERVERPORT);
+    connect(lobbyserver.sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
+
+    memset(&lobbyserver.over.overlapped, 0, sizeof(lobbyserver.over.overlapped));
+    lobbyserver.over.is_recv = true;
+
+    CreateIoCompletionPort((HANDLE)lobbyserver.sock, hcp, LOBBY_ID, 0);
+
+    do_recv(LOBBY_ID);
+}
+
+void Server::Accept()
+{
 
     // socket()
     SOCKET listen_sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
@@ -56,7 +77,7 @@ void Server::Accept()
     ZeroMemory(&serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serveraddr.sin_port = htons(SERVERPORT);
+    serveraddr.sin_port = htons(GAMESERVERPORT);
     int retval = bind(listen_sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
   
     // listen()
@@ -291,7 +312,7 @@ void Server::process_packet(char id, char* buf)
         start_ok_packet* sop = new start_ok_packet;
         sop->size = sizeof(sop);
         sop->type = Type_start_ok;
-        for (auto i = players.begin(); i != players.end(); ++i) {
+        /*for (auto i = players.begin(); i != players.end(); ++i) {
             if (!i->second.isready) {
                 sop->value = false;
                 break;
@@ -302,7 +323,8 @@ void Server::process_packet(char id, char* buf)
         for (auto& iter : players) {
             if (iter.second.connected)
                 do_send(iter.first, reinterpret_cast<char*>(&sop));
-        }
+        }*/
+        printf("잉\n");
         break;
     }
     case PacketType::Type_player_info:{
@@ -424,6 +446,7 @@ bool Server::Init()
     for (int i = 0; i < (int)si.dwNumberOfProcessors; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
+    ConnectLobby();
     accept_thread = std::thread(&Server::Accept, this);
 
     return 1;

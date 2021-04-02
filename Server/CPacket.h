@@ -1,6 +1,24 @@
 #pragma once
 #include"stdafx.h"
 
+constexpr int GAMESERVERPORT = 3500;
+constexpr int LOBBYSERVERPORT = 4000;
+constexpr int BUFSIZE = 1024;
+constexpr int MAX_CLIENT = 100;
+constexpr int MAX_PLAYER = 20;
+
+constexpr int LOBBY_ID = 0 ;
+
+constexpr int MAX_MAP_BLOCK = 9;
+constexpr int MAP_SIZE = 3000;
+constexpr int MAP_BLOCK_SIZE = 1000;
+constexpr int MAP_BREAK_TIME = 30;
+
+constexpr int VIEWING_DISTANCE = 500;
+
+#define SERVERIP   "127.0.0.1"
+
+
 enum PacketType {
 	Type_player_ID,			// S->C
 	Type_player_login,		// S->C
