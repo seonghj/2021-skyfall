@@ -26,7 +26,7 @@ void Server::display_error(const char* msg, int err_no)
 
 int Server::SetClientId()
 {
-    int count = LOBBY_ID + 1;
+    int count = LOBBY_ID;
     auto iter = sessions.begin();
     while (true) {
         if (!iter->second.connected) {
@@ -51,15 +51,19 @@ void Server::ConnectLobby()
     sessions[LOBBY_ID].sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 
     // connect()
-    SOCKADDR_IN serveraddr;
-    ZeroMemory(&serveraddr, sizeof(serveraddr));
-    serveraddr.sin_family = AF_INET;
-    serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
-    serveraddr.sin_port = htons(sessionsPORT);
-    connect(sessions[LOBBY_ID].sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
+    SOCKADDR_IN lobbyaddr;
+    ZeroMemory(&lobbyaddr, sizeof(lobbyaddr));
+    lobbyaddr.sin_family = AF_INET;
+    lobbyaddr.sin_addr.s_addr = inet_addr(SERVERIP);
+    lobbyaddr.sin_port = htons(LOBBYPORT);
+    connect(sessions[LOBBY_ID].sock, (SOCKADDR*)&lobbyaddr, sizeof(lobbyaddr));
 
     memset(&sessions[LOBBY_ID].over.overlapped, 0, sizeof(sessions[LOBBY_ID].over.overlapped));
     sessions[LOBBY_ID].over.is_recv = true;
+    sessions[LOBBY_ID].over.dataBuffer.len = BUFSIZE;
+    sessions[LOBBY_ID].over.dataBuffer.buf =
+        sessions[LOBBY_ID].over.messageBuffer;
+    sessions[LOBBY_ID].connected = true;
 
     CreateIoCompletionPort((HANDLE)sessions[LOBBY_ID].sock, hcp, LOBBY_ID, 0);
 
@@ -68,7 +72,6 @@ void Server::ConnectLobby()
 
 void Server::Accept()
 {
-
     // socket()
     SOCKET listen_sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 
@@ -324,7 +327,6 @@ void Server::process_packet(char id, char* buf)
             if (iter.second.connected)
                 do_send(iter.first, reinterpret_cast<char*>(&sop));
         }*/
-        printf("잉\n");
         break;
     }
     case PacketType::Type_player_info:{
@@ -360,13 +362,13 @@ void Server::WorkerFunc()
     while (1) {
         DWORD Transferred;
         SOCKET client_sock;
-        ULONG client_id;
+        ULONG id;
         SESSION* ptr;
 
         OVER_EX* over_ex;
 
         retval = GetQueuedCompletionStatus(hcp, &Transferred,
-            (PULONG_PTR)&client_id, (LPOVERLAPPED*)&over_ex, INFINITE);
+            (PULONG_PTR)&id, (LPOVERLAPPED*)&over_ex, INFINITE);
 
         //std::thread::id Thread_id = std::this_thread::get_id();
 
@@ -374,54 +376,53 @@ void Server::WorkerFunc()
         if (FALSE == retval)
         {
             display_error("GQCS", WSAGetLastError());
-            Disconnected(client_id);
+            Disconnected(id);
         }
 
 
         if (over_ex->is_recv) {
 
-            /*char* next_recv_ptr = sessions[client_id].recv_start + Transferred;
-            int packet_size = *sessions[client_id].packet_start;
-            while (packet_size <= (sessions[client_id].recv_start - sessions[client_id].packet_start)) {
-                process_packet(client_id, sessions[client_id].packet_start);
-                sessions[client_id].packet_start += packet_size;
-                if (sessions[client_id].recv_start > sessions[client_id].packet_start)
-                    packet_size = *sessions[client_id].packet_start;
+            /*char* next_recv_ptr = sessions[id].recv_start + Transferred;
+            int packet_size = *sessions[id].packet_start;
+            while (packet_size <= (sessions[id].recv_start - sessions[id].packet_start)) {
+                process_packet(id, sessions[id].packet_start);
+                sessions[id].packet_start += packet_size;
+                if (sessions[id].recv_start > sessions[id].packet_start)
+                    packet_size = *sessions[id].packet_start;
                 else break;
             }
 
-            if (sessions[client_id].recv_start - sessions[client_id].packet_buf < 3) {
-                memcpy(sessions[client_id].packet_start, sessions[client_id].packet_buf,
-                    (next_recv_ptr - sessions[client_id].packet_start));
-                sessions[client_id].packet_start = sessions[client_id].packet_buf;
-                sessions[client_id].recv_start = sessions[client_id].packet_buf;
+            if (sessions[id].recv_start - sessions[id].packet_buf < 3) {
+                memcpy(sessions[id].packet_start, sessions[id].packet_buf,
+                    (next_recv_ptr - sessions[id].packet_start));
+                sessions[id].packet_start = sessions[id].packet_buf;
+                sessions[id].recv_start = sessions[id].packet_buf;
             }*/
 
             ////printf("thread id: %d\n", Thread_id);
             int rest_size = Transferred;
             char* buf_ptr = over_ex->messageBuffer;
             char packet_size = 0;
-            if (0 < sessions[client_id].prev_size)
-                packet_size = sessions[client_id].packet_buf[0];
+            if (0 < sessions[id].prev_size)
+                packet_size = sessions[id].packet_buf[0];
             while (rest_size > 0) {
                 if (0 == packet_size) packet_size = buf_ptr[0];
-                int required = packet_size - sessions[client_id].prev_size;
+                int required = packet_size - sessions[id].prev_size;
                 if (rest_size >= required) {
-                    memcpy(sessions[client_id].packet_buf + sessions[client_id].
+                    memcpy(sessions[id].packet_buf + sessions[id].
                         prev_size, buf_ptr, required);
-                    process_packet(client_id, sessions[client_id].packet_buf);
+                    process_packet(id, sessions[id].packet_buf);
                     rest_size -= required;
                     buf_ptr += required;
                     packet_size = 0;
                 }
                 else {
-                    memcpy(sessions[client_id].packet_buf + sessions[client_id].prev_size,
+                    memcpy(sessions[id].packet_buf + sessions[id].prev_size,
                         buf_ptr, rest_size);
                     rest_size = 0;
                 }
             }
-            do_recv(client_id);
-            //printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
+            do_recv(id);
         }
         else {
             delete over_ex;
@@ -443,10 +444,11 @@ bool Server::Init()
     GetSystemInfo(&si);
 
     // (CPU 개수 * 2)개의 작업자 스레드 생성
-    for (int i = 0; i < (int)si.dwNumberOfProcessors; i++)
+    for (int i = 0; i < (int)si.dwNumberOfProcessors * 2; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
     ConnectLobby();
+
     accept_thread = std::thread(&Server::Accept, this);
 
     return 1;

@@ -2,7 +2,7 @@
 #include"stdafx.h"
 
 constexpr int GAMESERVERPORT = 3500;
-constexpr int sessionsPORT = 4000;
+constexpr int LOBBYPORT = 4000;
 constexpr int BUFSIZE = 1024;
 constexpr int MAX_CLIENT = 100;
 constexpr int MAX_PLAYER = 20;

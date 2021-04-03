@@ -26,7 +26,8 @@ void Server::display_error(const char* msg, int err_no)
 
 int Server::SetClientId()
 {
-    int count = GAMESERVER_ID + 1;
+    int count = GAMESERVER_ID;
+
     auto iter = sessions.begin();
     while (true) {
         if (!iter->second.connected) {
@@ -94,8 +95,6 @@ void Server::Accept()
 
     printf("ready\n");
 
-    send_game_start_packet(GAMESERVER_ID);
-
     while (1) {
         client_sock = accept(listen_sock, (struct sockaddr*)&clientaddr, &addrlen);
         if (client_sock == INVALID_SOCKET) {
@@ -131,6 +130,12 @@ void Server::Accept()
         send_ID_player_packet(client_id);
 
         do_recv(client_id);
+
+        if (client_id == 20) {
+            for (int i = 1; i <= 20; ++i)
+                send_game_start_packet(i);
+        }
+
     }
 
     // closesocket()
@@ -146,7 +151,7 @@ void Server::Disconnected(int id)
     printf("[TCP 서버] 클라이언트 종료: IP 주소=%s, 포트 번호=%d key = %d\n",
         inet_ntoa(sessions[id].clientaddr.sin_addr)
         , ntohs(sessions[id].clientaddr.sin_port), id);
-    send_disconnect_player_packet(id);
+    //send_disconnect_player_packet(id);
 }
 
 void Server::do_recv(char id)
@@ -224,7 +229,7 @@ void Server::send_disconnect_player_packet(char id)
     p.type = PacketType::Type_player_remove;
 
     for (auto &iter: sessions){
-        if (iter.second.connected)
+        if (iter.second.connected && iter.second.id != GAMESERVER_ID)
             do_send(iter.first, reinterpret_cast<char*>(&p));
     }
     closesocket(sessions[id].sock);
@@ -235,9 +240,11 @@ void Server::send_game_start_packet(char id)
     game_start_packet p;
     p.id = id;
     p.size = sizeof(player_remove_packet);
-    p.type = PacketType::Type_game_start;
+    p.type = PacketType::Type_start_ok;
 
     do_send(id, reinterpret_cast<char*>(&p));
+
+    Disconnected(id);
 }
 
 void Server::process_packet(char id, char* buf)
@@ -276,19 +283,19 @@ void Server::WorkerFunc()
     while (1) {
         DWORD Transferred;
         SOCKET client_sock;
-        ULONG client_id;
+        ULONG id;
         SESSION* ptr;
 
         OVER_EX* over_ex;
 
         retval = GetQueuedCompletionStatus(hcp, &Transferred,
-            (PULONG_PTR)&client_id, (LPOVERLAPPED*)&over_ex, INFINITE);
+            (PULONG_PTR)&id, (LPOVERLAPPED*)&over_ex, INFINITE);
 
         // 비동기 입출력 결과 확인
         if (FALSE == retval)
         {
             display_error("GQCS", WSAGetLastError());
-            Disconnected(client_id);
+            Disconnected(id);
         }
 
 
@@ -297,26 +304,26 @@ void Server::WorkerFunc()
             int rest_size = Transferred;
             char* buf_ptr = over_ex->messageBuffer;
             char packet_size = 0;
-            if (0 < sessions[client_id].prev_size)
-                packet_size = sessions[client_id].packet_buf[0];
+            if (0 < sessions[id].prev_size)
+                packet_size = sessions[id].packet_buf[0];
             while (rest_size > 0) {
                 if (0 == packet_size) packet_size = buf_ptr[0];
-                int required = packet_size - sessions[client_id].prev_size;
+                int required = packet_size - sessions[id].prev_size;
                 if (rest_size >= required) {
-                    memcpy(sessions[client_id].packet_buf + sessions[client_id].
+                    memcpy(sessions[id].packet_buf + sessions[id].
                         prev_size, buf_ptr, required);
-                    process_packet(client_id, sessions[client_id].packet_buf);
+                    process_packet(id, sessions[id].packet_buf);
                     rest_size -= required;
                     buf_ptr += required;
                     packet_size = 0;
                 }
                 else {
-                    memcpy(sessions[client_id].packet_buf + sessions[client_id].prev_size,
+                    memcpy(sessions[id].packet_buf + sessions[id].prev_size,
                         buf_ptr, rest_size);
                     rest_size = 0;
                 }
             }
-            do_recv(client_id);
+            do_recv(id);
             //printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
         }
         else {
