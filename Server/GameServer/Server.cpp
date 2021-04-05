@@ -111,7 +111,7 @@ void Server::Accept()
         getpeername(client_sock, (SOCKADDR*)&sessions[client_id].clientaddr
             , &sessions[client_id].addrlen);
 
-        printf("[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d, key=%d\n",
+        printf("client_connected: IP =%s, port=%d key = %d\n",
             inet_ntoa(sessions[client_id].clientaddr.sin_addr)
             , ntohs(sessions[client_id].clientaddr.sin_port), client_id);
 
@@ -152,10 +152,11 @@ void Server::Accept()
 void Server::Disconnected(int id)
 {
     sessions[id].connected = false;
-    printf("[TCP 서버] 클라이언트 종료: IP 주소=%s, 포트 번호=%d key = %d\n",
+    printf("client_end: IP =%s, port=%d key = %d\n",
         inet_ntoa(sessions[id].clientaddr.sin_addr)
         , ntohs(sessions[id].clientaddr.sin_port), id);
     send_disconnect_player_packet(id);
+    closesocket(sessions[id].sock);
 }
 
 void Server::do_recv(char id)
@@ -236,7 +237,7 @@ void Server::send_disconnect_player_packet(char id)
         if (iter.second.connected)
             do_send(iter.first, reinterpret_cast<char*>(&p));
     }
-    closesocket(sessions[id].sock);
+    Disconnected(id);
 }
 
 void Server::send_player_move_packet(char id)

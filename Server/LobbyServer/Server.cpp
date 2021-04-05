@@ -19,9 +19,10 @@ void Server::display_error(const char* msg, int err_no)
         NULL, err_no, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR)&lpMsgBuf, 0, NULL);
     std::cout << msg;
-    std::wcout << L"에러 " << lpMsgBuf << std::endl;
+    std::wcout << L"에러 " << lpMsgBuf;
     while (true);
     LocalFree(lpMsgBuf);
+    std::cout << std::endl;
 }
 
 int Server::SetClientId()
@@ -39,6 +40,31 @@ int Server::SetClientId()
             ++iter;
         }
     }
+}
+
+bool Server::MatchMaking(int id)
+{
+    auto iter = sessions.begin();
+    int cnt = 0;
+
+    do {
+        if (iter->second.connected && iter->second.isready) {
+            ++cnt;
+        }
+
+        if (cnt == 20) {
+            for (auto& s : sessions) {
+                if (s.second.connected && s.second.isready)
+                    send_game_start_packet(s.second.id);
+            }
+            break;
+        }
+        ++iter;
+
+    } while (iter != sessions.end());
+
+
+    return 1;
 }
 
 void Server::Accept()
@@ -112,7 +138,7 @@ void Server::Accept()
         getpeername(client_sock, (SOCKADDR*)&sessions[client_id].clientaddr
             , &sessions[client_id].addrlen);
 
-        printf("[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d, key=%d\n",
+        printf("client_connected: IP =%s, port=%d key = %d\n",
             inet_ntoa(sessions[client_id].clientaddr.sin_addr)
             , ntohs(sessions[client_id].clientaddr.sin_port), client_id);
 
@@ -130,12 +156,6 @@ void Server::Accept()
         send_ID_player_packet(client_id);
 
         do_recv(client_id);
-
-        if (client_id == 20) {
-            for (int i = 1; i <= 20; ++i)
-                send_game_start_packet(i);
-        }
-
     }
 
     // closesocket()
@@ -148,10 +168,11 @@ void Server::Accept()
 void Server::Disconnected(int id)
 {
     sessions[id].connected = false;
-    printf("[TCP 서버] 클라이언트 종료: IP 주소=%s, 포트 번호=%d key = %d\n",
+    printf("client_end: IP =%s, port=%d key = %d\n",
         inet_ntoa(sessions[id].clientaddr.sin_addr)
         , ntohs(sessions[id].clientaddr.sin_port), id);
     //send_disconnect_player_packet(id);
+    closesocket(sessions[id].sock);
 }
 
 void Server::do_recv(char id)
@@ -253,9 +274,10 @@ void Server::process_packet(char id, char* buf)
     switch (buf[1]) {
     case PacketType::Type_game_ready: {
         sessions[buf[2]].isready = true;
+        MatchMaking(buf[2]);
         break;
     }
-   /* case PacketType::Type_game_start: {
+    case PacketType::Type_game_start: {
         start_ok_packet* sop = new start_ok_packet;
         sop->size = sizeof(sop);
         sop->type = Type_start_ok;
@@ -272,7 +294,7 @@ void Server::process_packet(char id, char* buf)
                 do_send(iter.first, reinterpret_cast<char*>(&sop));
         }
         break;
-    }*/
+    }
     }
 }
 

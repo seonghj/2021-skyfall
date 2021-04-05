@@ -66,6 +66,7 @@ public:
     void display_error(const char* msg, int err_no);
 
     int SetClientId();
+    bool MatchMaking(int cnt);
 
     bool Init();
     void Thread_join();

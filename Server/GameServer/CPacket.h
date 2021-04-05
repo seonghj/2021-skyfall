@@ -14,7 +14,7 @@ constexpr int MAP_SIZE = 3000;
 constexpr int MAP_BLOCK_SIZE = 1000;
 constexpr int MAP_BREAK_TIME = 30;
 
-constexpr int VIEWING_DISTANCE = 500;
+constexpr float VIEWING_DISTANCE = 500.f;
 
 #define SERVERIP   "127.0.0.1"
 
