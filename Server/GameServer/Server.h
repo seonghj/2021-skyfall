@@ -1,6 +1,7 @@
 #pragma once
 #include"stdafx.h"
 #include "DB.h"
+#include "Map.h"
 #include "CPacket.h"
 
 struct OVER_EX
@@ -29,9 +30,10 @@ public:
     char*       recv_start;
 
     bool        connected = false;
+    bool        isready = false;
+    bool        playing = false;
     int         prev_size;
     int         id;
-    bool        isready = false;
 
     std::atomic<float>      x = 0;
     std::atomic<float>      y = 0;
@@ -57,6 +59,7 @@ public:
 //    };
 //}
 
+class Map;
 
 class Server {
 public:
@@ -66,6 +69,7 @@ public:
     void display_error(const char* msg, int err_no);
 
     int SetClientId();
+    int SetMapId();
 
     void ConnectLobby();
 
@@ -87,6 +91,8 @@ public:
     void send_player_attack_packet(char id, char* buf);
     void send_map_collapse_packet(int num);
     void send_cloud_move_packet(float x, float z);
+    
+    void game_end();
 
     float calc_distance(int a, int b);
 
@@ -95,6 +101,9 @@ private:
 
     std::unordered_map <int, SESSION> sessions;
 
+    std::unordered_map <int, Map> maps;
+
     std::vector <std::thread> working_threads;
     std::thread accept_thread;
+    std::vector <std::thread> map_threads;
 };

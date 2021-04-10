@@ -54,12 +54,13 @@ bool Server::MatchMaking(int id)
 
         if (cnt == 20) {
             for (auto& s : sessions) {
-                if (s.second.connected && s.second.isready)
+                if (s.second.connected && s.second.isready) {
                     send_game_start_packet(s.second.id);
+                }
             }
             break;
         }
-        ++iter;
+        iter++;
 
     } while (iter != sessions.end());
 
@@ -114,6 +115,7 @@ void Server::Accept()
     // 소켓과 입출력 완료 포트 연결
     CreateIoCompletionPort((HANDLE)gameserver_sock, hcp, GAMESERVER_ID, 0);
     sessions[GAMESERVER_ID].connected = true;
+    sessions[GAMESERVER_ID].isready = false;
 
     // 데이터 통신에 사용할 변수
     SOCKET client_sock;
@@ -168,11 +170,13 @@ void Server::Accept()
 void Server::Disconnected(int id)
 {
     sessions[id].connected = false;
-    printf("client_end: IP =%s, port=%d key = %d\n",
-        inet_ntoa(sessions[id].clientaddr.sin_addr)
-        , ntohs(sessions[id].clientaddr.sin_port), id);
     //send_disconnect_player_packet(id);
     closesocket(sessions[id].sock);
+   /* printf("client_end: IP =%s, port=%d key = %d\n",
+        inet_ntoa(sessions[id].clientaddr.sin_addr)
+        , ntohs(sessions[id].clientaddr.sin_port), id);*/
+    sessions.erase(id);
+    printf("id:%d erase\n", id);
 }
 
 void Server::do_recv(char id)
@@ -190,6 +194,7 @@ void Server::do_recv(char id)
         &flags, &(over->overlapped), NULL)){
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
+            printf("id: %d ", id);
             display_error("recv error: ", err_no);
         }
     }
@@ -214,6 +219,7 @@ void Server::do_send(int to, char* packet)
         0, &(over->overlapped), NULL)) {
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
+            printf("id: %d ", to);
             display_error("send error: ", err_no);
         }
     }
@@ -264,8 +270,8 @@ void Server::send_game_start_packet(char id)
     p.type = PacketType::Type_start_ok;
 
     do_send(id, reinterpret_cast<char*>(&p));
-
-    Disconnected(id);
+    printf("send to %d start packet\n", id);
+    //Disconnected(id);
 }
 
 void Server::process_packet(char id, char* buf)
@@ -320,6 +326,10 @@ void Server::WorkerFunc()
             Disconnected(id);
         }
 
+        if (Transferred == 0) {
+            Disconnected(id);
+            continue;
+        }
 
         if (over_ex->is_recv) {
             ////printf("thread id: %d\n", Thread_id);

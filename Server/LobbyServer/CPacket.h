@@ -77,6 +77,9 @@ struct start_ok_packet :public Packet {
 	char value;
 };
 
+struct game_end_packet :public Packet {
+	char id;
+};
 struct player_remove_packet : public Packet {
 	char id;
 };

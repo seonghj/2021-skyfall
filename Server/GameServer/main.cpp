@@ -6,12 +6,12 @@
 
 Server* s = new Server;
 DB* db = new DB;
-Map* m = new Map;
+//Map* m = new Map;
 
 
 int main(int argc, char* argv[])
 {
-	std::wcout.imbue(std::locale("korean"));
+	//std::wcout.imbue(std::locale("korean"));
    //db->Connection();
 
 	s->Init();

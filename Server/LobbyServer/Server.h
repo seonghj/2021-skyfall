@@ -29,22 +29,24 @@ public:
     char*       recv_start;
 
     bool        connected = false;
+    bool        isready = false;
+    bool        playing = false;
+
     int         prev_size;
     int         id;
-    bool        isready = false;
 
-    //std::atomic<float>      x = 0;
-    //std::atomic<float>      y = 0;
-    //std::atomic<float>      z = 0;
-    //std::atomic<float>      degree = 0;
-    //std::atomic<int>        weapon = 0;
+    std::atomic<float>      x = 0;
+    std::atomic<float>      y = 0;
+    std::atomic<float>      z = 0;
+    std::atomic<float>      degree = 0;
+    std::atomic<int>        weapon = 0;
 
-    //// 0 Á×À½ / 1 »ıÁ¸
-    //std::atomic<bool>       state = 0;
+    // 0 Á×À½ / 1 »ıÁ¸
+    std::atomic<bool>       state = 0;
 
-    //std::atomic<float>      hp = 0;
-    //std::atomic<float>      lv = 0;
-    //std::atomic<float>      speed = 10;
+    std::atomic<float>      hp = 0;
+    std::atomic<float>      lv = 0;
+    std::atomic<float>      speed = 10;
 };
 
 //namespace std {

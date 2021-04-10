@@ -3,6 +3,8 @@
 
 void Map::init_Map(Server* s)
 {
+	m_pServer = s;
+
 	int num_count[3] = { 0 };
 	int n;
 
@@ -37,7 +39,7 @@ void Map::init_Map(Server* s)
 	Set_wind();
 	Set_cloudpos();
 	print_Map();
-	cloud_move(s);
+	cloud_move();
 }
 
 void Map::Set_wind()
@@ -92,7 +94,7 @@ float Map::calc_windpower(float a, float b)
 	return (a - b) / 5;
 }
 
-void Map::cloud_move(Server* s)
+void Map::cloud_move()
 {
 	while (1)
 	{
@@ -140,17 +142,17 @@ void Map::cloud_move(Server* s)
 
 		//printf("cloud x: %f | y: %f\n\n", Cloud.x, Cloud.y);
 
-		s->send_cloud_move_packet(Cloud.x, Cloud.y);
+		m_pServer->send_cloud_move_packet(Cloud.x, Cloud.y);
 
 		collapse_count++;
 		if (collapse_count % MAP_BREAK_TIME == 0)
-			Map_collapse(s);
+			Map_collapse();
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		//printf("%d\n", collapse_count);
 	}
 }
 
-void Map::Map_collapse(Server* s)
+void Map::Map_collapse()
 {
 	srand((unsigned int)time(NULL));
 	int num = 0;
@@ -194,6 +196,10 @@ void Map::Map_collapse(Server* s)
 		else if (num == 7)
 			wind[4] = 0, wind[5] = 0, wind[10] = 0;
 	}*/
-	s->send_map_collapse_packet(num);
+	m_pServer->send_map_collapse_packet(num);
 	print_Map();
+
+	if (num == 9) {
+		m_pServer->game_end();
+	}
 }

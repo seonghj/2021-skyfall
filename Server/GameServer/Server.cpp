@@ -40,6 +40,22 @@ int Server::SetClientId()
     }
 }
 
+//int Server::SetMapId()
+//{
+//    int count = 0;
+//    auto iter = maps.begin();
+//    while (true) {
+//        if (!iter->) {
+//            iter->second.connected = true;
+//            return count;
+//        }
+//        else {
+//            ++count;
+//            ++iter;
+//        }
+//    }
+//}
+
 void Server::ConnectLobby()
 {
     // 윈속 초기화
@@ -140,6 +156,11 @@ void Server::Accept()
                 send_login_player_packet(client_id, i);
         }
         do_recv(client_id);
+
+        if (client_id == 20) {
+            maps.emplace(1, Map());
+            map_threads.emplace_back(std::thread(&Map::init_Map, maps[1], this));
+        }
     }
 
     // closesocket()
@@ -157,6 +178,7 @@ void Server::Disconnected(int id)
         , ntohs(sessions[id].clientaddr.sin_port), id);
     send_disconnect_player_packet(id);
     closesocket(sessions[id].sock);
+    sessions.erase(id);
 }
 
 void Server::do_recv(char id)
@@ -288,6 +310,20 @@ void Server::send_cloud_move_packet(float x, float z)
     for (auto& iter : sessions) {
         if (iter.second.connected) {
             //printf("Send %d: %f/%f\n", iter.first, packet.x, packet.z);
+            do_send(iter.first, reinterpret_cast<char*>(&packet));
+        }
+    }
+}
+
+void Server::game_end()
+{
+    game_end_packet packet;
+    packet.id = 0;
+    packet.size = sizeof(packet);
+    packet.type = PacketType::Type_game_end;
+
+    for (auto& iter : sessions) {
+        if (iter.second.connected) {
             do_send(iter.first, reinterpret_cast<char*>(&packet));
         }
     }
@@ -459,6 +495,9 @@ void Server::Thread_join()
 {
     accept_thread.join();
     for (auto& t : working_threads)
+        t.join();
+
+    for (auto& t : map_threads)
         t.join();
 
     CloseHandle(hcp);
