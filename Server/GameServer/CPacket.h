@@ -96,6 +96,7 @@ struct player_info_packet : public Packet {
 	char helmet;
 	char shoes;
 	float hp;
+	float lv;
 	float speed;
 };
 

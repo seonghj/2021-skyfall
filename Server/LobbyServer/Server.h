@@ -34,6 +34,7 @@ public:
 
     int         prev_size;
     int         id;
+    int         game_num;
 
     std::atomic<float>      x = 0;
     std::atomic<float>      y = 0;

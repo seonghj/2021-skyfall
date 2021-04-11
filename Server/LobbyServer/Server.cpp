@@ -172,11 +172,10 @@ void Server::Disconnected(int id)
     sessions[id].connected = false;
     //send_disconnect_player_packet(id);
     closesocket(sessions[id].sock);
-   /* printf("client_end: IP =%s, port=%d key = %d\n",
+    printf("client_end: IP =%s, port=%d key = %d\n",
         inet_ntoa(sessions[id].clientaddr.sin_addr)
-        , ntohs(sessions[id].clientaddr.sin_port), id);*/
+        , ntohs(sessions[id].clientaddr.sin_port), id);
     sessions.erase(id);
-    printf("id:%d erase\n", id);
 }
 
 void Server::do_recv(char id)
