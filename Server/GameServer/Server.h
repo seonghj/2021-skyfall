@@ -34,15 +34,17 @@ public:
     bool        playing = false;
     int         prev_size;
     int         id;
+    int         gameroom_num;
 
+    // 0 죽음 / 1 생존
+    std::atomic<bool>       state = 0;
     std::atomic<float>      x = 0;
     std::atomic<float>      y = 0;
     std::atomic<float>      z = 0;
     std::atomic<float>      degree = 0;
     std::atomic<int>        weapon = 0;
-
-    // 0 죽음 / 1 생존
-    std::atomic<bool>       state = 0;
+    std::atomic<int>        helmet = 0;
+    std::atomic<int>        shoes = 0;
 
     std::atomic<float>      hp = 0;
     std::atomic<float>      lv = 0;
@@ -69,7 +71,7 @@ public:
     void display_error(const char* msg, int err_no);
 
     int SetClientId();
-    int SetMapId();
+    int SetGameNum();
 
     void ConnectLobby();
 
@@ -89,8 +91,8 @@ public:
     void send_disconnect_player_packet(char id);
     void send_player_move_packet(char id);
     void send_player_attack_packet(char id, char* buf);
-    void send_map_collapse_packet(int num);
-    void send_cloud_move_packet(float x, float z);
+    void send_map_collapse_packet(int num, int map_num);
+    void send_cloud_move_packet(float x, float z, int map_num);
     
     void game_end();
 
@@ -99,8 +101,9 @@ public:
 private:
     HANDLE hcp;
 
+    
+    std::unordered_map <int, int> gameroom; // <방번호, 플레이어 ID>
     std::unordered_map <int, SESSION> sessions;
-
     std::unordered_map <int, Map> maps;
 
     std::vector <std::thread> working_threads;

@@ -8,7 +8,7 @@ class Server;
 class Map{
 public:
 	Map() { }
-	Map(const Map& m) {}
+	Map(const int& num) { game_num = num; }
 	~Map() {}
 
 	Vector2D Cloud;
@@ -32,4 +32,6 @@ public:
 
 private:
 	Server* m_pServer = NULL;
+
+	int game_num = -1;
 };

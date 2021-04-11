@@ -40,21 +40,16 @@ int Server::SetClientId()
     }
 }
 
-//int Server::SetMapId()
-//{
-//    int count = 0;
-//    auto iter = maps.begin();
-//    while (true) {
-//        if (!iter->) {
-//            iter->second.connected = true;
-//            return count;
-//        }
-//        else {
-//            ++count;
-//            ++iter;
-//        }
-//    }
-//}
+int Server::SetGameNum()
+{
+    int count = 1;
+    while (1) {
+        if (gameroom.count(count) >= 20)
+            count++;
+        else
+            return count;
+    }
+}
 
 void Server::ConnectLobby()
 {
@@ -144,22 +139,33 @@ void Server::Accept()
         // id전송
         send_ID_player_packet(client_id);
 
+        int gameroom_num = SetGameNum();
+
+        sessions[client_id].gameroom_num = gameroom_num;
+
+        gameroom.emplace(gameroom_num, client_id);
+
         // 로그인한 클라이언트에 다른 클라이언트 정보 전달
-        for (int i = 0; i < MAX_CLIENT; ++i) {
-            if (sessions[i].connected && i != client_id)
-                send_login_player_packet(i, client_id);
+        for (auto& i : gameroom) {
+            if (i.first != gameroom_num)
+                continue;
+            if (sessions[i.second].connected && i.second != client_id)
+                send_login_player_packet(i.second, client_id);
         }
 
         // 다른 클라이언트에 로그인정보 전달
-        for (int i = 0; i < MAX_CLIENT; ++i) {
-            if (sessions[i].connected && i != client_id)
-                send_login_player_packet(client_id, i);
+        for (auto& i : gameroom) {
+            if (i.first != gameroom_num)
+                continue;
+            if (sessions[i.second].connected && i.second != client_id)
+                send_login_player_packet(client_id, i.second);
         }
         do_recv(client_id);
 
-        if (client_id == 20) {
-            maps.emplace(1, Map());
-            map_threads.emplace_back(std::thread(&Map::init_Map, maps[1], this));
+        if (client_id % MAX_PLAYER == 0) {
+            maps.emplace(gameroom_num, Map(gameroom_num));
+            map_threads.emplace_back(std::thread(&Map::init_Map, maps[gameroom_num], this));
+            printf("room num %d map build\n", gameroom_num);
         }
     }
 
@@ -256,7 +262,8 @@ void Server::send_disconnect_player_packet(char id)
     p.type = PacketType::Type_player_remove;
 
     for (auto &iter: sessions){
-        if (iter.second.connected)
+        if (iter.second.connected &&
+            iter.second.gameroom_num == sessions[id].gameroom_num)
             do_send(iter.first, reinterpret_cast<char*>(&p));
     }
     Disconnected(id);
@@ -265,7 +272,8 @@ void Server::send_disconnect_player_packet(char id)
 void Server::send_player_move_packet(char id)
 {
     for (auto& iter : sessions) {
-        if (iter.second.connected){
+        if (iter.second.connected && 
+            iter.second.gameroom_num == sessions[id].gameroom_num){
             if (calc_distance(id, iter.first) <= VIEWING_DISTANCE) {
                 do_send(iter.first, sessions[id].packet_buf);
             }
@@ -276,7 +284,8 @@ void Server::send_player_move_packet(char id)
 void Server::send_player_attack_packet(char id, char* buf)
 {
     for (auto& iter : sessions) {
-        if (iter.second.connected) {
+        if (iter.second.connected &&
+            iter.second.gameroom_num == sessions[id].gameroom_num) {
             if (calc_distance(id, iter.first) <= VIEWING_DISTANCE) {
                 do_send(iter.first, sessions[id].packet_buf);
             }
@@ -284,7 +293,7 @@ void Server::send_player_attack_packet(char id, char* buf)
     }
 }
 
-void Server::send_map_collapse_packet(int num)
+void Server::send_map_collapse_packet(int num, int map_num)
 {
     map_collapse_packet packet;
     packet.size = sizeof(map_collapse_packet);
@@ -292,13 +301,15 @@ void Server::send_map_collapse_packet(int num)
     packet.block_num = num;
 
     for (auto& iter : sessions) {
-        if (iter.second.connected)
+        if (iter.second.connected &&
+            iter.second.gameroom_num == map_num) {
             do_send(iter.first, reinterpret_cast<char*>(&packet));
+        }
     }
 }
 
 
-void Server::send_cloud_move_packet(float x, float z)
+void Server::send_cloud_move_packet(float x, float z, int map_num)
 {
     cloud_move_packet packet;
     packet.size = sizeof(cloud_move_packet);
@@ -308,7 +319,8 @@ void Server::send_cloud_move_packet(float x, float z)
 
 
     for (auto& iter : sessions) {
-        if (iter.second.connected) {
+        if (iter.second.connected &&
+            iter.second.gameroom_num == map_num) {
             //printf("Send %d: %f/%f\n", iter.first, packet.x, packet.z);
             do_send(iter.first, reinterpret_cast<char*>(&packet));
         }
@@ -349,24 +361,13 @@ void Server::process_packet(char id, char* buf)
         break;
     }
     case PacketType::Type_game_start: {
-        start_ok_packet* sop = new start_ok_packet;
-        sop->size = sizeof(sop);
-        sop->type = Type_start_ok;
-        /*for (auto i = sessions.begin(); i != sessions.end(); ++i) {
-            if (!i->second.isready) {
-                sop->value = false;
-                break;
-            }
-            else
-                sop->value = true;
-        }
-        for (auto& iter : sessions) {
-            if (iter.second.connected)
-                do_send(iter.first, reinterpret_cast<char*>(&sop));
-        }*/
+        start_ok_packet* p = new start_ok_packet;
+        p->size = sizeof(p);
+        p->type = Type_start_ok;
         break;
     }
     case PacketType::Type_player_info:{
+        player_info_packet* p = reinterpret_cast<player_info_packet*>(buf);
 
         break;
     }
@@ -481,7 +482,7 @@ bool Server::Init()
     GetSystemInfo(&si);
 
     // (CPU 개수 * 2)개의 작업자 스레드 생성
-    for (int i = 0; i < (int)si.dwNumberOfProcessors * 2; i++)
+    for (int i = 0; i < (int)si.dwNumberOfProcessors; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
     ConnectLobby();

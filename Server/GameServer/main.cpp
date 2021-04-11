@@ -6,7 +6,6 @@
 
 Server* s = new Server;
 DB* db = new DB;
-//Map* m = new Map;
 
 
 int main(int argc, char* argv[])
@@ -15,8 +14,6 @@ int main(int argc, char* argv[])
    //db->Connection();
 
 	s->Init();
-
-	//std::thread map_thread = std::thread(&Map::init_Map, m, s);
 
 	s->Thread_join();
 

@@ -142,7 +142,7 @@ void Map::cloud_move()
 
 		//printf("cloud x: %f | y: %f\n\n", Cloud.x, Cloud.y);
 
-		m_pServer->send_cloud_move_packet(Cloud.x, Cloud.y);
+		m_pServer->send_cloud_move_packet(Cloud.x, Cloud.y, game_num);
 
 		collapse_count++;
 		if (collapse_count % MAP_BREAK_TIME == 0)
@@ -196,7 +196,7 @@ void Map::Map_collapse()
 		else if (num == 7)
 			wind[4] = 0, wind[5] = 0, wind[10] = 0;
 	}*/
-	m_pServer->send_map_collapse_packet(num);
+	m_pServer->send_map_collapse_packet(num, game_num);
 	print_Map();
 
 	if (num == 9) {
