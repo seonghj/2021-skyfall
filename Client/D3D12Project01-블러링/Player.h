@@ -32,6 +32,7 @@ protected:
 	bool						m_isJump;
 	bool						m_isGround;
 	bool						m_isRunning;
+	bool						m_isShooting;
 
 	// stat
 	int							m_iHp;
@@ -64,6 +65,7 @@ public:
 	void SetJump(bool jump) { m_isJump = jump; }
 	void SetRunning(bool run) { m_isRunning = run; }
 	void SetGround(bool ground) { m_isGround = ground; }
+	void SetShooting(bool shoot) { m_isShooting = shoot; }
 	void SetHp(int hp) { m_iHp = hp; }
 	void SetAtkStat(float atk) { m_fAtkStat = atk; }
 	void SetDefStat(float def) { m_fDefStat = def; }
@@ -75,6 +77,7 @@ public:
 	bool  GetJump() const { return(m_isJump); }
 	bool  GetRunning() const { return(m_isRunning); }
 	bool  GetGround() const { return(m_isGround); }
+	bool  GetShooting() const { return(m_isShooting); }
 	int GetHp() const { return(m_iHp); }
 	float GetAtkStat() const { return(m_fAtkStat); }
 	float GetDefStat() const { return(m_fDefStat); }
@@ -131,72 +134,4 @@ public:
 
 	virtual void OnPlayerUpdateCallback(float fDeltaTime);
 	virtual void OnCameraUpdateCallback(float fDeltaTime);
-};
-
-class CMonster : public CGameObject
-{
-protected:
-	XMFLOAT3					m_xmf3Position;
-	XMFLOAT3					m_xmf3Right;
-	XMFLOAT3					m_xmf3Up;
-	XMFLOAT3					m_xmf3Look;
-
-	float           			m_fPitch;
-	float           			m_fYaw;
-	float           			m_fRoll;
-
-	XMFLOAT3					m_xmf3Velocity;
-	XMFLOAT3     				m_xmf3Gravity;
-	float           			m_fMaxVelocityXZ;
-	float           			m_fMaxVelocityY;
-	float           			m_fFriction;
-	bool						m_isHit;
-
-	// stat
-	int							m_iHp;
-	float						m_fAtkStat;
-	float						m_fDefStat;
-
-	// drop
-	int							m_idrop;
-
-public:
-	CMonster();
-	virtual ~CMonster();
-
-	XMFLOAT3 GetPosition() { return(m_xmf3Position); }
-	XMFLOAT3 GetLookVector() { return(m_xmf3Look); }
-	XMFLOAT3 GetUpVector() { return(m_xmf3Up); }
-	XMFLOAT3 GetRightVector() { return(m_xmf3Right); }
-
-	void SetFriction(float fFriction) { m_fFriction = fFriction; }
-	void SetGravity(const XMFLOAT3& xmf3Gravity) { m_xmf3Gravity = xmf3Gravity; }
-	void SetMaxVelocityXZ(float fMaxVelocity) { m_fMaxVelocityXZ = fMaxVelocity; }
-	void SetMaxVelocityY(float fMaxVelocity) { m_fMaxVelocityY = fMaxVelocity; }
-	void SetVelocity(const XMFLOAT3& xmf3Velocity) { m_xmf3Velocity = xmf3Velocity; }
-	void SetPosition(const XMFLOAT3& xmf3Position) { Move(XMFLOAT3(xmf3Position.x - m_xmf3Position.x, xmf3Position.y - m_xmf3Position.y, xmf3Position.z - m_xmf3Position.z), false); }
-	void SetHp(int hp) { m_iHp = hp; }
-	void SetAtkStat(float atk) { m_fAtkStat = atk; }
-	void SetDefStat(float def) { m_fDefStat = def; }
-	void SetDropItem(int drop) { m_idrop = drop; }
-
-	XMFLOAT3& GetVelocity() { return(m_xmf3Velocity); }
-	float GetYaw() const { return(m_fYaw); }
-	float GetPitch() const { return(m_fPitch); }
-	float GetRoll() const { return(m_fRoll); }
-	int GetHp() const { return(m_iHp); }
-	float GetAtkStat() const { return(m_fAtkStat); }
-	float GetDefStat() const { return(m_fDefStat); }
-	int	GetDrop() const { return(m_idrop); }
-
-	void Move(ULONG nDirection, float fDistance, bool bVelocity = false);
-	void Move(const XMFLOAT3& xmf3Shift, bool bVelocity = false);
-	void Move(float fxOffset = 0.0f, float fyOffset = 0.0f, float fzOffset = 0.0f);
-	void Rotate(float x, float y, float z);
-
-	void Update(float fTimeElapsed);
-
-	virtual void OnMonsterUpdateCallback(float fTimeElapsed) { }
-
-	virtual bool IsInMap(BoundingBox& xmbbMap);
 };

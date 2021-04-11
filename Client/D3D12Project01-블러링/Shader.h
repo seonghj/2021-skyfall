@@ -291,7 +291,7 @@ protected:
 public:
 	void CheckMap(BoundingBox& MapBB, void* pContext);
 	bool CheckObject(BoundingBox& BBWorld);
-	void Shot(CPlayer* pPlayer, float fTimeElapsed);
+	void Shot(CPlayer* pPlayer, float fTimeElapsed, float fSpeed);
 	int GetnBullets() const { return m_nBullets; } 
 };
 

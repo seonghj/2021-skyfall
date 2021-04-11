@@ -296,10 +296,14 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		case WM_RBUTTONDOWN:
 			::SetCapture(hWnd);
 			::GetCursorPos(&m_ptOldCursorPos);
+			m_ChargeTimer.Reset();
+			m_ChargeTimer.Start();
 			break;
 		case WM_LBUTTONUP:
 		case WM_RBUTTONUP:
 			::ReleaseCapture();
+			m_ChargeTimer.Stop();
+			m_pPlayer->SetShooting(true);
 			break;
 		case WM_MOUSEMOVE:
 			break;
@@ -465,6 +469,7 @@ void CGameFramework::BuildObjects()
 	if (m_pPlayer) m_pPlayer->ReleaseUploadBuffers();
 
 	m_GameTimer.Reset();
+	m_ChargeTimer.Reset();
 }
 
 void CGameFramework::ReleaseObjects()
@@ -524,12 +529,12 @@ void CGameFramework::ProcessInput()
 
 		if (((pKeysBuffer[VK_LCONTROL] & 0xF0) && m_pCamera->GetMode() == THIRD_PERSON_CAMERA) ||
 			((pKeysBuffer[VK_LBUTTON] & 0xF0) && m_pCamera->GetMode() == SPACESHIP_CAMERA)) {
-			m_pScene->Shot(fTimeElapsed);
+			m_pScene->Shot(fTimeElapsed, 300.f);
 		}
 		float cxDelta = 0.0f, cyDelta = 0.0f;
 
 
-		if (GetCapture() == m_hWnd || m_pCamera->GetMode() == FIRST_PERSON_CAMERA || m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
+		if ((GetCapture() == m_hWnd || m_pCamera->GetMode() == FIRST_PERSON_CAMERA) || m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
 		{
 			::SetCursor(NULL);
 			POINT ptCursorPos;
@@ -537,6 +542,13 @@ void CGameFramework::ProcessInput()
 			cxDelta = (float)(ptCursorPos.x - m_ptOldCursorPos.x) / 3.0f;
 			cyDelta = (float)(ptCursorPos.y - m_ptOldCursorPos.y) / 3.0f;
 			::SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
+		}
+		
+		if (m_pPlayer->GetShooting() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
+		{
+			printf("Look - X : %f Y : %f Z : %f", m_pPlayer->GetLook().x, m_pPlayer->GetLook().y, m_pPlayer->GetLook().z);
+			m_pScene->Shot(fTimeElapsed, m_ChargeTimer.GetTotalTime() * 100.f);
+			m_pPlayer->SetShooting(false);
 		}
 
 		if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))

@@ -650,10 +650,10 @@ void CScene::ReleaseUploadBuffers()
 
 }
 
-void CScene::Shot(float fTimeElapsed)
+void CScene::Shot(float fTimeElapsed, float fSpeed)
 {
 	CBulletsShader* pShader = (CBulletsShader*)m_ppShaders[idxBulletsShader];
-	pShader->Shot(m_pPlayer,fTimeElapsed);
+	pShader->Shot(m_pPlayer,fTimeElapsed, fSpeed);
 }
 
 

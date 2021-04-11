@@ -90,6 +90,7 @@ private:
 #endif
 
 	CGameTimer					m_GameTimer;
+	CGameTimer					m_ChargeTimer;
 
 	CScene						*m_pScene = NULL;
 	CPlayer						*m_pPlayer = NULL;

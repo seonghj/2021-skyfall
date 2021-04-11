@@ -1406,8 +1406,7 @@ void CBullet::Animate(float fElapsedTime) {
 	//Rotate(&m_xmf3RotationAxis, m_fRotationSpeed * fElapsedTime);
 
 	if (m_fSpeed != 0.0f) Move(m_xmf3MovingDirection, m_fSpeed * fElapsedTime);
-
-	m_time += fElapsedTime;
+	m_xmf3MovingDirection = Vector3::Add(m_xmf3MovingDirection, m_xmf3Gravity, fElapsedTime);
 }
 
 //void CBullet::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)

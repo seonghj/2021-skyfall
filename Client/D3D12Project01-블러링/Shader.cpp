@@ -1367,27 +1367,21 @@ bool CBulletsShader::CheckObject(BoundingBox& BBWorld)
 	return false;
 }
 
-void CBulletsShader::Shot(CPlayer* pPlayer, float fTimeElapsed)
+void CBulletsShader::Shot(CPlayer* pPlayer, float fTimeElapsed, float fSpeed)
 {
-	if (m_time > 0.2f) {
-		m_ppBullets[m_nBullets] = new CBullet();
-		m_ppBullets[m_nBullets]->m_xmf4x4World = pPlayer->m_xmf4x4World;
+	m_ppBullets[m_nBullets] = new CBullet();
+	m_ppBullets[m_nBullets]->m_xmf4x4World = pPlayer->m_xmf4x4World;
 
-		XMFLOAT4X4 xmf4x4Scale = Matrix4x4::Identity();
-		xmf4x4Scale._11 = 3;
-		xmf4x4Scale._22 = 3;
-		xmf4x4Scale._33 = 3;
+	XMFLOAT4X4 xmf4x4Scale = Matrix4x4::Identity();
+	xmf4x4Scale._11 = 3;
+	xmf4x4Scale._22 = 3;
+	xmf4x4Scale._33 = 3;
 
-		m_ppBullets[m_nBullets]->m_xmf4x4Transform = Matrix4x4::Multiply(xmf4x4Scale, pPlayer->m_xmf4x4Transform);
-		//m_ppBullets[m_nBullets]->Rotate(0, 180, 0);
-		m_ppBullets[m_nBullets]->m_xmf3MovingDirection = pPlayer->GetLook();
+	m_ppBullets[m_nBullets]->m_xmf4x4Transform = Matrix4x4::Multiply(xmf4x4Scale, pPlayer->m_xmf4x4Transform);
+	m_ppBullets[m_nBullets]->m_xmf3MovingDirection = pPlayer->GetCamera()->GetLookVector();
+	m_ppBullets[m_nBullets]->SetSpeed(fSpeed);
+	m_ppBullets[m_nBullets++]->Move(pPlayer->GetLook(), 10);
 
-		m_ppBullets[m_nBullets++]->Move(pPlayer->GetLook(), 10);
-
-		m_time = 0;
-	}
-	else
-		m_time += fTimeElapsed;
 }
 
 CExplosionShader::CExplosionShader()

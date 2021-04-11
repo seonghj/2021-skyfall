@@ -36,7 +36,7 @@ void PacketFunc::err_display(char* msg)
         NULL, WSAGetLastError(),
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR)&lpMsgBuf, 0, NULL);
-    std::printf("[%s] %s", msg, (char*)lpMsgBuf);
+    //std::printf("[%s] %s", msg, (char*)lpMsgBuf);
     LocalFree(lpMsgBuf);
 }
 
@@ -109,17 +109,17 @@ void PacketFunc::ProcessPacket(char* buf)
     case PacketType::T_player_ID: {
         player_ID_packet* p = reinterpret_cast<player_ID_packet*>(buf);
         client_id = buf[2];
-        printf("recv id from server: %d\n", p->id);
+        //printf("recv id from server: %d\n", p->id);
         break;
     }
     case PacketType::T_player_login: {
         player_login_packet* p = reinterpret_cast<player_login_packet*>(buf);
-        printf("login id: %d\n", p->id);
+        //printf("login id: %d\n", p->id);
         break;
     }
     case PacketType::T_player_remove: {
         player_remove_packet* p = reinterpret_cast<player_remove_packet*>(buf);
-        printf("%d client logout\n", buf[2]);
+        //printf("%d client logout\n", buf[2]);
         break;
     }
     case PacketType::T_player_info: {

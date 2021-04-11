@@ -135,7 +135,7 @@ public:
 	D3D12_GPU_DESCRIPTOR_HANDLE		m_d3dUavGPUDescriptorNextHandle;
 
 public:
-	void Shot(float fTimeElapsed);
+	void Shot(float fTimeElapsed, float fSpeed);
 
 	void CheckCollision();
 	void Update(float fTimeElapsed);
