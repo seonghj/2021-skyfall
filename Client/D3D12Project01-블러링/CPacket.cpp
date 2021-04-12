@@ -1,7 +1,6 @@
 #pragma once
 #include "CPacket.h"
-
-#pragma once
+#include <iostream>
 
 PacketFunc::PacketFunc()
 {
@@ -36,45 +35,57 @@ void PacketFunc::err_display(char* msg)
         NULL, WSAGetLastError(),
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR)&lpMsgBuf, 0, NULL);
-    //std::printf("[%s] %s", msg, (char*)lpMsgBuf);
+    std::printf("[%s] %s", msg, (char*)lpMsgBuf);
     LocalFree(lpMsgBuf);
 }
 
 void PacketFunc::RecvPacket()
 {
+
     DWORD flags = 0;
     int retval = 0;
     int saved_packet_size = 0;
 
-    WSABUF r_wsabuf;
+    bool isRun = true;
 
-    char recv_buffer[BUFSIZE];
+    char recvbuf[BUFSIZE];
     char buffer[BUFSIZE];
 
-    r_wsabuf.buf = buffer;
-    r_wsabuf.len = BUFSIZE;
-
+    int rest_size = retval;
     DWORD packet_size = 0;
 
+    WSABUF r_wsabuf;
+    r_wsabuf.buf = recvbuf;
+    r_wsabuf.len = BUFSIZE;
+
     // 데이터 받기
-    while (1) {
-        retval = WSARecv(sock, &wsabuf, 1, &recvbytes, &flags, NULL, NULL);
+    while (isRun) {
+        retval = WSARecv(sock, &r_wsabuf, 1, &recvbytes, &flags, NULL, NULL);
+        //retval = recvn(sock, recvbuf, BUFSIZE, 0);
+
+        //printf("%d, %d", recvbytes, r_wsabuf.buf[1]);
         if (retval == SOCKET_ERROR) {
             err_display("recv()");
             printf("server disconnect\n");
             break;
         }
-        int rest_size = sizeof(recv_buffer);
-        BYTE* buf_ptr = reinterpret_cast<BYTE*>(recv_buffer);
 
-        // 받은 데이터 출력
+        int rest_size = recvbytes;
+        unsigned char* buf_ptr = reinterpret_cast<unsigned char*>(recvbuf);
+        //// 받은 데이터 출력
         while (rest_size > 0)
         {
             if (0 == packet_size)
-                packet_size = retval;
+                packet_size = recvbytes;
             if (rest_size + saved_packet_size >= packet_size) {
                 std::memcpy(buffer + saved_packet_size, buf_ptr, packet_size - saved_packet_size);
-                //std::printf("[TCP 클라이언트] %d바이트를 받았습니다. %d\r\n", retval, recvbuf[1]);
+                //std::printf("[TCP 클라이언트] %d바이트를 받았습니다. %d\r\n", recvbytes, recvbuf[1]);
+
+                if (buffer[1] == PacketType::Type_start_ok) {
+                    printf("start\n");
+                    isRun = false;
+
+                }
                 ProcessPacket(buffer);
                 buf_ptr += packet_size - saved_packet_size;
                 rest_size -= packet_size - saved_packet_size;
@@ -102,54 +113,71 @@ void PacketFunc::SendPacket(char* buf)
     }
 }
 
+void PacketFunc::Send_ready_packet()
+{
+    game_ready_packet p;
+    p.id = client_id;
+    p.size = sizeof(p);
+    p.type = PacketType::Type_game_ready;
+    SendPacket(reinterpret_cast<char*>(&p));
+}
+
 void PacketFunc::ProcessPacket(char* buf)
 {
     switch (buf[1])
     {
-    case PacketType::T_player_ID: {
+    case PacketType::Type_player_ID: {
         player_ID_packet* p = reinterpret_cast<player_ID_packet*>(buf);
         client_id = buf[2];
-        //printf("recv id from server: %d\n", p->id);
+        printf("recv id from server: %d\n", p->id);
+        Send_ready_packet();
         break;
     }
-    case PacketType::T_player_login: {
+    case PacketType::Type_player_login: {
         player_login_packet* p = reinterpret_cast<player_login_packet*>(buf);
         //printf("login id: %d\n", p->id);
         break;
     }
-    case PacketType::T_player_remove: {
-        player_remove_packet* p = reinterpret_cast<player_remove_packet*>(buf);
-        //printf("%d client logout\n", buf[2]);
+    case PacketType::Type_player_remove: {
+
         break;
     }
-    case PacketType::T_player_info: {
+    case PacketType::Type_start_ok: {
+        GameConnect();
+        break;
+    }
+    case PacketType::Type_game_end: {
+        printf("gameover\n");
+        LobbyConnect();
+        break;
+    }
+    case PacketType::Type_player_info: {
 
         break;
     }
 
-    case PacketType::T_player_move: {
+    case PacketType::Type_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
-        //printf("id: %d player move x = %f, y = %f, z = %f\n",p->id, p->x, p->y, p->z);
+        //if (client_id == 1)
+          //  printf("id: %d player move x = %f, y = %f, z = %f\n", p->id, p->x, p->y, p->z);
         break;
     }
-    case PacketType::T_player_pos: {
-        player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
-        //printf("id: %d player move x = %f, y = %f, z = %f\n",p->id, p->x, p->y, p->z);
+    case PacketType::Type_player_pos: {
         break;
     }
-    case PacketType::T_player_attack: {
+    case PacketType::Type_player_attack: {
         break;
     }
 
-    case PacketType::T_map_collapse: {
+    case PacketType::Type_map_collapse: {
         map_collapse_packet* p = reinterpret_cast<map_collapse_packet*>(buf);
         //printf("break map: %d\n", p->block_num);
         break;
     }
 
-    case PacketType::T_cloud_move: {
+    case PacketType::Type_cloud_move: {
         cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(buf);
-        //printf("cloud move x = %f, z = %f\n", p->x, p->z);
+        printf("id: %d cloud move x = %f, z = %f\n", client_id, p->x, p->z);
         break;
     }
 
@@ -174,3 +202,72 @@ void PacketFunc::Set_currentfps(unsigned long FrameRate)
         currentfps = 1;
 }
 
+void PacketFunc::LobbyConnect()
+{
+    // disconnect
+    shutdown(sock, SD_RECEIVE);
+    closesocket(sock);
+    //cout << "game diconnect" << endl;
+
+    int retval;
+
+    WSADATA wsa;
+    WSAStartup(MAKEWORD(2, 2), &wsa);
+
+    // socket()
+    sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+    if (sock == INVALID_SOCKET)err_quit("socket()");
+
+    // connect()
+    SOCKADDR_IN serveraddr;
+    ZeroMemory(&serveraddr, sizeof(serveraddr));
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
+    serveraddr.sin_port = htons(LOBBYSERVERPORT);
+    retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
+    if (retval == SOCKET_ERROR) err_quit("connect()");
+
+    memset(&overlapped, 0, sizeof(overlapped));
+
+
+    //gPacketFunc[num]->Set_clientid(num);
+
+    Recv_thread = std::thread(&PacketFunc::RecvPacket, this);
+    //std::thread test_Send_thread = std::thread(&PacketFunc::testSendPacket, gPacketFunc[num]);
+    //test_Send_thread.join();
+    Recv_thread.join();
+
+}
+
+void PacketFunc::GameConnect()
+{
+    // disconnect
+    shutdown(sock, SD_RECEIVE);
+    closesocket(sock);
+    //cout << "lobby diconnect" << endl;
+
+    int retval;
+
+    // socket()
+    sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+    if (sock == INVALID_SOCKET)err_quit("socket()");
+
+    // connect()
+    SOCKADDR_IN serveraddr;
+    ZeroMemory(&serveraddr, sizeof(serveraddr));
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
+    serveraddr.sin_port = htons(GAMESERVERPORT);
+    retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
+    if (retval == SOCKET_ERROR) err_quit("connect()");
+
+    memset(&overlapped, 0, sizeof(overlapped));
+
+    //cout << "game connect" << endl;
+
+    std::thread Recv_thread = std::thread(&PacketFunc::RecvPacket, this);
+    std::thread test_Send_thread = std::thread(&PacketFunc::testSendPacket, this);
+    test_Send_thread.join();
+    Recv_thread.join();
+
+}

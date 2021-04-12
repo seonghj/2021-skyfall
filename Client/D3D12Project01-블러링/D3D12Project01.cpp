@@ -47,7 +47,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 		freopen("CONOUT$", "wb", stderr);
 	}
 
-	CreateThread(NULL, 0, ServerConnect, NULL, 0, NULL);
+	std::thread	connect_thread = std::thread(&PacketFunc::LobbyConnect, gPacketFunc);
+	connect_thread.join();
 
 	while (1)
 	{
@@ -179,37 +180,4 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	return((INT_PTR)FALSE);
-}
-
-
-DWORD WINAPI ServerConnect(LPVOID lpParam)
-{
-	int retval;
-
-
-	// 윈속 초기화
-	WSADATA wsa;
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-		return 1;
-
-	// socket()
-	gPacketFunc->sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-	if (gPacketFunc->sock == INVALID_SOCKET) gPacketFunc->err_quit("socket()");
-
-	// connect()
-	SOCKADDR_IN serveraddr;
-	ZeroMemory(&serveraddr, sizeof(serveraddr));
-	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
-	serveraddr.sin_port = htons(SERVERPORT);
-	retval = connect(gPacketFunc->sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
-	if (retval == SOCKET_ERROR) gPacketFunc->err_quit("connect()");
-
-	gPacketFunc->SendEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-
-	std::thread Recv_thread = std::thread(&PacketFunc::RecvPacket, gPacketFunc);
-
-	Recv_thread.join();
-
-	return 0;
 }
