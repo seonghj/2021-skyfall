@@ -1,6 +1,7 @@
 #pragma once
 #include "CPacket.h"
 #include <iostream>
+#pragma warning(disable : 4996)
 
 PacketFunc::PacketFunc()
 {
@@ -248,6 +249,9 @@ void PacketFunc::GameConnect()
 
     int retval;
 
+    WSADATA wsa;
+    WSAStartup(MAKEWORD(2, 2), &wsa);
+
     // socket()
     sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
     if (sock == INVALID_SOCKET)err_quit("socket()");
@@ -266,8 +270,8 @@ void PacketFunc::GameConnect()
     //cout << "game connect" << endl;
 
     std::thread Recv_thread = std::thread(&PacketFunc::RecvPacket, this);
-    std::thread test_Send_thread = std::thread(&PacketFunc::testSendPacket, this);
-    test_Send_thread.join();
+    //std::thread test_Send_thread = std::thread(&PacketFunc::testSendPacket, this);
+    //test_Send_thread.join();
     Recv_thread.join();
 
 }

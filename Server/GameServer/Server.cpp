@@ -83,6 +83,11 @@ void Server::ConnectLobby()
 
 void Server::Accept()
 {
+    // 윈속 초기화
+    WSADATA wsa;
+    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+        return;
+
     // socket()
     SOCKET listen_sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 
@@ -162,11 +167,11 @@ void Server::Accept()
         }
         do_recv(client_id);
 
-        if (client_id % MAX_PLAYER == 0) {
+        /*if (client_id % MAX_PLAYER == 0) {
             maps.emplace(gameroom_num, Map(gameroom_num));
             map_threads.emplace_back(std::thread(&Map::init_Map, maps[gameroom_num], this));
             printf("room num %d map build\n", gameroom_num);
-        }
+        }*/
     }
 
     // closesocket()
@@ -371,18 +376,44 @@ void Server::process_packet(char id, char* buf)
 
         break;
     }
-    case PacketType::Type_player_move: {
-        player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
+    case PacketType::Type_player_pos: {
+        player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
 
-        float degree = sessions[p->id].degree.load();
+        float dx = sessions[p->id].dx.load();
+        float dy = sessions[p->id].dy.load();
+        float dz = sessions[p->id].dz.load();
         float x = sessions[p->id].x.load();
         float y = sessions[p->id].y.load();
         float z = sessions[p->id].z.load();
 
-        while (!sessions[p->id].degree.compare_exchange_strong(degree, p->degree)) {};
-        while (!sessions[p->id].x.compare_exchange_strong(x, p->x)) { };
+
+
+        while (!sessions[p->id].dx.compare_exchange_strong(dx, p->dx)) {};
+        while (!sessions[p->id].dy.compare_exchange_strong(dy, p->dy)) {};
+        while (!sessions[p->id].dz.compare_exchange_strong(dz, p->dz)) {};
+        while (!sessions[p->id].dx.compare_exchange_strong(x, p->x)) { };
         while (!sessions[p->id].y.compare_exchange_strong(y, p->y)) {  };
         while (!sessions[p->id].z.compare_exchange_strong(z, p->z)) {  };
+
+        send_player_move_packet(id);
+        break;
+    }
+    case PacketType::Type_player_move: {
+        player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
+
+        /*float dx = sessions[p->id].dx.load();
+        float dy = sessions[p->id].dy.load();
+        float dz = sessions[p->id].dz.load();
+        float x = sessions[p->id].x.load();
+        float y = sessions[p->id].y.load();
+        float z = sessions[p->id].z.load();
+
+        while (!sessions[p->id].dx.compare_exchange_strong(dx, p->dx)) {};
+        while (!sessions[p->id].dy.compare_exchange_strong(dy, p->dy)) {};
+        while (!sessions[p->id].dz.compare_exchange_strong(dz, p->dz)) {};
+        while (!sessions[p->id].dx.compare_exchange_strong(x, p->x)) {};
+        while (!sessions[p->id].y.compare_exchange_strong(y, p->y)) {};
+        while (!sessions[p->id].z.compare_exchange_strong(z, p->z)) {};*/
 
         send_player_move_packet(id);
         break;
@@ -485,7 +516,7 @@ bool Server::Init()
     for (int i = 0; i < (int)si.dwNumberOfProcessors; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
-    ConnectLobby();
+    //ConnectLobby();
 
     accept_thread = std::thread(&Server::Accept, this);
 

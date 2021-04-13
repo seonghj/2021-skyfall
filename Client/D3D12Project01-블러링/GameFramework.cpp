@@ -494,7 +494,7 @@ void CGameFramework::ProcessInput()
 		p.x = test.x;
 		p.y = test.y;
 		p.z = test.z;
-		p.type = T_player_move;
+		p.type = Type_player_move;
 		p.degree = 0;
 		p.MoveType = 0;
 		p.id = m_pPacket->Get_clientid();
@@ -560,7 +560,9 @@ void CGameFramework::ProcessInput()
 				else
 					m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
 			}
-			if (dwDirection) m_pPlayer->Move(dwDirection, 20.0f, true);
+			if (dwDirection) {
+				m_pPlayer->Move(dwDirection, 20.0f, true);
+			}
 		}
 	}
 	m_pPlayer->SetWhirlSpeed((int)m_fSpeedWhirl);

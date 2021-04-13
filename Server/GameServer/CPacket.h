@@ -41,13 +41,12 @@ enum PacketType {
 	Type_bot_attack,
 };
 
-enum MoveType {
-	FRONT,
-	RIGHT,
-	LEFT,
-	BACK,
-	STOP
-};
+#define DIR_FORWARD					0x01
+#define DIR_BACKWARD				0x02
+#define DIR_LEFT					0x04
+#define DIR_RIGHT					0x08
+#define DIR_UP						0x10
+#define DIR_DOWN					0x20
 
 #pragma pack(push, 1)
 
@@ -100,11 +99,16 @@ struct player_info_packet : public Packet {
 	float speed;
 };
 
-struct player_move_packet : public Packet {
+struct player_pos_packet : public Packet {
 	char id;
 	char MoveType;
 	float x, y, z;
-	float degree;
+	float dx, dy, dz;
+};
+
+struct player_move_packet : public Packet {
+	char id;
+	char MoveType;
 };
 
 struct player_attack_packet : public Packet {
