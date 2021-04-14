@@ -25,8 +25,8 @@ public:
     int         addrlen;
     char        packet_buf[BUFSIZE];
 
-    char*       packet_start;
-    char*       recv_start;
+    char* packet_start;
+    char* recv_start;
 
     bool        connected = false;
     bool        isready = false;
@@ -36,22 +36,25 @@ public:
     int         id;
     int         game_num;
 
-    std::atomic<float>      x = 0;
-    std::atomic<float>      y = 0;
-    std::atomic<float>      z = 0;
+    // 0 Á×À½ / 1 »ýÁ¸
+    std::atomic<bool>       state = 0;
+
+    std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<float>      dx = 0;
     std::atomic<float>      dy = 0;
     std::atomic<float>      dz = 0;
+    /*std::atomic<float>      x = 0;
+    std::atomic<float>      y = 0;
+    std::atomic<float>      z = 0;*/
+
     std::atomic<int>        weapon = 0;
     std::atomic<int>        helmet = 0;
     std::atomic<int>        shoes = 0;
-    // 0 Á×À½ / 1 »ýÁ¸
-    std::atomic<bool>       state = 0;
 
     std::atomic<float>      hp = 0;
     std::atomic<float>      lv = 0;
     std::atomic<float>      speed = 10;
-};
+}
 
 //namespace std {
 //    template<>

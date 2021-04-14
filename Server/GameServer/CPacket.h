@@ -41,6 +41,14 @@ enum PacketType {
 	Type_bot_attack,
 };
 
+enum PlayerState {
+	DEAD,
+	ALIVE,
+	WAKING,
+	RUNNING,
+
+};
+
 #define DIR_FORWARD					0x01
 #define DIR_BACKWARD				0x02
 #define DIR_LEFT					0x04
@@ -101,14 +109,16 @@ struct player_info_packet : public Packet {
 
 struct player_pos_packet : public Packet {
 	char id;
-	char MoveType;
-	float x, y, z;
+	char state;
+	DirectX::XMFLOAT3 Position;
 	float dx, dy, dz;
 };
 
 struct player_move_packet : public Packet {
 	char id;
-	char MoveType;
+	char state;
+	DWORD MoveType;
+	float dx, dy, dz;
 };
 
 struct player_attack_packet : public Packet {

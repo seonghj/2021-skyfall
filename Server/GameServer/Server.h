@@ -38,19 +38,23 @@ public:
 
     // 0 Á×À½ / 1 »ýÁ¸
     std::atomic<bool>       state = 0;
-    std::atomic<float>      x = 0;
-    std::atomic<float>      y = 0;
-    std::atomic<float>      z = 0;
+
+    std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<float>      dx = 0;
     std::atomic<float>      dy = 0;
     std::atomic<float>      dz = 0;
+    /*std::atomic<float>      x = 0;
+    std::atomic<float>      y = 0;
+    std::atomic<float>      z = 0;*/
+    
+
     std::atomic<int>        weapon = 0;
     std::atomic<int>        helmet = 0;
     std::atomic<int>        shoes = 0;
 
     std::atomic<float>      hp = 0;
     std::atomic<float>      lv = 0;
-    std::atomic<float>      speed = 10;
+    std::atomic<float>      speed = 20;
 };
 
 //namespace std {
@@ -91,7 +95,7 @@ public:
     void send_ID_player_packet(char id);
     void send_login_player_packet(char id, int to);
     void send_disconnect_player_packet(char id);
-    void send_player_move_packet(char id);
+    void send_player_move_packet(char id, char* buf);
     void send_player_attack_packet(char id, char* buf);
     void send_map_collapse_packet(int num, int map_num);
     void send_cloud_move_packet(float x, float z, int map_num);
@@ -99,6 +103,7 @@ public:
     void game_end();
 
     float calc_distance(int a, int b);
+    DirectX::XMFLOAT3 move_calc(DWORD dwDirection, float fDistance, int state);
 
 private:
     HANDLE hcp;

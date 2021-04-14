@@ -274,13 +274,13 @@ void Server::send_disconnect_player_packet(char id)
     Disconnected(id);
 }
 
-void Server::send_player_move_packet(char id)
+void Server::send_player_move_packet(char id, char* buf)
 {
     for (auto& iter : sessions) {
         if (iter.second.connected && 
             iter.second.gameroom_num == sessions[id].gameroom_num){
             if (calc_distance(id, iter.first) <= VIEWING_DISTANCE) {
-                do_send(iter.first, sessions[id].packet_buf);
+                do_send(iter.first, buf);
             }
         }
     }
@@ -348,13 +348,56 @@ void Server::game_end()
 
 float Server::calc_distance(int a, int b)
 {
-    float value = pow((sessions[a].x.load(std::memory_order_relaxed) - sessions[b].x.load(std::memory_order_relaxed)), 2)
-        + pow((sessions[a].z.load(std::memory_order_relaxed) - sessions[b].z.load(std::memory_order_relaxed)), 2);
+    float value = pow((sessions[a].f3Position.load(std::memory_order_relaxed).x - sessions[b].f3Position.load(std::memory_order_relaxed).x), 2)
+        + pow((sessions[a].f3Position.load(std::memory_order_relaxed).z - sessions[b].f3Position.load(std::memory_order_relaxed).z), 2);
 
     if (value < 0)
         return sqrt(-value);
     else
         return sqrt(value);
+}
+
+DirectX::XMFLOAT3 Server::move_calc(DWORD dwDirection, float fDistance, int state)
+{
+    XMFLOAT3 xmf3Right = XMFLOAT3(1.0f, 0.0f, 0.0f);
+    XMFLOAT3 xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
+    XMFLOAT3 xmf3Look = XMFLOAT3(0.0f, 0.0f, 1.0f);
+
+    XMFLOAT3 xmf3Shift = XMFLOAT3(0, 0, 0);
+
+    switch (dwDirection) {
+    case DIR_FORWARD: {
+        xmf3Shift = Add(xmf3Shift, xmf3Look, fDistance);
+        break;
+    }
+    case DIR_BACKWARD: {
+        xmf3Shift = Add(xmf3Shift, xmf3Look, -fDistance);
+        break;
+    }
+    case DIR_LEFT: {
+        xmf3Shift = Add(xmf3Shift, xmf3Right, -fDistance);
+        break;
+    }
+    case DIR_RIGHT: {
+        xmf3Shift = Add(xmf3Shift, xmf3Right, fDistance);
+        break;
+    }
+    }
+
+    XMFLOAT3 xmf3Velocity;
+
+    xmf3Velocity.x = 0;
+    xmf3Velocity.y = 0;
+    xmf3Velocity.z = 0;
+
+    xmf3Velocity = Add(xmf3Velocity, xmf3Shift);
+    if (state == PlayerState::RUNNING)
+    {
+        xmf3Velocity.x *= 3.3;
+        xmf3Velocity.z *= 3.3;
+    }
+
+    return xmf3Shift;
 }
 
 void Server::process_packet(char id, char* buf)
@@ -379,43 +422,51 @@ void Server::process_packet(char id, char* buf)
     case PacketType::Type_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
 
+       /* float x = sessions[p->id].x.load();
+        float y = sessions[p->id].y.load();
+        float z = sessions[p->id].z.load();*/
+
+
+
+        DirectX::XMFLOAT3 Position = sessions[p->id].f3Position.load();
         float dx = sessions[p->id].dx.load();
         float dy = sessions[p->id].dy.load();
         float dz = sessions[p->id].dz.load();
-        float x = sessions[p->id].x.load();
-        float y = sessions[p->id].y.load();
-        float z = sessions[p->id].z.load();
 
 
 
         while (!sessions[p->id].dx.compare_exchange_strong(dx, p->dx)) {};
         while (!sessions[p->id].dy.compare_exchange_strong(dy, p->dy)) {};
         while (!sessions[p->id].dz.compare_exchange_strong(dz, p->dz)) {};
-        while (!sessions[p->id].dx.compare_exchange_strong(x, p->x)) { };
-        while (!sessions[p->id].y.compare_exchange_strong(y, p->y)) {  };
-        while (!sessions[p->id].z.compare_exchange_strong(z, p->z)) {  };
+        while (!sessions[p->id].f3Position.compare_exchange_strong(Position, p->Position)) { };
 
-        send_player_move_packet(id);
+        send_player_move_packet(id, reinterpret_cast<char*>(&p));
         break;
     }
     case PacketType::Type_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
 
-        /*float dx = sessions[p->id].dx.load();
+        DirectX::XMFLOAT3 Position = move_calc(p->MoveType, sessions[p->id].speed,p->state);
+        float dx = sessions[p->id].dx.load();
         float dy = sessions[p->id].dy.load();
         float dz = sessions[p->id].dz.load();
-        float x = sessions[p->id].x.load();
-        float y = sessions[p->id].y.load();
-        float z = sessions[p->id].z.load();
-
+        
         while (!sessions[p->id].dx.compare_exchange_strong(dx, p->dx)) {};
         while (!sessions[p->id].dy.compare_exchange_strong(dy, p->dy)) {};
         while (!sessions[p->id].dz.compare_exchange_strong(dz, p->dz)) {};
-        while (!sessions[p->id].dx.compare_exchange_strong(x, p->x)) {};
-        while (!sessions[p->id].y.compare_exchange_strong(y, p->y)) {};
-        while (!sessions[p->id].z.compare_exchange_strong(z, p->z)) {};*/
+        sessions[p->id].f3Position.store(Position);
 
-        send_player_move_packet(id);
+        player_pos_packet* pp = new player_pos_packet;
+        pp->size = sizeof(player_pos_packet);
+        pp->type = Type_player_pos;
+        pp->id = p->id;
+        pp->Position = Position;
+        pp->dx = dx;
+        pp->dy = dy;
+        pp->dy = dz;
+        pp->state = p->state;
+
+        send_player_move_packet(id, reinterpret_cast<char*>(&pp));
         break;
     }
     case PacketType::Type_player_attack:{

@@ -164,6 +164,9 @@ void PacketFunc::ProcessPacket(char* buf)
         break;
     }
     case PacketType::Type_player_pos: {
+        player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
+        m_pPlayer->SetPosition(p->Position);
+        m_pPlayer->Update(60.0);
         break;
     }
     case PacketType::Type_player_attack: {
@@ -224,7 +227,7 @@ void PacketFunc::LobbyConnect()
     ZeroMemory(&serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
     serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
-    serveraddr.sin_port = htons(LOBBYSERVERPORT);
+    serveraddr.sin_port = htons(LOBBYPORT);
     retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
     if (retval == SOCKET_ERROR) err_quit("connect()");
 

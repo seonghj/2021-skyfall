@@ -1,21 +1,24 @@
 #pragma once
-#include "stdafx.h"
-
+#include"stdafx.h"
+#include "player.h"
 
 constexpr int GAMESERVERPORT = 3500;
-constexpr int LOBBYSERVERPORT = 4000;
+constexpr int LOBBYPORT = 4000;
 constexpr int BUFSIZE = 1024;
 constexpr int MAX_CLIENT = 100;
 constexpr int MAX_PLAYER = 20;
 
-constexpr int GAMESERVER_ID = 0;
+constexpr int LOBBY_ID = 0;
 
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 3000;
 constexpr int MAP_BLOCK_SIZE = 1000;
 constexpr int MAP_BREAK_TIME = 30;
 
-constexpr int VIEWING_DISTANCE = 500;
+constexpr float VIEWING_DISTANCE = 500.f;
+
+#define SERVERIP   "127.0.0.1"
+
 
 enum PacketType {
 	Type_player_ID,			// S->C
@@ -39,13 +42,20 @@ enum PacketType {
 	Type_bot_attack,
 };
 
-enum MoveType {
-	FRONT,
-	RIGHT,
-	LEFT,
-	BACK,
-	STOP
+enum PlayerState {
+	DEAD,
+	ALIVE,
+	WAKING,
+	RUNNING,
+
 };
+
+#define DIR_FORWARD					0x01
+#define DIR_BACKWARD				0x02
+#define DIR_LEFT					0x04
+#define DIR_RIGHT					0x08
+#define DIR_UP						0x10
+#define DIR_DOWN					0x20
 
 #pragma pack(push, 1)
 
@@ -82,7 +92,6 @@ struct game_end_packet :public Packet {
 	char id;
 };
 
-
 struct player_remove_packet : public Packet {
 	char id;
 };
@@ -99,11 +108,18 @@ struct player_info_packet : public Packet {
 	float speed;
 };
 
+struct player_pos_packet : public Packet {
+	char id;
+	char state;
+	DirectX::XMFLOAT3 Position;
+	float dx, dy, dz;
+};
+
 struct player_move_packet : public Packet {
 	char id;
-	char MoveType;
-	float x, y, z;
-	float degree;
+	char state;
+	DWORD MoveType;
+	float dx, dy, dz;
 };
 
 struct player_attack_packet : public Packet {
@@ -136,6 +152,8 @@ public:
 	DWORD sendbytes;
 	WSABUF wsabuf;
 	HANDLE SendEvent;
+
+	CPlayer* m_pPlayer = NULL;
 
 	void err_quit(char* msg);
 	void err_display(char* msg);
