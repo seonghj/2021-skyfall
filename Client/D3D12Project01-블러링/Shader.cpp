@@ -1381,9 +1381,6 @@ void CBulletsShader::Shot(CPlayer* pPlayer, float fTimeElapsed, float fSpeed)
 	m_ppBullets[m_nBullets]->m_xmf3MovingDirection = pPlayer->GetCamera()->GetLookVector();
 	m_ppBullets[m_nBullets]->SetSpeed(fSpeed);
 	m_ppBullets[m_nBullets++]->Move(pPlayer->GetLook(), 10);
-	m_ppBullets[m_nBullets]->m_xmf4x4World._31 = m_ppBullets[m_nBullets]->m_xmf3MovingDirection.x;
-	m_ppBullets[m_nBullets]->m_xmf4x4World._32 = m_ppBullets[m_nBullets]->m_xmf3MovingDirection.y;
-	m_ppBullets[m_nBullets]->m_xmf4x4World._33 = m_ppBullets[m_nBullets]->m_xmf3MovingDirection.z;
 }
 
 CExplosionShader::CExplosionShader()
