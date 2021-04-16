@@ -462,7 +462,7 @@ public:
 	XMFLOAT3 m_xmf3MovingDirection;
 	XMFLOAT3 m_xmf3Gravity;
 	float m_fSpeed;
-
+	float m_fRotationX = 0.0f;
 
 public:
 	CBullet() :CGameObject(),m_fSpeed(300.f),m_xmf3MovingDirection(0.f,0.f,0.f), m_xmf3Gravity(0.f,-0.2f,0.f) {};

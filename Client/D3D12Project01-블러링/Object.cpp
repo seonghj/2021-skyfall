@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "Object.h"
 #include "Shader.h"
+#include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -1406,7 +1407,14 @@ void CBullet::Animate(float fElapsedTime) {
 	//Rotate(&m_xmf3RotationAxis, m_fRotationSpeed * fElapsedTime);
 
 	if (m_fSpeed != 0.0f) Move(m_xmf3MovingDirection, m_fSpeed * fElapsedTime);
+	//if (m_xmf3MovingDirection.y <= m_xmf3Gravity.y)
+	//	std::cout << "---------------------------------------------" << endl;
 	m_xmf3MovingDirection = Vector3::Add(m_xmf3MovingDirection, m_xmf3Gravity, fElapsedTime);
+	XMFLOAT3 look = GetLook();
+	std::cout << "x : " << look.x << "y : " << look.y << "z : " << look.z << endl;
+	m_fRotationX = acos(Vector3::DotProduct(m_xmf3MovingDirection, look) / (Vector3::Length(look) * Vector3::Length(m_xmf3MovingDirection)));
+	//std::cout << m_fRotationX << std::endl;
+	Rotate(m_fRotationX * 10, 0, 0);
 }
 
 //void CBullet::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
