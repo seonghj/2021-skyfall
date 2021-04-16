@@ -131,7 +131,16 @@ void PacketFunc::ProcessPacket(char* buf)
         player_ID_packet* p = reinterpret_cast<player_ID_packet*>(buf);
         client_id = buf[2];
         printf("recv id from server: %d\n", p->id);
-        Send_ready_packet();
+
+        player_info_packet pp;
+        pp.id = Get_clientid();
+        pp.Position = m_pPlayer->GetPosition();
+        pp.size = sizeof(pp);
+        pp.state = 0;
+        pp.type = Type_player_info;
+        SendPacket(reinterpret_cast<char*>(&pp));
+
+        //Send_ready_packet();
         break;
     }
     case PacketType::Type_player_login: {
@@ -166,7 +175,10 @@ void PacketFunc::ProcessPacket(char* buf)
     case PacketType::Type_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
         m_pPlayer->SetPosition(p->Position);
-        m_pPlayer->Update(60.0);
+        m_pPlayer->Rotate(p->dx, p->dy, p->dz);
+       /* m_pPlayer->Update(60.0);
+        m_pScene->Update(60.0);*/
+        //m_pPlayer->GetCamera()->Move(p->Position);
         break;
     }
     case PacketType::Type_player_attack: {
@@ -233,7 +245,6 @@ void PacketFunc::LobbyConnect()
 
     memset(&overlapped, 0, sizeof(overlapped));
 
-
     //gPacketFunc[num]->Set_clientid(num);
 
     Recv_thread = std::thread(&PacketFunc::RecvPacket, this);
@@ -271,6 +282,8 @@ void PacketFunc::GameConnect()
     memset(&overlapped, 0, sizeof(overlapped));
 
     //cout << "game connect" << endl;
+
+
 
     std::thread Recv_thread = std::thread(&PacketFunc::RecvPacket, this);
     //std::thread test_Send_thread = std::thread(&PacketFunc::testSendPacket, this);

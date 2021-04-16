@@ -455,7 +455,8 @@ void CGameFramework::BuildObjects()
 	pAirplanePlayer->SetGravity(XMFLOAT3(0, -50.f, 0));
 
 	m_pScene->m_pPlayer = m_pPlayer = pAirplanePlayer;
-	m_pPacket->m_pPlayer = m_pScene->m_pPlayer;
+	m_pPacket->m_pPlayer = pAirplanePlayer;
+	m_pPacket->m_pScene = m_pScene;
 	m_pCamera = m_pPlayer->GetCamera();
 
 	CreateShaderVariables();
@@ -471,6 +472,7 @@ void CGameFramework::BuildObjects()
 
 	m_GameTimer.Reset();
 	m_ChargeTimer.Reset();
+
 }
 
 void CGameFramework::ReleaseObjects()
@@ -543,26 +545,34 @@ void CGameFramework::ProcessInput()
 
 		if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
 		{
+			player_pos_packet p;
 			if (cxDelta || cyDelta)
 			{
-				if (pKeysBuffer[VK_RBUTTON] & 0xF0)
-					m_pPlayer->Rotate(cyDelta, 0.0f, -cxDelta);
-				else
-					m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
+				if (pKeysBuffer[VK_RBUTTON] & 0xF0) {
+					//m_pPlayer->Rotate(cyDelta, 0.0f, -cxDelta);
+					p.dx = cyDelta;
+					p.dy = 0.f;
+					p.dz = -cxDelta;
+				}
+				else {
+					//m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
+					p.dx = cyDelta;
+					p.dy = cxDelta;
+					p.dz = 0.f;
+				}
 			}
-			/*if (dwDirection) {
-				m_pPlayer->Move(dwDirection, 20.0f, true);
-			}*/
-		}
+			if (dwDirection) {
+			}
 
-		player_move_packet p;
-		XMFLOAT3 test = m_pPlayer->GetPosition();
-		p.MoveType = dwDirection;
-		p.type = Type_player_move;
-		p.dx = 0, p.dy = 0, p.dz = 0;
-		p.id = m_pPacket->Get_clientid();
-		p.size = sizeof(player_move_packet);
-		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+			m_pPlayer->Move(dwDirection, 20.0f, true);
+			p.id = m_pPacket->Get_clientid();
+			p.Position = m_pPlayer->GetPosition();
+			p.size = sizeof(p);
+			p.state = RUNNING;
+			p.type = Type_player_pos;
+
+			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+		}
 	}
 	m_pPlayer->SetWhirlSpeed((int)m_fSpeedWhirl);
 

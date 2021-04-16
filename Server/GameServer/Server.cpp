@@ -357,7 +357,7 @@ float Server::calc_distance(int a, int b)
         return sqrt(value);
 }
 
-DirectX::XMFLOAT3 Server::move_calc(DWORD dwDirection, float fDistance, int state)
+DirectX::XMFLOAT3 Server::move_calc(DWORD dwDirection, float fDistance, int state, int id)
 {
     XMFLOAT3 xmf3Right = XMFLOAT3(1.0f, 0.0f, 0.0f);
     XMFLOAT3 xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
@@ -397,6 +397,8 @@ DirectX::XMFLOAT3 Server::move_calc(DWORD dwDirection, float fDistance, int stat
         xmf3Velocity.z *= 3.3;
     }
 
+    xmf3Shift = Add(sessions[id].f3Position.load(), xmf3Shift);
+
     return xmf3Shift;
 }
 
@@ -416,37 +418,25 @@ void Server::process_packet(char id, char* buf)
     }
     case PacketType::Type_player_info:{
         player_info_packet* p = reinterpret_cast<player_info_packet*>(buf);
+        sessions[p->id].f3Position.store(p->Position);
 
         break;
     }
     case PacketType::Type_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
 
-       /* float x = sessions[p->id].x.load();
-        float y = sessions[p->id].y.load();
-        float z = sessions[p->id].z.load();*/
 
+        sessions[p->id].f3Position.store(p->Position);
 
+        printf("move %f %f\n", sessions[p->id].f3Position.load().x, sessions[p->id].f3Position.load().z);
 
-        DirectX::XMFLOAT3 Position = sessions[p->id].f3Position.load();
-        float dx = sessions[p->id].dx.load();
-        float dy = sessions[p->id].dy.load();
-        float dz = sessions[p->id].dz.load();
-
-
-
-        while (!sessions[p->id].dx.compare_exchange_strong(dx, p->dx)) {};
-        while (!sessions[p->id].dy.compare_exchange_strong(dy, p->dy)) {};
-        while (!sessions[p->id].dz.compare_exchange_strong(dz, p->dz)) {};
-        while (!sessions[p->id].f3Position.compare_exchange_strong(Position, p->Position)) { };
-
-        send_player_move_packet(id, reinterpret_cast<char*>(&p));
+        send_player_move_packet(id, reinterpret_cast<char*>(p));
         break;
     }
     case PacketType::Type_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
 
-        DirectX::XMFLOAT3 Position = move_calc(p->MoveType, sessions[p->id].speed,p->state);
+        DirectX::XMFLOAT3 Position = move_calc(p->MoveType, sessions[p->id].speed,p->state, p->id);
         float dx = sessions[p->id].dx.load();
         float dy = sessions[p->id].dy.load();
         float dz = sessions[p->id].dz.load();
@@ -466,7 +456,9 @@ void Server::process_packet(char id, char* buf)
         pp->dy = dz;
         pp->state = p->state;
 
-        send_player_move_packet(id, reinterpret_cast<char*>(&pp));
+        printf("move %f %f\n", sessions[p->id].f3Position.load().x, sessions[p->id].f3Position.load().z);
+
+        send_player_move_packet(id, reinterpret_cast<char*>(pp));
         break;
     }
     case PacketType::Type_player_attack:{

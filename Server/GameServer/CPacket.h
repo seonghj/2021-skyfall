@@ -98,6 +98,8 @@ struct player_remove_packet : public Packet {
 struct player_info_packet : public Packet {
 	char id;
 	char state;
+	DirectX::XMFLOAT3 Position;
+	float dx, dy, dz;
 	char weapon;
 	char armor;
 	char helmet;

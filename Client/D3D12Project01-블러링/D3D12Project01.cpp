@@ -17,6 +17,7 @@ TCHAR							szWindowClass[MAX_LOADSTRING];
 CGameFramework					gGameFramework;
 PacketFunc*						gPacketFunc = new PacketFunc;
 
+
 ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -45,10 +46,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 		freopen("CONOUT$", "wb", stdout);
 		freopen("CONOUT$", "wb", stderr);
 	}
-
 	//std::thread	connect_thread = std::thread(&PacketFunc::LobbyConnect, gPacketFunc);
 	std::thread	connect_thread = std::thread(&PacketFunc::GameConnect, gPacketFunc);
-
 	while (1)
 	{
 		if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -62,7 +61,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 		}
 		else
 		{
-			gGameFramework.Set_m_pPacket(gPacketFunc);
 			gGameFramework.FrameAdvance();
 		}
 	}
@@ -107,6 +105,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 	if (!hMainWnd) return(FALSE);
 
+	gGameFramework.Set_m_pPacket(gPacketFunc);
 	gGameFramework.OnCreate(hInstance, hMainWnd);
 
 	::ShowWindow(hMainWnd, nCmdShow);

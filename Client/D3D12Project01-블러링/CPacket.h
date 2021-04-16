@@ -1,6 +1,7 @@
 #pragma once
 #include"stdafx.h"
 #include "player.h"
+#include "Scene.h"
 
 constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
@@ -99,13 +100,15 @@ struct player_remove_packet : public Packet {
 struct player_info_packet : public Packet {
 	char id;
 	char state;
+	DirectX::XMFLOAT3 Position;
+	/*float dx, dy, dz;
 	char weapon;
 	char armor;
 	char helmet;
 	char shoes;
 	float hp;
 	float lv;
-	float speed;
+	float speed;*/
 };
 
 struct player_pos_packet : public Packet {
@@ -154,6 +157,7 @@ public:
 	HANDLE SendEvent;
 
 	CPlayer* m_pPlayer = NULL;
+	CScene* m_pScene = NULL;
 
 	void err_quit(char* msg);
 	void err_display(char* msg);

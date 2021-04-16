@@ -103,11 +103,10 @@ public:
     void game_end();
 
     float calc_distance(int a, int b);
-    DirectX::XMFLOAT3 move_calc(DWORD dwDirection, float fDistance, int state);
+    DirectX::XMFLOAT3 move_calc(DWORD dwDirection, float fDistance, int state, int id);
 
 private:
     HANDLE hcp;
-
     
     std::unordered_map <int, int> gameroom; // <방번호, 플레이어 ID>
     std::unordered_map <int, SESSION> sessions;
