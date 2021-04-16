@@ -1,7 +1,7 @@
 #pragma once
 #include "CPacket.h"
 #include <iostream>
-
+#pragma warning(disable : 4996)
 PacketFunc::PacketFunc()
 {
 
@@ -223,7 +223,7 @@ void PacketFunc::LobbyConnect()
     ZeroMemory(&serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
     serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
-    serveraddr.sin_port = htons(LOBBYSERVERPORT);
+    serveraddr.sin_port = htons(LOBBYPORT);
     retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
     if (retval == SOCKET_ERROR) err_quit("connect()");
 
@@ -266,8 +266,8 @@ void PacketFunc::GameConnect()
     //cout << "game connect" << endl;
 
     std::thread Recv_thread = std::thread(&PacketFunc::RecvPacket, this);
-    std::thread test_Send_thread = std::thread(&PacketFunc::testSendPacket, this);
-    test_Send_thread.join();
+    //std::thread test_Send_thread = std::thread(&PacketFunc::testSendPacket, this);
+    //test_Send_thread.join();
     Recv_thread.join();
 
 }
