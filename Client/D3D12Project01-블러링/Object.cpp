@@ -1413,8 +1413,8 @@ void CBullet::Animate(float fElapsedTime) {
 	XMFLOAT3 look = GetLook();
 	std::cout << "x : " << look.x << "y : " << look.y << "z : " << look.z << endl;
 	m_fRotationX = acos(Vector3::DotProduct(m_xmf3MovingDirection, look) / (Vector3::Length(look) * Vector3::Length(m_xmf3MovingDirection)));
-	//std::cout << m_fRotationX << std::endl;
-	Rotate(m_fRotationX * 10, 0, 0);
+	std::cout << m_fRotationX << std::endl;
+	Rotate(m_fRotationX / PI * 180, 0, 0);
 }
 
 //void CBullet::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
