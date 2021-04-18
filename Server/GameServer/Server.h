@@ -95,8 +95,7 @@ public:
     void send_ID_player_packet(char id);
     void send_login_player_packet(char id, int to);
     void send_disconnect_player_packet(char id);
-    void send_player_move_packet(char id, char* buf);
-    void send_player_attack_packet(char id, char* buf);
+    void send_packet_to_players(char id, char* buf);
     void send_map_collapse_packet(int num, int map_num);
     void send_cloud_move_packet(float x, float z, int map_num);
     

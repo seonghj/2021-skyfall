@@ -131,6 +131,7 @@ struct player_move_packet : public Packet {
 struct player_attack_packet : public Packet {
 	char id;
 	char attack_type;
+	DirectX::XMFLOAT3 Position;
 	float damage;
 };
 
@@ -163,6 +164,7 @@ public:
 	CScene* m_pScene = NULL;
 
 	float fTimeElapsed;
+	float ChargeTimer;
 
 	void err_quit(char* msg);
 	void err_display(char* msg);

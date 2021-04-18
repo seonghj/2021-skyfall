@@ -545,15 +545,23 @@ void CGameFramework::ProcessInput()
 		
 		if (m_pPlayer->GetShooting() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
 		{
-			printf("Look - X : %f Y : %f Z : %f", m_pPlayer->GetLook().x, m_pPlayer->GetLook().y, m_pPlayer->GetLook().z);
+			player_attack_packet p;
+			p.attack_type = 0;
+			p.damage = 0;
+			p.id = m_pPacket->Get_clientid();
+			p.Position = m_pPlayer->GetPosition();
+			p.size = sizeof(p);
+			p.type = Type_player_attack;
+			m_pPacket->ChargeTimer = m_ChargeTimer.GetTotalTime();
+			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+			/*printf("Look - X : %f Y : %f Z : %f", m_pPlayer->GetLook().x, m_pPlayer->GetLook().y, m_pPlayer->GetLook().z);
 			m_pScene->Shot(fTimeElapsed, m_ChargeTimer.GetTotalTime() * 100.f);
-			m_pPlayer->SetShooting(false);
+			m_pPlayer->SetShooting(false);*/
 		}
 
 		if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
 		{
 			player_pos_packet p;
-			//player_move_packet p;
 			if (cxDelta || cyDelta)
 			{
 				if (pKeysBuffer[VK_RBUTTON] & 0xF0) {

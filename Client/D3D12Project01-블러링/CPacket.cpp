@@ -188,6 +188,18 @@ void PacketFunc::ProcessPacket(char* buf)
         break;
     }
     case PacketType::Type_player_attack: {
+        player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
+        m_pScene->Shot(fTimeElapsed, 300.f);
+
+        if (m_pPlayer->GetShooting() && m_pPlayer->GetCamera()->GetMode() == THIRD_PERSON_CAMERA)
+        {
+            printf("Look - X : %f Y : %f Z : %f", m_pPlayer->GetLook().x, m_pPlayer->GetLook().y, m_pPlayer->GetLook().z);
+            m_pScene->Shot(fTimeElapsed, ChargeTimer * 100.f);
+            m_pPlayer->SetShooting(false);
+        }
+        /*m_pPlayer->Update(fTimeElapsed);
+        m_pScene->Update(fTimeElapsed);*/
+
         break;
     }
 

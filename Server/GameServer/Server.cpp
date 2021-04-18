@@ -271,25 +271,13 @@ void Server::send_disconnect_player_packet(char id)
     Disconnected(id);
 }
 
-void Server::send_player_move_packet(char id, char* buf)
+void Server::send_packet_to_players(char id, char* buf)
 {
     for (auto& iter : sessions) {
         if (iter.second.connected && 
             iter.second.gameroom_num == sessions[id].gameroom_num){
             if (calc_distance(id, iter.first) <= VIEWING_DISTANCE) {
                 do_send(iter.first, buf);
-            }
-        }
-    }
-}
-
-void Server::send_player_attack_packet(char id, char* buf)
-{
-    for (auto& iter : sessions) {
-        if (iter.second.connected &&
-            iter.second.gameroom_num == sessions[id].gameroom_num) {
-            if (calc_distance(id, iter.first) <= VIEWING_DISTANCE) {
-                do_send(iter.first, sessions[id].packet_buf);
             }
         }
     }
@@ -429,7 +417,7 @@ void Server::process_packet(char id, char* buf)
         sessions[p->id].dz.store(p->dz);
         //printf("move %f %f\n", sessions[p->id].f3Position.load().x, sessions[p->id].f3Position.load().z);
 
-        send_player_move_packet(id, reinterpret_cast<char*>(p));
+        send_packet_to_players(id, reinterpret_cast<char*>(p));
         break;
     }
     case PacketType::Type_player_move: {
@@ -438,41 +426,46 @@ void Server::process_packet(char id, char* buf)
 
         switch (p->MoveType) {
         case PlayerMove::JUMP:{
-                send_player_move_packet(id, reinterpret_cast<char*>(p));
+            send_packet_to_players(id, reinterpret_cast<char*>(p));
                 break;
             }
         default: {
             break;
         }
         }
-        //DirectX::XMFLOAT3 Position = move_calc(p->MoveType, sessions[p->id].speed,p->state, p->id);
-        //float dx = p->dx;
-        //float dy = p->dy;
-        //float dz = p->dz;
-        //
-        ///*float dx = sessions[p->id].dx.load();
-        //float dy = sessions[p->id].dy.load();
-        //float dz = sessions[p->id].dz.load();
-        //
-        //while (!sessions[p->id].dx.compare_exchange_strong(dx, p->dx)) {};
-        //while (!sessions[p->id].dy.compare_exchange_strong(dy, p->dy)) {};
-        //while (!sessions[p->id].dz.compare_exchange_strong(dz, p->dz)) {};*/
-        //sessions[p->id].f3Position.store(Position);
+        {
+            //DirectX::XMFLOAT3 Position = move_calc(p->MoveType, sessions[p->id].speed,p->state, p->id);
+            //float dx = p->dx;
+            //float dy = p->dy;
+            //float dz = p->dz;
+            //
+            ///*float dx = sessions[p->id].dx.load();
+            //float dy = sessions[p->id].dy.load();
+            //float dz = sessions[p->id].dz.load();
+            //
+            //while (!sessions[p->id].dx.compare_exchange_strong(dx, p->dx)) {};
+            //while (!sessions[p->id].dy.compare_exchange_strong(dy, p->dy)) {};
+            //while (!sessions[p->id].dz.compare_exchange_strong(dz, p->dz)) {};*/
+            //sessions[p->id].f3Position.store(Position);
 
-        //player_pos_packet* pp = new player_pos_packet;
-        //pp->size = sizeof(player_pos_packet);
-        //pp->type = Type_player_pos;
-        //pp->id = p->id;
-        //pp->Position = Position;
-        //pp->dx = dx;
-        //pp->dy = dy;
-        //pp->dy = dz;
-        //pp->state = p->state;
+            //player_pos_packet* pp = new player_pos_packet;
+            //pp->size = sizeof(player_pos_packet);
+            //pp->type = Type_player_pos;
+            //pp->id = p->id;
+            //pp->Position = Position;
+            //pp->dx = dx;
+            //pp->dy = dy;
+            //pp->dy = dz;
+            //pp->state = p->state;
 
-        //send_player_move_packet(id, reinterpret_cast<char*>(pp));
+            //send_player_move_packet(id, reinterpret_cast<char*>(pp));
+        }
         break;
     }
     case PacketType::Type_player_attack:{
+        player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
+        send_packet_to_players(p->id, reinterpret_cast<char*>(p));
+        //printf("sex\n");
         break;
     }
     }

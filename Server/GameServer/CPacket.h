@@ -7,7 +7,8 @@ constexpr int BUFSIZE = 1024;
 constexpr int MAX_CLIENT = 100;
 constexpr int MAX_PLAYER = 20;
 
-constexpr int LOBBY_ID = 0 ;
+constexpr int LOBBY_ID = 0;
+constexpr int GAMESERVER_ID = 0;
 
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 3000;
@@ -129,6 +130,7 @@ struct player_move_packet : public Packet {
 struct player_attack_packet : public Packet {
 	char id;
 	char attack_type;
+	DirectX::XMFLOAT3 Position;
 	float damage;
 };
 

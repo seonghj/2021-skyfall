@@ -8,6 +8,7 @@ constexpr int MAX_CLIENT = 100;
 constexpr int MAX_PLAYER = 20;
 
 constexpr int LOBBY_ID = 0;
+constexpr int GAMESERVER_ID = 0;
 
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 3000;
@@ -39,6 +40,17 @@ enum PacketType {
 	Type_bot_move,
 	Type_bot_pos,
 	Type_bot_attack,
+};
+
+enum PlayerState {
+	DEAD,
+	ALIVE,
+};
+
+enum PlayerMove {
+	WAKING,
+	RUNNING,
+	JUMP
 };
 
 #define DIR_FORWARD					0x01
@@ -90,6 +102,8 @@ struct player_remove_packet : public Packet {
 struct player_info_packet : public Packet {
 	char id;
 	char state;
+	DirectX::XMFLOAT3 Position;
+	float dx, dy, dz;
 	char weapon;
 	char armor;
 	char helmet;
@@ -101,13 +115,16 @@ struct player_info_packet : public Packet {
 
 struct player_pos_packet : public Packet {
 	char id;
+	char state;
 	DirectX::XMFLOAT3 Position;
 	float dx, dy, dz;
 };
 
 struct player_move_packet : public Packet {
 	char id;
+	char state;
 	DWORD MoveType;
+	float dx, dy, dz;
 };
 
 struct player_attack_packet : public Packet {

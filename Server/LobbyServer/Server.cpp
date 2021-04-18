@@ -27,18 +27,12 @@ void Server::display_error(const char* msg, int err_no)
 
 int Server::SetClientId()
 {
-    int count = GAMESERVER_ID;
-
-    auto iter = sessions.begin();
+    int count = LOBBY_ID + 1;
     while (true) {
-        if (!iter->second.connected) {
-            iter->second.connected = true;
+        if (sessions.count(count) == 0)
             return count;
-        }
-        else {
+        else
             ++count;
-            ++iter;
-        }
     }
 }
 
