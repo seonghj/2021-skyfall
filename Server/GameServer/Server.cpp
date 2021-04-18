@@ -20,23 +20,17 @@ void Server::display_error(const char* msg, int err_no)
         (LPTSTR)&lpMsgBuf, 0, NULL);
     std::cout << msg;
     std::wcout << L"에러 " << lpMsgBuf << std::endl;
-    while (true);
     LocalFree(lpMsgBuf);
 }
 
 int Server::SetClientId()
 {
-    int count = LOBBY_ID;
-    auto iter = sessions.begin();
-    while (true) {
-        if (!iter->second.connected) {
-            iter->second.connected = true;
+    int count = LOBBY_ID+1;
+    while (true){
+        if (sessions.count(count) == 0)
             return count;
-        }
-        else {
+        else 
             ++count;
-            ++iter;
-        }
     }
 }
 
@@ -118,11 +112,14 @@ void Server::Accept()
         }
 
         int client_id = SetClientId();
+        //printf("만들기 전 세션 갯수: %d\n", sessions.size());
         sessions.emplace(client_id, SESSION());
+        //printf("만든 후 세션 갯수: %d\n", sessions.size());
         memset(&sessions[client_id], 0x00, sizeof(SESSION));
         sessions[client_id].id = client_id;
         sessions[client_id].sock = client_sock;
         sessions[client_id].clientaddr = clientaddr;
+        sessions[client_id].connected = true;
 
         getpeername(client_sock, (SOCKADDR*)&sessions[client_id].clientaddr
             , &sessions[client_id].addrlen);
@@ -139,7 +136,6 @@ void Server::Accept()
 
         // 소켓과 입출력 완료 포트 연결
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
-        sessions[client_id].connected = true;
 
         // id전송
         send_ID_player_packet(client_id);
@@ -149,6 +145,7 @@ void Server::Accept()
         sessions[client_id].gameroom_num = gameroom_num;
 
         gameroom.emplace(gameroom_num, client_id);
+        //printf("만든 후 방 갯수: %d\n", gameroom.size());
 
         // 로그인한 클라이언트에 다른 클라이언트 정보 전달
         for (auto& i : gameroom) {
@@ -183,13 +180,13 @@ void Server::Accept()
 
 void Server::Disconnected(int id)
 {
-    sessions[id].connected = false;
     printf("client_end: IP =%s, port=%d key = %d\n",
         inet_ntoa(sessions[id].clientaddr.sin_addr)
         , ntohs(sessions[id].clientaddr.sin_port), id);
-    send_disconnect_player_packet(id);
+    //send_disconnect_player_packet(id);
     closesocket(sessions[id].sock);
     sessions.erase(id);
+    //sessions.clear();
 }
 
 void Server::do_recv(char id)
@@ -391,7 +388,7 @@ DirectX::XMFLOAT3 Server::move_calc(DWORD dwDirection, float fDistance, int stat
     xmf3Velocity.z = 0;
 
     xmf3Velocity = Add(xmf3Velocity, xmf3Shift);
-    if (state == PlayerState::RUNNING)
+    if (state == PlayerMove::RUNNING)
     {
         xmf3Velocity.x *= 3.3;
         xmf3Velocity.z *= 3.3;
@@ -427,8 +424,10 @@ void Server::process_packet(char id, char* buf)
 
 
         sessions[p->id].f3Position.store(p->Position);
-
-        printf("move %f %f\n", sessions[p->id].f3Position.load().x, sessions[p->id].f3Position.load().z);
+        sessions[p->id].dx.store(p->dx);
+        sessions[p->id].dy.store(p->dy);
+        sessions[p->id].dz.store(p->dz);
+        //printf("move %f %f\n", sessions[p->id].f3Position.load().x, sessions[p->id].f3Position.load().z);
 
         send_player_move_packet(id, reinterpret_cast<char*>(p));
         break;
@@ -436,29 +435,41 @@ void Server::process_packet(char id, char* buf)
     case PacketType::Type_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
 
-        DirectX::XMFLOAT3 Position = move_calc(p->MoveType, sessions[p->id].speed,p->state, p->id);
-        float dx = sessions[p->id].dx.load();
-        float dy = sessions[p->id].dy.load();
-        float dz = sessions[p->id].dz.load();
-        
-        while (!sessions[p->id].dx.compare_exchange_strong(dx, p->dx)) {};
-        while (!sessions[p->id].dy.compare_exchange_strong(dy, p->dy)) {};
-        while (!sessions[p->id].dz.compare_exchange_strong(dz, p->dz)) {};
-        sessions[p->id].f3Position.store(Position);
 
-        player_pos_packet* pp = new player_pos_packet;
-        pp->size = sizeof(player_pos_packet);
-        pp->type = Type_player_pos;
-        pp->id = p->id;
-        pp->Position = Position;
-        pp->dx = dx;
-        pp->dy = dy;
-        pp->dy = dz;
-        pp->state = p->state;
+        switch (p->MoveType) {
+        case PlayerMove::JUMP:{
+                send_player_move_packet(id, reinterpret_cast<char*>(p));
+                break;
+            }
+        default: {
+            break;
+        }
+        }
+        //DirectX::XMFLOAT3 Position = move_calc(p->MoveType, sessions[p->id].speed,p->state, p->id);
+        //float dx = p->dx;
+        //float dy = p->dy;
+        //float dz = p->dz;
+        //
+        ///*float dx = sessions[p->id].dx.load();
+        //float dy = sessions[p->id].dy.load();
+        //float dz = sessions[p->id].dz.load();
+        //
+        //while (!sessions[p->id].dx.compare_exchange_strong(dx, p->dx)) {};
+        //while (!sessions[p->id].dy.compare_exchange_strong(dy, p->dy)) {};
+        //while (!sessions[p->id].dz.compare_exchange_strong(dz, p->dz)) {};*/
+        //sessions[p->id].f3Position.store(Position);
 
-        printf("move %f %f\n", sessions[p->id].f3Position.load().x, sessions[p->id].f3Position.load().z);
+        //player_pos_packet* pp = new player_pos_packet;
+        //pp->size = sizeof(player_pos_packet);
+        //pp->type = Type_player_pos;
+        //pp->id = p->id;
+        //pp->Position = Position;
+        //pp->dx = dx;
+        //pp->dy = dy;
+        //pp->dy = dz;
+        //pp->state = p->state;
 
-        send_player_move_packet(id, reinterpret_cast<char*>(pp));
+        //send_player_move_packet(id, reinterpret_cast<char*>(pp));
         break;
     }
     case PacketType::Type_player_attack:{
@@ -469,7 +480,6 @@ void Server::process_packet(char id, char* buf)
 
 void Server::WorkerFunc()
 {
-    int retval = 0;
 
     while (1) {
         DWORD Transferred;
@@ -479,7 +489,7 @@ void Server::WorkerFunc()
 
         OVER_EX* over_ex;
 
-        retval = GetQueuedCompletionStatus(hcp, &Transferred,
+        BOOL retval = GetQueuedCompletionStatus(hcp, &Transferred,
             (PULONG_PTR)&id, (LPOVERLAPPED*)&over_ex, INFINITE);
 
         //std::thread::id Thread_id = std::this_thread::get_id();
@@ -487,8 +497,15 @@ void Server::WorkerFunc()
         // 비동기 입출력 결과 확인
         if (FALSE == retval)
         {
-            display_error("GQCS", WSAGetLastError());
+            printf("error = %d\n", WSAGetLastError());
+            //display_error("GQCS", WSAGetLastError());
             Disconnected(id);
+            continue;
+        }
+
+        if ((Transferred == 0)) {
+            Disconnected(id);
+            continue;
         }
 
 
@@ -544,8 +561,7 @@ void Server::WorkerFunc()
 
 bool Server::Init()
 {
-    for (int i = 0; i < MAX_CLIENT; ++i)
-        sessions[i].connected = false;
+    sessions.clear();
 
     // 입출력 완료 포트 생성
     hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
@@ -559,6 +575,7 @@ bool Server::Init()
     for (int i = 0; i < (int)si.dwNumberOfProcessors; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
+    sessions.emplace(LOBBY_ID, SESSION());
     //ConnectLobby();
 
     accept_thread = std::thread(&Server::Accept, this);

@@ -46,9 +46,12 @@ enum PacketType {
 enum PlayerState {
 	DEAD,
 	ALIVE,
+};
+
+enum PlayerMove {
 	WAKING,
 	RUNNING,
-
+	JUMP
 };
 
 #define DIR_FORWARD					0x01
@@ -101,14 +104,14 @@ struct player_info_packet : public Packet {
 	char id;
 	char state;
 	DirectX::XMFLOAT3 Position;
-	/*float dx, dy, dz;
+	float dx, dy, dz;
 	char weapon;
 	char armor;
 	char helmet;
 	char shoes;
 	float hp;
 	float lv;
-	float speed;*/
+	float speed;
 };
 
 struct player_pos_packet : public Packet {
@@ -158,6 +161,8 @@ public:
 
 	CPlayer* m_pPlayer = NULL;
 	CScene* m_pScene = NULL;
+
+	float fTimeElapsed;
 
 	void err_quit(char* msg);
 	void err_display(char* msg);

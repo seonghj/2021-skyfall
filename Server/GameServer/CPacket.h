@@ -44,9 +44,12 @@ enum PacketType {
 enum PlayerState {
 	DEAD,
 	ALIVE,
+};
+
+enum PlayerMove {
 	WAKING,
 	RUNNING,
-
+	JUMP
 };
 
 #define DIR_FORWARD					0x01

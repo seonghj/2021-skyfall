@@ -110,6 +110,7 @@ void PacketFunc::SendPacket(char* buf)
     wsabuf.buf = buf;
     retval = WSASend(sock, &wsabuf, 1, &sendbytes, 0, NULL, NULL);
     if (retval == SOCKET_ERROR) {
+        printf("%d: ", WSAGetLastError());
         err_display("send()");
     }
 }
@@ -132,13 +133,13 @@ void PacketFunc::ProcessPacket(char* buf)
         client_id = buf[2];
         printf("recv id from server: %d\n", p->id);
 
-        player_info_packet pp;
+        /*player_info_packet pp;
         pp.id = Get_clientid();
         pp.Position = m_pPlayer->GetPosition();
         pp.size = sizeof(pp);
         pp.state = 0;
         pp.type = Type_player_info;
-        SendPacket(reinterpret_cast<char*>(&pp));
+        SendPacket(reinterpret_cast<char*>(&pp));*/
 
         //Send_ready_packet();
         break;
@@ -168,6 +169,12 @@ void PacketFunc::ProcessPacket(char* buf)
 
     case PacketType::Type_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
+
+        switch (p->MoveType){
+        case PlayerMove::JUMP:
+            m_pPlayer->SetJump(TRUE);
+        }
+
         //if (client_id == 1)
           //  printf("id: %d player move x = %f, y = %f, z = %f\n", p->id, p->x, p->y, p->z);
         break;
@@ -176,9 +183,8 @@ void PacketFunc::ProcessPacket(char* buf)
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
         m_pPlayer->SetPosition(p->Position);
         m_pPlayer->Rotate(p->dx, p->dy, p->dz);
-       /* m_pPlayer->Update(60.0);
-        m_pScene->Update(60.0);*/
-        //m_pPlayer->GetCamera()->Move(p->Position);
+        m_pPlayer->Update(fTimeElapsed);
+        m_pScene->Update(fTimeElapsed);
         break;
     }
     case PacketType::Type_player_attack: {
@@ -256,10 +262,10 @@ void PacketFunc::LobbyConnect()
 
 void PacketFunc::GameConnect()
 {
-    // disconnect
-    shutdown(sock, SD_RECEIVE);
-    closesocket(sock);
-    //cout << "lobby diconnect" << endl;
+    //// disconnect
+    //shutdown(sock, SD_RECEIVE);
+    //closesocket(sock);
+    ////cout << "lobby diconnect" << endl;
 
     int retval;
 

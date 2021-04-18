@@ -487,6 +487,7 @@ void CGameFramework::ReleaseObjects()
 void CGameFramework::ProcessInput()
 {
 	float fTimeElapsed = m_GameTimer.GetTimeElapsed();
+	m_pPacket->fTimeElapsed = fTimeElapsed;
 	static UCHAR pKeysBuffer[256];
 	bool bProcessedByScene = false;
 	if (GetKeyboardState(pKeysBuffer) && m_pScene) bProcessedByScene = m_pScene->ProcessInput(pKeysBuffer);
@@ -506,7 +507,13 @@ void CGameFramework::ProcessInput()
 		{
 			if (m_pPlayer->GetGround())
 			{
-				m_pPlayer->SetJump(true);
+				player_move_packet p;
+				p.type = Type_player_move;
+				p.MoveType = PlayerMove::JUMP;
+				p.id = m_pPacket->Get_clientid();
+				p.size = sizeof(p);
+				m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+				//m_pPlayer->SetJump(true);
 			}
 		}
 
@@ -546,31 +553,32 @@ void CGameFramework::ProcessInput()
 		if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
 		{
 			player_pos_packet p;
+			//player_move_packet p;
 			if (cxDelta || cyDelta)
 			{
 				if (pKeysBuffer[VK_RBUTTON] & 0xF0) {
 					//m_pPlayer->Rotate(cyDelta, 0.0f, -cxDelta);
 					p.dx = cyDelta;
-					p.dy = 0.f;
+					p.dy = 0.0f;
 					p.dz = -cxDelta;
 				}
 				else {
 					//m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
 					p.dx = cyDelta;
 					p.dy = cxDelta;
-					p.dz = 0.f;
+					p.dz = 0.0f;
 				}
 			}
 			if (dwDirection) {
+				m_pPlayer->Move(dwDirection, 20.0f, true);
 			}
 
-			m_pPlayer->Move(dwDirection, 20.0f, true);
 			p.id = m_pPacket->Get_clientid();
 			p.Position = m_pPlayer->GetPosition();
+			//p.MoveType = dwDirection;
 			p.size = sizeof(p);
 			p.state = RUNNING;
 			p.type = Type_player_pos;
-
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 		}
 	}
