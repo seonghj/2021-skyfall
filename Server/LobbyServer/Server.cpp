@@ -27,7 +27,7 @@ void Server::display_error(const char* msg, int err_no)
 
 int Server::SetClientId()
 {
-    int count = LOBBY_ID + 1;
+    int count = GAMESERVER_ID + 1;
     while (true) {
         if (sessions.count(count) == 0)
             return count;
@@ -77,7 +77,7 @@ void Server::Accept()
     ZeroMemory(&serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serveraddr.sin_port = htons(LOBBYSERVERPORT);
+    serveraddr.sin_port = htons(LOBBYPORT);
     int retval = bind(listen_sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
   
     // listen()

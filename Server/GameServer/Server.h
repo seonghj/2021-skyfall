@@ -48,9 +48,9 @@ public:
     std::atomic<float>      z = 0;*/
     
 
-    std::atomic<int>        weapon = 0;
-    std::atomic<int>        helmet = 0;
-    std::atomic<int>        shoes = 0;
+    std::atomic<short>        weapon = 0;
+    std::atomic<short>        helmet = 0;
+    std::atomic<short>        shoes = 0;
 
     std::atomic<float>      hp = 0;
     std::atomic<float>      lv = 0;
