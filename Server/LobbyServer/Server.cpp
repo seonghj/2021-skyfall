@@ -315,11 +315,13 @@ void Server::WorkerFunc()
         // 비동기 입출력 결과 확인
         if (FALSE == retval)
         {
+            //printf("error = %d\n", WSAGetLastError());
             display_error("GQCS", WSAGetLastError());
             Disconnected(id);
+            continue;
         }
 
-        if (Transferred == 0) {
+        if ((Transferred == 0)) {
             Disconnected(id);
             continue;
         }

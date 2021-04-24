@@ -137,15 +137,15 @@ void Server::Accept()
         // 소켓과 입출력 완료 포트 연결
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
 
-        // id전송
-        send_ID_player_packet(client_id);
-
         int gameroom_num = SetGameNum();
 
         sessions[client_id].gameroom_num = gameroom_num;
 
         gameroom.emplace(gameroom_num, client_id);
         //printf("만든 후 방 갯수: %d\n", gameroom.size());
+
+        // id전송
+        send_ID_player_packet(client_id);
 
         // 로그인한 클라이언트에 다른 클라이언트 정보 전달
         for (auto& i : gameroom) {
@@ -490,8 +490,8 @@ void Server::WorkerFunc()
         // 비동기 입출력 결과 확인
         if (FALSE == retval)
         {
-            printf("error = %d\n", WSAGetLastError());
-            //display_error("GQCS", WSAGetLastError());
+            //printf("error = %d\n", WSAGetLastError());
+            display_error("GQCS", WSAGetLastError());
             Disconnected(id);
             continue;
         }
@@ -503,25 +503,7 @@ void Server::WorkerFunc()
 
 
         if (over_ex->is_recv) {
-
-            /*char* next_recv_ptr = sessions[id].recv_start + Transferred;
-            int packet_size = *sessions[id].packet_start;
-            while (packet_size <= (sessions[id].recv_start - sessions[id].packet_start)) {
-                process_packet(id, sessions[id].packet_start);
-                sessions[id].packet_start += packet_size;
-                if (sessions[id].recv_start > sessions[id].packet_start)
-                    packet_size = *sessions[id].packet_start;
-                else break;
-            }
-
-            if (sessions[id].recv_start - sessions[id].packet_buf < 3) {
-                memcpy(sessions[id].packet_start, sessions[id].packet_buf,
-                    (next_recv_ptr - sessions[id].packet_start));
-                sessions[id].packet_start = sessions[id].packet_buf;
-                sessions[id].recv_start = sessions[id].packet_buf;
-            }*/
-
-            ////printf("thread id: %d\n", Thread_id);
+            //printf("thread id: %d\n", Thread_id);
             int rest_size = Transferred;
             char* buf_ptr = over_ex->messageBuffer;
             char packet_size = 0;
