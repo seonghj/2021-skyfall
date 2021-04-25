@@ -119,7 +119,6 @@ void Server::Accept()
         sessions[client_id].id = client_id;
         sessions[client_id].sock = client_sock;
         sessions[client_id].clientaddr = clientaddr;
-        sessions[client_id].connected = true;
 
         getpeername(client_sock, (SOCKADDR*)&sessions[client_id].clientaddr
             , &sessions[client_id].addrlen);
@@ -147,6 +146,8 @@ void Server::Accept()
         // id전송
         send_ID_player_packet(client_id);
 
+        sessions[client_id].connected = true;
+
         // 로그인한 클라이언트에 다른 클라이언트 정보 전달
         for (auto& i : gameroom) {
             if (i.first != gameroom_num)
@@ -162,6 +163,7 @@ void Server::Accept()
             if (sessions[i.second].connected && i.second != client_id)
                 send_login_player_packet(client_id, i.second);
         }
+
         do_recv(client_id);
 
         /*if (client_id % MAX_PLAYER == 0) {
@@ -410,7 +412,6 @@ void Server::process_packet(char id, char* buf)
     case PacketType::Type_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
 
-
         sessions[p->id].f3Position.store(p->Position);
         sessions[p->id].dx.store(p->dx);
         sessions[p->id].dy.store(p->dy);
@@ -465,7 +466,6 @@ void Server::process_packet(char id, char* buf)
     case PacketType::Type_player_attack:{
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
         send_packet_to_players(p->id, reinterpret_cast<char*>(p));
-        //printf("sex\n");
         break;
     }
     }

@@ -127,6 +127,30 @@ struct player_move_packet : public Packet {
 	float dx, dy, dz;
 };
 
+struct player_status_packet : public Packet {
+	char id;
+	char state;
+};
+
+struct player_stat_packet : public Packet {
+	char id;
+	float hp;
+	float lv;
+	float speed;
+};
+
+struct player_weapon_packet : public Packet {
+	char id;
+	char weapon;
+};
+
+struct player_equipment_packet : public Packet {
+	char id;
+	char armor;
+	char helmet;
+	char shoes;
+};
+
 struct player_attack_packet : public Packet {
 	char id;
 	char attack_type;
