@@ -165,12 +165,6 @@ void Server::Accept()
         }
 
         do_recv(client_id);
-
-        /*if (client_id % MAX_PLAYER == 0) {
-            maps.emplace(gameroom_num, Map(gameroom_num));
-            map_threads.emplace_back(std::thread(&Map::init_Map, maps[gameroom_num], this));
-            printf("room num %d map build\n", gameroom_num);
-        }*/
     }
 
     // closesocket()
@@ -299,7 +293,6 @@ void Server::send_map_collapse_packet(int num, int map_num)
         }
     }
 }
-
 
 void Server::send_cloud_move_packet(float x, float z, int map_num)
 {
