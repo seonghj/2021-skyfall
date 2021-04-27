@@ -340,6 +340,16 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				case 'Y':
 					m_pcbMappedFrameworkInfo->m_nRenderMode |= (DYNAMIC_TESSELLATION | DEBUG_TESSELLATION);
 					break;
+				/*case 'M':
+					player_start_pos p;
+					p.type = Type_start_pos;
+					p.id = m_pPacket->Get_clientid();
+					p.size = sizeof(p);
+					p.Position.x = 150;
+					p.Position.y = m_pPlayer->GetPosition().y;
+					p.Position.z = 200;
+					m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+					break;*/
 				case VK_F8:
 					::gbTerrainTessellationWireframe = !::gbTerrainTessellationWireframe;
 					break;

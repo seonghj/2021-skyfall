@@ -78,7 +78,7 @@ void CPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity)
 
 void CPlayer::Move(const XMFLOAT3& xmf3Shift, bool bUpdateVelocity)
 {
-	if (bUpdateVelocity)
+	/*if (bUpdateVelocity)
 	{
 		m_xmf3Velocity.x = 0;
 		m_xmf3Velocity.z = 0;
@@ -90,10 +90,10 @@ void CPlayer::Move(const XMFLOAT3& xmf3Shift, bool bUpdateVelocity)
 		}
 	}
 	else
-	{
+	{*/
 		m_xmf3Position = Vector3::Add(m_xmf3Position, xmf3Shift);		
 		m_pCamera->Move(xmf3Shift);
-	}
+	/*}*/
 }
 
 void CPlayer::Rotate(float x, float y, float z)

@@ -187,6 +187,13 @@ void PacketFunc::ProcessPacket(char* buf)
         m_pScene->Update(fTimeElapsed);
         break;
     }
+    case PacketType::Type_start_pos: {
+        player_start_pos* p = reinterpret_cast<player_start_pos*>(buf);
+        m_pPlayer->SetPosition(p->Position);
+        m_pPlayer->Update(fTimeElapsed);
+        m_pScene->Update(fTimeElapsed);
+        break;
+    }
     case PacketType::Type_player_attack: {
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
         m_pScene->Shot(fTimeElapsed, 300.f);

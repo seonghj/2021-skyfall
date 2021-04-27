@@ -207,7 +207,7 @@ void Server::do_recv(char id)
     //memcpy(sessions[id].packet_buf, over->dataBuffer.buf, over->dataBuffer.buf[0]);
 }
 
-void Server::do_send(int to, char* packet)
+void Server::send_packet(int to, char* packet)
 {
     SOCKET client_s = sessions[to].sock;
     OVER_EX* over = reinterpret_cast<OVER_EX*>(malloc(sizeof(OVER_EX)));
@@ -236,7 +236,7 @@ void Server::send_ID_player_packet(char id)
     p.id = id;
     p.size = sizeof(player_login_packet);
     p.type = PacketType::Type_player_ID;
-    do_send(id, reinterpret_cast<char*>(&p));
+    send_packet(id, reinterpret_cast<char*>(&p));
 }
 
 void Server::send_login_player_packet(char id, int to)
@@ -249,7 +249,7 @@ void Server::send_login_player_packet(char id, int to)
 
     //printf("%d: login\n",id);
 
-    do_send(to, reinterpret_cast<char*>(&p));
+    send_packet(to, reinterpret_cast<char*>(&p));
 }
 
 void Server::send_disconnect_player_packet(char id)
@@ -262,7 +262,7 @@ void Server::send_disconnect_player_packet(char id)
     for (auto &iter: sessions){
         if (iter.second.connected &&
             iter.second.gameroom_num == sessions[id].gameroom_num)
-            do_send(iter.first, reinterpret_cast<char*>(&p));
+            send_packet(iter.first, reinterpret_cast<char*>(&p));
     }
     Disconnected(id);
 }
@@ -273,7 +273,7 @@ void Server::send_packet_to_players(char id, char* buf)
         if (iter.second.connected && 
             iter.second.gameroom_num == sessions[id].gameroom_num){
             if (calc_distance(id, iter.first) <= VIEWING_DISTANCE) {
-                do_send(iter.first, buf);
+                send_packet(iter.first, buf);
             }
         }
     }
@@ -289,7 +289,7 @@ void Server::send_map_collapse_packet(int num, int map_num)
     for (auto& iter : sessions) {
         if (iter.second.connected &&
             iter.second.gameroom_num == map_num) {
-            do_send(iter.first, reinterpret_cast<char*>(&packet));
+            send_packet(iter.first, reinterpret_cast<char*>(&packet));
         }
     }
 }
@@ -307,7 +307,7 @@ void Server::send_cloud_move_packet(float x, float z, int map_num)
         if (iter.second.connected &&
             iter.second.gameroom_num == map_num) {
             //printf("Send %d: %f/%f\n", iter.first, packet.x, packet.z);
-            do_send(iter.first, reinterpret_cast<char*>(&packet));
+            send_packet(iter.first, reinterpret_cast<char*>(&packet));
         }
     }
 }
@@ -321,7 +321,7 @@ void Server::game_end()
 
     for (auto& iter : sessions) {
         if (iter.second.connected) {
-            do_send(iter.first, reinterpret_cast<char*>(&packet));
+            send_packet(iter.first, reinterpret_cast<char*>(&packet));
         }
     }
 }
@@ -409,11 +409,20 @@ void Server::process_packet(char id, char* buf)
         sessions[p->id].dx.store(p->dx);
         sessions[p->id].dy.store(p->dy);
         sessions[p->id].dz.store(p->dz);
-        //printf("move %f %f\n", sessions[p->id].f3Position.load().x, sessions[p->id].f3Position.load().z);
+        printf("move %f %f\n", sessions[p->id].f3Position.load().x, sessions[p->id].f3Position.load().z);
 
         send_packet_to_players(id, reinterpret_cast<char*>(p));
+
         break;
     }
+    case PacketType::Type_start_pos: {
+        player_start_pos* p = reinterpret_cast<player_start_pos*>(buf);
+        sessions[p->id].f3Position.store(p->Position);
+
+        send_packet(id, reinterpret_cast<char*>(p));
+        break;
+    }
+
     case PacketType::Type_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
 

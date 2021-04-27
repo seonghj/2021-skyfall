@@ -195,7 +195,7 @@ void Server::do_recv(char id)
     //memcpy(sessions[id].packet_buf, over->dataBuffer.buf, over->dataBuffer.buf[0]);
 }
 
-void Server::do_send(int to, char* packet)
+void Server::send_packet(int to, char* packet)
 {
     SOCKET client_s = sessions[to].sock;
     OVER_EX* over = reinterpret_cast<OVER_EX*>(malloc(sizeof(OVER_EX)));
@@ -225,7 +225,7 @@ void Server::send_ID_player_packet(char id)
     p.id = id;
     p.size = sizeof(player_login_packet);
     p.type = PacketType::Type_player_ID;
-    do_send(id, reinterpret_cast<char*>(&p));
+    send_packet(id, reinterpret_cast<char*>(&p));
 }
 
 void Server::send_login_player_packet(char id, int to)
@@ -238,7 +238,7 @@ void Server::send_login_player_packet(char id, int to)
 
     //printf("%d: login\n",id);
 
-    do_send(to, reinterpret_cast<char*>(&p));
+    send_packet(to, reinterpret_cast<char*>(&p));
 }
 
 void Server::send_disconnect_player_packet(char id)
@@ -250,7 +250,7 @@ void Server::send_disconnect_player_packet(char id)
 
     for (auto &iter: sessions){
         if (iter.second.connected && iter.second.id != GAMESERVER_ID)
-            do_send(iter.first, reinterpret_cast<char*>(&p));
+            send_packet(iter.first, reinterpret_cast<char*>(&p));
     }
     closesocket(sessions[id].sock);
 }
@@ -262,7 +262,7 @@ void Server::send_game_start_packet(char id)
     p.size = sizeof(player_remove_packet);
     p.type = PacketType::Type_start_ok;
 
-    do_send(id, reinterpret_cast<char*>(&p));
+    send_packet(id, reinterpret_cast<char*>(&p));
     printf("send to %d start packet\n", id);
     //Disconnected(id);
 }
@@ -290,7 +290,7 @@ void Server::process_packet(char id, char* buf)
         }
         for (auto& iter : sessions) {
             if (iter.second.connected)
-                do_send(iter.first, reinterpret_cast<char*>(&sop));
+                send_packet(iter.first, reinterpret_cast<char*>(&sop));
         }
         break;
     }

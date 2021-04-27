@@ -30,7 +30,8 @@ enum PacketType {
 	Type_game_end,			// S->C
 	Type_player_info,		//	
 	Type_player_move,		// C->S
-	Type_player_pos,		//
+	Type_player_pos,
+	Type_start_pos,
 	Type_player_attack,		//
 	Type_map_collapse,		// S->C
 	Type_cloud_move,		// S->C
@@ -118,6 +119,11 @@ struct player_pos_packet : public Packet {
 	char state;
 	DirectX::XMFLOAT3 Position;
 	float dx, dy, dz;
+};
+
+struct player_start_pos : public Packet {
+	char id;
+	DirectX::XMFLOAT3 Position;
 };
 
 struct player_move_packet : public Packet {

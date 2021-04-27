@@ -17,9 +17,10 @@ public:
 
 	float atm[9] = { 0 };
 	float wind[12] = { 0 };
-	int collapse_count = 0;
 
 	bool isMap_block[9];
+
+	void CALLBACK game_timer(HWND hWnd, UINT nMsg, UINT_PTR nID, DWORD dwTime);
 
 	void init_Map(Server* s);
 	void Set_wind();
@@ -33,5 +34,6 @@ public:
 private:
 	Server* m_pServer = NULL;
 
+	int game_time = 0;
 	int game_num = -1;
 };

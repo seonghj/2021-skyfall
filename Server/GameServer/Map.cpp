@@ -1,5 +1,9 @@
 #include "Map.h"
 
+void CALLBACK Map::game_timer(HWND hWnd, UINT nMsg, UINT_PTR nID, DWORD dwTime)
+{
+	++game_time;
+}
 
 void Map::init_Map(Server* s)
 {
@@ -34,7 +38,7 @@ void Map::init_Map(Server* s)
 	}
 
 
-	collapse_count = 0;
+	game_time = 0;
 
 	Set_wind();
 	Set_cloudpos();
@@ -144,8 +148,8 @@ void Map::cloud_move()
 
 		m_pServer->send_cloud_move_packet(Cloud.x, Cloud.y, game_num);
 
-		collapse_count++;
-		if (collapse_count % MAP_BREAK_TIME == 0)
+		++game_time;
+		if (game_time % MAP_BREAK_TIME == 0)
 			Map_collapse();
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		//printf("%d\n", collapse_count);

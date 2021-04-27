@@ -85,7 +85,7 @@ public:
     void WorkerFunc();
 
     void do_recv(char id);
-    void do_send(int to, char* packet);
+    void send_packet(int to, char* packet);
     void process_packet(char id, char* buf);
 
     void send_ID_player_packet(char id);

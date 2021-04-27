@@ -31,7 +31,8 @@ enum PacketType {
 	Type_game_end,			// S->C
 	Type_player_info,		//	
 	Type_player_move,		// C->S
-	Type_player_pos,		//
+	Type_player_pos,
+	Type_start_pos,
 	Type_player_attack,		//
 	Type_map_collapse,		// S->C
 	Type_cloud_move,		// S->C
@@ -121,11 +122,40 @@ struct player_pos_packet : public Packet {
 	float dx, dy, dz;
 };
 
+struct player_start_pos : public Packet {
+	char id;
+	DirectX::XMFLOAT3 Position;
+};
+
 struct player_move_packet : public Packet {
 	char id;
 	char state;
 	DWORD MoveType;
 	float dx, dy, dz;
+};
+
+struct player_status_packet : public Packet {
+	char id;
+	char state;
+};
+
+struct player_stat_packet : public Packet {
+	char id;
+	float hp;
+	float lv;
+	float speed;
+};
+
+struct player_weapon_packet : public Packet {
+	char id;
+	char weapon;
+};
+
+struct player_equipment_packet : public Packet {
+	char id;
+	char armor;
+	char helmet;
+	char shoes;
 };
 
 struct player_attack_packet : public Packet {
@@ -142,6 +172,7 @@ struct map_collapse_packet : public Packet {
 struct cloud_move_packet : public Packet {
 	float x, z;
 };
+
 
 #pragma pack(pop)
 
