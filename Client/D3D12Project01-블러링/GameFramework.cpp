@@ -468,6 +468,7 @@ void CGameFramework::BuildObjects()
 	m_pPacket->m_pPlayer = pAirplanePlayer;
 	m_pPacket->m_pScene = m_pScene;
 	m_pCamera = m_pPlayer->GetCamera();
+	m_pPlayer->SetCPacket(m_pPacket);
 
 	CreateShaderVariables();
 

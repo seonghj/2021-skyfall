@@ -3,18 +3,18 @@
 #include <iostream>
 #pragma warning(disable : 4996)
 
-PacketFunc::PacketFunc()
+CPacket::CPacket()
 {
 
 }
 
-PacketFunc::~PacketFunc()
+CPacket::~CPacket()
 {
 
 }
 
 // 소켓 함수 오류 출력 후 종료
-void PacketFunc::err_quit(char* msg)
+void CPacket::err_quit(char* msg)
 {
     LPVOID lpMsgBuf;
     FormatMessage(
@@ -28,7 +28,7 @@ void PacketFunc::err_quit(char* msg)
 }
 
 // 소켓 함수 오류 출력
-void PacketFunc::err_display(char* msg)
+void CPacket::err_display(char* msg)
 {
     LPVOID lpMsgBuf;
     FormatMessage(
@@ -40,7 +40,7 @@ void PacketFunc::err_display(char* msg)
     LocalFree(lpMsgBuf);
 }
 
-void PacketFunc::RecvPacket()
+void CPacket::RecvPacket()
 {
 
     DWORD flags = 0;
@@ -102,7 +102,7 @@ void PacketFunc::RecvPacket()
     }
 }
 
-void PacketFunc::SendPacket(char* buf)
+void CPacket::SendPacket(char* buf)
 {
     int retval = 0;
 
@@ -115,7 +115,7 @@ void PacketFunc::SendPacket(char* buf)
     }
 }
 
-void PacketFunc::Send_ready_packet()
+void CPacket::Send_ready_packet()
 {
     game_ready_packet p;
     p.id = client_id;
@@ -124,7 +124,7 @@ void PacketFunc::Send_ready_packet()
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
-void PacketFunc::ProcessPacket(char* buf)
+void CPacket::ProcessPacket(char* buf)
 {
     switch (buf[1])
     {
@@ -225,17 +225,17 @@ void PacketFunc::ProcessPacket(char* buf)
     }
 }
 
-void PacketFunc::Set_clientid(int n)
+void CPacket::Set_clientid(int n)
 {
     client_id = n;
 }
 
-int PacketFunc::Get_clientid()
+int CPacket::Get_clientid()
 {
     return client_id;
 }
 
-void PacketFunc::Set_currentfps(unsigned long FrameRate)
+void CPacket::Set_currentfps(unsigned long FrameRate)
 {
     if (FrameRate > 0)
         currentfps = FrameRate;
@@ -243,7 +243,7 @@ void PacketFunc::Set_currentfps(unsigned long FrameRate)
         currentfps = 1;
 }
 
-void PacketFunc::LobbyConnect()
+void CPacket::LobbyConnect()
 {
     // disconnect
     shutdown(sock, SD_RECEIVE);
@@ -270,16 +270,16 @@ void PacketFunc::LobbyConnect()
 
     memset(&overlapped, 0, sizeof(overlapped));
 
-    //gPacketFunc[num]->Set_clientid(num);
+    //gCPacket[num]->Set_clientid(num);
 
-    Recv_thread = std::thread(&PacketFunc::RecvPacket, this);
-    //std::thread test_Send_thread = std::thread(&PacketFunc::testSendPacket, gPacketFunc[num]);
+    Recv_thread = std::thread(&CPacket::RecvPacket, this);
+    //std::thread test_Send_thread = std::thread(&CPacket::testSendPacket, gCPacket[num]);
     //test_Send_thread.join();
     Recv_thread.join();
 
 }
 
-void PacketFunc::GameConnect()
+void CPacket::GameConnect()
 {
     //// disconnect
     //shutdown(sock, SD_RECEIVE);
@@ -310,8 +310,8 @@ void PacketFunc::GameConnect()
 
 
 
-    std::thread Recv_thread = std::thread(&PacketFunc::RecvPacket, this);
-    //std::thread test_Send_thread = std::thread(&PacketFunc::testSendPacket, this);
+    std::thread Recv_thread = std::thread(&CPacket::RecvPacket, this);
+    //std::thread test_Send_thread = std::thread(&CPacket::testSendPacket, this);
     //test_Send_thread.join();
     Recv_thread.join();
 

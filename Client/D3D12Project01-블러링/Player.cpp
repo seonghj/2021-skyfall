@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "Player.h"
 #include "Shader.h"
+#include "CPacket.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CPlayer
@@ -78,7 +79,7 @@ void CPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity)
 
 void CPlayer::Move(const XMFLOAT3& xmf3Shift, bool bUpdateVelocity)
 {
-	/*if (bUpdateVelocity)
+	if (bUpdateVelocity)
 	{
 		m_xmf3Velocity.x = 0;
 		m_xmf3Velocity.z = 0;
@@ -90,10 +91,10 @@ void CPlayer::Move(const XMFLOAT3& xmf3Shift, bool bUpdateVelocity)
 		}
 	}
 	else
-	{*/
+	{
 		m_xmf3Position = Vector3::Add(m_xmf3Position, xmf3Shift);		
 		m_pCamera->Move(xmf3Shift);
-	/*}*/
+	}
 }
 
 void CPlayer::Rotate(float x, float y, float z)
@@ -182,8 +183,24 @@ void CPlayer::Update(float fTimeElapsed)
 	fLength = sqrtf(m_xmf3Velocity.y * m_xmf3Velocity.y);
 	if (m_xmf3Velocity.y > 0 && fLength > m_fMaxVelocityY) m_xmf3Velocity.y *= (fMaxVelocityY / fLength);
 
+	XMFLOAT3 temp = GetPosition();
 	XMFLOAT3 xmf3Velocity = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
 	Move(xmf3Velocity, false);
+
+	if (temp.x != GetPosition().x || temp.y != GetPosition().y || temp.z != GetPosition().z) {
+		player_pos_packet p;
+		p.id = m_pPacket->Get_clientid();
+			p.Position = GetPosition();
+			//p.MoveType = dwDirection;
+			p.size = sizeof(p);
+			p.state = RUNNING;
+			p.type = Type_player_pos;
+			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+
+			//printf("À×\n");
+	}
+
+
 	DWORD nCurrentCameraMode = m_pCamera->GetMode();
 	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
 

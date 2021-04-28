@@ -176,11 +176,11 @@ struct cloud_move_packet : public Packet {
 
 #pragma pack(pop)
 
-class PacketFunc {
+class CPacket {
 public:
 
-	PacketFunc();
-	~PacketFunc();
+	CPacket();
+	~CPacket();
 
 	WSAOVERLAPPED overlapped;
 	SOCKET sock;
