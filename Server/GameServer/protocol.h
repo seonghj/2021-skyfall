@@ -164,6 +164,18 @@ struct player_attack_packet : public Packet {
 	float damage;
 };
 
+struct map_block_set : public Packet {
+	char block_1;
+	char block_2;
+	char block_3;
+	char block_4;
+	char block_5;
+	char block_6;
+	char block_7;
+	char block_8;
+	char block_9;
+};
+
 struct map_collapse_packet : public Packet {
 	char block_num;
 };
