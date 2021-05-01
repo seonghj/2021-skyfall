@@ -183,8 +183,8 @@ void CPacket::ProcessPacket(char* buf)
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
         m_pPlayer->SetPosition(p->Position);
         m_pPlayer->Rotate(p->dx, p->dy, p->dz);
-        m_pPlayer->Update(fTimeElapsed);
-        m_pScene->Update(fTimeElapsed);
+       /* m_pPlayer->Update(fTimeElapsed);
+        m_pScene->Update(fTimeElapsed);*/
         break;
     }
     case PacketType::Type_start_pos: {

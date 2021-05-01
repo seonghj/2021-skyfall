@@ -409,7 +409,7 @@ void Server::process_packet(char id, char* buf)
         sessions[p->id].dx.store(p->dx);
         sessions[p->id].dy.store(p->dy);
         sessions[p->id].dz.store(p->dz);
-        printf("move %f %f\n", sessions[p->id].f3Position.load().x, sessions[p->id].f3Position.load().z);
+        //printf("move %f %f\n", sessions[p->id].f3Position.load().x, sessions[p->id].f3Position.load().z);
 
         send_packet_to_players(id, reinterpret_cast<char*>(p));
 

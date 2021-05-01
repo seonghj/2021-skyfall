@@ -43,11 +43,7 @@ public:
     std::atomic<float>      dx = 0;
     std::atomic<float>      dy = 0;
     std::atomic<float>      dz = 0;
-    /*std::atomic<float>      x = 0;
-    std::atomic<float>      y = 0;
-    std::atomic<float>      z = 0;*/
     
-
     std::atomic<short>        weapon = 0;
     std::atomic<short>        helmet = 0;
     std::atomic<short>        shoes = 0;

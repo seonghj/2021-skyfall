@@ -12,6 +12,8 @@
 
 class CPacket;
 
+class CCamera;
+
 class CPlayer : public CGameObject
 {
 protected:

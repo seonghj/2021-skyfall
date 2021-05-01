@@ -38,6 +38,11 @@ CGameFramework::CGameFramework()
 	m_ptOldCursorPos.x = FRAME_BUFFER_WIDTH / 2;
 	m_ptOldCursorPos.y = FRAME_BUFFER_HEIGHT / 2;
 	_tcscpy_s(m_pszFrameRate, _T("2015182013 º¯Áø¹è ("));
+
+	m_BeforePosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_DegreeX = 0.0f;
+	m_DegreeY = 0.0f;
+	m_DegreeZ = 0.0f;
 }
 
 CGameFramework::~CGameFramework()
@@ -470,6 +475,8 @@ void CGameFramework::BuildObjects()
 	m_pCamera = m_pPlayer->GetCamera();
 	m_pPlayer->SetCPacket(m_pPacket);
 
+	m_BeforePosition = m_pPlayer->GetPosition();
+
 	CreateShaderVariables();
 
 	m_pd3dCommandList->Close();
@@ -570,37 +577,31 @@ void CGameFramework::ProcessInput()
 			m_pPlayer->SetShooting(false);*/
 		}
 
-		if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
+		if ( (cxDelta != 0.0f) || (cyDelta != 0.0f))
 		{
-			player_pos_packet p;
 			if (cxDelta || cyDelta)
 			{
 				if (pKeysBuffer[VK_RBUTTON] & 0xF0) {
-					//m_pPlayer->Rotate(cyDelta, 0.0f, -cxDelta);
-					p.dx = cyDelta;
-					p.dy = 0.0f;
-					p.dz = -cxDelta;
+					m_DegreeX = cyDelta;
+					m_DegreeY = 0.0f;
+					m_DegreeZ = -cxDelta;
 				}
 				else {
-					//m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
-					p.dx = cyDelta;
-					p.dy = cxDelta;
-					p.dz = 0.0f;
+					m_DegreeX = cyDelta;
+					m_DegreeY = cxDelta;
+					m_DegreeZ = 0.0f;
 				}
 			}
-			if (dwDirection) {
-				m_pPlayer->Move(dwDirection, 20.0f, true);
-			}
 
-			p.id = m_pPacket->Get_clientid();
-			p.Position = m_pPlayer->GetPosition();
-			//p.MoveType = dwDirection;
-			p.size = sizeof(p);
-			p.state = RUNNING;
-			p.type = Type_player_pos;
-			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+		}
+
+		if (dwDirection) {
+			m_BeforePosition = m_pPlayer->GetPosition();
+			m_pPlayer->Move(dwDirection, 20.0f, true);
 		}
 	}
+
+
 	m_pPlayer->SetWhirlSpeed((int)m_fSpeedWhirl);
 
 	m_pScene->Update(fTimeElapsed);
@@ -647,12 +648,12 @@ void CGameFramework::MoveToNextFrame()
 //#define _WITH_PLAYER_TOP
 
 void CGameFramework::FrameAdvance()
-{    
+{
 	m_GameTimer.Tick(0.0f);
-	
+
 	ProcessInput();
 
-    AnimateObjects();
+	AnimateObjects();
 
 	HRESULT hResult = m_pd3dCommandAllocator->Reset();
 	hResult = m_pd3dCommandList->Reset(m_pd3dCommandAllocator, NULL);
@@ -674,10 +675,10 @@ void CGameFramework::FrameAdvance()
 	D3D12_CPU_DESCRIPTOR_HANDLE d3dDsvCPUDescriptorHandle = m_pd3dDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
 	m_pScene->OnPrepareRender(m_pd3dCommandList, m_pCamera);
-	
+
 	UpdateShaderVariables();
 
-	m_pScene->Render(m_pd3dCommandList, &d3dRtvCPUDescriptorHandle, &d3dDsvCPUDescriptorHandle, m_ppd3dSwapChainBackBuffers[m_nSwapChainBufferIndex],m_pCamera);
+	m_pScene->Render(m_pd3dCommandList, &d3dRtvCPUDescriptorHandle, &d3dDsvCPUDescriptorHandle, m_ppd3dSwapChainBackBuffers[m_nSwapChainBufferIndex], m_pCamera);
 
 	float pfClearColor[4] = { 0.0f, 0.125f, 0.3f, 1.0f };
 	m_pd3dCommandList->ClearRenderTargetView(d3dRtvCPUDescriptorHandle, pfClearColor/*Colors::Azure*/, 0, NULL);
@@ -696,8 +697,8 @@ void CGameFramework::FrameAdvance()
 	m_pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);
 
 	hResult = m_pd3dCommandList->Close();
-	
-	ID3D12CommandList *ppd3dCommandLists[] = { m_pd3dCommandList };
+
+	ID3D12CommandList* ppd3dCommandLists[] = { m_pd3dCommandList };
 	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
 
 	WaitForGpuComplete();
@@ -717,8 +718,32 @@ void CGameFramework::FrameAdvance()
 #endif
 #endif
 
-//	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
+	//   m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
 	MoveToNextFrame();
+	XMFLOAT3 NowPosition = m_pPlayer->GetPosition();
+	if (m_BeforePosition.x != NowPosition.x || m_BeforePosition.y != NowPosition.y || m_BeforePosition.z != NowPosition.z
+		|| m_DegreeX != 0.0f || m_DegreeY != 0.0f || m_DegreeZ != 0.0f)
+	{
+		printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
+			m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);
+		player_pos_packet p;
+		p.id = m_pPacket->Get_clientid();
+		p.Position = NowPosition;
+		p.dx = m_DegreeX;
+		p.dy = m_DegreeY;
+		p.dz = m_DegreeZ;
+		//p.MoveType = dwDirection;
+		p.size = sizeof(p);
+		p.state = RUNNING;
+		p.type = Type_player_pos;
+		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+
+		m_BeforePosition = NowPosition;
+		
+		m_DegreeX = 0.0f;
+		m_DegreeY = 0.0f;
+		m_DegreeZ = 0.0f;
+	}
 
 	m_pPacket->Set_currentfps(m_GameTimer.GetFrameRate(m_pszFrameRate + 16, 45));
 	size_t nLength = _tcslen(m_pszFrameRate);

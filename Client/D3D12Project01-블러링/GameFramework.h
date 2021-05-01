@@ -51,6 +51,11 @@ public:
 
 	void Set_m_pPacket(CPacket* t) { m_pPacket = t; };
 
+	XMFLOAT3					m_BeforePosition;
+	float						m_DegreeX;
+	float						m_DegreeY;
+	float						m_DegreeZ;
+
 	void CreateShaderVariables();
 	void UpdateShaderVariables();
 	void ReleaseShaderVariables();

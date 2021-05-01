@@ -183,22 +183,25 @@ void CPlayer::Update(float fTimeElapsed)
 	fLength = sqrtf(m_xmf3Velocity.y * m_xmf3Velocity.y);
 	if (m_xmf3Velocity.y > 0 && fLength > m_fMaxVelocityY) m_xmf3Velocity.y *= (fMaxVelocityY / fLength);
 
-	XMFLOAT3 temp = GetPosition();
 	XMFLOAT3 xmf3Velocity = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
+	
+	//XMFLOAT3 BeforeMove = GetPosition();
 	Move(xmf3Velocity, false);
-
-	if (temp.x != GetPosition().x || temp.y != GetPosition().y || temp.z != GetPosition().z) {
-		player_pos_packet p;
-		p.id = m_pPacket->Get_clientid();
-			p.Position = GetPosition();
-			//p.MoveType = dwDirection;
-			p.size = sizeof(p);
-			p.state = RUNNING;
-			p.type = Type_player_pos;
-			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-
-			//printf("À×\n");
-	}
+	//XMFLOAT3 NowPosition = m_pPlayer->GetPosition();
+	//if (m_BeforePosition.x != NowPosition.x || m_BeforePosition.y != NowPosition.y || m_BeforePosition.z != NowPosition.z)
+	//{
+	//	player_pos_packet p;
+	//	p.id = m_pPacket->Get_clientid();
+	//	p.Position = NowPosition;
+	//	p.dx = 0.f;
+	//	p.dy = 0.f;
+	//	p.dz = 0.f;
+	//	//p.MoveType = dwDirection;
+	//	p.size = sizeof(p);
+	//	p.state = RUNNING;
+	//	p.type = Type_player_pos;
+	//	m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+	//}
 
 
 	DWORD nCurrentCameraMode = m_pCamera->GetMode();
