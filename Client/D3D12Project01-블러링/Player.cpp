@@ -32,6 +32,12 @@ CPlayer::CPlayer()
 	m_iSpeedJump = 100;
 	m_isJump = false;
 	m_isGround = true;
+	m_isRunning = false;
+	m_isShooting = false;
+
+	m_iHp = 0;
+	m_fAtkStat = 0;
+	m_fDefStat = 0;
 
 	m_pPlayerUpdatedContext = NULL;
 	m_pCameraUpdatedContext = NULL;

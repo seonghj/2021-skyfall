@@ -529,7 +529,7 @@ void CGameFramework::ProcessInput()
 
 		if (((pKeysBuffer[VK_LCONTROL] & 0xF0) && m_pCamera->GetMode() == THIRD_PERSON_CAMERA) ||
 			((pKeysBuffer[VK_LBUTTON] & 0xF0) && m_pCamera->GetMode() == SPACESHIP_CAMERA)) {
-			m_pScene->Shot(fTimeElapsed, 300.f);
+			//m_pScene->Shot(fTimeElapsed, 300.f);
 		}
 		float cxDelta = 0.0f, cyDelta = 0.0f;
 
