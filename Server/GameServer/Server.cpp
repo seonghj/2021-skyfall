@@ -136,7 +136,8 @@ void Server::Accept()
         // 소켓과 입출력 완료 포트 연결
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
 
-        int gameroom_num = SetGameNum();
+        //int gameroom_num = SetGameNum();
+        int gameroom_num = client_id % 2;
 
         sessions[client_id].gameroom_num = gameroom_num;
 
@@ -149,20 +150,18 @@ void Server::Accept()
         sessions[client_id].connected = true;
 
         // 로그인한 클라이언트에 다른 클라이언트 정보 전달
-        for (auto& i : gameroom) {
-            if (i.first != gameroom_num)
-                continue;
-            if (sessions[i.second].connected && i.second != client_id)
-                send_login_player_packet(i.second, client_id);
+        auto iter = gameroom.equal_range(gameroom_num);
+        for (auto it = iter.first; it != iter.second; ++it) {
+            if (sessions[it->second].connected && (it->second != client_id))
+                send_login_player_packet(it->second, client_id);
         }
 
         // 다른 클라이언트에 로그인정보 전달
-        for (auto& i : gameroom) {
-            if (i.first != gameroom_num)
-                continue;
-            if (sessions[i.second].connected && i.second != client_id)
-                send_login_player_packet(client_id, i.second);
+        for (auto it = iter.first; it != iter.second; ++it){
+            if (sessions[it->second].connected && (it->second != client_id) )
+                send_login_player_packet(client_id, it->second);
         }
+
 
         do_recv(client_id);
     }
@@ -247,7 +246,7 @@ void Server::send_login_player_packet(char id, int to)
     p.size = sizeof(player_login_packet);
     p.type = PacketType::Type_player_login;
 
-    //printf("%d: login\n",id);
+    printf("%d: login to %d\n",id, to);
 
     send_packet(to, reinterpret_cast<char*>(&p));
 }
@@ -259,24 +258,52 @@ void Server::send_disconnect_player_packet(char id)
     p.size = sizeof(player_remove_packet);
     p.type = PacketType::Type_player_remove;
 
-    for (auto &iter: sessions){
+    auto iter = gameroom.equal_range(sessions[id].gameroom_num);
+    for (auto it = iter.first; it != iter.second; ++it) {
+        if (sessions[it->second].connected)
+            send_packet(it->second, reinterpret_cast<char*>(&p));
+
+    }
+    /*for (auto &iter: sessions){
         if (iter.second.connected &&
             iter.second.gameroom_num == sessions[id].gameroom_num)
             send_packet(iter.first, reinterpret_cast<char*>(&p));
-    }
+    }*/
     Disconnected(id);
 }
 
 void Server::send_packet_to_players(char id, char* buf)
 {
-    for (auto& iter : sessions) {
+    auto iter = gameroom.equal_range(sessions[id].gameroom_num);
+    for (auto it = iter.first; it != iter.second; ++it) {
+        if (sessions[it->second].connected)
+            if (calc_distance(id, it->second) <= VIEWING_DISTANCE)
+                send_packet(it->second, buf);
+    }
+
+    /*for (auto& iter : sessions) {
         if (iter.second.connected && 
-            iter.second.gameroom_num == sessions[id].gameroom_num){
+            (iter.second.gameroom_num == sessions[id].gameroom_num)){
             if (calc_distance(id, iter.first) <= VIEWING_DISTANCE) {
                 send_packet(iter.first, buf);
             }
         }
+    }*/
+}
+
+void Server::send_packet_to_players(int game_num, char* buf)
+{
+    auto iter = gameroom.equal_range(game_num);
+    for (auto it = iter.first; it != iter.second; ++it) {
+        if (sessions[it->second].connected)
+            send_packet(it->second, buf);
     }
+   /* for (auto& iter : sessions) {
+        if (iter.second.connected &&
+            iter.second.gameroom_num == game_num) {
+            send_packet(iter.first, buf);
+        }
+    };*/
 }
 
 void Server::send_map_collapse_packet(int num, int map_num)
@@ -286,12 +313,17 @@ void Server::send_map_collapse_packet(int num, int map_num)
     packet.type = PacketType::Type_map_collapse;
     packet.block_num = num;
 
-    for (auto& iter : sessions) {
+    auto iter = gameroom.equal_range(map_num);
+    for (auto it = iter.first; it != iter.second; ++it) {
+        if (sessions[it->second].connected)
+            send_packet(it->second, reinterpret_cast<char*>(&packet));
+    }
+    /*for (auto& iter : sessions) {
         if (iter.second.connected &&
             iter.second.gameroom_num == map_num) {
             send_packet(iter.first, reinterpret_cast<char*>(&packet));
         }
-    }
+    }*/
 }
 
 void Server::send_cloud_move_packet(float x, float z, int map_num)
@@ -302,28 +334,38 @@ void Server::send_cloud_move_packet(float x, float z, int map_num)
     packet.x = x;
     packet.z = z;
 
-
-    for (auto& iter : sessions) {
-        if (iter.second.connected &&
-            iter.second.gameroom_num == map_num) {
-            //printf("Send %d: %f/%f\n", iter.first, packet.x, packet.z);
-            send_packet(iter.first, reinterpret_cast<char*>(&packet));
-        }
+    auto iter = gameroom.equal_range(map_num);
+    for (auto it = iter.first; it != iter.second; ++it) {
+        if (sessions[it->second].connected)
+            send_packet(it->second, reinterpret_cast<char*>(&packet));
     }
+    //for (auto& iter : sessions) {
+    //    if (iter.second.connected &&
+    //        iter.second.gameroom_num == map_num) {
+    //        //printf("Send %d: %f/%f\n", iter.first, packet.x, packet.z);
+    //        send_packet(iter.first, reinterpret_cast<char*>(&packet));
+    //    }
+    //}
 }
 
-void Server::game_end()
+void Server::game_end(int game_num)
 {
     game_end_packet packet;
     packet.id = 0;
     packet.size = sizeof(packet);
     packet.type = PacketType::Type_game_end;
 
-    for (auto& iter : sessions) {
+    auto iter = gameroom.equal_range(game_num);
+    for (auto it = iter.first; it != iter.second; ++it) {
+        if (sessions[it->second].connected)
+            send_packet(it->second, reinterpret_cast<char*>(&packet));
+    }
+
+    /*for (auto& iter : sessions) {
         if (iter.second.connected) {
             send_packet(iter.first, reinterpret_cast<char*>(&packet));
         }
-    }
+    }*/
 }
 
 float Server::calc_distance(int a, int b)

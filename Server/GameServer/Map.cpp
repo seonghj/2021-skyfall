@@ -37,6 +37,12 @@ void Map::init_Map(Server* s)
 		isMap_block[i] = TRUE;
 	}
 
+	map_block_set p;
+	p.type = PacketType::Type_map_set;
+	p.size = sizeof(p);
+	for (int i = 0; i < MAX_MAP_BLOCK; ++i)
+		p.block_num[i] = Map_num[i];
+	m_pServer->send_packet_to_players(game_num, reinterpret_cast<char*>(&p));
 
 	game_time = 0;
 
@@ -204,6 +210,6 @@ void Map::Map_collapse()
 	print_Map();
 
 	if (num == 9) {
-		m_pServer->game_end();
+		m_pServer->game_end(game_num);
 	}
 }

@@ -33,6 +33,7 @@ enum PacketType {
 	Type_player_pos,
 	Type_start_pos,
 	Type_player_attack,		//
+	Type_map_set,
 	Type_map_collapse,		// S->C
 	Type_cloud_move,		// S->C
 	Type_bot_ID,			//	
@@ -165,15 +166,7 @@ struct player_attack_packet : public Packet {
 };
 
 struct map_block_set : public Packet {
-	char block_1;
-	char block_2;
-	char block_3;
-	char block_4;
-	char block_5;
-	char block_6;
-	char block_7;
-	char block_8;
-	char block_9;
+	char block_num[9];
 };
 
 struct map_collapse_packet : public Packet {

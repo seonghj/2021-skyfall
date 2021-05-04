@@ -1,7 +1,6 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS // 최신 VC++ 컴파일 시 경고 방지
 #include "stdafx.h"
 #include "Server.h"
-#include "CPacket.h"
 #include "Map.h"
 
 Server* s = new Server;
@@ -20,5 +19,3 @@ int main(int argc, char* argv[])
    //mysql_close(db->connection);
 
 }
-
-// TO DO

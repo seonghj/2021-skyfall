@@ -2,7 +2,7 @@
 #include"stdafx.h"
 #include "DB.h"
 #include "Map.h"
-#include "CPacket.h"
+#include "protocol.h"
 
 struct OVER_EX
 {
@@ -92,10 +92,11 @@ public:
     void send_login_player_packet(char id, int to);
     void send_disconnect_player_packet(char id);
     void send_packet_to_players(char id, char* buf);
+    void send_packet_to_players(int game_num, char* buf);
     void send_map_collapse_packet(int num, int map_num);
     void send_cloud_move_packet(float x, float z, int map_num);
     
-    void game_end();
+    void game_end(int game_num);
 
     float calc_distance(int a, int b);
     DirectX::XMFLOAT3 move_calc(DWORD dwDirection, float fDistance, int state, int id);
@@ -103,8 +104,7 @@ public:
 private:
     HANDLE hcp;
     
-    std::unordered_map <int, int> gameroom; // <방번호, 플레이어 ID>
-    //std::unordered_map <int, SESSION[MAX_PLAYER]> sessions;
+    std::unordered_multimap <int, int> gameroom; // <방번호, 플레이아ID>
     std::unordered_map <int, SESSION> sessions;
     std::unordered_map <int, Map> maps;
 
