@@ -337,9 +337,9 @@ void CThirdPersonCamera::Rotate(float x, float y, float z)
 	}
 	if (m_pPlayer && m_xmf3Position.y <= m_pPlayer->GetPosition().y)
 	{
-		if (m_xmf3Position.y <= m_pPlayer->GetPosition().y - 30.0f)
+		if (m_xmf3Position.y <= m_pPlayer->GetPosition().y)
 		{
-			m_xmf3Position.y = m_pPlayer->GetPosition().y - 30.0f;
+			m_xmf3Position.y = m_pPlayer->GetPosition().y;
 			SetLookAt(m_pPlayer->GetPosition());
 		}
 	}
