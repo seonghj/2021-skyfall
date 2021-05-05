@@ -425,7 +425,7 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 			SetMaxVelocityY(100.f);
 			m_pCamera = OnChangeCamera(THIRD_PERSON_CAMERA, nCurrentCameraMode);
 			m_pCamera->SetTimeLag(0.25f);
-			m_pCamera->SetOffset(XMFLOAT3(0.0f, 15.0f, -30.0f));
+			m_pCamera->SetOffset(XMFLOAT3(0.0f, 55.0f, -80.0f));
 			m_pCamera->SetPosition(Vector3::Add(m_xmf3Position, Vector3::ScalarProduct(Vector3::Normalize(m_xmf3Look), -1 * Vector3::Length(m_pCamera->GetOffset()))));
 			m_pCamera->SetLookAt(m_xmf3Position);
 			m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
