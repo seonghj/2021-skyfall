@@ -3,6 +3,7 @@
 #include "Server.h"
 #include "protocol.h"
 
+class OVER_EX;
 class Server;
 
 class Map{
@@ -10,6 +11,8 @@ public:
 	Map() { }
 	Map(const int& num) { game_num = num; }
 	~Map() {}
+
+	OVER_EX     over;
 
 	Vector2D Cloud;
 
@@ -20,20 +23,17 @@ public:
 
 	bool isMap_block[9];
 
-	void CALLBACK game_timer(HWND hWnd, UINT nMsg, UINT_PTR nID, DWORD dwTime);
-
+	void SetNum(int n) { game_num = n; }
 	void init_Map(Server* s);
 	void Set_wind();
 	void Set_cloudpos();
 	void print_Map();
 	float calc_windpower(float a, float b);
 	void cloud_move();
-
 	void Map_collapse();
 
 private:
+	int game_time;
 	Server* m_pServer = NULL;
-
-	int game_time = 0;
 	int game_num = -1;
 };

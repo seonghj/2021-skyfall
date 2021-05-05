@@ -12,6 +12,8 @@ int main(int argc, char* argv[])
 	//std::wcout.imbue(std::locale("korean"));
    //db->Connection();
 
+	//CreateTimerQueueTimer(&hTimer, hTimerQueue, (WAITORTIMERCALLBACK)TimerCallback, NULL, 1000, 1000, 0);
+
 	s->Init();
 
 	s->Thread_join();

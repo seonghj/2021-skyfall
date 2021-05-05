@@ -47,6 +47,9 @@ int Server::SetGameNum()
 
 void Server::ConnectLobby()
 {
+    sessions.emplace(LOBBY_ID, SESSION());
+    sessions[LOBBY_ID].id = LOBBY_ID;
+
     // 윈속 초기화
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
@@ -131,13 +134,14 @@ void Server::Accept()
         sessions[client_id].over.dataBuffer.buf =
             sessions[client_sock].over.messageBuffer;
         sessions[client_id].over.is_recv = true;
+        sessions[client_id].over.type = 0;
         flags = 0;
 
         // 소켓과 입출력 완료 포트 연결
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
 
-        //int gameroom_num = SetGameNum();
-        int gameroom_num = client_id % 2;
+        int gameroom_num = SetGameNum();
+        //int gameroom_num = client_id % 2;
 
         sessions[client_id].gameroom_num = gameroom_num;
 
@@ -161,6 +165,12 @@ void Server::Accept()
             if (sessions[it->second].connected && (it->second != client_id) )
                 send_login_player_packet(client_id, it->second);
         }
+
+        /*if (20 == gameroom.count(gameroom_num))
+        {
+            maps.emplace(gameroom_num, Map(gameroom_num));
+            maps[gameroom_num].init_Map(this);
+        }*/
 
 
         do_recv(client_id);
@@ -531,49 +541,62 @@ void Server::WorkerFunc()
 
         //std::thread::id Thread_id = std::this_thread::get_id();
 
-        // 비동기 입출력 결과 확인
-        if (FALSE == retval)
-        {
-            //printf("error = %d\n", WSAGetLastError());
-            display_error("GQCS", WSAGetLastError());
-            Disconnected(id);
-            continue;
-        }
-
-        if ((Transferred == 0)) {
-            Disconnected(id);
-            continue;
-        }
-
-
-        if (over_ex->is_recv) {
-            //printf("thread id: %d\n", Thread_id);
-            int rest_size = Transferred;
-            char* buf_ptr = over_ex->messageBuffer;
-            char packet_size = 0;
-            if (0 < sessions[id].prev_size)
-                packet_size = sessions[id].packet_buf[0];
-            while (rest_size > 0) {
-                if (0 == packet_size) packet_size = buf_ptr[0];
-                int required = packet_size - sessions[id].prev_size;
-                if (rest_size >= required) {
-                    memcpy(sessions[id].packet_buf + sessions[id].
-                        prev_size, buf_ptr, required);
-                    process_packet(id, sessions[id].packet_buf);
-                    rest_size -= required;
-                    buf_ptr += required;
-                    packet_size = 0;
-                }
-                else {
-                    memcpy(sessions[id].packet_buf + sessions[id].prev_size,
-                        buf_ptr, rest_size);
-                    rest_size = 0;
-                }
+        switch (over_ex->type) {
+        case 0: {
+            // 비동기 입출력 결과 확인
+            if (FALSE == retval)
+            {
+                //printf("error = %d\n", WSAGetLastError());
+                display_error("GQCS", WSAGetLastError());
+                Disconnected(id);
+                continue;
             }
-            do_recv(id);
+
+            if ((Transferred == 0)) {
+                Disconnected(id);
+                continue;
+            }
+
+            if (over_ex->is_recv) {
+                //printf("thread id: %d\n", Thread_id);
+                int rest_size = Transferred;
+                char* buf_ptr = over_ex->messageBuffer;
+                char packet_size = 0;
+                if (0 < sessions[id].prev_size)
+                    packet_size = sessions[id].packet_buf[0];
+                while (rest_size > 0) {
+                    if (0 == packet_size) packet_size = buf_ptr[0];
+                    int required = packet_size - sessions[id].prev_size;
+                    if (rest_size >= required) {
+                        memcpy(sessions[id].packet_buf + sessions[id].
+                            prev_size, buf_ptr, required);
+                        process_packet(id, sessions[id].packet_buf);
+                        rest_size -= required;
+                        buf_ptr += required;
+                        packet_size = 0;
+                    }
+                    else {
+                        memcpy(sessions[id].packet_buf + sessions[id].prev_size,
+                            buf_ptr, rest_size);
+                        rest_size = 0;
+                    }
+                }
+                do_recv(id);
+            }
+            else {
+                delete over_ex;
+            }
+            break;
         }
-        else {
-            delete over_ex;
+
+        case 1: {
+            if (FALSE == retval)
+                continue;
+            cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(over_ex->messageBuffer);
+            send_cloud_move_packet(p->x, p->z, p->id);
+            printf("cloud x: %f | y: %f\n\n", p->x, p->z);
+            break;
+        }
         }
     }
 }
@@ -594,7 +617,6 @@ bool Server::Init()
     for (int i = 0; i < (int)si.dwNumberOfProcessors; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
-    sessions.emplace(LOBBY_ID, SESSION());
     //ConnectLobby();
 
     accept_thread = std::thread(&Server::Accept, this);

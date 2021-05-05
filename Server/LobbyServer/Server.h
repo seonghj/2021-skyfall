@@ -1,22 +1,14 @@
 #pragma once
 #include"stdafx.h"
 #include "DB.h"
-#include "CPacket.h"
-
-struct OVER_EX
-{
-    WSAOVERLAPPED	overlapped;
-    WSABUF			dataBuffer;
-    char			messageBuffer[BUFSIZE];
-    bool			is_recv;
-};
+#include "protocol.h"
 
 class SESSION
 {
 public:
 
     SESSION() {}
-    SESSION(const SESSION& s) {}
+    SESSION(const int& i) { id = i; }
     ~SESSION() {}
 
     OVER_EX     over;
@@ -54,7 +46,7 @@ public:
     std::atomic<float>      hp = 0;
     std::atomic<float>      lv = 0;
     std::atomic<float>      speed = 10;
-}
+};
 
 //namespace std {
 //    template<>

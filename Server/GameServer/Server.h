@@ -10,6 +10,8 @@ struct OVER_EX
     WSABUF			dataBuffer;
     char			messageBuffer[BUFSIZE];
     bool			is_recv;
+    int             type;
+    // 0 = session 1 = map
 };
 
 class SESSION
@@ -17,7 +19,7 @@ class SESSION
 public:
 
     SESSION() {}
-    SESSION(const SESSION& s) {}
+    SESSION(const int& i) { id = i; }
     ~SESSION() {}
 
     OVER_EX     over;
@@ -69,6 +71,8 @@ class Server {
 public:
     Server();
     ~Server();
+
+    HANDLE Gethcp() { return hcp; }
 
     void display_error(const char* msg, int err_no);
 

@@ -1,10 +1,5 @@
 #include "Map.h"
 
-void CALLBACK Map::game_timer(HWND hWnd, UINT nMsg, UINT_PTR nID, DWORD dwTime)
-{
-	++game_time;
-}
-
 void Map::init_Map(Server* s)
 {
 	m_pServer = s;
@@ -45,6 +40,12 @@ void Map::init_Map(Server* s)
 	m_pServer->send_packet_to_players(game_num, reinterpret_cast<char*>(&p));
 
 	game_time = 0;
+
+	memset(&over, 0, sizeof(over));
+	over.is_recv = true;
+	over.dataBuffer.len = BUFSIZE;
+	over.dataBuffer.buf = over.messageBuffer;
+	over.type = 1;
 
 	Set_wind();
 	Set_cloudpos();
@@ -150,13 +151,28 @@ void Map::cloud_move()
 			Set_cloudpos();
 		}
 
-		//printf("cloud x: %f | y: %f\n\n", Cloud.x, Cloud.y);
+		/*printf("cloud x: %f | y: %f\n\n", Cloud.x, Cloud.y);
 
-		m_pServer->send_cloud_move_packet(Cloud.x, Cloud.y, game_num);
+
+		m_pServer->send_cloud_move_packet(Cloud.x, Cloud.y, game_num);*/
+
+
+		cloud_move_packet p;
+		p.type = EventType::Cloud_move;
+		p.size = sizeof(p);
+		p.id = game_num;
+		p.x = Cloud.x;
+		p.z = Cloud.y;
+		over.dataBuffer.len = sizeof(p);
+		memcpy(over.dataBuffer.buf, reinterpret_cast<char*>(&p), sizeof(p));
 
 		++game_time;
 		if (game_time % MAP_BREAK_TIME == 0)
 			Map_collapse();
+
+		DWORD Transferred;
+		BOOL ret = PostQueuedCompletionStatus(m_pServer->Gethcp(), Transferred
+			, (ULONG_PTR)&(game_num), (LPOVERLAPPED)&over.overlapped);
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		//printf("%d\n", collapse_count);
 	}
