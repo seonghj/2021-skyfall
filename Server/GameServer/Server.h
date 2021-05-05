@@ -4,22 +4,23 @@
 #include "Map.h"
 #include "protocol.h"
 
-struct OVER_EX
-{
-    WSAOVERLAPPED	overlapped;
-    WSABUF			dataBuffer;
-    char			messageBuffer[BUFSIZE];
-    bool			is_recv;
-    int             type;
-    // 0 = session 1 = map
-};
+//struct OVER_EX
+//{
+//    WSAOVERLAPPED	overlapped;
+//    WSABUF			dataBuffer;
+//    char			messageBuffer[BUFSIZE];
+//    bool			is_recv;
+//    int             type;
+//    // 0 = session 1 = map
+//};
+
 
 class SESSION
 {
 public:
 
     SESSION() {}
-    SESSION(const int& i) { id = i; }
+    SESSION(const SESSION& session) {}
     ~SESSION() {}
 
     OVER_EX     over;
@@ -54,16 +55,6 @@ public:
     std::atomic<float>      lv = 0;
     std::atomic<float>      speed = 20;
 };
-
-//namespace std {
-//    template<>
-//    class hash<SESSION> {
-//    public:
-//        size_t operator() (const SESSION& s) const { 
-//            return std::hash<int>()(s.id);
-//        }
-//    };
-//}
 
 class Map;
 

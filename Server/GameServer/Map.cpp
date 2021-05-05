@@ -170,7 +170,7 @@ void Map::cloud_move()
 		if (game_time % MAP_BREAK_TIME == 0)
 			Map_collapse();
 
-		DWORD Transferred;
+		DWORD Transferred = 0;
 		BOOL ret = PostQueuedCompletionStatus(m_pServer->Gethcp(), Transferred
 			, (ULONG_PTR)&(game_num), (LPOVERLAPPED)&over.overlapped);
 		std::this_thread::sleep_for(std::chrono::seconds(1));

@@ -3,7 +3,7 @@
 #include "Server.h"
 #include "protocol.h"
 
-class OVER_EX;
+//struct OVER_EX;
 class Server;
 
 class Map{
