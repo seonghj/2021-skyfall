@@ -121,7 +121,7 @@ protected:
 	//vector<CBullet*> m_vpBullets;
 	CBullet** m_ppBullets = 0;
 
-	const int MAX_BULLET = 10;
+	const int MAX_BULLET = 1000;
 };
 
 class CSoundCallbackHandler : public CAnimationCallbackHandler
@@ -146,6 +146,8 @@ public:
 
 	virtual void OnPlayerUpdateCallback(float fTimeElapsed);
 	virtual void OnCameraUpdateCallback(float fTimeElapsed);
+
+	virtual void Animate(float fTimeElapsed);
 
 #ifdef _WITH_SOUND_CALLBACK
 	virtual void Move(ULONG nDirection, float fDistance, bool bVelocity = false);

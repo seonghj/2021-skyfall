@@ -533,30 +533,6 @@ void CAngrybotObjectsShader::BuildObjects(ID3D12Device *pd3dDevice, ID3D12Graphi
 //
 
 
-CBulletsShader::CBulletsShader()
-{
-}
-
-CBulletsShader::~CBulletsShader()
-{
-}
-
-void CBulletsShader::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
-{
-	//CreateCbvSrvUavDescriptorHeaps(pd3dDevice, 0, 20, 0); //SuperCobra(17), Gunship(2)
-	CGameObject* pGunshipModel = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/twig.bin", this);
-
-	m_pBulletMesh = pGunshipModel->FindFrame("SM_Tree_Twig_05")->m_pMesh;
-}
-
-void CBulletsShader::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
-{
-
-	CWireFrameShader::Render(pd3dCommandList, pCamera);
-	if(m_pBulletMesh)
-		m_pBulletMesh->Render(pd3dCommandList, 0);
-}
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //

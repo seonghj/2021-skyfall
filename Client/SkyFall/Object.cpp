@@ -1634,16 +1634,3 @@ void CBullet::Animate(float fElapsedTime) {
 	std::cout << m_fRotationX << std::endl;
 	Rotate(m_fRotationX / PI * 180, 0, 0);
 }
-
-void CBullet::SetShader(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
-{
-	m_nMaterials = 1;
-	m_ppMaterials = new CMaterial * [m_nMaterials];
-	m_ppMaterials[0] = NULL;
-	CMaterial* pMaterial = new CMaterial(0);
-
-	CBulletsShader* pShader = new CBulletsShader();
-	pShader->BuildObjects(pd3dDevice,pd3dCommandList,pd3dGraphicsRootSignature);
-	pMaterial->SetShader(pShader);
-	SetMaterial(0, pMaterial);
-}

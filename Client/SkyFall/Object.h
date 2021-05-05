@@ -577,10 +577,9 @@ public:
 	float m_fRotationX = 0.0f;
 
 public:
-	CBullet() :CGameObject(), m_fSpeed(300.f), m_xmf3MovingDirection(0.f, 0.f, 0.f), m_xmf3Gravity(0.f, -0.2f, 0.f) {};
+	CBullet(void* pContext = 0) :CGameObject(), m_fSpeed(300.f), m_xmf3MovingDirection(0.f, 0.f, 0.f), m_xmf3Gravity(0.f, -0.2f, 0.f) { SetMesh((CStandardMesh*)pContext); };
 	virtual ~CBullet() { CGameObject::~CGameObject(); };
 	void Animate(float fElapsedTime);
-	void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; }
-	void SetShader(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = 0);
+	void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; };
 	//virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera=NULL);
 };
