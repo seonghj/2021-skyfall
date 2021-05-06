@@ -15,6 +15,7 @@ public:
 	OVER_EX     over;
 
 	Vector2D Cloud;
+	HANDLE hMove;
 
 	int Map_num[MAX_MAP_BLOCK];
 
@@ -22,6 +23,8 @@ public:
 	float wind[12] = { 0 };
 
 	bool isMap_block[9];
+
+	bool ismove;
 
 	void SetNum(int n) { game_num = n; }
 	void init_Map(Server* s);

@@ -724,8 +724,8 @@ void CGameFramework::FrameAdvance()
 	if (m_BeforePosition.x != NowPosition.x || m_BeforePosition.y != NowPosition.y || m_BeforePosition.z != NowPosition.z
 		|| m_DegreeX != 0.0f || m_DegreeY != 0.0f || m_DegreeZ != 0.0f)
 	{
-		printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
-			m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);
+		/*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
+			m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
 		player_pos_packet p;
 		p.id = m_pPacket->Get_clientid();
 		p.Position = NowPosition;

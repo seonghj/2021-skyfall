@@ -29,6 +29,11 @@ struct OVER_EX
 	// 0 = session 1 = map
 };
 
+enum OVER_EX_Type {
+	OE_session,
+	OE_map
+};
+
 enum PacketType {
 	Type_player_ID,			// S->C
 	Type_player_login,		// S->C

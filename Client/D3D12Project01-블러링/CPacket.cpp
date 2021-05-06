@@ -105,7 +105,6 @@ void CPacket::RecvPacket()
 void CPacket::SendPacket(char* buf)
 {
     int retval = 0;
-
     wsabuf.len = buf[0];
     wsabuf.buf = buf;
     retval = WSASend(sock, &wsabuf, 1, &sendbytes, 0, NULL, NULL);
@@ -154,12 +153,12 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::Type_start_ok: {
-        GameConnect();
+        //GameConnect();
         break;
     }
     case PacketType::Type_game_end: {
         printf("gameover\n");
-        LobbyConnect();
+        //LobbyConnect();
         break;
     }
     case PacketType::Type_player_info: {

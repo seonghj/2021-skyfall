@@ -9,7 +9,7 @@ DB* db = new DB;
 
 int main(int argc, char* argv[])
 {
-	std::wcout.imbue(std::locale("korean"));
+	//std::wcout.imbue(std::locale("korean"));
    //db->Connection();
 
 	s->Init();

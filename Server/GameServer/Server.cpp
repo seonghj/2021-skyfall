@@ -115,9 +115,7 @@ void Server::Accept()
         }
 
         int client_id = SetClientId();
-        //printf("만들기 전 세션 갯수: %d\n", sessions.size());
         sessions.emplace(client_id, SESSION());
-        //printf("만든 후 세션 갯수: %d\n", sessions.size());
         memset(&sessions[client_id], 0x00, sizeof(SESSION));
         sessions[client_id].id = client_id;
         sessions[client_id].sock = client_sock;
@@ -130,11 +128,11 @@ void Server::Accept()
             inet_ntoa(sessions[client_id].clientaddr.sin_addr)
             , ntohs(sessions[client_id].clientaddr.sin_port), client_id);
 
+        sessions[client_id].over.type = 0;
         sessions[client_id].over.dataBuffer.len = BUFSIZE;
         sessions[client_id].over.dataBuffer.buf =
             sessions[client_sock].over.messageBuffer;
         sessions[client_id].over.is_recv = true;
-        sessions[client_id].over.type = 0;
         flags = 0;
 
         // 소켓과 입출력 완료 포트 연결
@@ -166,14 +164,13 @@ void Server::Accept()
                 send_login_player_packet(client_id, it->second);
         }
 
-        if (20 == gameroom.count(gameroom_num))
+        do_recv(client_id);
+
+        if (1 == gameroom.count(gameroom_num))
         {
             maps.emplace(gameroom_num, Map(gameroom_num));
             maps[gameroom_num].init_Map(this);
         }
-
-
-        do_recv(client_id);
     }
 
     // closesocket()
@@ -370,6 +367,7 @@ void Server::game_end(int game_num)
         if (sessions[it->second].connected)
             send_packet(it->second, reinterpret_cast<char*>(&packet));
     }
+    maps.erase(game_num);
 
     /*for (auto& iter : sessions) {
         if (iter.second.connected) {
@@ -462,7 +460,6 @@ void Server::process_packet(char id, char* buf)
         sessions[p->id].dy.store(p->dy);
         sessions[p->id].dz.store(p->dz);
         //printf("move %f %f\n", sessions[p->id].f3Position.load().x, sessions[p->id].f3Position.load().z);
-
         send_packet_to_players(id, reinterpret_cast<char*>(p));
 
         break;
@@ -542,7 +539,7 @@ void Server::WorkerFunc()
         //std::thread::id Thread_id = std::this_thread::get_id();
 
         switch (over_ex->type) {
-        case 0: {
+        case OE_session: {
             // 비동기 입출력 결과 확인
             if (FALSE == retval)
             {
@@ -553,10 +550,11 @@ void Server::WorkerFunc()
             }
 
             if ((Transferred == 0)) {
+                display_error("GQCS", WSAGetLastError());
                 Disconnected(id);
                 continue;
             }
-
+            //printf("%d\n", true);
             if (over_ex->is_recv) {
                 //printf("thread id: %d\n", Thread_id);
                 int rest_size = Transferred;
@@ -589,15 +587,17 @@ void Server::WorkerFunc()
             break;
         }
 
-        case 1: {
+        case OE_map: {
             if (FALSE == retval)
                 continue;
             cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(over_ex->messageBuffer);
             send_cloud_move_packet(p->x, p->z, p->id);
             printf("cloud x: %f | y: %f\n\n", p->x, p->z);
+            maps[p->id].cloud_move();
             break;
         }
         }
+
     }
 }
 

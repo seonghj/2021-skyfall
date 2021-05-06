@@ -47,6 +47,9 @@ void Map::init_Map(Server* s)
 	over.dataBuffer.buf = over.messageBuffer;
 	over.type = 1;
 
+	//hMove = CreateEvent(NULL, TRUE, TRUE, NULL);
+	ismove = true;
+
 	Set_wind();
 	Set_cloudpos();
 	print_Map();
@@ -107,23 +110,26 @@ float Map::calc_windpower(float a, float b)
 
 void Map::cloud_move()
 {
-	while (1)
-	{
+	if (ismove) {
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		std::thread::id Thread_id = std::this_thread::get_id();
+		printf("thread id: %d - ", Thread_id);
+		//ismove = false;
 		for (int i = 0; i < 3; i++)
 		{
-			if (MAP_BLOCK_SIZE * i < Cloud.y && Cloud.y <= MAP_BLOCK_SIZE * (i+1))
+			if (MAP_BLOCK_SIZE * i < Cloud.y && Cloud.y <= MAP_BLOCK_SIZE * (i + 1))
 			{
 				if (0 < Cloud.x && Cloud.x <= MAP_BLOCK_SIZE * 1.5f)
 				{
 					Cloud.x += wind[i * 2];
 					//printf("%d", i * 2);
-					
+
 				}
 				else if (MAP_BLOCK_SIZE * 1.5f < Cloud.x && Cloud.x < MAP_BLOCK_SIZE * 3)
 				{
 					Cloud.x += wind[i * 2 + 1];
 					//printf("%d", i * 2 + 1);
-					
+
 				}
 			}
 		}
@@ -147,7 +153,7 @@ void Map::cloud_move()
 			}
 		}
 
-		if(Cloud.x < 0 || Cloud.y < 0){ 
+		if (Cloud.x < 0 || Cloud.y < 0) {
 			Set_cloudpos();
 		}
 
@@ -169,12 +175,10 @@ void Map::cloud_move()
 		++game_time;
 		if (game_time % MAP_BREAK_TIME == 0)
 			Map_collapse();
-
 		DWORD Transferred = 0;
 		BOOL ret = PostQueuedCompletionStatus(m_pServer->Gethcp(), Transferred
-			, (ULONG_PTR)&(game_num), (LPOVERLAPPED)&over.overlapped);
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-		//printf("%d\n", collapse_count);
+			, (ULONG_PTR) & (game_num), (LPOVERLAPPED)&over.overlapped);
+		ismove = true;
 	}
 }
 
