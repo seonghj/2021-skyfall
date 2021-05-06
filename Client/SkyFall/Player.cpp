@@ -131,6 +131,7 @@ void CPlayer::Rotate(float x, float y, float z)
 			if (m_fRoll < -20.0f) { z -= (m_fRoll + 20.0f); m_fRoll = -20.0f; }
 		}
 		m_pCamera->Rotate(x, y, z);
+		
 		if (y != 0.0f)
 		{
 			XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(y));
@@ -207,7 +208,9 @@ void CPlayer::Update(float fTimeElapsed)
 	fLength = Vector3::Length(m_xmf3Velocity);
 	float fDeceleration = (m_fFriction * fTimeElapsed);
 	if (fDeceleration > fLength) fDeceleration = fLength;
+	float VY = m_xmf3Velocity.y;
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, Vector3::ScalarProduct(m_xmf3Velocity, -fDeceleration, true));
+	m_xmf3Velocity.y = VY;
 }
 
 CCamera *CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
@@ -236,7 +239,7 @@ CCamera *CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
 		m_fYaw = Vector3::Angle(XMFLOAT3(0.0f, 0.0f, 1.0f), m_xmf3Look);
 		if (m_xmf3Look.x < 0.0f) m_fYaw = -m_fYaw;
 	}
-	else if ((nNewCameraMode == SPACESHIP_CAMERA) && m_pCamera)
+	else if ((nNewCameraMode == THIRD_PERSON_CAMERA) && m_pCamera)
 	{
 		m_xmf3Right = m_pCamera->GetRightVector();
 		m_xmf3Up = m_pCamera->GetUpVector();
@@ -265,7 +268,9 @@ void CPlayer::OnPrepareRender()
 void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
 {
 	DWORD nCameraMode = (pCamera) ? pCamera->GetMode() : 0x00;
-	if (nCameraMode == THIRD_PERSON_CAMERA) CGameObject::Render(pd3dCommandList, pCamera);
+	if (nCameraMode == THIRD_PERSON_CAMERA) {
+		CGameObject::Render(pd3dCommandList, pCamera);
+	}
 	for (int i = 0; i < m_nBullets; ++i)
 		m_ppBullets[i]->Render(pd3dCommandList, pCamera);
 }
@@ -293,6 +298,13 @@ void CPlayer::DeleteBullet(const int& idx)
 	--m_nBullets;
 }
 
+void CPlayer::RotatePlayer(int iYaw)
+{
+	XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(iYaw));
+	m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, xmmtxRotate);
+	m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, xmmtxRotate);
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 
 
@@ -317,24 +329,31 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 {
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
-	CLoadedModelInfo *pAngrybotModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player.bin", NULL);
-	SetChild(pAngrybotModel->m_pModelRootObject, true);
+	CLoadedModelInfo *pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player.bin", NULL);
+	SetChild(pPlayerModel->m_pModelRootObject, true);
 
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 1, pAngrybotModel);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(0, 3);
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 5, pPlayerModel);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nAnimation_Idle, nAnimation_Idle);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nAnimation_Walk, nAnimation_Walk);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nAnimation_Run, nAnimation_Run);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nAnimation_Jump, nAnimation_Jump);
+	m_pSkinnedAnimationController->SetTrackType(nAnimation_Jump, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nAnimation_Death, nAnimation_Death);
+	m_pSkinnedAnimationController->SetTrackType(nAnimation_Death, ANIMATION_TYPE_ONCE);
+
 
 #ifdef _WITH_SOUND_CALLBACK
-	m_pSkinnedAnimationController->SetCallbackKeys(0, 1);
-	m_pSkinnedAnimationController->SetCallbackKey(0, 0, 0.001f, _T("Sound/Footstep01.wav"));
+	m_pSkinnedAnimationController->SetCallbackKeys(nAnimation_Walk, 1);
+	m_pSkinnedAnimationController->SetCallbackKey(nAnimation_Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
 
 	CAnimationCallbackHandler *pAnimationCallbackHandler = new CSoundCallbackHandler();
-	m_pSkinnedAnimationController->SetAnimationCallbackHandler(1, pAnimationCallbackHandler);
+	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nAnimation_Walk, pAnimationCallbackHandler);
 #endif
 
 	SetPlayerUpdatedContext(pContext);
 	SetCameraUpdatedContext(pContext);
 
-	if (pAngrybotModel) delete pAngrybotModel;
+	if (pPlayerModel) delete pPlayerModel;
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -355,7 +374,7 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 		m_ppBullets[i]->m_xmf4x4World = m_xmf4x4World;
 	}
 
-//	SetScale(XMFLOAT3(0.2f, 0.2f, 0.2f));
+	//SetScale(XMFLOAT3(1.2f, 1.2f, 1.2f));
 }
 
 CTerrainPlayer::~CTerrainPlayer()
@@ -374,6 +393,11 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 {
 	DWORD nCurrentCameraMode = (m_pCamera) ? m_pCamera->GetMode() : 0x00;
 	if (nCurrentCameraMode == nNewCameraMode) return(m_pCamera);
+
+	//SetFriction(2.5f);
+	SetGravity(XMFLOAT3(0.0f, -400.f, 0.0f));
+	SetMaxVelocityXZ(1000.0f);
+	SetMaxVelocityY(200.f);
 	switch (nNewCameraMode)
 	{
 		case FIRST_PERSON_CAMERA:
@@ -381,10 +405,6 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 			SetGravity(XMFLOAT3(0.0f, -400.0f, 0.0f));
 			SetMaxVelocityXZ(300.0f);
 			SetMaxVelocityY(400.0f);*/
-			SetFriction(2.5f);
-			SetGravity(XMFLOAT3(0.0f, -200.f, 0.0f));
-			SetMaxVelocityXZ(1000.0f);
-			SetMaxVelocityY(100.f);
 			m_pCamera = OnChangeCamera(FIRST_PERSON_CAMERA, nCurrentCameraMode);
 			m_pCamera->SetTimeLag(0.0f);
 			m_pCamera->SetOffset(XMFLOAT3(0.0f, 20.0f, 0.0f));
@@ -397,10 +417,6 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 			SetGravity(XMFLOAT3(0.0f, 0.0f, 0.0f));
 			SetMaxVelocityXZ(300.0f);
 			SetMaxVelocityY(400.0f);*/
-			SetFriction(2.5f);
-			SetGravity(XMFLOAT3(0.0f, -200.f, 0.0f));
-			SetMaxVelocityXZ(1000.0f);
-			SetMaxVelocityY(100.f);
 			m_pCamera = OnChangeCamera(SPACESHIP_CAMERA, nCurrentCameraMode);
 			m_pCamera->SetTimeLag(0.0f);
 			m_pCamera->SetOffset(XMFLOAT3(0.0f, 0.0f, 0.0f));
@@ -419,10 +435,6 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 			m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 			m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 			m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);*/
-			SetFriction(2.5f);
-			SetGravity(XMFLOAT3(0.0f, -200.f, 0.0f));
-			SetMaxVelocityXZ(1000.0f);
-			SetMaxVelocityY(100.f);
 			m_pCamera = OnChangeCamera(THIRD_PERSON_CAMERA, nCurrentCameraMode);
 			m_pCamera->SetTimeLag(0.25f);
 			m_pCamera->SetOffset(XMFLOAT3(0.0f, 55.0f, -80.0f));
@@ -436,7 +448,7 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		default:
 			break;
 	}
-	m_pCamera->SetPosition(Vector3::Add(m_xmf3Position, m_pCamera->GetOffset()));
+	//m_pCamera->SetPosition(Vector3::Add(m_xmf3Position, m_pCamera->GetOffset()));
 	Update(fTimeElapsed);
 
 	return(m_pCamera);
@@ -450,17 +462,18 @@ void CTerrainPlayer::OnPlayerUpdateCallback(float fTimeElapsed)
 	int z = (int)(xmf3PlayerPosition.z / xmf3Scale.z);
 	bool bReverseQuad = ((z % 2) != 0);
 	float fHeight = pTerrain->GetHeight(xmf3PlayerPosition.x, xmf3PlayerPosition.z, bReverseQuad) + 0.0f;
-
-	SetFriction(25.f);
-	if (xmf3PlayerPosition.y <= fHeight)
+	
+	//SetFriction(1000.f);
+	if (xmf3PlayerPosition.y <= 0/*fHeight*/)
 	{
 		XMFLOAT3 xmf3PlayerVelocity = GetVelocity();
 		xmf3PlayerVelocity.y = 0.0f;
 		SetVelocity(xmf3PlayerVelocity);
-		xmf3PlayerPosition.y = fHeight;
+		xmf3PlayerPosition.y = 0/*fHeight*/;
 		SetPosition(xmf3PlayerPosition);
 		if (!GetGround())
 		{
+			SetFriction(1000.f);
 			SetGround(true);
 		}
 	}
@@ -502,10 +515,16 @@ void CTerrainPlayer::Animate(float fTimeElapsed)
 #ifdef _WITH_SOUND_CALLBACK
 void CTerrainPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity)
 {
-	if (dwDirection)
+	if (dwDirection&&GetGround())
 	{
-		m_pSkinnedAnimationController->SetTrackEnable(0, false);
-		m_pSkinnedAnimationController->SetTrackEnable(1, true);
+		if (m_isRunning) {
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackEnable(nAnimation_Run, true);
+		}
+		else {
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackEnable(nAnimation_Walk, true);
+		}
 	}
 
 	CPlayer::Move(dwDirection, fDistance, bUpdateVelocity);
@@ -513,17 +532,21 @@ void CTerrainPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVeloci
 
 void CTerrainPlayer::Update(float fTimeElapsed)
 {
-	CPlayer::Update(fTimeElapsed);
-
 	if (m_pSkinnedAnimationController)
 	{
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
-		if (::IsZero(fLength))
+
+		if (GetJump()) {
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackPosition(nAnimation_Jump, 0);
+			m_pSkinnedAnimationController->SetTrackEnable(nAnimation_Jump, true);
+		}
+		else if (::IsZero(fLength)&&GetGround())
 		{
-			m_pSkinnedAnimationController->SetTrackEnable(0, true);
-			m_pSkinnedAnimationController->SetTrackEnable(1, false);
-			m_pSkinnedAnimationController->SetTrackPosition(1, 0.0f);
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackEnable(nAnimation_Idle, true);
 		}
 	}
+	CPlayer::Update(fTimeElapsed);
 }
 #endif

@@ -290,12 +290,15 @@ void CGameFramework::ChangeSwapChainState()
 void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
 	if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
-	switch (nMessageID)
-	{
+	if (!m_bRotateEnable)
+		switch (nMessageID)
+		{
 		case WM_LBUTTONDOWN:
 		case WM_RBUTTONDOWN:
 			::SetCapture(hWnd);
 			::GetCursorPos(&m_ptOldCursorPos);
+			m_ChargeTimer.Reset();
+			m_ChargeTimer.Start();
 			break;
 		case WM_LBUTTONUP:
 		case WM_RBUTTONUP:
@@ -307,7 +310,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 			break;
 		default:
 			break;
-	}
+		}
 }
 
 void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
@@ -318,6 +321,12 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 		case WM_KEYUP:
 			switch (wParam)
 			{
+				case VK_CONTROL:
+					m_bRotateEnable = false;
+					m_pCamera->Rotate(-m_fPitch, -m_fYaw, 0);
+					m_fPitch = 0;
+					m_fYaw = 0;
+					break;
 				case VK_ESCAPE:
 					::PostQuitMessage(0);
 					break;
@@ -335,6 +344,14 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 					break;
 			}
 			break;
+		case WM_KEYDOWN:
+			switch (wParam)
+			{
+			case VK_CONTROL:
+				m_bRotateEnable = true;
+				break;
+			}
+			break;
 		default:
 			break;
 	}
@@ -344,14 +361,6 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 {
 	switch (nMessageID)
 	{
-		case WM_ACTIVATE:
-		{
-			if (LOWORD(wParam) == WA_INACTIVE)
-				m_GameTimer.Stop();
-			else
-				m_GameTimer.Start();
-			break;
-		}
 		case WM_SIZE:
 			break;
 		case WM_LBUTTONDOWN:
@@ -365,6 +374,15 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
         case WM_KEYUP:
 			OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
 			break;
+
+		case WM_ACTIVATE:
+		{
+			if (LOWORD(wParam) == WA_INACTIVE)
+				m_GameTimer.Stop();
+			else
+				m_GameTimer.Start();
+			break;
+		}
 	}
 	return(0);
 }
@@ -439,7 +457,7 @@ void CGameFramework::ProcessInput()
 {
 	float fTimeElapsed = m_GameTimer.GetTimeElapsed();
 	static UCHAR pKeysBuffer[256];
-	bool bProcessedByScene = false;
+	bool bProcessedByScene = true;
 	if (GetKeyboardState(pKeysBuffer) && m_pScene) bProcessedByScene = m_pScene->ProcessInput(pKeysBuffer);
 	if (!bProcessedByScene)
 	{
@@ -452,26 +470,26 @@ void CGameFramework::ProcessInput()
 		if (pKeysBuffer[VK_RIGHT] & 0xF0) dwDirection |= DIR_RIGHT;
 		if (pKeysBuffer[VK_PRIOR] & 0xF0) dwDirection |= DIR_UP;
 		if (pKeysBuffer[VK_NEXT] & 0xF0) dwDirection |= DIR_DOWN;*/
+		if (m_pPlayer->GetGround()) {
+			if (pKeysBuffer['W'] & 0xF0) dwDirection |= DIR_FORWARD;
+			if (pKeysBuffer['S'] & 0xF0) dwDirection |= DIR_BACKWARD;
+			if (pKeysBuffer['A'] & 0xF0) dwDirection |= DIR_LEFT;
+			if (pKeysBuffer['D'] & 0xF0) dwDirection |= DIR_RIGHT;
+			/*if (pKeysBuffer['Q'] & 0xF0) dwDirection |= DIR_UP;
+			if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_DOWN;*/
 
-		if (pKeysBuffer['W'] & 0xF0) dwDirection |= DIR_FORWARD;
-		if (pKeysBuffer['S'] & 0xF0) dwDirection |= DIR_BACKWARD;
-		if (pKeysBuffer['A'] & 0xF0) dwDirection |= DIR_LEFT;
-		if (pKeysBuffer['D'] & 0xF0) dwDirection |= DIR_RIGHT;
-		/*if (pKeysBuffer['Q'] & 0xF0) dwDirection |= DIR_UP;
-		if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_DOWN;*/
 
-		if (pKeysBuffer[VK_SPACE] & 0xF0)
-		{
-			if (m_pPlayer->GetGround())
+			if (pKeysBuffer[VK_SPACE] & 0xF0)
 			{
 				m_pPlayer->SetJump(true);
+				m_pPlayer->SetFriction(0.f);
+			}
+			else if (pKeysBuffer[VK_SHIFT] & 0xF0)
+			{
+				m_pPlayer->SetRunning(true);
 			}
 		}
-
-		else if (pKeysBuffer[VK_SHIFT] & 0xF0)
-		{
-			m_pPlayer->SetRunning(true);
-		}
+		
 		if (!(pKeysBuffer[VK_SHIFT] & 0xF0) && m_pPlayer->GetRunning())
 		{
 			m_pPlayer->SetRunning(false);
@@ -504,15 +522,49 @@ void CGameFramework::ProcessInput()
 		{
 			if (cxDelta || cyDelta)
 			{
-				if (pKeysBuffer[VK_RBUTTON] & 0xF0)
-					m_pPlayer->Rotate(cyDelta, 0.0f, -cxDelta);
+				if (m_bRotateEnable) {
+					m_fPitch += cyDelta;
+					m_fYaw += cxDelta;
+					m_pCamera->Rotate(cyDelta, cxDelta, 0);
+				}
 				else
 					m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
 			}
-			if (dwDirection) m_pPlayer->Move(dwDirection, 50.25f, true);
+			if (dwDirection) {
+				m_pPlayer->Move(dwDirection, 50.25f, true);
+
+				//int Yaw = 0;
+				//if (dwDirection & DIR_BACKWARD) {
+				//	Yaw = 180;
+				//	if (dwDirection & DIR_LEFT) {
+				//		Yaw += 45;
+				//	}
+				//	else if (dwDirection & DIR_RIGHT) {
+				//		Yaw -= 45;
+				//	}
+				//}
+				//else if (dwDirection & DIR_FORWARD) {
+				//	Yaw = 0.f;
+				//	if (dwDirection & DIR_LEFT) {
+				//		Yaw -= 45;
+				//	}
+				//	else if (dwDirection & DIR_RIGHT) {
+				//		Yaw += 45;
+				//	}
+				//}
+				//else if (dwDirection & DIR_RIGHT) {
+				//	Yaw = 90;
+				//}
+				//else if (dwDirection & DIR_LEFT) {
+				//	Yaw = -90;
+				//}
+				//if (m_pPlayer->m_iRotate != Yaw) {
+				//	//m_pPlayer->RotatePlayer(Yaw - m_pPlayer->m_iRotate);
+				//	m_pPlayer->m_iRotate = Yaw;
+				//}
+			}
 		}
 	}
-	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
 }
 
 void CGameFramework::AnimateObjects()
@@ -558,7 +610,7 @@ void CGameFramework::FrameAdvance()
 	m_GameTimer.Tick(0.0f);
 	
 	ProcessInput();
-
+	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
     AnimateObjects();
 
 	HRESULT hResult = m_pd3dCommandAllocator->Reset();

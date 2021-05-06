@@ -85,13 +85,17 @@ private:
 	CGameTimer					m_ChargeTimer;
 
 	CScene						*m_pScene = NULL;
-	CPlayer						*m_pPlayer = NULL;
+	CTerrainPlayer				*m_pPlayer = NULL;
 	CCamera						*m_pCamera = NULL;
 
-	PacketFunc* m_pPacket = NULL;
+	PacketFunc					*m_pPacket = NULL;
 
 	POINT						m_ptOldCursorPos;
 
 	_TCHAR						m_pszFrameRate[70];
+
+	bool						m_bRotateEnable = 0;
+	float						m_fPitch = 0;
+	float						m_fYaw = 0;
 };
 

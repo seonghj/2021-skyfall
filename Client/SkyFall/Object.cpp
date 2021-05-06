@@ -264,11 +264,12 @@ XMFLOAT4X4 CAnimationLayer::GetSRT(int nBoneFrame, float fPosition, float fTrack
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-CAnimationSet::CAnimationSet(float fStartTime, float fEndTime, char *pstrName)
+CAnimationSet::CAnimationSet(float fStartTime, float fEndTime, char* pstrName, int nType)
 {
 	m_fStartTime = fStartTime;
 	m_fEndTime = fEndTime;
 	m_fLength = fEndTime - fStartTime;
+	m_nType = nType;
 
 	strcpy_s(m_pstrAnimationSetName, 64, pstrName);
 }
@@ -304,12 +305,14 @@ void CAnimationSet::SetPosition(float fElapsedPosition)
 		{
 			m_fPosition += fElapsedPosition;
 			if (m_fPosition >= m_fLength) m_fPosition = 0.0f;
-//			m_fPosition = fmod(fTrackPosition, m_pfKeyFrameTimes[m_nKeyFrames-1]); // m_fPosition = fTrackPosition - int(fTrackPosition / m_pfKeyFrameTimes[m_nKeyFrames-1]) * m_pfKeyFrameTimes[m_nKeyFrames-1];
-//			m_fPosition = fmod(fTrackPosition, m_fLength); //if (m_fPosition < 0) m_fPosition += m_fLength;
-//			m_fPosition = fTrackPosition - int(fTrackPosition / m_fLength) * m_fLength;
+			//m_fPosition = fmod(fTrackPosition, m_pfKeyFrameTimes[m_nKeyFrames-1]); // m_fPosition = fTrackPosition - int(fTrackPosition / m_pfKeyFrameTimes[m_nKeyFrames-1]) * m_pfKeyFrameTimes[m_nKeyFrames-1];
+			//m_fPosition = fmod(fTrackPosition, m_fLength); //if (m_fPosition < 0) m_fPosition += m_fLength;
+			//m_fPosition = fTrackPosition - int(fTrackPosition / m_fLength) * m_fLength;
 			break;
 		}
 		case ANIMATION_TYPE_ONCE:
+			if (m_fPosition < m_fLength)
+				m_fPosition += fElapsedPosition;
 			break;
 		case ANIMATION_TYPE_PINGPONG:
 			break;
@@ -448,7 +451,10 @@ void CAnimationController::SetTrackEnable(int nAnimationTrack, bool bEnable)
 
 void CAnimationController::SetTrackPosition(int nAnimationTrack, float fPosition)
 {
-	if (m_pAnimationTracks) m_pAnimationTracks[nAnimationTrack].SetPosition(fPosition);
+	if (m_pAnimationTracks) {
+		m_pAnimationTracks[nAnimationTrack].SetPosition(fPosition);
+		m_pAnimationSets->m_ppAnimationSets[m_pAnimationTracks[nAnimationTrack].m_nAnimationSet]->m_fPosition = fPosition;
+	}
 }
 
 void CAnimationController::SetTrackSpeed(int nAnimationTrack, float fSpeed)
@@ -490,7 +496,19 @@ void CAnimationController::AdvanceTime(float fTimeElapsed, CGameObject *pRootGam
 			if (m_pAnimationTracks[k].m_bEnable) m_pAnimationSets->m_ppAnimationSets[m_pAnimationTracks[k].m_nAnimationSet]->HandleCallback();
 		}
 	}
-} 
+}
+void CAnimationController::SetAllTrackDisable()
+{
+	for (int i = 0; i < m_nAnimationTracks; ++i)
+		SetTrackEnable(i, false);
+}
+
+void CAnimationController::SetTrackType(int nAnimationTrack, int nType)
+{
+	if (m_pAnimationTracks)
+		m_pAnimationSets->m_ppAnimationSets[m_pAnimationTracks[nAnimationTrack].m_nAnimationSet]->SetType(nType);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -962,16 +980,16 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 			TCHAR pstrDebug[256] = { 0 };
 			pGameObject->LoadMaterialsFromFile(pd3dDevice, pd3dCommandList, pParent, pInFile, pShader);
 			if (isSkinDeformation) {				
-				_stprintf_s(pstrDebug, 256, _T("[SkinnedAnim] (m_nMaterials: %d)\n"), (int)pGameObject->m_nMaterials);
+				//_stprintf_s(pstrDebug, 256, _T("[SkinnedAnim] (m_nMaterials: %d)\n"), (int)pGameObject->m_nMaterials);
 
 				/**/pGameObject->SetSkinnedAnimationWireFrameShader();
 			}
 			else {
-				_stprintf_s(pstrDebug, 256, _T("[WireFrame] (m_nMaterials: %d)\n"), (int)pGameObject->m_nMaterials);
+				//_stprintf_s(pstrDebug, 256, _T("[WireFrame] (m_nMaterials: %d)\n"), (int)pGameObject->m_nMaterials);
 
 				/**/pGameObject->SetWireFrameShader();
 			}
-			OutputDebugString(pstrDebug);
+			//OutputDebugString(pstrDebug);
 
 		}
 		else if (!strcmp(pstrToken, "<Children>:"))
@@ -1238,6 +1256,10 @@ void CGameObject::LoadAnimationFromFile(FILE *pInFile, CLoadedModelInfo *pLoaded
 			int nAnimationSet = ::ReadIntegerFromFile(pInFile);
 
 			::ReadStringFromFile(pInFile, pstrToken); //Animation Set Name
+
+			TCHAR pstrDebug[256] = { 0 };
+			_stprintf_s(pstrDebug, 256, _T("Animation Name: %hs\n"), pstrToken);
+			OutputDebugString(pstrDebug);
 
 			float fStartTime = ::ReadFloatFromFile(pInFile);
 			float fEndTime = ::ReadFloatFromFile(pInFile);
@@ -1589,7 +1611,7 @@ CPlayerObject::CPlayerObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 	strcpy_s(m_pstrFrameName, "Player");
 
 	Rotate(-90.0f, 0.0f, 0.0f);
-//	SetScale(0.2f, 0.2f, 0.2f);
+	//SetScale(0.2,0.2,0.2);
 }
 
 CPlayerObject::~CPlayerObject()
@@ -1608,7 +1630,7 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	//m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMapModel);
 
 	strcpy_s(m_pstrFrameName, "Tree");
-
+	//SetScale(10, 10, 10);
 	//Rotate(-90.0f, 0.0f, 0.0f);
 }
 

@@ -116,12 +116,14 @@ public:
 	void Shot(float fTimeElapsed, float fSpeed);
 	void DeleteBullet(const int& idx);
 
+	void RotatePlayer(int iYaw);
 protected:
 	int m_nBullets = 0;
 	//vector<CBullet*> m_vpBullets;
 	CBullet** m_ppBullets = 0;
 
 	const int MAX_BULLET = 1000;
+public:
 };
 
 class CSoundCallbackHandler : public CAnimationCallbackHandler
@@ -150,8 +152,13 @@ public:
 	virtual void Animate(float fTimeElapsed);
 
 #ifdef _WITH_SOUND_CALLBACK
-	virtual void Move(ULONG nDirection, float fDistance, bool bVelocity = false);
+	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
 #endif
+	const int nAnimation_Death = 0;
+	const int nAnimation_Idle = 1;
+	const int nAnimation_Jump = 2;
+	const int nAnimation_Run = 3;
+	const int nAnimation_Walk = 4;
 };
 

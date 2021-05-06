@@ -199,7 +199,7 @@ public:
 class CAnimationSet
 {
 public:
-	CAnimationSet(float fStartTime, float fEndTime, char *pstrName);
+	CAnimationSet(float fStartTime, float fEndTime, char* pstrName, int nType = ANIMATION_TYPE_LOOP);
 	~CAnimationSet();
 
 public:
@@ -222,7 +222,7 @@ public:
 
 public:
 	void SetPosition(float fTrackPosition);
-
+	void SetType(int nType) { m_nType = nType; }
 	void Animate(float fTrackPosition, float fTrackWeight);
 
 	void SetCallbackKeys(int nCallbackKeys);
@@ -331,6 +331,9 @@ public:
 	void SetAnimationCallbackHandler(int nAnimationSet, CAnimationCallbackHandler *pCallbackHandler);
 
 	void AdvanceTime(float fElapsedTime, CGameObject *pRootGameObject);
+
+	void SetAllTrackDisable();
+	void SetTrackType(int nAnimationTrack, int nType);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
