@@ -155,20 +155,6 @@ public:
 //
 
 
-class CBulletsShader : public CWireFrameShader
-{
-public:
-	CBulletsShader();
-	virtual ~CBulletsShader();
-
-	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL);
-
-	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
-
-private:
-	CMesh* m_pBulletMesh = 0;
-};
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //

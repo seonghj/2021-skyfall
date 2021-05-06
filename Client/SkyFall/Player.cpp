@@ -272,10 +272,12 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 void CPlayer::Shot(float fTimeElapsed, float fSpeed)
 {
+	m_ppBullets[m_nBullets]->m_xmf4x4World = m_xmf4x4World;
+
 	XMFLOAT4X4 xmf4x4Scale = Matrix4x4::Identity();
-	xmf4x4Scale._11 = 3;
-	xmf4x4Scale._22 = 3;
-	xmf4x4Scale._33 = 3;
+	xmf4x4Scale._11 = 0.5;
+	xmf4x4Scale._22 = 0.5;
+	xmf4x4Scale._33 = 0.5;
 
 	m_ppBullets[m_nBullets]->m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
 	m_ppBullets[m_nBullets]->m_xmf3MovingDirection = GetCamera()->GetLookVector();
@@ -341,10 +343,15 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	
 
 	m_ppBullets = new CBullet * [MAX_BULLET];
+
+
+	CGameObject* pArrow = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/twig.bin", NULL);
+	CMesh* pMesh = pArrow->FindFrame("SM_Tree_Twig_05")->m_pMesh;
+
 	for (int i = 0; i < MAX_BULLET; ++i)
 	{
-		m_ppBullets[i] = new CBullet();
-		m_ppBullets[i]->SetShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+		m_ppBullets[i] = new CBullet(pMesh);
+		m_ppBullets[i]->SetWireFrameShader();
 		m_ppBullets[i]->m_xmf4x4World = m_xmf4x4World;
 	}
 
@@ -481,6 +488,14 @@ void CTerrainPlayer::OnCameraUpdateCallback(float fTimeElapsed)
 			p3rdPersonCamera->SetLookAt(GetPosition());
 		}
 	}
+}
+
+void CTerrainPlayer::Animate(float fTimeElapsed)
+{
+	CGameObject::Animate(fTimeElapsed);
+
+	for (int i = 0; i < m_nBullets; ++i)
+		m_ppBullets[i]->Animate(fTimeElapsed);
 }
 
 
