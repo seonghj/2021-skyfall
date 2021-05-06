@@ -166,7 +166,7 @@ void Server::Accept()
                 send_login_player_packet(client_id, it->second);
         }
 
-        if (1 == gameroom.count(gameroom_num))
+        if (20 == gameroom.count(gameroom_num))
         {
             maps.emplace(gameroom_num, Map(gameroom_num));
             maps[gameroom_num].init_Map(this);
