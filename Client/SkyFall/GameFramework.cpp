@@ -413,6 +413,9 @@ void CGameFramework::BuildObjects()
 
 	m_pScene->m_pPlayer = m_pPlayer = pPlayer;
 	m_pCamera = m_pPlayer->GetCamera();
+	m_pPacket->m_pPlayer = pPlayer;
+	m_pPacket->m_pScene = m_pScene;
+	m_pPlayer->SetCPacket(m_pPacket);
 
 	m_pd3dCommandList->Close();
 	ID3D12CommandList *ppd3dCommandLists[] = { m_pd3dCommandList };
@@ -495,21 +498,41 @@ void CGameFramework::ProcessInput()
 
 		if (m_pPlayer->GetShooting() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
 		{
-			printf("Look - X : %f Y : %f Z : %f", m_pPlayer->GetLook().x, m_pPlayer->GetLook().y, m_pPlayer->GetLook().z);
+			player_attack_packet p;
+			p.attack_type = 0;
+			p.damage = 0;
+			p.id = m_pPacket->Get_clientid();
+			p.Position = m_pPlayer->GetPosition();
+			p.size = sizeof(p);
+			p.type = Type_player_attack;
+			m_pPacket->ChargeTimer = m_ChargeTimer.GetTotalTime();
+			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+			/*printf("Look - X : %f Y : %f Z : %f", m_pPlayer->GetLook().x, m_pPlayer->GetLook().y, m_pPlayer->GetLook().z);
 			m_pPlayer->Shot(fTimeElapsed, m_ChargeTimer.GetTotalTime() * 100.f);
-			m_pPlayer->SetShooting(false);
+			m_pPlayer->SetShooting(false);*/
 		}
 
-		if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
+		if ((cxDelta != 0.0f) || (cyDelta != 0.0f))
 		{
 			if (cxDelta || cyDelta)
 			{
-				if (pKeysBuffer[VK_RBUTTON] & 0xF0)
-					m_pPlayer->Rotate(cyDelta, 0.0f, -cxDelta);
-				else
-					m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
+				if (pKeysBuffer[VK_RBUTTON] & 0xF0) {
+					m_DegreeX = cyDelta;
+					m_DegreeY = 0.0f;
+					m_DegreeZ = -cxDelta;
+				}
+				else {
+					m_DegreeX = cyDelta;
+					m_DegreeY = cxDelta;
+					m_DegreeZ = 0.0f;
+				}
 			}
-			if (dwDirection) m_pPlayer->Move(dwDirection, 50.25f, true);
+
+		}
+
+		if (dwDirection) {
+			m_BeforePosition = m_pPlayer->GetPosition();
+			m_pPlayer->Move(dwDirection, 20.0f, true);
 		}
 	}
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
@@ -625,6 +648,31 @@ void CGameFramework::FrameAdvance()
 
 //	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
 	MoveToNextFrame();
+
+	XMFLOAT3 NowPosition = m_pPlayer->GetPosition();
+	if (m_BeforePosition.x != NowPosition.x || m_BeforePosition.y != NowPosition.y || m_BeforePosition.z != NowPosition.z
+		|| m_DegreeX != 0.0f || m_DegreeY != 0.0f || m_DegreeZ != 0.0f)
+	{
+		/*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
+			m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
+		player_pos_packet p;
+		p.id = m_pPacket->Get_clientid();
+		p.Position = NowPosition;
+		p.dx = m_DegreeX;
+		p.dy = m_DegreeY;
+		p.dz = m_DegreeZ;
+		//p.MoveType = dwDirection;
+		p.size = sizeof(p);
+		p.state = RUNNING;
+		p.type = Type_player_pos;
+		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+
+		m_BeforePosition = NowPosition;
+
+		m_DegreeX = 0.0f;
+		m_DegreeY = 0.0f;
+		m_DegreeZ = 0.0f;
+	}
 
 	m_GameTimer.GetFrameRate(m_pszFrameRate + 12, 37);
 	size_t nLength = _tcslen(m_pszFrameRate);

@@ -6,7 +6,7 @@
 #include "Timer.h"
 #include "Player.h"
 #include "Scene.h"
-#include "Packet.h"
+#include "CPacket.h"
 
 class CGameFramework
 {
@@ -44,7 +44,11 @@ public:
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	LRESULT CALLBACK OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 
-	void Set_m_pPacket(PacketFunc* t) { m_pPacket = t; };
+	void Set_m_pPacket(CPacket* t) { m_pPacket = t; };
+	XMFLOAT3					m_BeforePosition;
+	float						m_DegreeX;
+	float						m_DegreeY;
+	float						m_DegreeZ;
 
 private:
 	HINSTANCE					m_hInstance;
@@ -91,7 +95,7 @@ private:
 	CPlayer						m_pOtherPlayer[OTHER_PLAYER_NUM];
 	CCamera						*m_pCamera = NULL;
 
-	PacketFunc* m_pPacket = NULL;
+	CPacket* m_pPacket = NULL;
 
 	POINT						m_ptOldCursorPos;
 

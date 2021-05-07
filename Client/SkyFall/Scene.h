@@ -52,7 +52,7 @@ public:
 
 	void BuildDefaultLightsAndMaterials();
 	void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
-	void MoveOtherPlayer(int player_num, float x, float y, float z);
+	void MoveOtherPlayer(int player_num, XMFLOAT3 pos);
 	void ReleaseObjects();
 
 	ID3D12RootSignature *CreateGraphicsRootSignature(ID3D12Device *pd3dDevice);

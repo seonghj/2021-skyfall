@@ -27,18 +27,12 @@ void Server::display_error(const char* msg, int err_no)
 
 int Server::SetClientId()
 {
-    int count = GAMESERVER_ID;
-
-    auto iter = sessions.begin();
+    int count = GAMESERVER_ID + 1;
     while (true) {
-        if (!iter->second.connected) {
-            iter->second.connected = true;
+        if (sessions.count(count) == 0)
             return count;
-        }
-        else {
+        else
             ++count;
-            ++iter;
-        }
     }
 }
 
@@ -83,7 +77,7 @@ void Server::Accept()
     ZeroMemory(&serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serveraddr.sin_port = htons(LOBBYSERVERPORT);
+    serveraddr.sin_port = htons(LOBBYPORT);
     int retval = bind(listen_sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
   
     // listen()
@@ -201,7 +195,7 @@ void Server::do_recv(char id)
     //memcpy(sessions[id].packet_buf, over->dataBuffer.buf, over->dataBuffer.buf[0]);
 }
 
-void Server::do_send(int to, char* packet)
+void Server::send_packet(int to, char* packet)
 {
     SOCKET client_s = sessions[to].sock;
     OVER_EX* over = reinterpret_cast<OVER_EX*>(malloc(sizeof(OVER_EX)));
@@ -231,7 +225,7 @@ void Server::send_ID_player_packet(char id)
     p.id = id;
     p.size = sizeof(player_login_packet);
     p.type = PacketType::Type_player_ID;
-    do_send(id, reinterpret_cast<char*>(&p));
+    send_packet(id, reinterpret_cast<char*>(&p));
 }
 
 void Server::send_login_player_packet(char id, int to)
@@ -244,7 +238,7 @@ void Server::send_login_player_packet(char id, int to)
 
     //printf("%d: login\n",id);
 
-    do_send(to, reinterpret_cast<char*>(&p));
+    send_packet(to, reinterpret_cast<char*>(&p));
 }
 
 void Server::send_disconnect_player_packet(char id)
@@ -256,7 +250,7 @@ void Server::send_disconnect_player_packet(char id)
 
     for (auto &iter: sessions){
         if (iter.second.connected && iter.second.id != GAMESERVER_ID)
-            do_send(iter.first, reinterpret_cast<char*>(&p));
+            send_packet(iter.first, reinterpret_cast<char*>(&p));
     }
     closesocket(sessions[id].sock);
 }
@@ -268,7 +262,7 @@ void Server::send_game_start_packet(char id)
     p.size = sizeof(player_remove_packet);
     p.type = PacketType::Type_start_ok;
 
-    do_send(id, reinterpret_cast<char*>(&p));
+    send_packet(id, reinterpret_cast<char*>(&p));
     printf("send to %d start packet\n", id);
     //Disconnected(id);
 }
@@ -296,7 +290,7 @@ void Server::process_packet(char id, char* buf)
         }
         for (auto& iter : sessions) {
             if (iter.second.connected)
-                do_send(iter.first, reinterpret_cast<char*>(&sop));
+                send_packet(iter.first, reinterpret_cast<char*>(&sop));
         }
         break;
     }
@@ -321,11 +315,13 @@ void Server::WorkerFunc()
         // 비동기 입출력 결과 확인
         if (FALSE == retval)
         {
+            //printf("error = %d\n", WSAGetLastError());
             display_error("GQCS", WSAGetLastError());
             Disconnected(id);
+            continue;
         }
 
-        if (Transferred == 0) {
+        if ((Transferred == 0)) {
             Disconnected(id);
             continue;
         }

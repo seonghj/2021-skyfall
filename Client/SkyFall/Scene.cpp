@@ -161,9 +161,9 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
-void CScene::MoveOtherPlayer(int player_num, float x, float y, float z)
+void CScene::MoveOtherPlayer(int player_num, XMFLOAT3 pos)
 {
-	m_ppGameObjects[player_num]->SetPosition(x, y, z);
+	m_ppGameObjects[player_num]->SetPosition(pos.x, pos.y, pos.z);
 }
 
 void CScene::ReleaseObjects()

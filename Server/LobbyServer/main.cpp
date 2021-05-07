@@ -1,7 +1,7 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS // 최신 VC++ 컴파일 시 경고 방지
 #include "stdafx.h"
 #include "Server.h"
-#include "CPacket.h"
+#include "protocol.h"
 
 Server* s = new Server;
 DB* db = new DB;
