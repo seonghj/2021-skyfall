@@ -522,6 +522,10 @@ void CGameFramework::AnimateObjects()
 	if (m_pScene) m_pScene->AnimateObjects(fTimeElapsed);
 
 	m_pPlayer->Animate(fTimeElapsed);
+	for (int i = 0; i < OTHER_PLAYER_NUM; i++)
+	{
+		m_pOtherPlayer[i].Animate(fTimeElapsed);
+	}
 }
 
 void CGameFramework::WaitForGpuComplete()
@@ -629,3 +633,7 @@ void CGameFramework::FrameAdvance()
 	::SetWindowText(m_hWnd, m_pszFrameRate);
 }
 
+void CGameFramework::OtherPlayerMove(int player_num, XMFLOAT3 pos) 
+{
+
+}

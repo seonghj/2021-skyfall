@@ -35,6 +35,8 @@ public:
     void AnimateObjects();
     void FrameAdvance();
 
+	void OtherPlayerMove(int player_num, XMFLOAT3 pos);
+
 	void WaitForGpuComplete();
 	void MoveToNextFrame();
 
@@ -86,6 +88,7 @@ private:
 
 	CScene						*m_pScene = NULL;
 	CPlayer						*m_pPlayer = NULL;
+	CPlayer						m_pOtherPlayer[OTHER_PLAYER_NUM];
 	CCamera						*m_pCamera = NULL;
 
 	PacketFunc* m_pPacket = NULL;
