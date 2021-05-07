@@ -52,8 +52,8 @@ public:
 
 	void BuildDefaultLightsAndMaterials();
 	void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
-	void AddOtherPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
-	void MoveOtherPlayer(int player_num, XMFLOAT3 pos);
+	void AddPlayer(int id, ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	void MovePlayer(int player_num, XMFLOAT3 pos);
 	void ReleaseObjects();
 
 	ID3D12RootSignature *CreateGraphicsRootSignature(ID3D12Device *pd3dDevice);
@@ -100,6 +100,7 @@ public:
 
 	int									m_nGameObjects = 0;
 	CGameObject							**m_ppGameObjects = NULL;
+	unordered_map<int, CGameObject*>   m_ppPlayerObjects;
 
 	float								m_fElapsedTime = 0.0f;
 

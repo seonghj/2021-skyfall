@@ -155,19 +155,18 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
-void CScene::AddOtherPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+void CScene::AddPlayer(int id, ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	m_nGameObjects++;
 	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player.bin", NULL);
-	m_ppGameObjects[m_nGameObjects-1] = new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPlayerModel, 1);
-	m_ppGameObjects[m_nGameObjects - 1]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 1);
-	m_ppGameObjects[m_nGameObjects - 1]->SetPosition(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f);
+	m_ppPlayerObjects.emplace(id, new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPlayerModel, 1));
+	m_ppPlayerObjects[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 1);
+	m_ppPlayerObjects[id]->SetPosition(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f);
 	if (pPlayerModel) delete pPlayerModel;
 }
 
-void CScene::MoveOtherPlayer(int player_num, XMFLOAT3 pos)
+void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
 {
-	m_ppGameObjects[player_num]->SetPosition(pos.x, pos.y, pos.z);
+	m_ppPlayerObjects[player_num]->SetPosition(pos.x, pos.y, pos.z);
 }
 
 void CScene::ReleaseObjects()
@@ -194,6 +193,8 @@ void CScene::ReleaseObjects()
 		for (int i = 0; i < m_nGameObjects; i++) if (m_ppGameObjects[i]) m_ppGameObjects[i]->Release();
 		delete[] m_ppGameObjects;
 	}
+
+
 
 	ReleaseShaderVariables();
 
@@ -422,6 +423,9 @@ void CScene::ReleaseUploadBuffers()
 
 	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_nGameObjects; i++) m_ppGameObjects[i]->ReleaseUploadBuffers();
+	for (auto p : m_ppPlayerObjects) {
+		p.second->ReleaseUploadBuffers();
+	}
 }
 
 void CScene::CreateCbvSrvDescriptorHeaps(ID3D12Device *pd3dDevice, int nConstantBufferViews, int nShaderResourceViews)
@@ -587,6 +591,16 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 			m_ppGameObjects[i]->Animate(m_fElapsedTime);
 			if (!m_ppGameObjects[i]->m_pSkinnedAnimationController) m_ppGameObjects[i]->UpdateTransform(NULL);
 			m_ppGameObjects[i]->Render(pd3dCommandList, pCamera);
+		}
+	}
+
+	for (auto p : m_ppPlayerObjects)
+	{
+		if (p.second)
+		{
+			p.second->Animate(m_fElapsedTime);
+			if (!p.second->m_pSkinnedAnimationController) p.second->UpdateTransform(NULL);
+			p.second->Render(pd3dCommandList, pCamera);
 		}
 	}
 

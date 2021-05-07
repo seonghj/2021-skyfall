@@ -166,11 +166,11 @@ void Server::Accept()
 
         do_recv(client_id);
 
-        if (1 == gameroom.count(gameroom_num))
+       /* if (1 == gameroom.count(gameroom_num))
         {
             maps.emplace(gameroom_num, Map(gameroom_num));
             maps[gameroom_num].init_Map(this);
-        }
+        }*/
     }
 
     // closesocket()

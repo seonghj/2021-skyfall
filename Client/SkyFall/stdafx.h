@@ -20,9 +20,11 @@
 #include <wrl.h>
 #include <shellapi.h>
 
+#include <iostream>
 #include <fstream>
 #include <vector>
-
+#include <array>
+#include <unordered_map>
 #include <thread>
 
 #pragma comment(lib, "ws2_32")

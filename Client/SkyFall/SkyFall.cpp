@@ -8,6 +8,9 @@
 
 #define MAX_LOADSTRING 100
 
+
+#pragma warning(disable : 4996)
+
 HINSTANCE						ghAppInstance;
 TCHAR							szTitle[MAX_LOADSTRING];
 TCHAR							szWindowClass[MAX_LOADSTRING];
@@ -35,6 +38,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	if (!InitInstance(hInstance, nCmdShow)) return(FALSE);
 
 	hAccelTable = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SKYFALL));
+
+	if (AllocConsole())
+	{
+		freopen("CONIN$", "rb", stdin);
+		freopen("CONOUT$", "wb", stdout);
+		freopen("CONOUT$", "wb", stderr);
+	}
 
 	std::thread	connect_thread = std::thread(&CPacket::GameConnect, gCPacket);
 

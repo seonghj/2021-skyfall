@@ -130,7 +130,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::Type_player_ID: {
         player_ID_packet* p = reinterpret_cast<player_ID_packet*>(buf);
         client_id = buf[2];
-        printf("recv id from server: %d\n", p->id);
+        //printf("recv id from server: %d\n", p->id);
 
         /*player_info_packet pp;
         pp.id = Get_clientid();
@@ -189,12 +189,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::Type_start_pos: {
         player_start_pos* p = reinterpret_cast<player_start_pos*>(buf);
 
-        if (p->id == client_id) {
-            m_pPlayer->SetPosition(p->Position);
-            //m_pPlayer->Update(fTimeElapsed);
-        }
-        else
-            m_pScene->MoveOtherPlayer(3, p->Position);
+        m_pScene->MovePlayer(p->id, p->Position);
         break;
     }
     case PacketType::Type_player_attack: {
