@@ -408,7 +408,8 @@ void CGameFramework::BuildObjects()
 
 	m_pScene = new CScene();
 	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
-
+	m_pScene->AddOtherPlayer(m_pd3dDevice, m_pd3dCommandList);
+	m_pScene->MoveOtherPlayer(m_pScene->m_nGameObjects - 1, XMFLOAT3(400.0f, 300.0f, 300.0f));
 	CTerrainPlayer *pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain);
 
 	m_pScene->m_pPlayer = m_pPlayer = pPlayer;

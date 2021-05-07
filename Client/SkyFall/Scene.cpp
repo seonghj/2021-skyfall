@@ -90,7 +90,7 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	XMFLOAT4 xmf4Color(0.0f, 0.3f, 0.0f, 0.0f);
 	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/HeightMap.raw"), 257, 257, xmf3Scale, xmf4Color);
 
-	m_nGameObjects = 4;
+	m_nGameObjects = 3;
 	m_ppGameObjects = new CGameObject*[m_nGameObjects];
 
 	/*CLoadedModelInfo *pLionModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Lion.bin", NULL);
@@ -146,12 +146,6 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	m_ppGameObjects[2]->SetPosition(4000, 0/*m_pTerrain->GetHeight(400.0f, 800.0f)*/, 500.0f);
 	if (pMapDesert)delete pMapDesert;
 
-	CLoadedModelInfo* pPlayer2Model = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player.bin", NULL);
-	m_ppGameObjects[3] = new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPlayer2Model, 1);
-	m_ppGameObjects[3]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 1);
-	m_ppGameObjects[3]->SetPosition(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f);
-	if (pPlayer2Model) delete pPlayer2Model;
-
 	//CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Dragon.bin", NULL);
 	//m_ppGameObjects[2] = new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pDragonModel, 1);
 	//m_ppGameObjects[2]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
@@ -159,6 +153,16 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	//if (pDragonModel)delete pDragonModel;
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+void CScene::AddOtherPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	m_nGameObjects++;
+	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player.bin", NULL);
+	m_ppGameObjects[m_nGameObjects-1] = new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPlayerModel, 1);
+	m_ppGameObjects[m_nGameObjects - 1]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 1);
+	m_ppGameObjects[m_nGameObjects - 1]->SetPosition(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f);
+	if (pPlayerModel) delete pPlayerModel;
 }
 
 void CScene::MoveOtherPlayer(int player_num, XMFLOAT3 pos)
