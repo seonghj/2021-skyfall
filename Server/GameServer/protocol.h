@@ -95,6 +95,7 @@ struct player_ID_packet :public Packet {
 };
 
 struct player_login_packet : public Packet {
+	DirectX::XMFLOAT3 Position;
 };
 
 struct game_ready_packet :public Packet {

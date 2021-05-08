@@ -151,26 +151,28 @@ void Server::Accept()
 
         sessions[client_id].connected = true;
 
+        sessions[client_id].f3Position.store(XMFLOAT3(300.0f + (client_id*50.f), 200.0f, 500.0f));
+
         // 로그인한 클라이언트에 다른 클라이언트 정보 전달
         auto iter = gameroom.equal_range(gameroom_num);
         for (auto it = iter.first; it != iter.second; ++it) {
-            if (sessions[it->second].connected && (it->second != client_id))
+            if (sessions[it->second].connected)
                 send_login_player_packet(it->second, client_id);
         }
 
         // 다른 클라이언트에 로그인정보 전달
         for (auto it = iter.first; it != iter.second; ++it){
-            if (sessions[it->second].connected && (it->second != client_id) )
+            if (sessions[it->second].connected && (it->second != client_id))
                 send_login_player_packet(client_id, it->second);
         }
 
         do_recv(client_id);
 
-        if (1 == gameroom.count(gameroom_num))
+       /* if (1 == gameroom.count(gameroom_num))
         {
             maps.emplace(gameroom_num, Map(gameroom_num));
             maps[gameroom_num].init_Map(this);
-        }
+        }*/
     }
 
     // closesocket()
@@ -252,6 +254,7 @@ void Server::send_login_player_packet(char id, int to)
     p.id = id;
     p.size = sizeof(player_login_packet);
     p.type = PacketType::Type_player_login;
+    p.Position = sessions[id].f3Position;
 
     printf("%d: login to %d\n",id, to);
 
