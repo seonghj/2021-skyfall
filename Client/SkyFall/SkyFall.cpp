@@ -46,7 +46,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 		freopen("CONOUT$", "wb", stderr);
 	}
 
-	std::thread	connect_thread = std::thread(&CPacket::GameConnect, gCPacket);
+	//std::thread	connect_thread = std::thread(&CPacket::GameConnect, gCPacket);
 
 	while (1)
 	{
@@ -70,7 +70,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	closesocket(gCPacket->sock);
 	delete gCPacket;
 
-	connect_thread.join();
+	//connect_thread.join();
 
 	return((int)msg.wParam);
 }
