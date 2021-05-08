@@ -175,7 +175,7 @@ void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
 	}
 }
 
-void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
+void CScene::RotatePlayer(int player_num, float x, float y, float z)
 {
 	for (int i = 0; i < m_nPlayerObjects; ++i)
 	{

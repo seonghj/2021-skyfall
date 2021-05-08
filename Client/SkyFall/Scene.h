@@ -37,6 +37,14 @@ struct LIGHTS
 	int									m_nLights;
 };
 
+class PlayerObjects
+{
+public:
+	CGameObject		*m_Object = NULL;
+	int				id;
+	XMFLOAT3		pos;
+};
+
 class CScene
 {
 public:
@@ -54,6 +62,7 @@ public:
 	void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
 	void AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	void MovePlayer(int player_num, XMFLOAT3 pos);
+	void RotatePlayer(int player_num, float x, float y, float z);
 	void ReleaseObjects();
 
 	ID3D12RootSignature *CreateGraphicsRootSignature(ID3D12Device *pd3dDevice);
@@ -101,8 +110,7 @@ public:
 	int									m_nGameObjects = 0;
 	CGameObject							**m_ppGameObjects = NULL;
 	int									m_nPlayerObjects = 0;
-	array<CGameObject*, 20>				m_ppPlayerObjects;
-	array<int, 20>						m_ppPlayerObjectsId;
+	array<PlayerObjects, 20>			m_ppPlayerObjects;
 
 	float								m_fElapsedTime = 0.0f;
 

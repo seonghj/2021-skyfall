@@ -150,7 +150,7 @@ void CPacket::ProcessPacket(char* buf)
             m_pPlayer->SetPosition(p->Position);
         else {
             ++OtherPlayerNum;
-            m_pScene->m_ppPlayerObjectsId[OtherPlayerNum] = p->id;
+            m_pScene->m_ppPlayerObjects[OtherPlayerNum].id = p->id;
             m_pScene->MovePlayer(p->id, p->Position);
         }
         break;
@@ -193,7 +193,7 @@ void CPacket::ProcessPacket(char* buf)
         }
         else {
             m_pScene->MovePlayer(p->id, p->Position);
-            m_pScene->m_ppPlayerObjects[]
+            m_pScene->RotatePlayer(p->id, p->dx, p->dy, p->dz);
         }
         /* m_pPlayer->Update(fTimeElapsed);
          m_pScene->Update(fTimeElapsed);*/
