@@ -20,9 +20,11 @@
 #include <wrl.h>
 #include <shellapi.h>
 
+#include <iostream>
 #include <fstream>
 #include <vector>
-
+#include <array>
+#include <unordered_map>
 #include <thread>
 
 #pragma comment(lib, "ws2_32")
@@ -64,6 +66,8 @@ extern HINSTANCE					ghAppInstance;
 #define ANIMATION_TYPE_ONCE			0
 #define ANIMATION_TYPE_LOOP			1
 #define ANIMATION_TYPE_PINGPONG		2
+
+#define OTHER_PLAYER_NUM			19
 
 #define ANIMATION_CALLBACK_EPSILON	0.015f
 

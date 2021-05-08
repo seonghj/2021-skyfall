@@ -1,22 +1,14 @@
 #pragma once
 #include"stdafx.h"
 #include "DB.h"
-#include "CPacket.h"
-
-struct OVER_EX
-{
-    WSAOVERLAPPED	overlapped;
-    WSABUF			dataBuffer;
-    char			messageBuffer[BUFSIZE];
-    bool			is_recv;
-};
+#include "protocol.h"
 
 class SESSION
 {
 public:
 
     SESSION() {}
-    SESSION(const SESSION& s) {}
+    SESSION(const int& i) { id = i; }
     ~SESSION() {}
 
     OVER_EX     over;
@@ -25,8 +17,8 @@ public:
     int         addrlen;
     char        packet_buf[BUFSIZE];
 
-    char*       packet_start;
-    char*       recv_start;
+    char* packet_start;
+    char* recv_start;
 
     bool        connected = false;
     bool        isready = false;
@@ -36,14 +28,20 @@ public:
     int         id;
     int         game_num;
 
-    std::atomic<float>      x = 0;
-    std::atomic<float>      y = 0;
-    std::atomic<float>      z = 0;
-    std::atomic<float>      degree = 0;
-    std::atomic<int>        weapon = 0;
-
     // 0 Á×À½ / 1 »ýÁ¸
     std::atomic<bool>       state = 0;
+
+    std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+    std::atomic<float>      dx = 0;
+    std::atomic<float>      dy = 0;
+    std::atomic<float>      dz = 0;
+    /*std::atomic<float>      x = 0;
+    std::atomic<float>      y = 0;
+    std::atomic<float>      z = 0;*/
+
+    std::atomic<short>        weapon = 0;
+    std::atomic<short>        helmet = 0;
+    std::atomic<short>        shoes = 0;
 
     std::atomic<float>      hp = 0;
     std::atomic<float>      lv = 0;
@@ -79,7 +77,7 @@ public:
     void WorkerFunc();
 
     void do_recv(char id);
-    void do_send(int to, char* packet);
+    void send_packet(int to, char* packet);
     void process_packet(char id, char* buf);
 
     void send_ID_player_packet(char id);

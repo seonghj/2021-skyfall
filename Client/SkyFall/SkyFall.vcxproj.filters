@@ -45,7 +45,7 @@
     <ClInclude Include="Object.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Packet.h">
+    <ClInclude Include="CPacket.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Player.h">
@@ -58,6 +58,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="protocol.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -80,7 +83,7 @@
     <ClCompile Include="Object.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Packet.cpp">
+    <ClCompile Include="CPacket.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Player.cpp">

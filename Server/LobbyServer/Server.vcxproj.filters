@@ -12,9 +12,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CPacket.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -22,6 +19,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Server.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="protocol.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

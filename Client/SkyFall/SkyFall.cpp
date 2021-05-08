@@ -4,16 +4,19 @@
 #include "stdafx.h"
 #include "SkyFall.h"
 #include "GameFramework.h"
-#include "Packet.h"
+#include "CPacket.h"
 
 #define MAX_LOADSTRING 100
+
+
+#pragma warning(disable : 4996)
 
 HINSTANCE						ghAppInstance;
 TCHAR							szTitle[MAX_LOADSTRING];
 TCHAR							szWindowClass[MAX_LOADSTRING];
 
 CGameFramework					gGameFramework;
-PacketFunc* gPacketFunc = new PacketFunc;
+CPacket*						gCPacket = new CPacket;
 
 ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE, int);
@@ -36,6 +39,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 	hAccelTable = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SKYFALL));
 
+	if (AllocConsole())
+	{
+		freopen("CONIN$", "rb", stdin);
+		freopen("CONOUT$", "wb", stdout);
+		freopen("CONOUT$", "wb", stderr);
+	}
+
+	//std::thread	connect_thread = std::thread(&CPacket::GameConnect, gCPacket);
+
 	while (1)
 	{
 		if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -49,11 +61,16 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 		}
 		else
 		{
-			gGameFramework.Set_m_pPacket(gPacketFunc);
+			gGameFramework.Set_m_pPacket(gCPacket);
 			gGameFramework.FrameAdvance();
 		}
 	}
 	gGameFramework.OnDestroy();
+
+	closesocket(gCPacket->sock);
+	delete gCPacket;
+
+	//connect_thread.join();
 
 	return((int)msg.wParam);
 }
@@ -90,6 +107,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 	if (!hMainWnd) return(FALSE);
 
+	gGameFramework.Set_m_pPacket(gCPacket);
 	gGameFramework.OnCreate(hInstance, hMainWnd);
 
 	::ShowWindow(hMainWnd, nCmdShow);
