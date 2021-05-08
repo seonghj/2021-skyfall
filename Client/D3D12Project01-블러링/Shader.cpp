@@ -6,18 +6,6 @@
 #include "Shader.h"
 #include "Player.h"
 
-const int nCheckPoint = 9;
-XMFLOAT3 xmf3CheckPoint[nCheckPoint] = {
-	XMFLOAT3(405, 120, 1870),
-	XMFLOAT3(800, 120, 1873),
-	XMFLOAT3(1655, 120, 1856),
-	XMFLOAT3(1705, 120, 1512),
-	XMFLOAT3(240, 120, 1194),
-	XMFLOAT3(530, 120, 850),
-	XMFLOAT3(1764, 120, 750),
-	XMFLOAT3(1718, 120, 312),
-	XMFLOAT3(375, 60, 280)
-};
 
 CShader::CShader()
 {
@@ -572,40 +560,7 @@ void CObjectsShader::ReleaseObjects()
 
 void CObjectsShader::AnimateObjects(float fTimeElapsed)
 {
-	if (m_ppObjects && !m_ppObjects[0]->m_bCollision) {
-		if (0 <= m_nCheckPoint && m_nCheckPoint < nCheckPoint) {
-			//다음 체크포인트를 향해 Look
-			XMFLOAT3 xmf3Look = Vector3::Subtract(xmf3CheckPoint[m_nCheckPoint], m_ppObjects[0]->GetPosition());
 
-
-			if (Vector3::Length(xmf3Look) < 30) {
-				m_nCheckPoint += m_direction;
-			}
-			xmf3Look = Vector3::Normalize(xmf3Look);
-
-			float dot = Vector3::DotProduct(Vector3::CrossProduct(xmf3Look, m_ppObjects[0]->GetLook()), m_ppObjects[0]->GetUp());
-			float angle = Vector3::Angle(XMLoadFloat3(&xmf3Look), XMLoadFloat3(&m_ppObjects[0]->GetLook()));
-
-			if (dot > 0)
-				angle = -angle;
-
-
-			m_ppObjects[0]->Rotate(0, angle * fTimeElapsed * 3, 0);
-			m_ppObjects[0]->UpdateTransform(NULL);
-
-
-			xmf3Look.x = m_ppObjects[0]->GetLook().x;
-			xmf3Look.z = m_ppObjects[0]->GetLook().z;
-			m_ppObjects[0]->Move(xmf3Look, 100.f * fTimeElapsed);
-			m_ppObjects[0]->Animate(fTimeElapsed);
-		}
-		else {
-			m_direction = -m_direction;
-			m_nCheckPoint += m_direction;;
-		}
-
-
-	}
 }
 
 void CObjectsShader::ReleaseUploadBuffers()

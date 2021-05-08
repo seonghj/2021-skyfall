@@ -91,8 +91,8 @@ private:
 	CGameTimer					m_ChargeTimer;
 
 	CScene						*m_pScene = NULL;
-	CPlayer						*m_pPlayer = NULL;
-	CPlayer						m_pOtherPlayer[OTHER_PLAYER_NUM];
+	CTerrainPlayer				*m_pPlayer = NULL;
+	CTerrainPlayer				*m_ppOtherPlayer[OTHER_PLAYER_NUM];
 	CCamera						*m_pCamera = NULL;
 
 	CPacket* m_pPacket = NULL;

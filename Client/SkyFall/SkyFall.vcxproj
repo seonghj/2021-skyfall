@@ -145,6 +145,7 @@
     <ClInclude Include="DDSTextureLoader12.h" />
     <ClInclude Include="GameFramework.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Monster.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="CPacket.h" />
     <ClInclude Include="Player.h" />
@@ -163,6 +164,7 @@
     <ClCompile Include="DDSTextureLoader12.cpp" />
     <ClCompile Include="GameFramework.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Monster.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="CPacket.cpp" />
     <ClCompile Include="Player.cpp" />

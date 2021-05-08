@@ -708,6 +708,18 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 				m_d3dPositionBufferView.BufferLocation = m_pd3dPositionBuffer->GetGPUVirtualAddress();
 				m_d3dPositionBufferView.StrideInBytes = sizeof(XMFLOAT3);
 				m_d3dPositionBufferView.SizeInBytes = sizeof(XMFLOAT3) * m_nVertices;
+				
+				XMFLOAT3 min{ 100,100,100 }, max{ -100,-100,-100 };
+				for (int i = 0; i < m_nVertices; ++i) {
+					if (m_pxmf3Positions[i].x < min.x)min.x = m_pxmf3Positions[i].x;
+					if (m_pxmf3Positions[i].y < min.y)min.y = m_pxmf3Positions[i].y;
+					if (m_pxmf3Positions[i].z < min.z)min.z = m_pxmf3Positions[i].z;
+					if (m_pxmf3Positions[i].x > max.x)max.x = m_pxmf3Positions[i].x;
+					if (m_pxmf3Positions[i].y > max.y)max.y = m_pxmf3Positions[i].y;
+					if (m_pxmf3Positions[i].z > max.z)max.z = m_pxmf3Positions[i].z;
+				}
+				m_xmf3AABBExtents = m_xmf3AABBCenter = Vector3::ScalarProduct(Vector3::Subtract(max,min), 0.5f, false);
+				
 			}
 		}
 		else if (!strcmp(pstrToken, "<UVs>:"))

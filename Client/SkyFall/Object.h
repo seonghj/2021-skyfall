@@ -588,3 +588,50 @@ public:
 	void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; };
 	//virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera=NULL);
 };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class CMonster : public CGameObject
+{
+private:
+	int Health;
+	int Damage;
+
+public:
+	CMonster();
+	virtual ~CMonster();
+};
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class CDragon : public CMonster
+{
+public:
+	CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks);
+	virtual ~CDragon();
+};
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class CWolf : public CMonster
+{
+public:
+	CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks);
+	virtual ~CWolf();
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class CMetalon : public CMonster
+{
+public:
+	CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks);
+	virtual ~CMetalon();
+};

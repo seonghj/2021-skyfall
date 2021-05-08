@@ -90,7 +90,7 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	XMFLOAT4 xmf4Color(0.0f, 0.3f, 0.0f, 0.0f);
 	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/HeightMap.raw"), 257, 257, xmf3Scale, xmf4Color);
 
-	m_nGameObjects = 4;
+	m_nGameObjects = 6;
 	m_ppGameObjects = new CGameObject*[m_nGameObjects];
 
 	/*
@@ -108,26 +108,30 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	m_ppGameObjects[0]->SetPosition(400.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f);
 	if (pPlayerModel) delete pPlayerModel;
 
-	CLoadedModelInfo* pMapForest = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Forest_Passable.bin", NULL);
+	CLoadedModelInfo* pMapForest = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Forest_Collision.bin", NULL);
 	m_ppGameObjects[1] = new CMapObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pMapForest, 0);
 	m_ppGameObjects[1]->SetPosition(0.0f, 0/*m_pTerrain->GetHeight(400.0f,700.0f)*/, 0);
 	if (pMapForest)delete pMapForest;
 
-	CLoadedModelInfo* pMapDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Snow_Passable.bin", NULL);
+	CLoadedModelInfo* pMapDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Forest_Steppable.bin", NULL);
 	m_ppGameObjects[2] = new CMapObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pMapDesert, 0);
 	m_ppGameObjects[2]->SetPosition(0, 0/*m_pTerrain->GetHeight(400.0f, 800.0f)*/, 0);
 	if (pMapDesert)delete pMapDesert;
 
-	CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Desert_Passable.bin", NULL);
-	m_ppGameObjects[3] = new CMapObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pMapSnow, 0);
-	m_ppGameObjects[3]->SetPosition(0, 0/*m_pTerrain->GetHeight(400.0f, 800.0f)*/, 0);
-	if (pMapSnow)delete pMapSnow;
+	//CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Desert_Passable.bin", NULL);
+	//m_ppGameObjects[3] = new CMapObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pMapSnow, 0);
+	//m_ppGameObjects[3]->SetPosition(0, 0/*m_pTerrain->GetHeight(400.0f, 800.0f)*/, 0);
+	//if (pMapSnow)delete pMapSnow;
 
-	//CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Dragon.bin", NULL);
-	//m_ppGameObjects[2] = new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pDragonModel, 1);
-	//m_ppGameObjects[2]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
-	//m_ppGameObjects[2]->SetPosition(400, m_pTerrain->GetHeight(400.0f, 500.0f), 500.0f);
-	//if (pDragonModel)delete pDragonModel;
+	CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Wolf.bin", NULL);
+	m_ppGameObjects[3] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
+	m_ppGameObjects[3]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
+	m_ppGameObjects[4] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
+	m_ppGameObjects[4]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
+	m_ppGameObjects[5] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
+	m_ppGameObjects[5]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
+
+	if (pDragonModel)delete pDragonModel;
 
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 
@@ -563,6 +567,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	if (m_pSkyBox) m_pSkyBox->Render(pd3dCommandList, pCamera);
 	//if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
 
+	if(m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
 	for (int i = 0; i < m_nGameObjects; i++)
 	{
 		if (m_ppGameObjects[i])
