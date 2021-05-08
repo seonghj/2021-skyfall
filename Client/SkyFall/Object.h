@@ -586,7 +586,7 @@ public:
 	virtual ~CBullet() { CGameObject::~CGameObject(); };
 	void Animate(float fElapsedTime);
 	void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; };
-	//virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera=NULL);
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera=NULL);
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

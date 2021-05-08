@@ -299,12 +299,14 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 			::GetCursorPos(&m_ptOldCursorPos);
 			m_ChargeTimer.Reset();
 			m_ChargeTimer.Start();
+			m_pPlayer->SetCharging(true);
 			break;
 		case WM_LBUTTONUP:
 		case WM_RBUTTONUP:
 			::ReleaseCapture();
 			m_ChargeTimer.Stop();
 			m_pPlayer->SetShooting(true);
+			m_pPlayer->SetCharging(false);
 			break;
 		case WM_MOUSEMOVE:
 			break;
@@ -525,9 +527,9 @@ void CGameFramework::ProcessInput()
 			p.type = Type_player_attack;
 			m_pPacket->ChargeTimer = m_ChargeTimer.GetTotalTime();
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-			/*printf("Look - X : %f Y : %f Z : %f", m_pPlayer->GetLook().x, m_pPlayer->GetLook().y, m_pPlayer->GetLook().z);
+			printf("Look - X : %f Y : %f Z : %f", m_pPlayer->GetLook().x, m_pPlayer->GetLook().y, m_pPlayer->GetLook().z);
 			m_pPlayer->Shot(fTimeElapsed, m_ChargeTimer.GetTotalTime() * 100.f);
-			m_pPlayer->SetShooting(false);*/
+			m_pPlayer->SetShooting(false);
 		}
 
 		if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))

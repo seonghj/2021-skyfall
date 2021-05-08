@@ -1155,6 +1155,25 @@ void CGameObject::LoadMaterialsFromFile(ID3D12Device* pd3dDevice, ID3D12Graphics
 				}
 			}
 		}
+		else if (!strcmp(pstrToken, "<Lambert>:"))
+		{
+			//Ambient
+			m_ppMaterials[0]->m_xmf4AmbientColor.x = ::ReadFloatFromFile(pInFile);
+			m_ppMaterials[0]->m_xmf4AmbientColor.y = ::ReadFloatFromFile(pInFile);
+			m_ppMaterials[0]->m_xmf4AmbientColor.z = ::ReadFloatFromFile(pInFile);
+			//Diffuse
+			m_ppMaterials[0]->m_xmf4DiffuseColor.x = ::ReadFloatFromFile(pInFile);
+			m_ppMaterials[0]->m_xmf4DiffuseColor.y = ::ReadFloatFromFile(pInFile);
+			m_ppMaterials[0]->m_xmf4DiffuseColor.z = ::ReadFloatFromFile(pInFile);
+			//Emissive
+			m_ppMaterials[0]->m_xmf4EmissiveColor.x = ::ReadFloatFromFile(pInFile);
+			m_ppMaterials[0]->m_xmf4EmissiveColor.y = ::ReadFloatFromFile(pInFile);
+			m_ppMaterials[0]->m_xmf4EmissiveColor.z = ::ReadFloatFromFile(pInFile);
+
+			//Transparency Factor
+			::ReadFloatFromFile(pInFile);
+
+		}
 		else if (!strcmp(pstrToken, "<Phong>:"))
 		{
 			//Ambient
@@ -1479,9 +1498,9 @@ void CSkyBox::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature)
 {
-	CLoadedModelInfo* pMapForest = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Forest_Steppable.bin", NULL);
-	CLoadedModelInfo* pMapDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Desert_Steppable.bin", NULL);
-	CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Snow_Steppable.bin", NULL);
+	CLoadedModelInfo* pMapForest = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Forest_Steppable.bin", NULL);
+	CLoadedModelInfo* pMapDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Steppable.bin", NULL);
+	CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Steppable.bin", NULL);
 
 	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 3; ++j) {
@@ -1623,14 +1642,15 @@ CEagleObject::~CEagleObject()
 CPlayerObject::CPlayerObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks)
 {
 	CLoadedModelInfo* pPlayerModel = pModel;
-	if (!pPlayerModel) pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player.bin", NULL);
+	if (!pPlayerModel) pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
 
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pPlayerModel);
 
+	
 	strcpy_s(m_pstrFrameName, "Player");
 
-	Rotate(-90.0f, 0.0f, 0.0f);
+	//Rotate(-90.0f, 0.0f, 0.0f);
 	//SetScale(0.2,0.2,0.2);
 }
 
@@ -1651,7 +1671,7 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	strcpy_s(m_pstrFrameName, "Map");
 	SetScale(2.f, 2.f, 2.f);
-	//Rotate(-90.0f, 0.0f, 0.0f);
+	Rotate(-90.0f, 0.0f, 0.0f);
 }
 
 CMapObject::~CMapObject()
@@ -1674,13 +1694,21 @@ void CBullet::Animate(float fElapsedTime) {
 	std::cout << "x : " << look.x << "y : " << look.y << "z : " << look.z << endl;
 	m_fRotationX = acos(Vector3::DotProduct(m_xmf3MovingDirection, look) / (Vector3::Length(look) * Vector3::Length(m_xmf3MovingDirection)));
 	std::cout << m_fRotationX << std::endl;
-	Rotate(m_fRotationX / PI * 180, 0, 0);
+	Rotate(m_fRotationX / PI * 180 , 0, 0);
 }
+
+void CBullet::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	Rotate(90.f, 0, 0);
+	CGameObject::Render(pd3dCommandList, pCamera);
+	Rotate(-90.f, 0, 0);
+}
+
 
 CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks)
 {
 	CLoadedModelInfo* pDragonModel = pModel;
-	if (!pDragonModel) pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Dragon.bin", NULL);
+	if (!pDragonModel) pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
 
 	SetChild(pDragonModel->m_pModelRootObject, true);
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pDragonModel);
@@ -1703,7 +1731,7 @@ CDragon::~CDragon()
 CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks)
 {
 	CLoadedModelInfo* pWolfModel = pModel;
-	if (!pWolfModel) pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Wolf.bin", NULL);
+	if (!pWolfModel) pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
 
 	SetChild(pWolfModel->m_pModelRootObject, true);
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pWolfModel);
@@ -1726,7 +1754,7 @@ CWolf::~CWolf()
 CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks)
 {
 	CLoadedModelInfo* pMetalonModel = pModel;
-	if (!pMetalonModel) pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Metalon.bin", NULL);
+	if (!pMetalonModel) pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
 
 	SetChild(pMetalonModel->m_pModelRootObject, true);
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMetalonModel);

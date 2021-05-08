@@ -40,6 +40,7 @@ protected:
 	bool						m_isGround;
 	bool						m_isRunning;
 	bool						m_isShooting;
+	bool						m_isCharging;
 
 	// stat
 	int							m_iHp;
@@ -71,6 +72,7 @@ public:
 	void SetRunning(bool run) { m_isRunning = run; }
 	void SetGround(bool ground) { m_isGround = ground; }
 	void SetShooting(bool shoot) { m_isShooting = shoot; }
+	void SetCharging(bool charge) { m_isCharging = charge; }
 	void SetHp(int hp) { m_iHp = hp; }
 	void SetAtkStat(float atk) { m_fAtkStat = atk; }
 	void SetDefStat(float def) { m_fDefStat = def; }
@@ -83,6 +85,7 @@ public:
 	bool  GetRunning() const { return(m_isRunning); }
 	bool  GetGround() const { return(m_isGround); }
 	bool  GetShooting() const { return(m_isShooting); }
+	bool  GetCharging() const { return(m_isCharging); }
 	int GetHp() const { return(m_iHp); }
 	float GetAtkStat() const { return(m_fAtkStat); }
 	float GetDefStat() const { return(m_fDefStat); }
@@ -163,10 +166,23 @@ public:
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
 #endif
-	const int nAnimation_Death = 0;
-	const int nAnimation_Idle = 1;
-	const int nAnimation_Jump = 2;
-	const int nAnimation_Run = 3;
-	const int nAnimation_Walk = 4;
+	const int nBasic_Death = 0;
+	const int nBasic_Idle = 1;
+	const int nBasic_Jump = 2;
+	const int nBasic_Run = 3;
+	const int nBasic_Walk = 4;
+
+	const int nBow_Idle = 0;
+	const int nBow_Jump = 1;
+	const int nBow_Run = 2;
+	const int nBow_RunBack = 3;
+	const int nBow_RunLeft = 4;
+	const int nBow_RunRight = 5;
+	const int nBow_ShotHold = 6;
+	const int nBow_ShotReady = 7;
+	const int nBow_ShotRelease = 8;
+	const int nBow_TakeDamage = 9;
+	const int nBow_Walk = 10;
+	const int nBow_Death = 11;
 };
 

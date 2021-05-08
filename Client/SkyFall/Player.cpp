@@ -271,8 +271,9 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 	if (nCameraMode == THIRD_PERSON_CAMERA) {
 		CGameObject::Render(pd3dCommandList, pCamera);
 	}
-	for (int i = 0; i < m_nBullets; ++i)
+	for (int i = 0; i < m_nBullets; ++i) {
 		m_ppBullets[i]->Render(pd3dCommandList, pCamera);
+	}
 }
 
 void CPlayer::Shot(float fTimeElapsed, float fSpeed)
@@ -329,25 +330,34 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 {
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
-	CLoadedModelInfo *pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player.bin", NULL);
+	CLoadedModelInfo *pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 5, pPlayerModel);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nAnimation_Idle, nAnimation_Idle);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nAnimation_Walk, nAnimation_Walk);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nAnimation_Run, nAnimation_Run);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nAnimation_Jump, nAnimation_Jump);
-	m_pSkinnedAnimationController->SetTrackType(nAnimation_Jump, ANIMATION_TYPE_ONCE);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nAnimation_Death, nAnimation_Death);
-	m_pSkinnedAnimationController->SetTrackType(nAnimation_Death, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 12, pPlayerModel);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Idle, nBow_Idle);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Walk, nBow_Walk);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Run, nBow_Run);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunBack, nBow_RunBack);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunLeft, nBow_RunLeft);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunRight, nBow_RunRight);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotHold, nBow_ShotHold);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotReady, nBow_ShotReady);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotRelease, nBow_ShotRelease);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_TakeDamage, nBow_TakeDamage);
+
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Jump, nBow_Jump);
+	m_pSkinnedAnimationController->SetTrackType(nBow_Jump, ANIMATION_TYPE_ONCE);
+
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Death, nBow_Death);
+	m_pSkinnedAnimationController->SetTrackType(nBow_Death, ANIMATION_TYPE_ONCE);
 
 
 #ifdef _WITH_SOUND_CALLBACK
-	m_pSkinnedAnimationController->SetCallbackKeys(nAnimation_Walk, 1);
-	m_pSkinnedAnimationController->SetCallbackKey(nAnimation_Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
+	m_pSkinnedAnimationController->SetCallbackKeys(nBow_Walk, 1);
+	m_pSkinnedAnimationController->SetCallbackKey(nBow_Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
 
 	CAnimationCallbackHandler *pAnimationCallbackHandler = new CSoundCallbackHandler();
-	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nAnimation_Walk, pAnimationCallbackHandler);
+	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nBow_Walk, pAnimationCallbackHandler);
 #endif
 
 	SetPlayerUpdatedContext(pContext);
@@ -364,9 +374,10 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	m_ppBullets = new CBullet * [MAX_BULLET];
 
 
-	CGameObject* pArrow = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/twig.bin", NULL);
-	CMesh* pMesh = pArrow->FindFrame("SM_Tree_Twig_05")->m_pMesh;
-
+	CGameObject* pArrow = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Arrow.bin", NULL);
+	//CMesh* pMesh = pArrow->FindFrame("Arrow")->m_pMesh;
+	CMesh* pMesh = pArrow->m_pMesh;
+	
 	for (int i = 0; i < MAX_BULLET; ++i)
 	{
 		m_ppBullets[i] = new CBullet(pMesh);
@@ -519,11 +530,11 @@ void CTerrainPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVeloci
 	{
 		if (m_isRunning) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackEnable(nAnimation_Run, true);
+			m_pSkinnedAnimationController->SetTrackEnable(nBow_Run, true);
 		}
 		else {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackEnable(nAnimation_Walk, true);
+			m_pSkinnedAnimationController->SetTrackEnable(nBow_Walk, true);
 		}
 	}
 
@@ -538,13 +549,17 @@ void CTerrainPlayer::Update(float fTimeElapsed)
 
 		if (GetJump()) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackPosition(nAnimation_Jump, 0);
-			m_pSkinnedAnimationController->SetTrackEnable(nAnimation_Jump, true);
+			m_pSkinnedAnimationController->SetTrackPosition(nBow_Jump, 0);
+			m_pSkinnedAnimationController->SetTrackEnable(nBow_Jump, true);
+		}
+		else if (GetCharging()) {
+			//m_pSkinnedAnimationController->SetAllTrackDisable();
+			//m_pSkinnedAnimationController->SetTrackEnable(nBow_ShotReady,true);		
 		}
 		else if (::IsZero(fLength)&&GetGround())
 		{
 			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackEnable(nAnimation_Idle, true);
+			m_pSkinnedAnimationController->SetTrackEnable(nBow_Idle, true);
 		}
 	}
 	CPlayer::Update(fTimeElapsed);
