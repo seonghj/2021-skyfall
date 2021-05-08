@@ -129,6 +129,8 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	//m_ppGameObjects[2]->SetPosition(400, m_pTerrain->GetHeight(400.0f, 500.0f), 500.0f);
 	//if (pDragonModel)delete pDragonModel;
 
+	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 

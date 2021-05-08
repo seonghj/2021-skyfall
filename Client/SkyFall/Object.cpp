@@ -1479,17 +1479,36 @@ void CSkyBox::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature)
 {
-	for (int i = 0; i < 3; ++i) {
-		CLoadedModelInfo* pMapForest = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Forest.bin", NULL);
-		m_ppGameObjects[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pMapForest, 0);
-		m_ppGameObjects[1]->SetPosition(500.0f, 0/*m_pTerrain->GetHeight(400.0f,700.0f)*/, 500.0f);
-		if (pMapForest)delete pMapForest;
+	CLoadedModelInfo* pMapForest = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Forest_Stepable.bin", NULL);
+	CLoadedModelInfo* pMapDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Desert_Stepable.bin", NULL);
+	CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Snow_Stepable.bin", NULL);
 
-		CLoadedModelInfo* pMapDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Desert.bin", NULL);
-		m_ppGameObjects[2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pMapDesert, 0);
-		m_ppGameObjects[2]->SetPosition(1500, 0/*m_pTerrain->GetHeight(400.0f, 800.0f)*/, 500.0f);
-		if (pMapDesert)delete pMapDesert;
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			int n = i * 3 + j;
+			if (n % 3 == 0) {
+				m_ppMaps[n] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pMapForest, 0);
+				m_ppMaps[n]->SetPosition(i * 500.0f, 0, j * 500.0f);
+			}
+			else if (n % 3 == 1) {
+				m_ppMaps[n] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pMapDesert, 0);
+				m_ppMaps[n]->SetPosition(i * 500.0f, 0, j * 500.0f);
+			}
+			else {
+				m_ppMaps[n] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pMapSnow, 0);
+				m_ppMaps[n]->SetPosition(i * 500.0f, 0, j * 500.0f);
+			}
+		}
 	}
+	if (pMapForest)delete pMapForest;
+	if (pMapDesert)delete pMapDesert;
+	if (pMapSnow)delete pMapSnow;
+}
+
+void CMap::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	for (int i = 0; i < 9; ++i)
+		m_ppMaps[i]->Render(pd3dCommandList, pCamera);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

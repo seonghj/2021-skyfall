@@ -493,9 +493,11 @@ class CMap : public CGameObject
 public:
 	CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
 	virtual ~CMap() {};
+
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 		
 private:
-	CGameObject** m_ppGameObjects = new CGameObject * [9];
+	CGameObject** m_ppMaps = new CGameObject * [9];
 };
 
 
