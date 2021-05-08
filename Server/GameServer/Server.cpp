@@ -27,8 +27,9 @@ int Server::SetClientId()
 {
     int count = LOBBY_ID+1;
     while (true){
-        if (sessions.count(count) == 0)
+        if (!sessions[count].connected) {
             return count;
+        }
         else 
             ++count;
     }
@@ -39,7 +40,7 @@ int Server::SetGameNum()
     int count = 1;
     while (1) {
         if (gameroom.count(count) >= 20)
-            count++;
+            ++count;
         else
             return count;
     }
@@ -144,7 +145,6 @@ void Server::Accept()
         sessions[client_id].gameroom_num = gameroom_num;
 
         gameroom.emplace(gameroom_num, client_id);
-        //printf("만든 후 방 갯수: %d\n", gameroom.size());
 
         // id전송
         send_ID_player_packet(client_id);
@@ -182,7 +182,7 @@ void Server::Accept()
     WSACleanup();
 }
 
-void Server::Disconnected(int id)
+void Server::Disconnected(int id, int gamenum)
 {
     printf("client_end: IP =%s, port=%d key = %d\n",
         inet_ntoa(sessions[id].clientaddr.sin_addr)
@@ -190,6 +190,7 @@ void Server::Disconnected(int id)
     //send_disconnect_player_packet(id);
     closesocket(sessions[id].sock);
     sessions.erase(id);
+    std::cout << sessions.count(id);
     //sessions.clear();
 }
 
@@ -256,7 +257,7 @@ void Server::send_login_player_packet(char id, int to)
     p.type = PacketType::Type_player_login;
     p.Position = sessions[id].f3Position;
 
-    printf("%d: login to %d\n",id, to);
+    //printf("%d: login to %d\n",id, to);
 
     send_packet(to, reinterpret_cast<char*>(&p));
 }
@@ -279,7 +280,7 @@ void Server::send_disconnect_player_packet(char id)
             iter.second.gameroom_num == sessions[id].gameroom_num)
             send_packet(iter.first, reinterpret_cast<char*>(&p));
     }*/
-    Disconnected(id);
+    Disconnected(id, sessions[id].gameroom_num);
 }
 
 void Server::send_packet_to_players(char id, char* buf)
@@ -548,13 +549,13 @@ void Server::WorkerFunc()
             {
                 //printf("error = %d\n", WSAGetLastError());
                 display_error("GQCS", WSAGetLastError());
-                Disconnected(id);
+                Disconnected(id, sessions[id].gameroom_num);
                 continue;
             }
 
             if ((Transferred == 0)) {
                 display_error("GQCS", WSAGetLastError());
-                Disconnected(id);
+                Disconnected(id, sessions[id].gameroom_num);
                 continue;
             }
             //printf("%d\n", true);

@@ -74,7 +74,7 @@ public:
 
     bool Init();
     void Thread_join();
-    void Disconnected(int id);
+    void Disconnected(int id, int gamenum);
 
     void Accept();
     void WorkerFunc();

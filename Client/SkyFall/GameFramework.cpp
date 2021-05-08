@@ -410,7 +410,9 @@ void CGameFramework::BuildObjects()
 	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
 	CTerrainPlayer *pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain);
 
-	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
+	for (int i = 0; i < 19; ++i) {
+		m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
+	}
 
 	m_pScene->m_pPlayer = m_pPlayer = pPlayer;
 	m_pCamera = m_pPlayer->GetCamera();

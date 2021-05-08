@@ -193,7 +193,7 @@ void CPacket::ProcessPacket(char* buf)
         }
         else {
             m_pScene->MovePlayer(p->id, p->Position);
-            m_pScene->RotatePlayer(p->id, p->dx, p->dy, p->dz);
+            m_pScene->RotatePlayer(p->id, 0, p->dz, p->dy);
         }
         /* m_pPlayer->Update(fTimeElapsed);
          m_pScene->Update(fTimeElapsed);*/

@@ -161,8 +161,9 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player.bin", NULL);
 	m_ppPlayerObjects[m_nPlayerObjects - 1].m_Object = new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPlayerModel, 1);
 	m_ppPlayerObjects[m_nPlayerObjects - 1].m_Object->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 1);
-	m_ppPlayerObjects[m_nPlayerObjects - 1].m_Object->SetPosition(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f);
+	m_ppPlayerObjects[m_nPlayerObjects - 1].m_Object->SetPosition(-1000.0f, m_pTerrain->GetHeight(400.0f, 650.0f), -1000.0f);
 	if (pPlayerModel) delete pPlayerModel;
+
 }
 
 void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
