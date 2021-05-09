@@ -88,7 +88,7 @@ struct Packet {
 public:
 	char size;
 	char type;
-	unsigned int id;
+	short id;
 };
 
 struct player_ID_packet :public Packet {

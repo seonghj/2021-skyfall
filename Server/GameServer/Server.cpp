@@ -27,7 +27,7 @@ int Server::SetClientId()
 {
     int count = LOBBY_ID+1;
     while (true){
-        if (!sessions[count].connected) {
+        if (!sessions[count].connected && sessions.count(count) == 0) {
             return count;
         }
         else 
@@ -81,11 +81,6 @@ void Server::ConnectLobby()
 
 void Server::Accept()
 {
-    // 윈속 초기화
-    WSADATA wsa;
-    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-        return;
-
     // socket()
     SOCKET listen_sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 
@@ -139,12 +134,19 @@ void Server::Accept()
         // 소켓과 입출력 완료 포트 연결
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
 
+
+        accept_lock.lock();
         int gameroom_num = SetGameNum();
         //int gameroom_num = client_id % 2;
 
         sessions[client_id].gameroom_num = gameroom_num;
 
         gameroom.emplace(gameroom_num, client_id);
+        //printf("create game room - %d\n", gameroom_num);
+
+
+        auto iter = gameroom.equal_range(gameroom_num);
+        accept_lock.unlock();
 
         // id전송
         send_ID_player_packet(client_id);
@@ -153,8 +155,8 @@ void Server::Accept()
 
         sessions[client_id].f3Position.store(XMFLOAT3(300.0f + (client_id*50.f), 200.0f, 500.0f));
 
+
         // 로그인한 클라이언트에 다른 클라이언트 정보 전달
-        auto iter = gameroom.equal_range(gameroom_num);
         for (auto it = iter.first; it != iter.second; ++it) {
             if (sessions[it->second].connected)
                 send_login_player_packet(it->second, client_id);
@@ -166,13 +168,12 @@ void Server::Accept()
                 send_login_player_packet(client_id, it->second);
         }
 
-        do_recv(client_id);
-
        /* if (1 == gameroom.count(gameroom_num))
         {
             maps.emplace(gameroom_num, Map(gameroom_num));
             maps[gameroom_num].init_Map(this);
         }*/
+        do_recv(client_id);
     }
 
     // closesocket()
@@ -194,7 +195,7 @@ void Server::Disconnected(int id, int gamenum)
     //sessions.clear();
 }
 
-void Server::do_recv(char id)
+void Server::do_recv(int id)
 {
     DWORD flags = 0;
 
@@ -203,17 +204,15 @@ void Server::do_recv(char id)
 
     over->dataBuffer.len = BUFSIZE;
     over->dataBuffer.buf = over->messageBuffer;
-    ZeroMemory(&(over->overlapped), sizeof(WSAOVERLAPPED));
+    ZeroMemory(&over->overlapped, sizeof(over->overlapped));
 
     if (WSARecv(client_s, &over->dataBuffer, 1, (LPDWORD)sessions[id].prev_size,
         &flags, &(over->overlapped), NULL)){
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
-            display_error("recv error: ", err_no);
+            printf("to: %d recv error: %d\n", id, err_no);
         }
     }
-    //printf("Recv id: %d: type:%d / size: %d\n", id, over->dataBuffer.buf[1], over->dataBuffer.buf[0]);
-    //memcpy(sessions[id].packet_buf, over->dataBuffer.buf, over->dataBuffer.buf[0]);
 }
 
 void Server::send_packet(int to, char* packet)
@@ -225,20 +224,19 @@ void Server::send_packet(int to, char* packet)
     over->dataBuffer.len = packet[0];
 
     memcpy(over->messageBuffer, packet, packet[0]);
-
-    ZeroMemory(&(over->overlapped), sizeof(WSAOVERLAPPED));
     over->is_recv = false;
+    ZeroMemory(&over->overlapped, sizeof(over->overlapped));
 
     if (WSASend(client_s, &over->dataBuffer, 1, NULL,
         0, &(over->overlapped), NULL)) {
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
-            display_error("send error: ", err_no);
+            printf("to: %d packet: %d send error: %d\n", to, packet[1], err_no);
         }
     }
 }
 
-void Server::send_ID_player_packet(char id)
+void Server::send_ID_player_packet(int id)
 {
     player_ID_packet p;
 
@@ -248,7 +246,7 @@ void Server::send_ID_player_packet(char id)
     send_packet(id, reinterpret_cast<char*>(&p));
 }
 
-void Server::send_login_player_packet(char id, int to)
+void Server::send_login_player_packet(int id, int to)
 {
     player_login_packet p;
 
@@ -262,7 +260,7 @@ void Server::send_login_player_packet(char id, int to)
     send_packet(to, reinterpret_cast<char*>(&p));
 }
 
-void Server::send_disconnect_player_packet(char id)
+void Server::send_disconnect_player_packet(int id)
 {
     player_remove_packet p;
     p.id = id;
@@ -283,7 +281,7 @@ void Server::send_disconnect_player_packet(char id)
     Disconnected(id, sessions[id].gameroom_num);
 }
 
-void Server::send_packet_to_players(char id, char* buf)
+void Server::send_packet_to_players(int id, char* buf)
 {
     auto iter = gameroom.equal_range(sessions[id].gameroom_num);
     for (auto it = iter.first; it != iter.second; ++it) {
@@ -302,7 +300,7 @@ void Server::send_packet_to_players(char id, char* buf)
     }*/
 }
 
-void Server::send_packet_to_players(int game_num, char* buf)
+void Server::send_packet_to_players(int id, int game_num, char* buf)
 {
     auto iter = gameroom.equal_range(game_num);
     for (auto it = iter.first; it != iter.second; ++it) {
@@ -323,6 +321,7 @@ void Server::send_map_collapse_packet(int num, int map_num)
     packet.size = sizeof(map_collapse_packet);
     packet.type = PacketType::Type_map_collapse;
     packet.block_num = num;
+    packet.id = 0;
 
     auto iter = gameroom.equal_range(map_num);
     for (auto it = iter.first; it != iter.second; ++it) {
@@ -344,6 +343,7 @@ void Server::send_cloud_move_packet(float x, float z, int map_num)
     packet.type = PacketType::Type_cloud_move;
     packet.x = x;
     packet.z = z;
+    packet.id = 0;
 
     auto iter = gameroom.equal_range(map_num);
     for (auto it = iter.first; it != iter.second; ++it) {
@@ -436,12 +436,13 @@ DirectX::XMFLOAT3 Server::move_calc(DWORD dwDirection, float fDistance, int stat
     return xmf3Shift;
 }
 
-void Server::process_packet(char id, char* buf)
+void Server::process_packet(int id, char* buf)
 {
     // 클라이언트에서 받은 패킷 처리
     switch (buf[1]) {
     case PacketType::Type_game_ready: {
-        sessions[buf[2]].isready = true;
+        game_ready_packet* p = new game_ready_packet;
+        sessions[p->id].isready = true;
         break;
     }
     case PacketType::Type_game_start: {
@@ -609,6 +610,10 @@ bool Server::Init()
 {
     sessions.clear();
 
+    // 윈속 초기화
+    WSADATA wsa;
+    WSAStartup(MAKEWORD(2, 2), &wsa);
+
     // 입출력 완료 포트 생성
     hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
     if (hcp == NULL) return 0;
@@ -618,7 +623,7 @@ bool Server::Init()
     GetSystemInfo(&si);
 
     // (CPU 개수 * 2)개의 작업자 스레드 생성
-    for (int i = 0; i < (int)si.dwNumberOfProcessors; i++)
+    for (int i = 0; i < (int)si.dwNumberOfProcessors*2; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
     //ConnectLobby();

@@ -37,7 +37,7 @@ void Map::init_Map(Server* s)
 	p.size = sizeof(p);
 	for (int i = 0; i < MAX_MAP_BLOCK; ++i)
 		p.block_num[i] = Map_num[i];
-	m_pServer->send_packet_to_players(game_num, reinterpret_cast<char*>(&p));
+	m_pServer->send_packet_to_players(0, game_num, reinterpret_cast<char*>(&p));
 
 	game_time = 0;
 

@@ -79,15 +79,15 @@ public:
     void Accept();
     void WorkerFunc();
 
-    void do_recv(char id);
+    void do_recv(int id);
     void send_packet(int to, char* packet);
-    void process_packet(char id, char* buf);
+    void process_packet(int id, char* buf);
 
-    void send_ID_player_packet(char id);
-    void send_login_player_packet(char id, int to);
-    void send_disconnect_player_packet(char id);
-    void send_packet_to_players(char id, char* buf);
-    void send_packet_to_players(int game_num, char* buf);
+    void send_ID_player_packet(int id);
+    void send_login_player_packet(int id, int to);
+    void send_disconnect_player_packet(int id);
+    void send_packet_to_players(int id, char* buf);
+    void send_packet_to_players(int id, int game_num, char* buf);
     void send_map_collapse_packet(int num, int map_num);
     void send_cloud_move_packet(float x, float z, int map_num);
     
@@ -106,4 +106,6 @@ private:
     std::vector <std::thread> working_threads;
     std::thread accept_thread;
     std::vector <std::thread> map_threads;
+
+    std::mutex accept_lock;
 };
