@@ -239,7 +239,7 @@ CCamera *CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
 		m_fYaw = Vector3::Angle(XMFLOAT3(0.0f, 0.0f, 1.0f), m_xmf3Look);
 		if (m_xmf3Look.x < 0.0f) m_fYaw = -m_fYaw;
 	}
-	else if ((nNewCameraMode == THIRD_PERSON_CAMERA) && m_pCamera)
+	else if ((nNewCameraMode == SPACESHIP_CAMERA) && m_pCamera)
 	{
 		m_xmf3Right = m_pCamera->GetRightVector();
 		m_xmf3Up = m_pCamera->GetUpVector();
@@ -341,9 +341,11 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunLeft, nBow_RunLeft);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunRight, nBow_RunRight);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotHold, nBow_ShotHold);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotReady, nBow_ShotReady);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotRelease, nBow_ShotRelease);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_TakeDamage, nBow_TakeDamage);
+
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotReady, nBow_ShotReady);
+	m_pSkinnedAnimationController->SetTrackType(nBow_ShotReady, ANIMATION_TYPE_ONCE);
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Jump, nBow_Jump);
 	m_pSkinnedAnimationController->SetTrackType(nBow_Jump, ANIMATION_TYPE_ONCE);
@@ -361,14 +363,14 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 #endif
 
 	SetPlayerUpdatedContext(pContext);
-	SetCameraUpdatedContext(pContext);
+	//SetCameraUpdatedContext(pContext);
 
 	if (pPlayerModel) delete pPlayerModel;
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)pContext;
-	SetPosition(XMFLOAT3(310.0f, pTerrain->GetHeight(310.0f, 595.0f), 595.0f));
+	//SetPosition(XMFLOAT3(310.0f, pTerrain->GetHeight(310.0f, 595.0f), 595.0f));
 	
 
 	m_ppBullets = new CBullet * [MAX_BULLET];
@@ -397,7 +399,8 @@ void CTerrainPlayer::OnPrepareRender()
 	CPlayer::OnPrepareRender();
 
 	m_xmf4x4ToParent = Matrix4x4::Multiply(XMMatrixScaling(m_xmf3Scale.x, m_xmf3Scale.y, m_xmf3Scale.z), m_xmf4x4ToParent);
-	m_xmf4x4ToParent = Matrix4x4::Multiply(XMMatrixRotationX(-90.0f), m_xmf4x4ToParent);
+	//m_xmf4x4ToParent = Matrix4x4::Multiply(XMMatrixRotationX(-90.0f), m_xmf4x4ToParent);
+	CGameObject::Rotate(-90.f, 0, 0);
 }
 
 CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
@@ -475,12 +478,12 @@ void CTerrainPlayer::OnPlayerUpdateCallback(float fTimeElapsed)
 	float fHeight = pTerrain->GetHeight(xmf3PlayerPosition.x, xmf3PlayerPosition.z, bReverseQuad) + 0.0f;
 	
 	//SetFriction(1000.f);
-	if (xmf3PlayerPosition.y <= 0/*fHeight*/)
+	if (xmf3PlayerPosition.y <= fHeight)
 	{
 		XMFLOAT3 xmf3PlayerVelocity = GetVelocity();
 		xmf3PlayerVelocity.y = 0.0f;
 		SetVelocity(xmf3PlayerVelocity);
-		xmf3PlayerPosition.y = 0/*fHeight*/;
+		xmf3PlayerPosition.y = fHeight;
 		SetPosition(xmf3PlayerPosition);
 		if (!GetGround())
 		{
@@ -553,8 +556,8 @@ void CTerrainPlayer::Update(float fTimeElapsed)
 			m_pSkinnedAnimationController->SetTrackEnable(nBow_Jump, true);
 		}
 		else if (GetCharging()) {
-			//m_pSkinnedAnimationController->SetAllTrackDisable();
-			//m_pSkinnedAnimationController->SetTrackEnable(nBow_ShotReady,true);		
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackEnable(nBow_ShotReady,true);	
 		}
 		else if (::IsZero(fLength)&&GetGround())
 		{

@@ -307,6 +307,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 			m_ChargeTimer.Stop();
 			m_pPlayer->SetShooting(true);
 			m_pPlayer->SetCharging(false);
+			m_pPlayer->m_pSkinnedAnimationController->SetTrackPosition(m_pPlayer->nBow_ShotReady, 0);
 			break;
 		case WM_MOUSEMOVE:
 			break;

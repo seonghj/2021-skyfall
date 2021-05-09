@@ -1430,7 +1430,7 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device *pd3dDevice, ID3D12GraphicsCom
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	CTexture *pTerrainBaseTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
-	pTerrainBaseTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Terrain/Base_Texture.dds", 0);
+	pTerrainBaseTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Terrain/Forest_Floor_Texture.dds", 0);
 
 	CTexture *pTerrainDetailTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
 	pTerrainDetailTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Terrain/Detail_Texture_7.dds", 0);
@@ -1670,8 +1670,9 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	//m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMapModel);
 
 	strcpy_s(m_pstrFrameName, "Map");
-	SetScale(2.f, 2.f, 2.f);
-	Rotate(-90.0f, 0.0f, 0.0f);
+	Rotate(0, -90.f, 0);
+	SetScale(20.f, 20.f, 20.f);
+	//Rotate(-90.0f, 0.0f, 0.0f);
 }
 
 CMapObject::~CMapObject()
