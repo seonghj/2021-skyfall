@@ -131,15 +131,17 @@ void Server::Accept()
         sessions[client_id].over.is_recv = true;
         flags = 0;
 
+        int gameroom_num = SetGameNum();
+        gameroom.emplace(gameroom_num, client_id);
+        auto iter = gameroom.equal_range(gameroom_num);
+        accept_lock.unlock();
+
         // 소켓과 입출력 완료 포트 연결
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
-
-        int gameroom_num = SetGameNum();
         //int gameroom_num = client_id % 2;
 
         sessions[client_id].gameroom_num = gameroom_num;
 
-        gameroom.emplace(gameroom_num, client_id);
         //printf("create game room - %d\n", gameroom_num);
 
         // id전송
@@ -150,7 +152,6 @@ void Server::Accept()
         sessions[client_id].f3Position.store(XMFLOAT3(300.0f + (client_id*50.f), 200.0f, 500.0f));
 
 
-        auto iter = gameroom.equal_range(gameroom_num);
         // 로그인한 클라이언트에 다른 클라이언트 정보 전달
         for (auto it = iter.first; it != iter.second; ++it) {
             if (sessions[it->second].connected)
@@ -163,13 +164,11 @@ void Server::Accept()
                 send_login_player_packet(client_id, it->second);
         }
 
-       /* if (1 == gameroom.count(gameroom_num))
+        if (20 <= gameroom.count(gameroom_num))
         {
             maps.emplace(gameroom_num, Map(gameroom_num));
             maps[gameroom_num].init_Map(this);
-        }*/
-
-        accept_lock.unlock();
+        }
 
         do_recv(client_id);
     }
@@ -183,9 +182,9 @@ void Server::Accept()
 
 void Server::Disconnected(int id, int gamenum)
 {
-    printf("client_end: IP =%s, port=%d key = %d\n",
+    /*printf("client_end: IP =%s, port=%d key = %d\n",
         inet_ntoa(sessions[id].clientaddr.sin_addr)
-        , ntohs(sessions[id].clientaddr.sin_port), id);
+        , ntohs(sessions[id].clientaddr.sin_port), id);*/
     //send_disconnect_player_packet(id);
     closesocket(sessions[id].sock);
     sessions.erase(id);
@@ -208,7 +207,7 @@ void Server::do_recv(int id)
         &flags, &(over->overlapped), NULL)){
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
-            printf("to: %d recv error: %d\n", id, err_no);
+            //printf("to: %d recv error: %d\n", id, err_no);
         }
     }
 }
@@ -229,7 +228,7 @@ void Server::send_packet(int to, char* packet)
         0, &(over->overlapped), NULL)) {
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
-            printf("to: %d packet: %d send error: %d\n", to, packet[1], err_no);
+            //printf("to: %d packet: %d send error: %d\n", to, packet[1], err_no);
         }
     }
 }
@@ -439,12 +438,12 @@ void Server::process_packet(int id, char* buf)
     // 클라이언트에서 받은 패킷 처리
     switch (buf[1]) {
     case PacketType::Type_game_ready: {
-        game_ready_packet* p = new game_ready_packet;
+        game_ready_packet* p = reinterpret_cast<game_ready_packet*>(buf);
         sessions[p->id].isready = true;
         break;
     }
     case PacketType::Type_game_start: {
-        start_ok_packet* p = new start_ok_packet;
+        start_ok_packet* p = reinterpret_cast<start_ok_packet*>(buf);
         p->size = sizeof(p);
         p->type = Type_start_ok;
         break;
@@ -487,33 +486,6 @@ void Server::process_packet(int id, char* buf)
         default: {
             break;
         }
-        }
-        {
-            //DirectX::XMFLOAT3 Position = move_calc(p->MoveType, sessions[p->id].speed,p->state, p->id);
-            //float dx = p->dx;
-            //float dy = p->dy;
-            //float dz = p->dz;
-            //
-            ///*float dx = sessions[p->id].dx.load();
-            //float dy = sessions[p->id].dy.load();
-            //float dz = sessions[p->id].dz.load();
-            //
-            //while (!sessions[p->id].dx.compare_exchange_strong(dx, p->dx)) {};
-            //while (!sessions[p->id].dy.compare_exchange_strong(dy, p->dy)) {};
-            //while (!sessions[p->id].dz.compare_exchange_strong(dz, p->dz)) {};*/
-            //sessions[p->id].f3Position.store(Position);
-
-            //player_pos_packet* pp = new player_pos_packet;
-            //pp->size = sizeof(player_pos_packet);
-            //pp->type = Type_player_pos;
-            //pp->id = p->id;
-            //pp->Position = Position;
-            //pp->dx = dx;
-            //pp->dy = dy;
-            //pp->dy = dz;
-            //pp->state = p->state;
-
-            //send_player_move_packet(id, reinterpret_cast<char*>(pp));
         }
         break;
     }
