@@ -27,7 +27,7 @@ int Server::SetClientId()
 {
     int count = LOBBY_ID+1;
     while (true){
-        if (!sessions[count].connected && sessions.count(count) == 0) {
+        if (!sessions[count].connected) {
             return count;
         }
         else 
@@ -110,13 +110,13 @@ void Server::Accept()
             break;
         }
 
+        accept_lock.lock();
         int client_id = SetClientId();
         sessions.emplace(client_id, SESSION());
         memset(&sessions[client_id], 0x00, sizeof(SESSION));
         sessions[client_id].id = client_id;
         sessions[client_id].sock = client_sock;
         sessions[client_id].clientaddr = clientaddr;
-
         getpeername(client_sock, (SOCKADDR*)&sessions[client_id].clientaddr
             , &sessions[client_id].addrlen);
 
@@ -134,8 +134,6 @@ void Server::Accept()
         // 소켓과 입출력 완료 포트 연결
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
 
-
-        accept_lock.lock();
         int gameroom_num = SetGameNum();
         //int gameroom_num = client_id % 2;
 
@@ -143,10 +141,6 @@ void Server::Accept()
 
         gameroom.emplace(gameroom_num, client_id);
         //printf("create game room - %d\n", gameroom_num);
-
-
-        auto iter = gameroom.equal_range(gameroom_num);
-        accept_lock.unlock();
 
         // id전송
         send_ID_player_packet(client_id);
@@ -156,6 +150,7 @@ void Server::Accept()
         sessions[client_id].f3Position.store(XMFLOAT3(300.0f + (client_id*50.f), 200.0f, 500.0f));
 
 
+        auto iter = gameroom.equal_range(gameroom_num);
         // 로그인한 클라이언트에 다른 클라이언트 정보 전달
         for (auto it = iter.first; it != iter.second; ++it) {
             if (sessions[it->second].connected)
@@ -173,6 +168,9 @@ void Server::Accept()
             maps.emplace(gameroom_num, Map(gameroom_num));
             maps[gameroom_num].init_Map(this);
         }*/
+
+        accept_lock.unlock();
+
         do_recv(client_id);
     }
 

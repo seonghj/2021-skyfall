@@ -209,7 +209,7 @@ void CPacket::ProcessPacket(int id, char* buf)
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
         players[p->id].pos.x = p->Position.x;
         players[p->id].pos.y = p->Position.z;
-       // printf("id %d : move %d %d\n", p->id, players[p->id].pos.x, players[p->id].pos.y);
+        //printf("id %d : move %d %d\n", p->id, players[p->id].pos.x, players[p->id].pos.y);
         
         break;
     }
