@@ -133,11 +133,12 @@ public:
 public:
 	static CShader					*m_pWireFrameShader;
 	static CShader					*m_pSkinnedAnimationWireFrameShader;
-
+	static CShader					*m_pBoundingBoxShader;
 	static void CMaterial::PrepareShaders(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature);
 
 	void SetWireFrameShader() { CMaterial::SetShader(m_pWireFrameShader); }
 	void SetSkinnedAnimationWireFrameShader() { CMaterial::SetShader(m_pSkinnedAnimationWireFrameShader); }
+	void SetBoundingBoxShader() { CMaterial::SetShader(m_pBoundingBoxShader); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -372,12 +373,14 @@ public:
 	CGameObject 					*m_pParent = NULL;
 	CGameObject 					*m_pChild = NULL;
 	CGameObject 					*m_pSibling = NULL;
-
+	
+	CGameObject* SetBBObject(CCubeMesh* pBoundingBox);
 	void SetMesh(CMesh *pMesh);
 	void SetShader(CShader *pShader);
 	void SetShader(int nMaterial, CShader *pShader);
 	void SetWireFrameShader();
 	void SetSkinnedAnimationWireFrameShader();
+	void SetBoundingBoxShader();
 	void SetMaterial(int nMaterial, CMaterial *pMaterial);
 
 	void SetChild(CGameObject *pChild, bool bReferenceUpdate=false);

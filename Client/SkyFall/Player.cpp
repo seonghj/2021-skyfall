@@ -330,9 +330,15 @@ void CSoundCallbackHandler::HandleCallback(void *pCallbackData, float fTrackPosi
 
 CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext)
 {
-
 	CLoadedModelInfo *pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
 	SetChild(pPlayerModel->m_pModelRootObject, true);
+
+	CGameObject* pObject = pPlayerModel->m_pModelRootObject->FindFrame("DummyMesh");
+
+	pObject->m_pMesh->m_xmf3AABBCenter = XMFLOAT3(0, 0, 30);
+	pObject->m_pMesh->m_xmf3AABBExtents = XMFLOAT3(10, 10, 30);
+
+	SetBBObject(new CCubeMesh(pd3dDevice, pd3dCommandList, 20, 20, 60))->MoveForward(30);
 
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
@@ -382,10 +388,15 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	CGameObject* pArrow = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Arrow.bin", NULL);
 	//CMesh* pMesh = pArrow->FindFrame("Arrow")->m_pMesh;
 	CMesh* pMesh = pArrow->m_pMesh;
-	
+
+	CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList,
+		pMesh->m_xmf3AABBExtents.x * 2, pMesh->m_xmf3AABBExtents.y * 2, pMesh->m_xmf3AABBExtents.z * 2);
+
+
 	for (int i = 0; i < MAX_BULLET; ++i)
 	{
 		m_ppBullets[i] = new CBullet(pMesh);
+		m_ppBullets[i]->SetBBObject(pBoundingBox);
 		m_ppBullets[i]->SetWireFrameShader();
 		m_ppBullets[i]->m_xmf4x4World = m_xmf4x4World;
 	}

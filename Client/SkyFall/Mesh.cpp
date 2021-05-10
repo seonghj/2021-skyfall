@@ -882,3 +882,68 @@ void CStandardMesh::OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList, void
 	D3D12_VERTEX_BUFFER_VIEW pVertexBufferViews[5] = { m_d3dPositionBufferView, m_d3dTextureCoord0BufferView, m_d3dNormalBufferView, m_d3dTangentBufferView, m_d3dBiTangentBufferView };
 	pd3dCommandList->IASetVertexBuffers(m_nSlot, 5, pVertexBufferViews);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+CCubeMesh::CCubeMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth, float fHeight, float fDepth) : CMesh(pd3dDevice, pd3dCommandList)
+{
+
+	m_nVertices = 8;
+	UINT nStride = sizeof(XMFLOAT3);
+	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	float fx = fWidth * 0.5f, fy = fHeight * 0.5f, fz = fDepth * 0.5f;
+	m_pxmf3Positions = new XMFLOAT3[m_nVertices];
+
+	m_pxmf3Positions[0] = XMFLOAT3(-fx, +fy, -fz);
+	m_pxmf3Positions[1] = XMFLOAT3(+fx, +fy, -fz);
+	m_pxmf3Positions[2] = XMFLOAT3(+fx, +fy, +fz);
+	m_pxmf3Positions[3] = XMFLOAT3(-fx, +fy, +fz);
+	m_pxmf3Positions[4] = XMFLOAT3(-fx, -fy, -fz);
+	m_pxmf3Positions[5] = XMFLOAT3(+fx, -fy, -fz);
+	m_pxmf3Positions[6] = XMFLOAT3(+fx, -fy, +fz);
+	m_pxmf3Positions[7] = XMFLOAT3(-fx, -fy, +fz);
+
+	m_pd3dPositionBuffer = CreateBufferResource(pd3dDevice, pd3dCommandList, m_pxmf3Positions, nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
+
+	m_d3dPositionBufferView.BufferLocation = m_pd3dPositionBuffer->GetGPUVirtualAddress();
+	m_d3dPositionBufferView.StrideInBytes = nStride;
+	m_d3dPositionBufferView.SizeInBytes = nStride * m_nVertices;
+
+	m_nSubMeshes = 1;
+	m_pnSubSetIndices = new int[m_nSubMeshes];
+	m_ppnSubSetIndices = new UINT * [m_nSubMeshes];
+
+	m_ppd3dSubSetIndexBuffers = new ID3D12Resource * [m_nSubMeshes];
+	m_ppd3dSubSetIndexUploadBuffers = new ID3D12Resource * [m_nSubMeshes];
+	m_pd3dSubSetIndexBufferViews = new D3D12_INDEX_BUFFER_VIEW[m_nSubMeshes];
+
+	m_pnSubSetIndices[0] = 36;
+	m_ppnSubSetIndices[0] = new UINT[m_pnSubSetIndices[0]];
+
+
+	m_ppnSubSetIndices[0][0] = (UINT)3; m_ppnSubSetIndices[0][1] = (UINT)1; m_ppnSubSetIndices[0][2] = (UINT)0;
+	m_ppnSubSetIndices[0][3] = (UINT)2; m_ppnSubSetIndices[0][4] = (UINT)1; m_ppnSubSetIndices[0][5] = (UINT)3;
+	m_ppnSubSetIndices[0][6] = (UINT)0; m_ppnSubSetIndices[0][7] = (UINT)5; m_ppnSubSetIndices[0][8] = (UINT)4;
+	m_ppnSubSetIndices[0][9] = (UINT)1; m_ppnSubSetIndices[0][10] = (UINT)5; m_ppnSubSetIndices[0][11] = (UINT)0;
+	m_ppnSubSetIndices[0][12] = (UINT)3; m_ppnSubSetIndices[0][13] = (UINT)4; m_ppnSubSetIndices[0][14] = (UINT)7;
+	m_ppnSubSetIndices[0][15] = (UINT)0; m_ppnSubSetIndices[0][16] = (UINT)4; m_ppnSubSetIndices[0][17] = (UINT)3;
+	m_ppnSubSetIndices[0][18] = (UINT)1; m_ppnSubSetIndices[0][19] = (UINT)6; m_ppnSubSetIndices[0][20] = (UINT)5;
+	m_ppnSubSetIndices[0][21] = (UINT)2; m_ppnSubSetIndices[0][22] = (UINT)6; m_ppnSubSetIndices[0][23] = (UINT)1;
+	m_ppnSubSetIndices[0][24] = (UINT)2; m_ppnSubSetIndices[0][25] = (UINT)7; m_ppnSubSetIndices[0][26] = (UINT)6;
+	m_ppnSubSetIndices[0][27] = (UINT)3; m_ppnSubSetIndices[0][28] = (UINT)7; m_ppnSubSetIndices[0][29] = (UINT)2;
+	m_ppnSubSetIndices[0][30] = (UINT)6; m_ppnSubSetIndices[0][31] = (UINT)4; m_ppnSubSetIndices[0][32] = (UINT)5;
+	m_ppnSubSetIndices[0][33] = (UINT)7; m_ppnSubSetIndices[0][34] = (UINT)4; m_ppnSubSetIndices[0][35] = (UINT)6;
+
+	m_ppd3dSubSetIndexBuffers[0] = CreateBufferResource(pd3dDevice, pd3dCommandList, m_ppnSubSetIndices[0], sizeof(UINT) * m_pnSubSetIndices[0], D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_INDEX_BUFFER, & m_ppd3dSubSetIndexUploadBuffers[0]);
+
+	m_pd3dSubSetIndexBufferViews[0].BufferLocation = m_ppd3dSubSetIndexBuffers[0]->GetGPUVirtualAddress();
+	m_pd3dSubSetIndexBufferViews[0].Format = DXGI_FORMAT_R32_UINT;
+	m_pd3dSubSetIndexBufferViews[0].SizeInBytes = sizeof(UINT) * m_pnSubSetIndices[0];
+}
+
+CCubeMesh::~CCubeMesh()
+{
+}

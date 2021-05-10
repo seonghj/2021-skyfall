@@ -148,7 +148,7 @@ void CMaterial::ReleaseUploadBuffers()
 
 CShader *CMaterial::m_pWireFrameShader = NULL;
 CShader *CMaterial::m_pSkinnedAnimationWireFrameShader = NULL;
-
+CShader* CMaterial::m_pBoundingBoxShader = NULL;
 void CMaterial::PrepareShaders(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature)
 {
 	m_pWireFrameShader = new CWireFrameShader();
@@ -158,6 +158,10 @@ void CMaterial::PrepareShaders(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationWireFrameShader = new CSkinnedAnimationWireFrameShader();
 	m_pSkinnedAnimationWireFrameShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
 	m_pSkinnedAnimationWireFrameShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	m_pBoundingBoxShader = new CBoundingBoxShader();
+	m_pBoundingBoxShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+	m_pBoundingBoxShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
 void CMaterial::UpdateShaderVariable(ID3D12GraphicsCommandList *pd3dCommandList)
@@ -594,6 +598,17 @@ void CGameObject::SetChild(CGameObject *pChild, bool bReferenceUpdate)
 	}
 }
 
+CGameObject* CGameObject::SetBBObject(CCubeMesh* pBoundingBox)
+{
+	CGameObject* pBBObj = new CGameObject();
+	strcpy_s(pBBObj->m_pstrFrameName, "BoundingBox");
+	pBBObj->SetMesh(pBoundingBox);
+	pBBObj->SetBoundingBoxShader();
+	SetChild(pBBObj);
+
+	return pBBObj;
+}
+
 void CGameObject::SetMesh(CMesh *pMesh)
 {
 	if (m_pMesh) m_pMesh->Release();
@@ -645,6 +660,17 @@ void CGameObject::SetSkinnedAnimationWireFrameShader()
 	else {
 		m_ppMaterials[0]->SetSkinnedAnimationWireFrameShader();
 	}
+}
+
+void CGameObject::SetBoundingBoxShader()
+{
+	m_nMaterials = 1;
+	m_ppMaterials = new CMaterial * [m_nMaterials];
+	m_ppMaterials[0] = NULL;
+	CMaterial* pMaterial = new CMaterial(0);
+
+	pMaterial->SetBoundingBoxShader();
+	SetMaterial(0, pMaterial);
 }
 
 void CGameObject::SetMaterial(int nMaterial, CMaterial *pMaterial)
@@ -1719,6 +1745,11 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 
 	CGameObject* pObject = pDragonModel->m_pModelRootObject->FindFrame("Polygonal_Dragon");
 
+	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
+	CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
+
+	SetBBObject(pBoundingBox);
+	
 	SetPosition(300.f, 0, 300.f);
 	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.5f);
 	SetScale(0.5f, 0.5f, 0.5f);
@@ -1742,8 +1773,13 @@ CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 
 	CGameObject* pObject = pWolfModel->m_pModelRootObject->FindFrame("Polygonal_Wolf");
 
-	SetPosition(400.f, 0, 400.f);
+	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
+	CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
+
+	SetBBObject(pBoundingBox)->MoveForward(-bb.Extents.z);
+
 	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.5f);
+	SetPosition(400.f, 0, 400.f);
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, 0.0f, 0.0f);
 }
@@ -1762,8 +1798,13 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 
 	strcpy_s(m_pstrFrameName, "Metalon");
 
-
 	CGameObject* pObject = pMetalonModel->m_pModelRootObject->FindFrame("Polygonal_Metalon");
+
+	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
+	CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
+
+	SetBBObject(pBoundingBox);
+
 	SetPosition(500.f, 0, 500.f);
 	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y*0.1f);
 	SetScale(0.1f, 0.1f, 0.1f);
