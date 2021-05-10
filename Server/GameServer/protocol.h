@@ -15,7 +15,7 @@ constexpr int MAP_SIZE = 3000;
 constexpr int MAP_BLOCK_SIZE = 1000;
 constexpr int MAP_BREAK_TIME = 30;
 
-constexpr float VIEWING_DISTANCE = 500.f;
+constexpr float VIEWING_DISTANCE = 300.f;
 
 #define SERVERIP   "127.0.0.1"
 
@@ -26,6 +26,7 @@ struct OVER_EX
 	char			messageBuffer[BUFSIZE];
 	bool			is_recv;
 	int             type;
+	int				roomID;
 	// 0 = session 1 = map
 };
 
@@ -59,6 +60,7 @@ enum PacketType {
 };
 
 enum EventType {
+	Mapset,
 	Cloud_move
 };
 
@@ -88,7 +90,7 @@ struct Packet {
 public:
 	char size;
 	char type;
-	unsigned int id;
+	unsigned short id;
 };
 
 struct player_ID_packet :public Packet {

@@ -317,10 +317,10 @@ void CPacket::Test_Thread()
             p.size = sizeof(p);
             p.type = Type_player_pos;
             switch (rand() % 4) {
-            case 0: p.Position.x -= 20; break;
-            case 1: p.Position.x += 20; break;
-            case 2: p.Position.z -= 20; break;
-            case 3: p.Position.z += 20; break;
+            case 0: p.Position.x = players[i].pos.x - 20; break;
+            case 1: p.Position.x = players[i].pos.x + 20; break;
+            case 2: p.Position.z = players[i].pos.y - 20; break;
+            case 3: p.Position.z = players[i].pos.y + 20; break;
             }
             p.id = i;
             p.dx = 0;
@@ -329,6 +329,32 @@ void CPacket::Test_Thread()
             p.Position.y = 0;
             p.state = 1;
             SendPacket(i, reinterpret_cast<char*>(&p));
+            switch (rand() % 2) {
+            case 0: {
+                player_move_packet p;
+                p.size = sizeof(p);
+                p.type = Type_player_pos;
+                p.id = i;
+                p.dx = 0;
+                p.dy = 0;
+                p.dz = 0;
+                p.MoveType = PlayerMove::JUMP;
+                p.state = 1;
+                SendPacket(i, reinterpret_cast<char*>(&p));
+            }
+            case 1: {
+                player_attack_packet p;
+                p.Position.x = players[i].pos.x;
+                p.Position.z = players[i].pos.y;
+                p.Position.y = 0;
+                p.attack_type = 0;
+                p.damage = 100;
+                p.id = i;
+                p.size = sizeof(p);
+                p.type = PacketType::Type_player_attack;
+                SendPacket(i, reinterpret_cast<char*>(&p));
+            }
+            }
         }
 
         //std::this_thread::sleep_for(std::chrono::seconds(1));

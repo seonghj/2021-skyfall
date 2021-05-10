@@ -21,23 +21,23 @@ public:
 
     SESSION() {}
     SESSION(const SESSION& session) {}
+    SESSION(BOOL b) : connected(b) {}
     ~SESSION() {}
 
-    OVER_EX     over;
-    SOCKET      sock;
-    SOCKADDR_IN clientaddr;
-    int         addrlen;
-    char        packet_buf[BUFSIZE];
+    OVER_EX                  over;
+    SOCKET                   sock;
+    SOCKADDR_IN              clientaddr;
+    int                      addrlen;
+    char                     packet_buf[BUFSIZE];
+        
+    char*                    packet_start;
+    char*                    recv_start;
 
-    char*       packet_start;
-    char*       recv_start;
-
-    bool        connected = false;
-    bool        isready = false;
-    bool        playing = false;
-    int         prev_size;
-    int         id;
-    int         gameroom_num;
+    std::atomic<bool>        connected = false;
+    bool                     isready = false;
+    bool                     playing = false;
+    int                      prev_size;
+    int                      id;
 
     // 0 Á×À½ / 1 »ýÁ¸
     std::atomic<bool>       state = 0;
@@ -68,30 +68,30 @@ public:
     void display_error(const char* msg, int err_no);
 
     int SetClientId();
-    int SetGameNum();
+    int SetroomID();
 
     void ConnectLobby();
 
     bool Init();
     void Thread_join();
-    void Disconnected(int id, int gamenum);
+    void Disconnected(int id, int roomID);
 
     void Accept();
     void WorkerFunc();
 
     void do_recv(int id);
     void send_packet(int to, char* packet);
-    void process_packet(int id, char* buf);
+    void process_packet(int id, char* buf, int roomID);
 
-    void send_ID_player_packet(int id);
-    void send_login_player_packet(int id, int to);
-    void send_disconnect_player_packet(int id);
-    void send_packet_to_players(int id, char* buf);
-    void send_packet_to_players(int id, int game_num, char* buf);
-    void send_map_collapse_packet(int num, int map_num);
-    void send_cloud_move_packet(float x, float z, int map_num);
+    void send_ID_player_packet(int id, int roomID);
+    void send_login_player_packet(int id, int to, int roomID);
+    void send_disconnect_player_packet(int id,int roomID);
+    void send_packet_to_players(int id, char* buf, int roomID);
+    void send_packet_to_allplayers(int roomnum, char* buf);
+    void send_map_collapse_packet(int num, int roomID);
+    void send_cloud_move_packet(float x, float z, int roomID);
     
-    void game_end(int game_num);
+    void game_end(int roomnum);
 
     float calc_distance(int a, int b);
     DirectX::XMFLOAT3 move_calc(DWORD dwDirection, float fDistance, int state, int id);
