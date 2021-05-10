@@ -197,11 +197,11 @@ void CPlayer::Update(float fTimeElapsed)
 	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
 
 	DWORD nCurrentCameraMode = m_pCamera->GetMode();
-	/*if (nCurrentCameraMode == THIRD_PERSON_CAMERA) {
-		m_pCamera->Update(m_xmf3Position, fTimeElapsed);
+	if (nCurrentCameraMode == THIRD_PERSON_CAMERA) {
+		//m_pCamera->Update(m_xmf3Position, fTimeElapsed);
 		if (m_pCameraUpdatedContext) OnCameraUpdateCallback(fTimeElapsed);
-		m_pCamera->SetLookAt(m_xmf3Position);
-	}*/
+		//m_pCamera->SetLookAt(m_xmf3Position);
+	}
 
 	m_pCamera->RegenerateViewMatrix();
 
@@ -278,13 +278,15 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 void CPlayer::Shot(float fTimeElapsed, float fSpeed)
 {
-	m_ppBullets[m_nBullets]->m_xmf4x4World = m_xmf4x4World;
+	CGameObject* pBow = FindFrame("Bow_Main");
+
+	m_ppBullets[m_nBullets]->m_xmf4x4World = pBow->m_xmf4x4World;
 
 	XMFLOAT4X4 xmf4x4Scale = Matrix4x4::Identity();
 	xmf4x4Scale._11 = 0.5;
 	xmf4x4Scale._22 = 0.5;
 	xmf4x4Scale._33 = 0.5;
-
+	
 	m_ppBullets[m_nBullets]->m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
 	m_ppBullets[m_nBullets]->m_xmf3MovingDirection = GetCamera()->GetLookVector();
 	m_ppBullets[m_nBullets]->SetSpeed(fSpeed);
@@ -328,10 +330,11 @@ void CSoundCallbackHandler::HandleCallback(void *pCallbackData, float fTrackPosi
 
 CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext)
 {
-	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	CLoadedModelInfo *pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
 	SetChild(pPlayerModel->m_pModelRootObject, true);
+
+	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 12, pPlayerModel);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Idle, nBow_Idle);
@@ -407,7 +410,6 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 {
 	DWORD nCurrentCameraMode = (m_pCamera) ? m_pCamera->GetMode() : 0x00;
 	if (nCurrentCameraMode == nNewCameraMode) return(m_pCamera);
-
 	//SetFriction(2.5f);
 	SetGravity(XMFLOAT3(0.0f, -400.f, 0.0f));
 	SetMaxVelocityXZ(1000.0f);
@@ -451,9 +453,12 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 			m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);*/
 			m_pCamera = OnChangeCamera(THIRD_PERSON_CAMERA, nCurrentCameraMode);
 			m_pCamera->SetTimeLag(0.25f);
-			m_pCamera->SetOffset(XMFLOAT3(0.0f, 55.0f, -80.0f));
-			m_pCamera->SetPosition(Vector3::Add(m_xmf3Position, Vector3::ScalarProduct(Vector3::Normalize(m_xmf3Look), -1 * Vector3::Length(m_pCamera->GetOffset()))));
-			m_pCamera->SetLookAt(m_xmf3Position);
+			m_pCamera->SetOffset(XMFLOAT3(0.0f, 110.0f, -50.0f));
+			m_pCamera->SetPosition(Vector3::Subtract(m_xmf3Position, Vector3::ScalarProduct(Vector3::Normalize(m_xmf3Look), Vector3::Length(m_pCamera->GetOffset()))));
+			//m_pCamera->SetPosition(Vector3::Subtract(pos,Vector3::ScalarProduct(GetLook(),10,false)));
+			XMFLOAT3 pos = m_xmf3Position;
+			pos.y += 50;
+			m_pCamera->SetLookAt(pos);
 			m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 			m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 			m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
@@ -504,16 +509,20 @@ void CTerrainPlayer::OnCameraUpdateCallback(float fTimeElapsed)
 	XMFLOAT3 xmf3CameraPosition = m_pCamera->GetPosition();
 	int z = (int)(xmf3CameraPosition.z / xmf3Scale.z);
 	bool bReverseQuad = ((z % 2) != 0);
-	float fHeight = pTerrain->GetHeight(xmf3CameraPosition.x, xmf3CameraPosition.z, bReverseQuad) + 15.0f;
+	float fHeight = pTerrain->GetHeight(xmf3CameraPosition.x, xmf3CameraPosition.z, bReverseQuad);
 	if (xmf3CameraPosition.y <= fHeight)
 	{
+		float d = fHeight - xmf3CameraPosition.y;
 		xmf3CameraPosition.y = fHeight;
+		XMFLOAT3 LookAtPos = m_pCamera->GetLookAtPosition();
+		LookAtPos.y += d;
+		m_pCamera->SetLookAtPosition(LookAtPos);
 		m_pCamera->SetPosition(xmf3CameraPosition);
-		if (m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
+		/*if (m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
 		{
 			CThirdPersonCamera *p3rdPersonCamera = (CThirdPersonCamera *)m_pCamera;
 			p3rdPersonCamera->SetLookAt(GetPosition());
-		}
+		}*/
 	}
 }
 

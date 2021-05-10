@@ -1692,9 +1692,9 @@ void CBullet::Animate(float fElapsedTime) {
 	//	std::cout << "---------------------------------------------" << endl;
 	m_xmf3MovingDirection = Vector3::Add(m_xmf3MovingDirection, m_xmf3Gravity, fElapsedTime);
 	XMFLOAT3 look = GetLook();
-	std::cout << "x : " << look.x << "y : " << look.y << "z : " << look.z << endl;
+	//std::cout << "x : " << look.x << "y : " << look.y << "z : " << look.z << endl;
 	m_fRotationX = acos(Vector3::DotProduct(m_xmf3MovingDirection, look) / (Vector3::Length(look) * Vector3::Length(m_xmf3MovingDirection)));
-	std::cout << m_fRotationX << std::endl;
+	//std::cout << m_fRotationX << std::endl;
 	Rotate(m_fRotationX / PI * 180 , 0, 0);
 }
 
@@ -1765,8 +1765,8 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 
 	CGameObject* pObject = pMetalonModel->m_pModelRootObject->FindFrame("Polygonal_Metalon");
 	SetPosition(500.f, 0, 500.f);
-	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y*0.2f);
-	SetScale(0.2f, 0.2f, 0.2f);
+	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y*0.1f);
+	SetScale(0.1f, 0.1f, 0.1f);
 	Rotate(-90.0f, 0.0f, 0.0f);
 }
 
