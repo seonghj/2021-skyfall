@@ -94,6 +94,7 @@ public:
     void game_end(int roomnum);
 
     float calc_distance(int a, int b);
+    unsigned short calc_attack(int id, char attacktype);
     DirectX::XMFLOAT3 move_calc(DWORD dwDirection, float fDistance, int state, int id);
 
 private:

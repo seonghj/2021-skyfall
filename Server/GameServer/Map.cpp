@@ -66,11 +66,9 @@ void Map::Set_map()
 			atm[i] += 100;
 		isMap_block[i] = TRUE;
 	}
-	printf(" ´Ù¸¸µë\n");
 	over.dataBuffer.len = sizeof(p);
 	strcpy_s(over.messageBuffer, reinterpret_cast<char*>(&p));
 	m_pServer->send_packet_to_allplayers(p.id, reinterpret_cast<char*>(&p));
-	printf("´Ùº¸³¿\n");
 }
 
 void Map::Set_wind()

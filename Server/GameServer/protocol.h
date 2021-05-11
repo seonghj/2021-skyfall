@@ -15,7 +15,7 @@ constexpr int MAP_SIZE = 3000;
 constexpr int MAP_BLOCK_SIZE = 1000;
 constexpr int MAP_BREAK_TIME = 30;
 
-constexpr float VIEWING_DISTANCE = 300.f;
+constexpr float VIEWING_DISTANCE = 500.f;
 
 #define SERVERIP   "127.0.0.1"
 
@@ -48,6 +48,7 @@ enum PacketType {
 	Type_player_pos,
 	Type_start_pos,
 	Type_player_attack,		//
+	Type_player_Damage
 	Type_map_set,
 	Type_map_collapse,		// S->C
 	Type_cloud_move,		// S->C
@@ -75,6 +76,10 @@ enum PlayerMove {
 	JUMP
 };
 
+enum PlayerAttackType {
+	SWORD1H
+};
+
 #define DIR_FORWARD					0x01
 #define DIR_BACKWARD				0x02
 #define DIR_LEFT					0x04
@@ -84,7 +89,7 @@ enum PlayerMove {
 
 #pragma pack(push, 1)
 
-// 0: size // 1: type // 2: id
+// 0: size // 1: type // 2: id;
 
 struct Packet {
 public:
@@ -168,8 +173,10 @@ struct player_equipment_packet : public Packet {
 
 struct player_attack_packet : public Packet {
 	char attack_type;
-	DirectX::XMFLOAT3 Position;
-	float damage;
+};
+
+struct player_damage_packet : public Packet {
+	unsigned short damage;
 };
 
 struct map_block_set : public Packet {
