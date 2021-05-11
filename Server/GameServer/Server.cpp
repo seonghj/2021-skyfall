@@ -146,7 +146,7 @@ void Server::Accept()
         // id전송
         send_ID_player_packet(client_id, roomID);
 
-        sessions[client_id].f3Position.store(XMFLOAT3((float)(rand()% MAP_SIZE), 200.0f, (float)(rand() % MAP_SIZE)));
+        sessions[client_id].f3Position.store(XMFLOAT3(0 , 8.0f, 0));
 
 
         // 로그인한 클라이언트에 다른 클라이언트 정보 전달
@@ -256,7 +256,7 @@ void Server::send_login_player_packet(int id, int to, int roomID)
     p.type = PacketType::Type_player_login;
     p.Position = sessions[id].f3Position;
 
-    //printf("%d: login to %d\n",id, to);
+    printf("%d: login to %d\n",id, to);
 
     send_packet(to, reinterpret_cast<char*>(&p));
 }
@@ -425,7 +425,6 @@ void Server::process_packet(int id, char* buf, int roomID)
         sessions[p->id].dz.store(p->dz);
         //printf("move %f %f\n", sessions[p->id].f3Position.load(std::memory_order_seq_cst).x, sessions[p->id].f3Position.load(std::memory_order_seq_cst).z);
         send_packet_to_players(id, reinterpret_cast<char*>(p), roomID);
-        printf("tlqkf");
         break;
     }
     case PacketType::Type_start_pos: {

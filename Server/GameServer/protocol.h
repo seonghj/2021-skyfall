@@ -143,6 +143,7 @@ struct player_pos_packet : public Packet {
 	char state;
 	DirectX::XMFLOAT3 Position;
 	float dx, dy, dz;
+	DWORD MoveType;
 };
 
 struct player_start_pos : public Packet {
