@@ -4,7 +4,7 @@
 
 class Player {
 public:
-	POINT pos = POINT{ 500, 500 };
+	POINT pos = POINT{ 1500, 1500 };
 	RECT m_rcObject = RECT{ -5, -5, 5, 5 };
 	HBRUSH m_hbrObject = CreateSolidBrush(RGB(0, 175, 197));
 

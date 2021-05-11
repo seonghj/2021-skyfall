@@ -27,7 +27,7 @@ int Server::SetClientId()
 {
     int count = LOBBY_ID+1;
     while (true){
-        if (!sessions.find(count)->second.connected.load()) {
+        if (!sessions.find(count)->second.connected.load(std::memory_order_seq_cst)) {
             return count;
         }
         else 
@@ -110,7 +110,7 @@ void Server::Accept()
             break;
         }
 
-        accept_lock.lock();
+        //accept_lock.lock();
         int client_id = SetClientId();
         sessions.emplace(client_id, SESSION());
         memset(&sessions[client_id], 0x00, sizeof(SESSION));
@@ -146,29 +146,30 @@ void Server::Accept()
         // id전송
         send_ID_player_packet(client_id, roomID);
 
-        sessions[client_id].f3Position.store(XMFLOAT3(300.0f + (client_id*50.f), 200.0f, 500.0f));
+        sessions[client_id].f3Position.store(XMFLOAT3((float)(rand()% MAP_SIZE), 200.0f, (float)(rand() % MAP_SIZE)));
 
 
         // 로그인한 클라이언트에 다른 클라이언트 정보 전달
         for (auto it = iter.first; it != iter.second; ++it) {
-            if (sessions[it->second].connected.load())
+            if (sessions[it->second].connected.load(std::memory_order_seq_cst))
                 send_login_player_packet(it->second, client_id, roomID);
         }
 
         // 다른 클라이언트에 로그인정보 전달
         for (auto it = iter.first; it != iter.second; ++it){
-            if (sessions[it->second].connected.load() && (it->second != client_id))
+            if (sessions[it->second].connected.load(std::memory_order_seq_cst) && (it->second != client_id))
                 send_login_player_packet(client_id, it->second, roomID);
         }
 
         if (20 == gameroom.count(roomID))
         {
-            //printf("새로운 방 만든다\n");
-            maps.emplace(roomID, Map(roomID));
-            maps[roomID].SetNum(roomID);
-            maps[roomID].init_Map(this);
+            if (maps.find(roomID) == maps.end()) {
+                maps.emplace(roomID, Map(roomID));
+                maps[roomID].SetNum(roomID);
+                maps[roomID].init_Map(this);
+            }
         }
-        accept_lock.unlock();
+        //accept_lock.unlock();
 
         do_recv(client_id);
     }
@@ -208,7 +209,8 @@ void Server::do_recv(int id)
         &flags, &(over->overlapped), NULL)){
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
-            printf("to: %d recv error: %d\n", id, err_no);
+            printf("id: %d recv error: %d\n", id, err_no);
+            Disconnected(id, sessions[id].over.roomID);
         }
     }
 }
@@ -216,8 +218,8 @@ void Server::do_recv(int id)
 void Server::send_packet(int to, char* packet)
 {
     SOCKET client_s = sessions[to].sock;
-    OVER_EX* over = reinterpret_cast<OVER_EX*>(malloc(sizeof(OVER_EX)));
-
+    OVER_EX* over = new OVER_EX;
+    ZeroMemory(over, sizeof(OVER_EX));
     over->dataBuffer.buf = packet;
     over->dataBuffer.len = packet[0];
 
@@ -230,6 +232,7 @@ void Server::send_packet(int to, char* packet)
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
             printf("to: %d packet: %d send error: %d\n", to, packet[1], err_no);
+            //Disconnected(to, sessions[to].over.roomID);
         }
     }
 }
@@ -267,7 +270,7 @@ void Server::send_disconnect_player_packet(int id, int roomID)
 
     auto iter = gameroom.equal_range(roomID);
     for (auto it = iter.first; it != iter.second; ++it) {
-        if (sessions[it->second].connected.load())
+        if (sessions[it->second].connected.load(std::memory_order_seq_cst))
             send_packet(it->second, reinterpret_cast<char*>(&p));
 
     }
@@ -278,9 +281,10 @@ void Server::send_packet_to_players(int id, char* buf, int roomID)
 {
     auto iter = gameroom.equal_range(roomID);
     for (auto it = iter.first; it != iter.second; ++it) {
-        if (sessions[it->second].connected.load())
-            if (calc_distance(id, it->second) <= VIEWING_DISTANCE)
+        if (sessions[it->second].connected.load(std::memory_order_seq_cst))
+            if (calc_distance(id, it->second) <= VIEWING_DISTANCE) {
                 send_packet(it->second, buf);
+            }
     }
 }
 
@@ -288,7 +292,7 @@ void Server::send_packet_to_allplayers(int roomnum, char* buf)
 {
     auto iter = gameroom.equal_range(roomnum);
     for (auto it = iter.first; it != iter.second; ++it) {
-        if (sessions[it->second].connected.load())
+        if (sessions[it->second].connected.load(std::memory_order_seq_cst))
             send_packet(it->second, buf);
     }
 }
@@ -325,7 +329,7 @@ void Server::game_end(int roomnum)
 
     auto iter = gameroom.equal_range(roomnum);
     for (auto it = iter.first; it != iter.second; ++it) {
-        if (sessions[it->second].connected.load())
+        if (sessions[it->second].connected.load(std::memory_order_seq_cst))
             send_packet(it->second, reinterpret_cast<char*>(&packet));
     }
     maps.erase(roomnum);
@@ -333,13 +337,18 @@ void Server::game_end(int roomnum)
 
 float Server::calc_distance(int a, int b)
 {
-    float value = pow((sessions[a].f3Position.load(std::memory_order_relaxed).x - sessions[b].f3Position.load(std::memory_order_relaxed).x), 2)
-        + pow((sessions[a].f3Position.load(std::memory_order_relaxed).z - sessions[b].f3Position.load(std::memory_order_relaxed).z), 2);
+    float value = pow(((short)sessions[a].f3Position.load(std::memory_order_seq_cst).x - (short)sessions[b].f3Position.load(std::memory_order_seq_cst).x), 2)
+        + pow(((short)sessions[a].f3Position.load(std::memory_order_seq_cst).z - (short)sessions[b].f3Position.load(std::memory_order_seq_cst).z), 2);
 
     if (value < 0)
         return sqrt(-value);
     else
         return sqrt(value);
+}
+
+unsigned short Server::calc_attack(int id, char attacktype)
+{
+    return 0;
 }
 
 DirectX::XMFLOAT3 Server::move_calc(DWORD dwDirection, float fDistance, int state, int id)
@@ -382,7 +391,7 @@ DirectX::XMFLOAT3 Server::move_calc(DWORD dwDirection, float fDistance, int stat
         xmf3Velocity.z *= 3.3;
     }
 
-    xmf3Shift = Add(sessions[id].f3Position.load(), xmf3Shift);
+    xmf3Shift = Add(sessions[id].f3Position.load(std::memory_order_seq_cst), xmf3Shift);
 
     return xmf3Shift;
 }
@@ -405,7 +414,6 @@ void Server::process_packet(int id, char* buf, int roomID)
     case PacketType::Type_player_info:{
         player_info_packet* p = reinterpret_cast<player_info_packet*>(buf);
         sessions[p->id].f3Position.store(p->Position);
-
         break;
     }
     case PacketType::Type_player_pos: {
@@ -415,9 +423,8 @@ void Server::process_packet(int id, char* buf, int roomID)
         sessions[p->id].dx.store(p->dx);
         sessions[p->id].dy.store(p->dy);
         sessions[p->id].dz.store(p->dz);
-        //printf("move %f %f\n", sessions[p->id].f3Position.load().x, sessions[p->id].f3Position.load().z);
+        //printf("move %f %f\n", sessions[p->id].f3Position.load(std::memory_order_seq_cst).x, sessions[p->id].f3Position.load(std::memory_order_seq_cst).z);
         send_packet_to_players(id, reinterpret_cast<char*>(p), roomID);
-
         break;
     }
     case PacketType::Type_start_pos: {
@@ -430,8 +437,6 @@ void Server::process_packet(int id, char* buf, int roomID)
 
     case PacketType::Type_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
-
-
         switch (p->MoveType) {
         case PlayerMove::JUMP:{
             send_packet_to_players(id, reinterpret_cast<char*>(p), roomID);
@@ -453,12 +458,10 @@ void Server::process_packet(int id, char* buf, int roomID)
 
 void Server::WorkerFunc()
 {
-
     while (1) {
         DWORD Transferred;
         SOCKET client_sock;
         ULONG id;
-        SESSION* ptr;
         ULONG roomID;
         OVER_EX* over_ex;
 
@@ -512,6 +515,7 @@ void Server::WorkerFunc()
             }
             else {
                 delete over_ex;
+                over_ex = nullptr;
             }
             break;
         }
@@ -556,8 +560,7 @@ bool Server::Init()
     SYSTEM_INFO si;
     GetSystemInfo(&si);
 
-    // (CPU 개수 * 2)개의 작업자 스레드 생성
-    for (int i = 0; i < (int)si.dwNumberOfProcessors*2; i++)
+    for (int i = 0; i < 12; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
     //ConnectLobby();

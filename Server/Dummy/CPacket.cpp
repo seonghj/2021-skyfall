@@ -282,8 +282,8 @@ void CPacket::TestGameConnect()
         memset(&players[num_connections].over.overlapped, 0, sizeof(players[num_connections].over.overlapped));
         players[num_connections].connected = true;
 
-        players[num_connections].pos.x = rand() % 1000;
-        players[num_connections].pos.y = rand() % 1000;
+        players[num_connections].pos.x = rand() % MAP_SIZE;
+        players[num_connections].pos.y = rand() % MAP_SIZE;
 
         player_start_pos p;
         p.size = sizeof(p);
