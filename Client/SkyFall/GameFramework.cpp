@@ -450,6 +450,9 @@ void CGameFramework::BuildObjects()
 
 	m_pScene = new CScene();
 	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
+	m_pScene->AddPlayer(0, m_pd3dDevice, m_pd3dCommandList);
+	m_pScene->MovePlayer(0, XMFLOAT3(500.0f, 300.0f, 300.0f));
+	m_pScene->AnimatePlayer(0,3);
 	//m_pScene->AddPlayer(3, m_pd3dDevice, m_pd3dCommandList);
 	//m_pScene->MovePlayer(/*m_pScene->m_nGameObjects - 1*/3, XMFLOAT3(400.0f, 300.0f, 300.0f));
 
@@ -656,7 +659,7 @@ void CGameFramework::MoveToNextFrame()
 }
 
 //#define _WITH_PLAYER_TOP
-
+int i = 0;
 void CGameFramework::FrameAdvance()
 {
 	m_GameTimer.Tick(0.0f);
@@ -664,6 +667,7 @@ void CGameFramework::FrameAdvance()
 	ProcessInput();
 	CheckCollision();
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
+	m_pScene->m_mPlayer[0]->Update(m_GameTimer.GetTimeElapsed());
     AnimateObjects();
 
 
@@ -698,6 +702,9 @@ void CGameFramework::FrameAdvance()
 #endif
 	if (m_pBowPlayer) m_pBowPlayer->Render(m_pd3dCommandList, m_pCamera);
 	if (m_p1HswordPlayer) m_p1HswordPlayer->Render(m_pd3dCommandList, m_pCamera);
+	if (m_pScene->m_mPlayer[0]) m_pScene->m_mPlayer[0]->Render(m_pd3dCommandList, m_pCamera);
+	m_pScene->AnimatePlayer(0, i++);
+	i %= 4;
 
 	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;

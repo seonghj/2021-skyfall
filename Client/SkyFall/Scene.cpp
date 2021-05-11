@@ -140,19 +140,54 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 
 void CScene::AddPlayer(int id, ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	m_ppPlayerObjects.emplace(id, new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1));
-	m_ppPlayerObjects[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 3);
-	m_ppPlayerObjects[id]->SetPosition(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f);
+	m_mPlayer.emplace(id, new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain));
+	m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 3);
+	m_mPlayer[id]->SetPosition(XMFLOAT3(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f));
 }
 
 void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
 {
-	m_ppPlayerObjects[player_num]->SetPosition(pos.x, pos.y, pos.z);
+	m_mPlayer[player_num]->SetPosition(pos);
 }
 
 void CScene::AnimatePlayer(int id, int animation_num)
 {
-	m_ppPlayerObjects[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(animation_num, 3);
+	switch (id)
+	{
+	case 0:	// LbuttonDown
+		m_mPlayer[id]->LButtonDown();
+		break;
+	case 1:	// LbuttonUp
+		m_mPlayer[id]->LButtonUp();
+		break;
+	case 2: // RbuttonDown
+		m_mPlayer[id]->RButtonDown();
+		break;
+	case 3:
+		m_mPlayer[id]->RButtonUp();
+		break;
+	}
+	//m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(animation_num, 3);
+	//if (m_mPlayer[id]->m_pSkinnedAnimationController)
+	//{
+	//	XMFLOAT3 vel = m_mPlayer[id]->GetVelocity();
+	//	float fLength = sqrtf(vel.x * vel.x + vel.z * vel.z);
+
+	//	if (m_mPlayer[id]->GetJump()) {
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(m_mPlayer[id]->n1Hsword_Jump, 0);
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->n1Hsword_Jump, true);
+	//	}
+	//	else if (m_mPlayer[id]->GetAttack()) {
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->n1Hsword_Attack1 + m_mPlayer[id]->m_nAttack, true);
+	//	}
+	//	else if (::IsZero(fLength) && m_mPlayer[id]->GetGround())
+	//	{
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->n1Hsword_Idle, true);
+	//	}
+	//}
 }
 
 void CScene::ReleaseObjects()
@@ -600,6 +635,15 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 			p.second->Render(pd3dCommandList, pCamera);
 		}
 	}
+	//for (auto p : m_mPlayer)
+	//{
+	//	if (p.second)
+	//	{
+	//		p.second->Animate(m_fElapsedTime);
+	//		if (!p.second->m_pSkinnedAnimationController) p.second->UpdateTransform(NULL);
+	//		p.second->Render(pd3dCommandList, pCamera);
+	//	}
+	//}
 
 	for (int i = 0; i < m_nShaders; i++) if (m_ppShaders[i]) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
 }
