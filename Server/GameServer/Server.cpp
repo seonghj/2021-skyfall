@@ -515,7 +515,9 @@ void Server::WorkerFunc()
             }
             else {
                 delete over_ex;
-                over_ex = nullptr;
+                over_ex = NULL;
+                if (_heapchk() != _HEAPOK)
+                    DebugBreak();
             }
             break;
         }
@@ -525,7 +527,6 @@ void Server::WorkerFunc()
             switch (over_ex->messageBuffer[1]) {
             case EventType::Mapset: {
                 map_block_set* p = reinterpret_cast<map_block_set*>(over_ex->messageBuffer);
-                //printf("¸¸µç´Ù\n");
                 maps[roomID].Set_map();
                 break;
             }
@@ -560,7 +561,7 @@ bool Server::Init()
     SYSTEM_INFO si;
     GetSystemInfo(&si);
 
-    for (int i = 0; i < (int)si.dwNumberOfProcessors; i++)
+    for (int i = 0; i < (int)si.dwNumberOfProcessors * 2; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
     //ConnectLobby();

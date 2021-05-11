@@ -48,7 +48,7 @@ enum PacketType {
 	Type_player_pos,
 	Type_start_pos,
 	Type_player_attack,		//
-	Type_player_Damage
+	Type_player_Damage,
 	Type_map_set,
 	Type_map_collapse,		// S->C
 	Type_cloud_move,		// S->C
