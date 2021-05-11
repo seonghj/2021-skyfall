@@ -209,7 +209,7 @@ void CPacket::ProcessPacket(int id, char* buf)
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
         players[p->id].pos.x = p->Position.x;
         players[p->id].pos.y = p->Position.z;
-        //printf("id %d : move %d %d\n", p->id, players[p->id].pos.x, players[p->id].pos.y);
+        printf("¾Æ\n");
         
         break;
     }
@@ -282,8 +282,8 @@ void CPacket::TestGameConnect()
         memset(&players[num_connections].over.overlapped, 0, sizeof(players[num_connections].over.overlapped));
         players[num_connections].connected = true;
 
-        players[num_connections].pos.x = rand() % 1000;
-        players[num_connections].pos.y = rand() % 1000;
+        players[num_connections].pos.x = rand() % 3000;
+        players[num_connections].pos.y = rand() % 3000;
 
         player_start_pos p;
         p.size = sizeof(p);
@@ -317,10 +317,10 @@ void CPacket::Test_Thread()
             p.size = sizeof(p);
             p.type = Type_player_pos;
             switch (rand() % 4) {
-            case 0: p.Position.x = players[i].pos.x - 20; break;
-            case 1: p.Position.x = players[i].pos.x + 20; break;
-            case 2: p.Position.z = players[i].pos.y - 20; break;
-            case 3: p.Position.z = players[i].pos.y + 20; break;
+            case 0: p.Position.x = (players[i].pos.x) - 20; break;
+            case 1: p.Position.x = (players[i].pos.x) + 20; break;
+            case 2: p.Position.z = (players[i].pos.y) - 20; break;
+            case 3: p.Position.z = (players[i].pos.y) + 20; break;
             }
             p.id = i;
             p.dx = 0;
@@ -329,30 +329,31 @@ void CPacket::Test_Thread()
             p.Position.y = 0;
             p.state = 1;
             SendPacket(i, reinterpret_cast<char*>(&p));
-            switch (rand() % 2) {
-            case 0: {
-                player_move_packet p;
-                p.size = sizeof(p);
-                p.type = Type_player_pos;
-                p.id = i;
-                p.dx = 0;
-                p.dy = 0;
-                p.dz = 0;
-                p.MoveType = PlayerMove::JUMP;
-                p.state = 1;
-                SendPacket(i, reinterpret_cast<char*>(&p));
+            switch (rand() % 4) {
+            case 2: {
+                player_move_packet p1;
+                p1.size = sizeof(p1);
+                p1.type = Type_player_pos;
+                p1.id = i;
+                p1.dx = 0;
+                p1.dy = 0;
+                p1.dz = 0;
+                p1.MoveType = PlayerMove::JUMP;
+                p1.state = 1;
+                SendPacket(i, reinterpret_cast<char*>(&p1));
             }
-            case 1: {
-                player_attack_packet p;
-                p.Position.x = players[i].pos.x;
-                p.Position.z = players[i].pos.y;
-                p.Position.y = 0;
-                p.attack_type = 0;
-                p.damage = 100;
-                p.id = i;
-                p.size = sizeof(p);
-                p.type = PacketType::Type_player_attack;
-                SendPacket(i, reinterpret_cast<char*>(&p));
+            case 3: {
+                //std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                player_attack_packet p1;
+                p1.Position.x = players[i].pos.x;
+                p1.Position.z = players[i].pos.y;
+                p1.Position.y = 0;
+                p1.attack_type = 0;
+                p1.damage = 100;
+                p1.id = i;
+                p1.size = sizeof(p1);
+                p1.type = PacketType::Type_player_attack;
+                SendPacket(i, reinterpret_cast<char*>(&p1));
             }
             }
         }

@@ -37,8 +37,8 @@ public:
 	void Thread_join();
 	void Test_Thread();
 
-	Player players[MAX_CLIENT];
-	RECT rcTmpPlayer[MAX_CLIENT];
+	Player players[MAX_CLIENT + 1];
+	RECT rcTmpPlayer[MAX_CLIENT + 1];
 
 private:
 	//int client_id;
