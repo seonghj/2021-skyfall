@@ -264,6 +264,7 @@ void CPacket::ProcessPacket(char* buf)
                     switch (p->attack_type) {
                     case SWORD1H: {
                         m_pScene->AnimatePlayer(i, 0);
+                        printf("id: %d SWORD1H attack\n", p->id);
                         break;
                     }
                     }
