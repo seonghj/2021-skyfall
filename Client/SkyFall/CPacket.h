@@ -3,7 +3,6 @@
 #include "player.h"
 #include "Scene.h"
 #include "protocol.h"
-#include "Camera.h"
 
 class CPacket {
 public:
@@ -22,7 +21,6 @@ public:
 
 	CPlayer* m_pPlayer = NULL;
 	CScene* m_pScene = NULL;
-	CCamera* m_pCamera = NULL;
 
 	float fTimeElapsed;
 	float ChargeTimer;

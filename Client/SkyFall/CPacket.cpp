@@ -145,7 +145,15 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::Type_player_login: {
         player_login_packet* p = reinterpret_cast<player_login_packet*>(buf);
-        //printf("login id: %d\n", p->id);
+        printf("login id: %d\n", p->id);
+        if (p->id != client_id) {
+            for (int i = 0; i < MAX_PLAYER; ++i) {
+                if (m_pScene->PlayerIDs[i] == -1) {
+                    m_pScene->PlayerIDs[i] = p->id;
+                    break;
+                }
+            }
+        }
         break;
     }
     case PacketType::Type_player_remove: {
@@ -162,26 +170,60 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::Type_player_info: {
-
         break;
     }
 
     case PacketType::Type_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
 
-        switch (p->MoveType) {
-        case PlayerMove::JUMP:
-            m_pPlayer->SetJump(TRUE);
+        if (p->id == client_id) {
+            switch (p->MoveType) {
+            case PlayerMove::JUMP: {
+                m_pPlayer->SetJump(TRUE);
+                break;
+            }
+            }
+        }
+        else {
+            switch (p->MoveType) {
+            case PlayerMove::JUMP: {
+                m_pPlayer->SetJump(TRUE);
+                for (int i = 0; i < MAX_PLAYER; ++i) {
+                    if (m_pScene->PlayerIDs[i] == p->id) {
+                        m_pScene->m_mPlayer[i]->SetJump(TRUE);
+                        break;
+                    }
+                }
+                break;
+            }
+            }
         }
 
-        //if (client_id == 1)
-          //  printf("id: %d player move x = %f, y = %f, z = %f\n", p->id, p->x, p->y, p->z);
         break;
     }
     case PacketType::Type_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
-        m_pPlayer->SetPosition(p->Position);
-        m_pPlayer->Rotate(p->dx, p->dy, p->dz);
+        if (p->id == client_id) {
+            m_pPlayer->SetPosition(p->Position);
+            m_pPlayer->Rotate(p->dx, p->dy, p->dz);
+            switch (p->MoveType) {
+            case PlayerMove::RUNNING:
+                m_pPlayer->SetRunning(true);
+            }
+        }
+        else {
+            for (int i = 0; i < MAX_PLAYER; ++i) {
+                if (m_pScene->PlayerIDs[i] == p->id) {
+                    m_pScene->m_mPlayer[i]->SetPosition(p->Position);
+                    m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, p->dz);
+                    switch (p->MoveType) {
+                    case PlayerMove::RUNNING:
+                        m_pScene->m_mPlayer[i]->SetRunning(true);
+                    }
+                    break;
+                }
+            }
+        }
         //m_pCamera->Rotate(p->dx, p->dy, p->dz);
         /* m_pPlayer->Update(fTimeElapsed);
          m_pScene->Update(fTimeElapsed);*/
@@ -189,13 +231,22 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::Type_start_pos: {
         player_start_pos* p = reinterpret_cast<player_start_pos*>(buf);
-
-        m_pScene->MovePlayer(p->id, p->Position);
+        if (p->id == client_id) {
+            m_pPlayer->SetPosition(p->Position);
+        }
+        else {
+            for (int i = 0; i < MAX_PLAYER; ++i) {
+                if (m_pScene->PlayerIDs[i] == p->id) {
+                    m_pScene->m_mPlayer[i]->SetPosition(p->Position);
+                    break;
+                }
+            }
+        }
         break;
     }
     case PacketType::Type_player_attack: {
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
-        if (p->id = client_id) {
+        if (p->id == client_id) {
             switch (p->attack_type) {
             case SWORD1H: {
                 m_pPlayer->LButtonDown();
@@ -203,8 +254,19 @@ void CPacket::ProcessPacket(char* buf)
             }
             }
         }
-        /*m_pPlayer->Update(fTimeElapsed);
-        m_pScene->Update(fTimeElapsed);*/
+        else {
+            for (int i = 0; i < MAX_PLAYER; ++i) {
+                if (m_pScene->PlayerIDs[i] == p->id) {
+                    switch (p->attack_type) {
+                    case SWORD1H: {
+                        m_pScene->AnimatePlayer(i, 0);
+                        break;
+                    }
+                    }
+                    break;
+                }
+            }
+        }
 
         break;
     }

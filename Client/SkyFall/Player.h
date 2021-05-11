@@ -128,17 +128,12 @@ public:
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera = NULL);
 
 
-	void Shot(float fTimeElapsed, float fSpeed);
-	void DeleteBullet(const int& idx);
+	virtual void Shot(float fTimeElapsed, float fSpeed) {};
+	virtual void DeleteBullet(const int& idx) {};
 	virtual void CheckCollision(CGameObject* pObject);
 	void RotatePlayer(int iYaw);
 
 protected:
-	int m_nBullets = 0;
-	//vector<CBullet*> m_vpBullets;
-	CBullet** m_ppBullets = NULL;
-
-	const int MAX_BULLET = 1000;
 public:
 };
 
@@ -184,6 +179,10 @@ public:
 class CBowPlayer : public CTerrainPlayer
 {
 public:
+	void Shot(float fTimeElapsed, float fSpeed);
+	void DeleteBullet(const int& idx);
+	void Animate(float fTimeElapsed);
+
 	CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL);
 	virtual ~CBowPlayer();
 
@@ -198,6 +197,8 @@ public:
 
 	virtual void CheckCollision(CGameObject* pObject);
 
+	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
+
 	const int nBow_Idle = 0;
 	const int nBow_Jump = 1;
 	const int nBow_Run = 2;
@@ -210,6 +211,13 @@ public:
 	const int nBow_TakeDamage = 9;
 	const int nBow_Walk = 10;
 	const int nBow_Death = 11;
+
+protected:
+	int m_nBullets = 0;
+	//vector<CBullet*> m_vpBullets;
+	CBullet** m_ppBullets = 0;
+
+	const int MAX_BULLET = 1000;
 };
 
 class C1HswordPlayer : public CTerrainPlayer

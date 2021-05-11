@@ -36,11 +36,11 @@ void CScene::BuildDefaultLightsAndMaterials()
 	m_pLights[0].m_bEnable = true;
 	m_pLights[0].m_nType = POINT_LIGHT;
 	m_pLights[0].m_fRange = 1000.0f;
-	m_pLights[0].m_xmf4Ambient = XMFLOAT4(0.1f, 0.0f, 0.0f, 1.0f);
-	m_pLights[0].m_xmf4Diffuse = XMFLOAT4(0.8f, 0.0f, 0.0f, 1.0f);
+	m_pLights[0].m_xmf4Ambient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
+	m_pLights[0].m_xmf4Diffuse = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
 	m_pLights[0].m_xmf4Specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.0f);
 	m_pLights[0].m_xmf3Position = XMFLOAT3(300.0f, 300.0f, 300.0f);
-	m_pLights[0].m_xmf3Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_pLights[0].m_xmf3Direction = XMFLOAT3(-1.0f, -1.0f, -1.0f);
 	m_pLights[0].m_xmf3Attenuation = XMFLOAT3(1.0f, 0.001f, 0.0001f);
 	m_pLights[1].m_bEnable = true;
 	m_pLights[1].m_nType = SPOT_LIGHT;
@@ -59,7 +59,7 @@ void CScene::BuildDefaultLightsAndMaterials()
 	m_pLights[2].m_xmf4Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 	m_pLights[2].m_xmf4Diffuse = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
 	m_pLights[2].m_xmf4Specular = XMFLOAT4(0.4f, 0.4f, 0.4f, 0.0f);
-	m_pLights[2].m_xmf3Direction = XMFLOAT3(1.0f, -1.0f, 1.0f);
+	m_pLights[2].m_xmf3Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
 	m_pLights[3].m_bEnable = true;
 	m_pLights[3].m_nType = SPOT_LIGHT;
 	m_pLights[3].m_fRange = 1200.0f;
@@ -88,7 +88,7 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 
 	XMFLOAT3 xmf3Scale(8.0f, 2.0f, 8.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.3f, 0.0f, 0.0f);
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Desert_HeightMap.raw"), 257, 257, xmf3Scale, xmf4Color);
+	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Forest_HeightMap.raw"), 257, 257, xmf3Scale, xmf4Color);
 
 	m_nGameObjects = 3;
 	m_ppGameObjects = new CGameObject*[m_nGameObjects];
@@ -123,34 +123,73 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	//m_ppGameObjects[3]->SetPosition(0, 0/*m_pTerrain->GetHeight(400.0f, 800.0f)*/, 0);
 	//if (pMapSnow)delete pMapSnow;
 
-	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
+	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1,m_pTerrain);
 	m_ppGameObjects[0]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 1);
-	m_ppGameObjects[1] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
+
+	m_ppGameObjects[1] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1, m_pTerrain);
 	m_ppGameObjects[1]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
-	m_ppGameObjects[2] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
+
+	m_ppGameObjects[2] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1, m_pTerrain);
 	m_ppGameObjects[2]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
 
 	
-	//m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
-void CScene::AddPlayer(int id, ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	m_ppPlayerObjects.emplace(id, new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1));
-	m_ppPlayerObjects[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 3);
-	m_ppPlayerObjects[id]->SetPosition(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f);
+	for (int i = 0; i < 20; ++i) {
+		m_mPlayer.emplace(i, new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain));
+		m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 3);
+		m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f));
+	}
 }
 
 void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
 {
-	m_ppPlayerObjects[player_num]->SetPosition(pos.x, pos.y, pos.z);
+	m_mPlayer[player_num]->SetPosition(pos);
 }
 
 void CScene::AnimatePlayer(int id, int animation_num)
 {
-	m_ppPlayerObjects[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(animation_num, 3);
+	switch (id)
+	{
+	case 0:	// LbuttonDown
+		m_mPlayer[id]->LButtonDown();
+		break;
+	case 1:	// LbuttonUp
+		m_mPlayer[id]->LButtonUp();
+		break;
+	case 2: // RbuttonDown
+		m_mPlayer[id]->RButtonDown();
+		break;
+	case 3:
+		m_mPlayer[id]->RButtonUp();
+		break;
+	}
+	//m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(animation_num, 3);
+	//if (m_mPlayer[id]->m_pSkinnedAnimationController)
+	//{
+	//	XMFLOAT3 vel = m_mPlayer[id]->GetVelocity();
+	//	float fLength = sqrtf(vel.x * vel.x + vel.z * vel.z);
+
+	//	if (m_mPlayer[id]->GetJump()) {
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(m_mPlayer[id]->n1Hsword_Jump, 0);
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->n1Hsword_Jump, true);
+	//	}
+	//	else if (m_mPlayer[id]->GetAttack()) {
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->n1Hsword_Attack1 + m_mPlayer[id]->m_nAttack, true);
+	//	}
+	//	else if (::IsZero(fLength) && m_mPlayer[id]->GetGround())
+	//	{
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->n1Hsword_Idle, true);
+	//	}
+	//}
 }
 
 void CScene::ReleaseObjects()
@@ -558,7 +597,7 @@ void CScene::AnimateObjects(float fTimeElapsed)
 	if (m_pLights)
 	{
 		m_pLights[1].m_xmf3Position = m_pPlayer->GetPosition();
-		m_pLights[1].m_xmf3Direction = m_pPlayer->GetLookVector();
+		m_pLights[1].m_xmf3Direction = m_pPlayer->GetCamera()->GetLookVector();
 	}
 }
 
@@ -576,7 +615,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	pd3dCommandList->SetGraphicsRootConstantBufferView(2, d3dcbLightsGpuVirtualAddress); //Lights
 
 	if (m_pSkyBox) m_pSkyBox->Render(pd3dCommandList, pCamera);
-	//if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
+	if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
 
 	if(m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
 	for (int i = 0; i < m_nGameObjects; i++)
@@ -598,6 +637,15 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 			p.second->Render(pd3dCommandList, pCamera);
 		}
 	}
+	//for (auto p : m_mPlayer)
+	//{
+	//	if (p.second)
+	//	{
+	//		p.second->Animate(m_fElapsedTime);
+	//		if (!p.second->m_pSkinnedAnimationController) p.second->UpdateTransform(NULL);
+	//		p.second->Render(pd3dCommandList, pCamera);
+	//	}
+	//}
 
 	for (int i = 0; i < m_nShaders; i++) if (m_ppShaders[i]) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
 }
