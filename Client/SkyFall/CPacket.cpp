@@ -222,7 +222,7 @@ void CPacket::ProcessPacket(char* buf)
                     case PlayerMove::RUNNING:
                         m_pScene->m_mPlayer[i]->SetRunning(true);
                     }
-                    printf("id %d move\n", p->id);
+                    printf("id %d move (%f, %f)\n", p->id, p->Position.x, p->Position.z);
                     break;
                 }
             }
