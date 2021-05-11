@@ -106,5 +106,8 @@ private:
 	bool						m_bRotateEnable = 0;
 	float						m_fPitch = 0;
 	float						m_fYaw = 0;
+
+	CBowPlayer					*m_pBowPlayer;
+	C1HswordPlayer				*m_p1HswordPlayer;
 };
 

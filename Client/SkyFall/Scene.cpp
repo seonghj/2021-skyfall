@@ -36,11 +36,11 @@ void CScene::BuildDefaultLightsAndMaterials()
 	m_pLights[0].m_bEnable = true;
 	m_pLights[0].m_nType = POINT_LIGHT;
 	m_pLights[0].m_fRange = 1000.0f;
-	m_pLights[0].m_xmf4Ambient = XMFLOAT4(0.1f, 0.0f, 0.0f, 1.0f);
-	m_pLights[0].m_xmf4Diffuse = XMFLOAT4(0.8f, 0.0f, 0.0f, 1.0f);
+	m_pLights[0].m_xmf4Ambient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
+	m_pLights[0].m_xmf4Diffuse = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
 	m_pLights[0].m_xmf4Specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.0f);
 	m_pLights[0].m_xmf3Position = XMFLOAT3(300.0f, 300.0f, 300.0f);
-	m_pLights[0].m_xmf3Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_pLights[0].m_xmf3Direction = XMFLOAT3(-1.0f, -1.0f, -1.0f);
 	m_pLights[0].m_xmf3Attenuation = XMFLOAT3(1.0f, 0.001f, 0.0001f);
 	m_pLights[1].m_bEnable = true;
 	m_pLights[1].m_nType = SPOT_LIGHT;
@@ -59,7 +59,7 @@ void CScene::BuildDefaultLightsAndMaterials()
 	m_pLights[2].m_xmf4Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 	m_pLights[2].m_xmf4Diffuse = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
 	m_pLights[2].m_xmf4Specular = XMFLOAT4(0.4f, 0.4f, 0.4f, 0.0f);
-	m_pLights[2].m_xmf3Direction = XMFLOAT3(1.0f, -1.0f, 1.0f);
+	m_pLights[2].m_xmf3Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
 	m_pLights[3].m_bEnable = true;
 	m_pLights[3].m_nType = SPOT_LIGHT;
 	m_pLights[3].m_fRange = 1200.0f;
@@ -88,7 +88,7 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 
 	XMFLOAT3 xmf3Scale(8.0f, 2.0f, 8.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.3f, 0.0f, 0.0f);
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Desert_HeightMap.raw"), 257, 257, xmf3Scale, xmf4Color);
+	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Forest_HeightMap.raw"), 257, 257, xmf3Scale, xmf4Color);
 
 	m_nGameObjects = 3;
 	m_ppGameObjects = new CGameObject*[m_nGameObjects];
@@ -123,15 +123,17 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	//m_ppGameObjects[3]->SetPosition(0, 0/*m_pTerrain->GetHeight(400.0f, 800.0f)*/, 0);
 	//if (pMapSnow)delete pMapSnow;
 
-	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
+	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1,m_pTerrain);
 	m_ppGameObjects[0]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 1);
-	m_ppGameObjects[1] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
+
+	m_ppGameObjects[1] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1, m_pTerrain);
 	m_ppGameObjects[1]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
-	m_ppGameObjects[2] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
+
+	m_ppGameObjects[2] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1, m_pTerrain);
 	m_ppGameObjects[2]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
 
 	
-	//m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
@@ -553,7 +555,7 @@ void CScene::AnimateObjects(float fTimeElapsed)
 	if (m_pLights)
 	{
 		m_pLights[1].m_xmf3Position = m_pPlayer->GetPosition();
-		m_pLights[1].m_xmf3Direction = m_pPlayer->GetLookVector();
+		m_pLights[1].m_xmf3Direction = m_pPlayer->GetCamera()->GetLookVector();
 	}
 }
 
@@ -571,7 +573,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	pd3dCommandList->SetGraphicsRootConstantBufferView(2, d3dcbLightsGpuVirtualAddress); //Lights
 
 	if (m_pSkyBox) m_pSkyBox->Render(pd3dCommandList, pCamera);
-	//if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
+	if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
 
 	if(m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
 	for (int i = 0; i < m_nGameObjects; i++)

@@ -293,24 +293,25 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	switch (nMessageID)
 	{
 	case WM_LBUTTONDOWN:
-		if (!m_bRotateEnable)
-			m_pPlayer->LButtonDown();
-		break;
-	case WM_RBUTTONDOWN:
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
 			m_ChargeTimer.Reset();
 			m_ChargeTimer.Start();
+			m_pPlayer->LButtonDown();
+		}
+		break;
+	case WM_RBUTTONDOWN:
+		if (!m_bRotateEnable) {
 			m_pPlayer->RButtonDown();
 		}
 		break;
 	case WM_LBUTTONUP:
+		::ReleaseCapture();
+		m_ChargeTimer.Stop();
 		m_pPlayer->LButtonUp();
 		break;
 	case WM_RBUTTONUP:
-		::ReleaseCapture();
-		m_ChargeTimer.Stop();
 		m_pPlayer->RButtonUp();
 		break;
 	case WM_MOUSEMOVE:
@@ -343,6 +344,18 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				case VK_F2:
 				case VK_F3:
 					m_pCamera = m_pPlayer->ChangeCamera((DWORD)(wParam - VK_F1 + 1), m_GameTimer.GetTimeElapsed());
+					break;
+				case VK_F4:
+					if(m_pScene)
+						m_pScene->m_pPlayer = m_pBowPlayer;
+					m_pPlayer = m_pBowPlayer;
+					m_pCamera = m_pPlayer->GetCamera();
+					break;
+				case VK_F5:
+					if (m_pScene)
+						m_pScene->m_pPlayer = m_p1HswordPlayer;
+					m_pPlayer = m_p1HswordPlayer;
+					m_pCamera = m_pPlayer->GetCamera();
 					break;
 				case VK_F9:
 					ChangeSwapChainState();
@@ -437,13 +450,18 @@ void CGameFramework::BuildObjects()
 
 	m_pScene = new CScene();
 	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
-	m_pScene->AddPlayer(3, m_pd3dDevice, m_pd3dCommandList);
-	m_pScene->MovePlayer(/*m_pScene->m_nGameObjects - 1*/3, XMFLOAT3(400.0f, 300.0f, 300.0f));
-	CTerrainPlayer* pPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain);
+	//m_pScene->AddPlayer(3, m_pd3dDevice, m_pd3dCommandList);
+	//m_pScene->MovePlayer(/*m_pScene->m_nGameObjects - 1*/3, XMFLOAT3(400.0f, 300.0f, 300.0f));
 
-	m_pScene->m_pPlayer = m_pPlayer = pPlayer;
+	C1HswordPlayer* p1HswordPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain);
+	m_p1HswordPlayer = p1HswordPlayer;
+	
+	CBowPlayer* pBowPlayer = new CBowPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain);
+	m_pBowPlayer = pBowPlayer;
+
+	m_pScene->m_pPlayer = m_pPlayer = pBowPlayer;
 	m_pCamera = m_pPlayer->GetCamera();
-	m_pPacket->m_pPlayer = pPlayer;
+	m_pPacket->m_pPlayer = m_pPlayer;
 	m_pPacket->m_pScene = m_pScene;
 	m_pPlayer->SetCPacket(m_pPacket);
 
@@ -454,7 +472,8 @@ void CGameFramework::BuildObjects()
 	WaitForGpuComplete();
 
 	if (m_pScene) m_pScene->ReleaseUploadBuffers();
-	if (m_pPlayer) m_pPlayer->ReleaseUploadBuffers();
+	if (p1HswordPlayer) p1HswordPlayer->ReleaseUploadBuffers();
+	if (pBowPlayer) pBowPlayer->ReleaseUploadBuffers();
 
 	m_GameTimer.Reset();
 	m_ChargeTimer.Reset();
@@ -538,7 +557,7 @@ void CGameFramework::ProcessInput()
 			p.type = Type_player_attack;
 			m_pPacket->ChargeTimer = m_ChargeTimer.GetTotalTime();
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-			printf("Look - X : %f Y : %f Z : %f", m_pPlayer->GetLook().x, m_pPlayer->GetLook().y, m_pPlayer->GetLook().z);
+			printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
 			m_pPlayer->Shot(fTimeElapsed, m_ChargeTimer.GetTotalTime() * 100.f);
 			m_pPlayer->SetAttack(false);
 		}
@@ -598,7 +617,11 @@ void CGameFramework::AnimateObjects()
 
 	if (m_pScene) m_pScene->AnimateObjects(fTimeElapsed);
 
-	m_pPlayer->Animate(fTimeElapsed);
+	if(m_p1HswordPlayer)
+		m_p1HswordPlayer->Animate(fTimeElapsed);
+	if (m_pBowPlayer)
+		m_pBowPlayer->Animate(fTimeElapsed);
+
 	/*for (int i = 0; i < OTHER_PLAYER_NUM; i++)
 	{
 		m_ppOtherPlayer[i]->Animate(fTimeElapsed);
@@ -673,7 +696,8 @@ void CGameFramework::FrameAdvance()
 #ifdef _WITH_PLAYER_TOP
 	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
 #endif
-	if (m_pPlayer) m_pPlayer->Render(m_pd3dCommandList, m_pCamera);
+	if (m_pBowPlayer) m_pBowPlayer->Render(m_pd3dCommandList, m_pCamera);
+	if (m_p1HswordPlayer) m_p1HswordPlayer->Render(m_pd3dCommandList, m_pCamera);
 
 	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;

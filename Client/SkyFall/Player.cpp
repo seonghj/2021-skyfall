@@ -272,35 +272,9 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 	if (nCameraMode == THIRD_PERSON_CAMERA) {
 		CGameObject::Render(pd3dCommandList, pCamera);
 	}
-	for (int i = 0; i < m_nBullets; ++i) {
-		m_ppBullets[i]->Render(pd3dCommandList, pCamera);
-	}
 }
 
-void CPlayer::Shot(float fTimeElapsed, float fSpeed)
-{
-	CGameObject* pBow = FindFrame("Bow_Main");
 
-	m_ppBullets[m_nBullets]->m_xmf4x4World = pBow->m_xmf4x4World;
-
-	XMFLOAT4X4 xmf4x4Scale = Matrix4x4::Identity();
-	xmf4x4Scale._11 = 0.5;
-	xmf4x4Scale._22 = 0.5;
-	xmf4x4Scale._33 = 0.5;
-	
-	m_ppBullets[m_nBullets]->m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
-	m_ppBullets[m_nBullets]->m_xmf3MovingDirection = GetCamera()->GetLookVector();
-	m_ppBullets[m_nBullets]->SetSpeed(fSpeed);
-	m_ppBullets[m_nBullets++]->Move(GetLook(), 10);
-}
-
-void CPlayer::DeleteBullet(const int& idx)
-{
-	for (int i = idx; i < m_nBullets - 1; ++i) {
-		m_ppBullets[i] = m_ppBullets[i + 1];
-	}
-	--m_nBullets;
-}
 
 void CPlayer::CheckCollision(CGameObject* pObject)
 {
@@ -348,7 +322,7 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	CLoadedModelInfo *pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 
-	SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,30), XMFLOAT3(10,10,30));
+	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,30), XMFLOAT3(10,10,30));
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 12, pPlayerModel);
@@ -526,9 +500,6 @@ void CTerrainPlayer::OnCameraUpdateCallback(float fTimeElapsed)
 void CTerrainPlayer::Animate(float fTimeElapsed)
 {
 	CGameObject::Animate(fTimeElapsed);
-
-	for (int i = 0; i < m_nBullets; ++i)
-		m_ppBullets[i]->Animate(fTimeElapsed);
 }
 
 
@@ -577,7 +548,7 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 
-	SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(10, 10, 30));
+	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(10, 10, 30));
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 12, pPlayerModel);
@@ -624,7 +595,6 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 
 	CGameObject* pArrow = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Arrow.bin", NULL);
-	//CMesh* pMesh = pArrow->FindFrame("Arrow")->m_pMesh;
 	CMesh* pMesh = pArrow->m_pMesh;
 
 
@@ -635,9 +605,7 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		m_ppBullets[i]->SetBBObject(pd3dDevice, pd3dCommandList,
 			XMFLOAT3(0, pMesh->m_xmf3AABBExtents.y + 10, 0),	// Center
 			XMFLOAT3(2, 5, 2));									// Extents
-
 		m_ppBullets[i]->SetWireFrameShader();
-		m_ppBullets[i]->m_xmf4x4World = m_xmf4x4World;
 	}
 }
 
@@ -738,7 +706,49 @@ void CBowPlayer::CheckCollision(CGameObject* pObject)
 	}
 }
 
+void CBowPlayer::Shot(float fTimeElapsed, float fSpeed)
+{
+	CGameObject* pBow = FindFrame("Bow_Main");
 
+	m_ppBullets[m_nBullets]->m_xmf4x4World = pBow->m_xmf4x4World;
+
+	XMFLOAT4X4 xmf4x4Scale = Matrix4x4::Identity();
+	xmf4x4Scale._11 = 0.5;
+	xmf4x4Scale._22 = 0.5;
+	xmf4x4Scale._33 = 0.5;
+
+	m_ppBullets[m_nBullets]->m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
+	m_ppBullets[m_nBullets]->m_xmf3MovingDirection = GetCamera()->GetLookVector();
+	m_ppBullets[m_nBullets]->SetSpeed(fSpeed);
+	m_ppBullets[m_nBullets++]->Move(GetLook(), 10);
+}
+
+void CBowPlayer::DeleteBullet(const int& idx)
+{
+	for (int i = idx; i < m_nBullets - 1; ++i) {
+		m_ppBullets[i] = m_ppBullets[i + 1];
+	}
+	--m_nBullets;
+}
+
+void CBowPlayer::Animate(float fTimeElapsed)
+{
+	CTerrainPlayer::Animate(fTimeElapsed);
+
+	for (int i = 0; i < m_nBullets; ++i)
+		m_ppBullets[i]->Animate(fTimeElapsed);
+}
+
+void CBowPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	DWORD nCameraMode = (pCamera) ? pCamera->GetMode() : 0x00;
+	if (nCameraMode == THIRD_PERSON_CAMERA) {
+		CGameObject::Render(pd3dCommandList, pCamera);
+	}
+	for (int i = 0; i < m_nBullets; ++i) {
+		m_ppBullets[i]->Render(pd3dCommandList, pCamera);
+	}
+}
 
 C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
 {
@@ -749,7 +759,7 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(10, 10, 30));
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 12, pPlayerModel);
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 13, pPlayerModel);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Idle, n1Hsword_Idle);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Walk, n1Hsword_Walk);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Run, n1Hsword_Run);

@@ -132,10 +132,10 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 		//float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
 		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] ¡æ [-1, 1]
 		//normalW = normalize(mul(vNormal, TBN));
-		//cIllumination = Lighting(input.positionW, normalW);
-		//cColor = lerp(cColor, cIllumination, 0.5f);
+		cIllumination = Lighting(input.positionW, normalW);
+		cColor = lerp(cColor, cIllumination, 0.5f);
 	}
-
+	//cColor =float4(0,0,1,1);
 	return(cColor);
 }
 
