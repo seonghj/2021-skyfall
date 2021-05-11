@@ -148,7 +148,7 @@ void CPacket::ProcessPacket(char* buf)
         printf("login id: %d\n", p->id);
         if (p->id != client_id) {
             for (int i = 0; i < MAX_PLAYER; ++i) {
-                if (m_pScene->PlayerIDs[i] == -1) {
+                if (m_pScene->PlayerIDs[i] == 0) {
                     m_pScene->PlayerIDs[i] = p->id;
                     m_pScene->m_mPlayer[i]->SetPosition(p->Position);
                     printf("id: %d x: %f, z: %f\n", p->id, p->Position.x, p->Position.z);
