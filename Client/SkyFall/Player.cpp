@@ -32,11 +32,12 @@ CPlayer::CPlayer()
 	m_isJump = false;
 	m_isGround = true;
 	m_isRunning = false;
-	m_isShooting = false;
+	m_isAttack = false;
 
 	m_iHp = 0;
 	m_fAtkStat = 0;
 	m_fDefStat = 0;
+	m_fHitCool = 0.f;
 
 	m_pPlayerUpdatedContext = NULL;
 	m_pCameraUpdatedContext = NULL;
@@ -301,6 +302,18 @@ void CPlayer::DeleteBullet(const int& idx)
 	--m_nBullets;
 }
 
+void CPlayer::CheckCollision(CGameObject* pObject)
+{
+	// Player - pObject
+	if (m_fHitCool <= 0 && isCollide(pObject)) {
+		m_fHitCool = 0.f;
+		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
+		Move(Vector3::ScalarProduct(d, 50.25f, true), true);
+
+		cout << "충돌 - " << pObject->m_pstrFrameName << endl;
+	}
+}
+
 void CPlayer::RotatePlayer(int iYaw)
 {
 	XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(iYaw));
@@ -330,45 +343,37 @@ void CSoundCallbackHandler::HandleCallback(void *pCallbackData, float fTrackPosi
 
 CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext)
 {
+	strcpy_s(m_pstrFrameName, "Player_Basic");
+
 	CLoadedModelInfo *pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 
-	CGameObject* pObject = pPlayerModel->m_pModelRootObject->FindFrame("DummyMesh");
-
-	pObject->m_pMesh->m_xmf3AABBCenter = XMFLOAT3(0, 0, 30);
-	pObject->m_pMesh->m_xmf3AABBExtents = XMFLOAT3(10, 10, 30);
-
-	SetBBObject(new CCubeMesh(pd3dDevice, pd3dCommandList, 20, 20, 60))->MoveForward(30);
-
+	SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,30), XMFLOAT3(10,10,30));
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 12, pPlayerModel);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Idle, nBow_Idle);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Walk, nBow_Walk);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Run, nBow_Run);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunBack, nBow_RunBack);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunLeft, nBow_RunLeft);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunRight, nBow_RunRight);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotHold, nBow_ShotHold);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotRelease, nBow_ShotRelease);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_TakeDamage, nBow_TakeDamage);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Idle, nBasic_Idle);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Walk, nBasic_Walk);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Run, nBasic_Run);
+	/*m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunBack, nBasic_RunBack);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunLeft, nBasic_RunLeft);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunRight, nBasic_RunRight);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_TakeDamage, nBasic_TakeDamage);*/
 
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotReady, nBow_ShotReady);
-	m_pSkinnedAnimationController->SetTrackType(nBow_ShotReady, ANIMATION_TYPE_ONCE);
 
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Jump, nBow_Jump);
-	m_pSkinnedAnimationController->SetTrackType(nBow_Jump, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Jump, nBasic_Jump);
+	m_pSkinnedAnimationController->SetTrackType(nBasic_Jump, ANIMATION_TYPE_ONCE);
 
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Death, nBow_Death);
-	m_pSkinnedAnimationController->SetTrackType(nBow_Death, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Death, nBasic_Death);
+	m_pSkinnedAnimationController->SetTrackType(nBasic_Death, ANIMATION_TYPE_ONCE);
 
 
 #ifdef _WITH_SOUND_CALLBACK
-	m_pSkinnedAnimationController->SetCallbackKeys(nBow_Walk, 1);
-	m_pSkinnedAnimationController->SetCallbackKey(nBow_Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
+	m_pSkinnedAnimationController->SetCallbackKeys(nBasic_Walk, 1);
+	m_pSkinnedAnimationController->SetCallbackKey(nBasic_Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
 
 	CAnimationCallbackHandler *pAnimationCallbackHandler = new CSoundCallbackHandler();
-	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nBow_Walk, pAnimationCallbackHandler);
+	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nBasic_Walk, pAnimationCallbackHandler);
 #endif
 
 	SetPlayerUpdatedContext(pContext);
@@ -378,28 +383,9 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)pContext;
-	//SetPosition(XMFLOAT3(310.0f, pTerrain->GetHeight(310.0f, 595.0f), 595.0f));
-	
+	//CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)pContext;
+	//SetPosition(XMFLOAT3(310.0f, pTerrain->GetHeight(310.0f, 595.0f), 595.0f));	
 
-	m_ppBullets = new CBullet * [MAX_BULLET];
-
-
-	CGameObject* pArrow = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Arrow.bin", NULL);
-	//CMesh* pMesh = pArrow->FindFrame("Arrow")->m_pMesh;
-	CMesh* pMesh = pArrow->m_pMesh;
-
-	CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList,
-		pMesh->m_xmf3AABBExtents.x * 2, pMesh->m_xmf3AABBExtents.y * 2, pMesh->m_xmf3AABBExtents.z * 2);
-
-
-	for (int i = 0; i < MAX_BULLET; ++i)
-	{
-		m_ppBullets[i] = new CBullet(pMesh);
-		m_ppBullets[i]->SetBBObject(pBoundingBox);
-		m_ppBullets[i]->SetWireFrameShader();
-		m_ppBullets[i]->m_xmf4x4World = m_xmf4x4World;
-	}
 
 	//SetScale(XMFLOAT3(1.2f, 1.2f, 1.2f));
 }
@@ -549,7 +535,121 @@ void CTerrainPlayer::Animate(float fTimeElapsed)
 #ifdef _WITH_SOUND_CALLBACK
 void CTerrainPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity)
 {
-	if (dwDirection&&GetGround())
+	if (dwDirection&&m_isGround)
+	{
+		if (m_isRunning) {
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Run, true);
+		}
+		else {
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Walk, true);
+		}
+	}
+
+	CPlayer::Move(dwDirection, fDistance, bUpdateVelocity);
+}
+
+void CTerrainPlayer::Update(float fTimeElapsed)
+{
+	if (m_pSkinnedAnimationController)
+	{
+		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
+
+		if (m_isJump) {
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackPosition(nBasic_Jump, 0);
+			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Jump, true);
+		}
+		else if (::IsZero(fLength)&&m_isGround)
+		{
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
+		}
+	}
+	CPlayer::Update(fTimeElapsed);
+}
+#endif
+
+CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
+{
+	strcpy_s(m_pstrFrameName, "Player_Bow");
+	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+	SetChild(pPlayerModel->m_pModelRootObject, true);
+
+	SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(10, 10, 30));
+	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
+
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 12, pPlayerModel);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Idle, nBow_Idle);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Walk, nBow_Walk);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Run, nBow_Run);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunBack, nBow_RunBack);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunLeft, nBow_RunLeft);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunRight, nBow_RunRight);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotHold, nBow_ShotHold);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotRelease, nBow_ShotRelease);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_TakeDamage, nBow_TakeDamage);
+
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotReady, nBow_ShotReady);
+	m_pSkinnedAnimationController->SetTrackType(nBow_ShotReady, ANIMATION_TYPE_ONCE);
+
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Jump, nBow_Jump);
+	m_pSkinnedAnimationController->SetTrackType(nBow_Jump, ANIMATION_TYPE_ONCE);
+
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Death, nBow_Death);
+	m_pSkinnedAnimationController->SetTrackType(nBow_Death, ANIMATION_TYPE_ONCE);
+
+
+#ifdef _WITH_SOUND_CALLBACK
+	m_pSkinnedAnimationController->SetCallbackKeys(nBow_Walk, 1);
+	m_pSkinnedAnimationController->SetCallbackKey(nBow_Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
+
+	CAnimationCallbackHandler* pAnimationCallbackHandler = new CSoundCallbackHandler();
+	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nBow_Walk, pAnimationCallbackHandler);
+#endif
+
+	SetPlayerUpdatedContext(pContext);
+	//SetCameraUpdatedContext(pContext);
+
+	if (pPlayerModel) delete pPlayerModel;
+
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	//CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
+	//SetPosition(XMFLOAT3(310.0f, pTerrain->GetHeight(310.0f, 595.0f), 595.0f));
+
+
+	m_ppBullets = new CBullet * [MAX_BULLET];
+
+
+	CGameObject* pArrow = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Arrow.bin", NULL);
+	//CMesh* pMesh = pArrow->FindFrame("Arrow")->m_pMesh;
+	CMesh* pMesh = pArrow->m_pMesh;
+
+
+	for (int i = 0; i < MAX_BULLET; ++i)
+	{
+		m_ppBullets[i] = new CBullet(pMesh);
+
+		m_ppBullets[i]->SetBBObject(pd3dDevice, pd3dCommandList,
+			XMFLOAT3(0, pMesh->m_xmf3AABBExtents.y + 10, 0),	// Center
+			XMFLOAT3(2, 5, 2));									// Extents
+
+		m_ppBullets[i]->SetWireFrameShader();
+		m_ppBullets[i]->m_xmf4x4World = m_xmf4x4World;
+	}
+}
+
+CBowPlayer::~CBowPlayer()
+{
+}
+
+
+
+void CBowPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity)
+{
+	if (dwDirection && m_isGround)
 	{
 		if (m_isRunning) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
@@ -564,22 +664,22 @@ void CTerrainPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVeloci
 	CPlayer::Move(dwDirection, fDistance, bUpdateVelocity);
 }
 
-void CTerrainPlayer::Update(float fTimeElapsed)
+void CBowPlayer::Update(float fTimeElapsed)
 {
 	if (m_pSkinnedAnimationController)
 	{
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
 
-		if (GetJump()) {
+		if (m_isJump) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackPosition(nBow_Jump, 0);
 			m_pSkinnedAnimationController->SetTrackEnable(nBow_Jump, true);
 		}
-		else if (GetCharging()) {
+		else if (m_isCharging) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackEnable(nBow_ShotReady,true);	
+			m_pSkinnedAnimationController->SetTrackEnable(nBow_ShotReady, true);
 		}
-		else if (::IsZero(fLength)&&GetGround())
+		else if (::IsZero(fLength) && m_isGround)
 		{
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nBow_Idle, true);
@@ -587,4 +687,211 @@ void CTerrainPlayer::Update(float fTimeElapsed)
 	}
 	CPlayer::Update(fTimeElapsed);
 }
+
+void CBowPlayer::SetAttack(bool shoot)
+{
+	m_isAttack = shoot;
+
+	if(!shoot)
+		m_pSkinnedAnimationController->SetTrackPosition(nBow_ShotReady, 0);
+}
+
+void CBowPlayer::RButtonDown()
+{
+}
+
+void CBowPlayer::RButtonUp()
+{
+}
+
+void CBowPlayer::LButtonDown()
+{
+	SetCharging(true);
+}
+
+void CBowPlayer::LButtonUp()
+{
+	SetAttack(true);
+	SetCharging(false);
+}
+
+
+void CBowPlayer::CheckCollision(CGameObject* pObject)
+{
+	// Bullet - pObject
+	if (m_ppBullets)
+		for (int i = 0; i < m_nBullets; ++i) {
+			if (pObject->isCollide(m_ppBullets[i])) {
+				cout << "화살 충돌 - " << pObject->m_pstrFrameName << ": Hp = " << pObject->m_iHp << endl;
+				DeleteBullet(i);
+				--pObject->m_iHp;
+			}
+		}
+
+	// Player - pObject
+	if (m_fHitCool <= 0 && isCollide(pObject)) {
+		m_fHitCool = 0.f;
+		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
+		CPlayer::Move(Vector3::ScalarProduct(d, 50.25f, true), true);
+
+		cout << "충돌 - " << pObject->m_pstrFrameName << endl;
+	}
+}
+
+
+
+C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
+{
+	strcpy_s(m_pstrFrameName, "Player_1Hsword");
+	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
+	SetChild(pPlayerModel->m_pModelRootObject, true);
+
+	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(10, 10, 30));
+	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
+
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 12, pPlayerModel);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Idle, n1Hsword_Idle);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Walk, n1Hsword_Walk);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Run, n1Hsword_Run);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_RunBack, n1Hsword_RunBack);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_RunLeft, n1Hsword_RunLeft);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_RunRight, n1Hsword_RunRight);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Attack1, n1Hsword_Attack1);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Attack2, n1Hsword_Attack2);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Attack3, n1Hsword_Attack3);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Attack4, n1Hsword_Attack4);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_TakeDamage, n1Hsword_TakeDamage);
+
+	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Jump, n1Hsword_Jump);
+	m_pSkinnedAnimationController->SetTrackType(n1Hsword_Jump, ANIMATION_TYPE_ONCE);
+
+	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Death, n1Hsword_Death);
+	m_pSkinnedAnimationController->SetTrackType(n1Hsword_Death, ANIMATION_TYPE_ONCE);
+
+
+#ifdef _WITH_SOUND_CALLBACK
+	m_pSkinnedAnimationController->SetCallbackKeys(n1Hsword_Walk, 1);
+	m_pSkinnedAnimationController->SetCallbackKey(n1Hsword_Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
+
+	CAnimationCallbackHandler* pAnimationCallbackHandler = new CSoundCallbackHandler();
+	m_pSkinnedAnimationController->SetAnimationCallbackHandler(n1Hsword_Walk, pAnimationCallbackHandler);
 #endif
+
+	SetPlayerUpdatedContext(pContext);
+	//SetCameraUpdatedContext(pContext);
+
+
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	CGameObject* pBlade = pPlayerModel->m_pModelRootObject->FindFrame("Sword_Blade");
+
+	BoundingBox bb = BoundingBox(pBlade->m_pMesh->m_xmf3AABBCenter, pBlade->m_pMesh->m_xmf3AABBExtents);
+
+	pBlade->SetBBObject(pd3dDevice, pd3dCommandList, 
+		XMFLOAT3(0,0,0),
+		XMFLOAT3(bb.Extents.x, bb.Extents.y, bb.Extents.z));
+
+	if (pPlayerModel) delete pPlayerModel;
+}
+
+C1HswordPlayer::~C1HswordPlayer()
+{
+}
+
+void C1HswordPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity)
+{
+	if (dwDirection && GetGround())
+	{
+		if (m_isRunning) {
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Run, true);
+		}
+		else {
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Walk, true);
+		}
+	}
+
+	CPlayer::Move(dwDirection, fDistance, bUpdateVelocity);
+}
+
+void C1HswordPlayer::Update(float fTimeElapsed)
+{
+	if (m_pSkinnedAnimationController)
+	{
+		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
+
+		if (m_isJump) {
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackPosition(n1Hsword_Jump, 0);
+			m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Jump, true);
+		}
+		else if (m_isAttack) {
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Attack1 + m_nAttack, true);
+		}
+		else if (::IsZero(fLength) && m_isGround)
+		{
+			m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Idle, true);
+		}
+	}
+	CPlayer::Update(fTimeElapsed);
+}
+
+void C1HswordPlayer::LButtonDown()
+{
+	if (m_isGround) {
+		m_nAttack = 0;
+		m_isAttack = true;
+	}
+}
+
+void C1HswordPlayer::LButtonUp()
+{
+	if (m_isAttack) {
+		m_isAttack = false;
+		m_pSkinnedAnimationController->SetTrackPosition(n1Hsword_Attack1, 0);
+		m_pSkinnedAnimationController->SetTrackPosition(n1Hsword_Attack2, 0);
+	}
+}
+
+void C1HswordPlayer::RButtonDown()
+{
+	if (m_isGround) {
+		if (m_isRunning)
+			m_nAttack = 2;
+		else
+			m_nAttack = 3;
+
+		m_isAttack = true;
+	}
+}
+
+void C1HswordPlayer::RButtonUp()
+{
+	if (m_isAttack) {
+		m_isAttack = false;
+		m_pSkinnedAnimationController->SetTrackPosition(n1Hsword_Attack3, 0);
+		m_pSkinnedAnimationController->SetTrackPosition(n1Hsword_Attack4, 0);
+	}
+}
+
+
+void C1HswordPlayer::CheckCollision(CGameObject* pObject)
+{
+	// Player - pObject
+	if (m_fHitCool <= 0 && isCollide(pObject)) {
+		m_fHitCool = 0.f;
+		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
+		CPlayer::Move(Vector3::ScalarProduct(d, 50.25f, true), true);
+
+		cout << "충돌 - " << pObject->m_pstrFrameName << endl;
+	}
+	if (m_isAttack) {
+		CGameObject* pBlade = FindFrame("Sword_Blade");
+		if (pObject->isCollide(pBlade)) {
+			cout << "검 충돌 - " << pObject->m_pstrFrameName << ": Hp = " << pObject->m_iHp << endl;
+			--pObject->m_iHp;
+		}
+	}
+}

@@ -609,6 +609,38 @@ CGameObject* CGameObject::SetBBObject(CCubeMesh* pBoundingBox)
 	return pBBObj;
 }
 
+CGameObject* CGameObject::SetBBObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 Center, XMFLOAT3 Extents)
+{
+	CGameObject* pBBObj = new CGameObject();
+	strcpy_s(pBBObj->m_pstrFrameName, "BoundingBox");
+
+	CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, Extents.x*2, Extents.y*2, Extents.z*2);
+	pBBObj->SetMesh(pBoundingBox);
+	pBBObj->SetBoundingBoxShader();
+	pBBObj->Move(Center, 1);
+	pBBObj->m_pMesh->m_xmf3AABBCenter = Center;
+	pBBObj->m_pMesh->m_xmf3AABBExtents = Extents;
+	SetChild(pBBObj);
+
+	return pBBObj;
+}
+
+bool CGameObject::isCollide(CGameObject* pObject)
+{
+	BoundingBox bb = BoundingBox(FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter,
+		FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents);
+	bb.Transform(bb, XMLoadFloat4x4(&m_xmf4x4World));
+
+	BoundingBox bbObject = BoundingBox(pObject->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter,
+		pObject->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents);
+	bbObject.Transform(bbObject, XMLoadFloat4x4(&pObject->m_xmf4x4World));
+
+	if (bb.Contains(bbObject) != DirectX::DISJOINT) {
+		return true;
+	}
+	return false;
+}
+
 void CGameObject::SetMesh(CMesh *pMesh)
 {
 	if (m_pMesh) m_pMesh->Release();
@@ -1668,7 +1700,7 @@ CEagleObject::~CEagleObject()
 CPlayerObject::CPlayerObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks)
 {
 	CLoadedModelInfo* pPlayerModel = pModel;
-	if (!pPlayerModel) pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+	if (!pPlayerModel) pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
 
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pPlayerModel);
@@ -1746,14 +1778,22 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	CGameObject* pObject = pDragonModel->m_pModelRootObject->FindFrame("Polygonal_Dragon");
 
 	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
-	CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
+	/*CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
 
-	SetBBObject(pBoundingBox);
+	SetBBObject(pBoundingBox);*/
+
+	SetBBObject(pd3dDevice, pd3dCommandList,
+		XMFLOAT3(0, bb.Extents.y-200, -50),												// Center
+		XMFLOAT3(80, bb.Extents.y - 100, bb.Extents.z-50));	// Extents
 	
 	SetPosition(300.f, 0, 300.f);
-	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.5f);
+	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.2f);
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, 0.0f, 0.0f);
+
+
+	m_iHp = 100;
+
 }
 
 CDragon::~CDragon()
@@ -1774,14 +1814,22 @@ CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 	CGameObject* pObject = pWolfModel->m_pModelRootObject->FindFrame("Polygonal_Wolf");
 
 	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
-	CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
+	/*CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
 
-	SetBBObject(pBoundingBox)->MoveForward(-bb.Extents.z);
+	SetBBObject(pBoundingBox)->MoveForward(-bb.Extents.z);*/
 
-	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.5f);
+	SetBBObject(pd3dDevice, pd3dCommandList,
+		XMFLOAT3(0, 20, -bb.Extents.z),									// Center
+		XMFLOAT3(bb.Extents.x, bb.Extents.y - 20, bb.Extents.z));	// Extents
+
 	SetPosition(400.f, 0, 400.f);
+	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.5f);
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, 0.0f, 0.0f);
+
+
+	m_iHp = 100;
+
 }
 
 CWolf::~CWolf()
@@ -1801,14 +1849,24 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 	CGameObject* pObject = pMetalonModel->m_pModelRootObject->FindFrame("Polygonal_Metalon");
 
 	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
-	CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
 
-	SetBBObject(pBoundingBox);
+	/*CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
+
+	SetBBObject(pBoundingBox);*/
+
+	SetBBObject(pd3dDevice, pd3dCommandList,
+		XMFLOAT3(0, 20, -bb.Extents.z),													// Center
+		XMFLOAT3(bb.Extents.x, bb.Extents.y-20, bb.Extents.z));	// Extents
 
 	SetPosition(500.f, 0, 500.f);
 	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y*0.1f);
 	SetScale(0.1f, 0.1f, 0.1f);
 	Rotate(-90.0f, 0.0f, 0.0f);
+
+
+	m_iHp = 100;
+
+
 }
 
 CMetalon::~CMetalon()

@@ -65,6 +65,8 @@ public:
 
 	void ReleaseUploadBuffers();
 
+	void CheckCollision();
+
 	CPlayer								*m_pPlayer = NULL;
 
 protected:

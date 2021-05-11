@@ -109,8 +109,8 @@ void CPacket::SendPacket(char* buf)
     wsabuf.buf = buf;
     retval = WSASend(sock, &wsabuf, 1, &sendbytes, 0, NULL, NULL);
     if (retval == SOCKET_ERROR) {
-        printf("%d: ", WSAGetLastError());
-        err_display("send()");
+        /*printf("%d: ", WSAGetLastError());
+        err_display("send()");*/
     }
 }
 
@@ -196,11 +196,11 @@ void CPacket::ProcessPacket(char* buf)
        /* player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
         m_pScene->Shot(fTimeElapsed, 300.f);
 
-        if (m_pPlayer->GetShooting() && m_pPlayer->GetCamera()->GetMode() == THIRD_PERSON_CAMERA)
+        if (m_pPlayer->GetAttack() && m_pPlayer->GetCamera()->GetMode() == THIRD_PERSON_CAMERA)
         {
             printf("Look - X : %f Y : %f Z : %f", m_pPlayer->GetLook().x, m_pPlayer->GetLook().y, m_pPlayer->GetLook().z);
             m_pPlayer->Shot(fTimeElapsed, m_ChargeTimer.GetTotalTime() * 100.f);
-            m_pPlayer->SetShooting(false);
+            m_pPlayer->SetAttack(false);
         }*/
         /*m_pPlayer->Update(fTimeElapsed);
         m_pScene->Update(fTimeElapsed);*/

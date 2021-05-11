@@ -45,6 +45,8 @@ public:
 	LRESULT CALLBACK OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 
 	void Set_m_pPacket(CPacket* t) { m_pPacket = t; };
+	void CheckCollision();
+
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
 	float						m_DegreeY;

@@ -290,30 +290,34 @@ void CGameFramework::ChangeSwapChainState()
 void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
 	if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
-	if (!m_bRotateEnable)
-		switch (nMessageID)
-		{
-		case WM_LBUTTONDOWN:
-		case WM_RBUTTONDOWN:
-			::SetCapture(hWnd);
-			::GetCursorPos(&m_ptOldCursorPos);
+	switch (nMessageID)
+	{
+	case WM_LBUTTONDOWN:
+		if (!m_bRotateEnable)
+			m_pPlayer->LButtonDown();
+		break;
+	case WM_RBUTTONDOWN:
+		::SetCapture(hWnd);
+		::GetCursorPos(&m_ptOldCursorPos);
+		if (!m_bRotateEnable) {
 			m_ChargeTimer.Reset();
 			m_ChargeTimer.Start();
-			m_pPlayer->SetCharging(true);
-			break;
-		case WM_LBUTTONUP:
-		case WM_RBUTTONUP:
-			::ReleaseCapture();
-			m_ChargeTimer.Stop();
-			m_pPlayer->SetShooting(true);
-			m_pPlayer->SetCharging(false);
-			m_pPlayer->m_pSkinnedAnimationController->SetTrackPosition(m_pPlayer->nBow_ShotReady, 0);
-			break;
-		case WM_MOUSEMOVE:
-			break;
-		default:
-			break;
+			m_pPlayer->RButtonDown();
 		}
+		break;
+	case WM_LBUTTONUP:
+		m_pPlayer->LButtonUp();
+		break;
+	case WM_RBUTTONUP:
+		::ReleaseCapture();
+		m_ChargeTimer.Stop();
+		m_pPlayer->RButtonUp();
+		break;
+	case WM_MOUSEMOVE:
+		break;
+	default:
+		break;
+	}
 }
 
 void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
@@ -389,6 +393,11 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 	return(0);
 }
 
+void CGameFramework::CheckCollision()
+{
+	m_pScene->CheckCollision();
+}
+
 void CGameFramework::OnDestroy()
 {
 	ReleaseObjects();
@@ -430,7 +439,7 @@ void CGameFramework::BuildObjects()
 	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
 	m_pScene->AddPlayer(3, m_pd3dDevice, m_pd3dCommandList);
 	m_pScene->MovePlayer(/*m_pScene->m_nGameObjects - 1*/3, XMFLOAT3(400.0f, 300.0f, 300.0f));
-	CTerrainPlayer* pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain);
+	CTerrainPlayer* pPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain);
 
 	m_pScene->m_pPlayer = m_pPlayer = pPlayer;
 	m_pCamera = m_pPlayer->GetCamera();
@@ -517,7 +526,8 @@ void CGameFramework::ProcessInput()
 			SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
 		}
 
-		if (m_pPlayer->GetShooting() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
+		if (m_pPlayer->GetAttack() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA&&
+			!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
 		{
 			player_attack_packet p;
 			p.attack_type = 0;
@@ -530,7 +540,7 @@ void CGameFramework::ProcessInput()
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 			printf("Look - X : %f Y : %f Z : %f", m_pPlayer->GetLook().x, m_pPlayer->GetLook().y, m_pPlayer->GetLook().z);
 			m_pPlayer->Shot(fTimeElapsed, m_ChargeTimer.GetTotalTime() * 100.f);
-			m_pPlayer->SetShooting(false);
+			m_pPlayer->SetAttack(false);
 		}
 
 		if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
@@ -629,8 +639,10 @@ void CGameFramework::FrameAdvance()
 	m_GameTimer.Tick(0.0f);
 
 	ProcessInput();
+	CheckCollision();
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
     AnimateObjects();
+
 
 	HRESULT hResult = m_pd3dCommandAllocator->Reset();
 	hResult = m_pd3dCommandList->Reset(m_pd3dCommandAllocator, NULL);

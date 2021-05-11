@@ -124,7 +124,7 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	//if (pMapSnow)delete pMapSnow;
 
 	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
-	m_ppGameObjects[0]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
+	m_ppGameObjects[0]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 1);
 	m_ppGameObjects[1] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
 	m_ppGameObjects[1]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
 	m_ppGameObjects[2] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
@@ -404,6 +404,16 @@ void CScene::ReleaseUploadBuffers()
 	for (int i = 0; i < m_nGameObjects; i++) m_ppGameObjects[i]->ReleaseUploadBuffers();
 	for (auto p : m_ppPlayerObjects) {
 		p.second->ReleaseUploadBuffers();
+	}
+}
+
+void CScene::CheckCollision()
+{
+
+	for (int i = 0; i < m_nGameObjects; ++i) {
+		if (m_ppGameObjects[i]->m_iHp > 0) {
+			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
+		}
 	}
 }
 

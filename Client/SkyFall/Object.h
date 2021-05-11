@@ -373,8 +373,14 @@ public:
 	CGameObject 					*m_pParent = NULL;
 	CGameObject 					*m_pChild = NULL;
 	CGameObject 					*m_pSibling = NULL;
+
+	int							m_iHp;
+	float						m_fAtkStat;
 	
 	CGameObject* SetBBObject(CCubeMesh* pBoundingBox);
+	CGameObject* SetBBObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,XMFLOAT3 Center,XMFLOAT3 Extents);
+	bool isCollide(CGameObject* pObject);
+
 	void SetMesh(CMesh *pMesh);
 	void SetShader(CShader *pShader);
 	void SetShader(int nMaterial, CShader *pShader);
