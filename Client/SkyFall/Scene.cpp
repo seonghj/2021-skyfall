@@ -150,6 +150,11 @@ void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
 	m_ppPlayerObjects[player_num]->SetPosition(pos.x, pos.y, pos.z);
 }
 
+void CScene::AnimatePlayer(int id, int animation_num)
+{
+	m_ppPlayerObjects[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(animation_num, 3);
+}
+
 void CScene::ReleaseObjects()
 {
 	if (m_pd3dGraphicsRootSignature) m_pd3dGraphicsRootSignature->Release();
