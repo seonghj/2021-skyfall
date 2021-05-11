@@ -472,7 +472,6 @@ void Server::WorkerFunc()
         roomID = over_ex->roomID;
         switch (over_ex->type) {
         case OE_session: {
-            // 비동기 입출력 결과 확인
             if (FALSE == retval)
             {
                 //printf("error = %d\n", WSAGetLastError());
