@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+ï»¿//-----------------------------------------------------------------------------
 // File: CScene.cpp
 //-----------------------------------------------------------------------------
 
@@ -39,7 +39,7 @@ void CScene::BuildDefaultLightsAndMaterials()
 	m_pLights[0].m_xmf4Ambient = XMFLOAT4(0.1f, 0.0f, 0.0f, 1.0f);
 	m_pLights[0].m_xmf4Diffuse = XMFLOAT4(0.8f, 0.0f, 0.0f, 1.0f);
 	m_pLights[0].m_xmf4Specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.0f);
-	m_pLights[0].m_xmf3Position = XMFLOAT3(30.0f, 30.0f, 30.0f);
+	m_pLights[0].m_xmf3Position = XMFLOAT3(300.0f, 300.0f, 300.0f);
 	m_pLights[0].m_xmf3Direction = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_pLights[0].m_xmf3Attenuation = XMFLOAT3(1.0f, 0.001f, 0.0001f);
 	m_pLights[1].m_bEnable = true;
@@ -59,15 +59,15 @@ void CScene::BuildDefaultLightsAndMaterials()
 	m_pLights[2].m_xmf4Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 	m_pLights[2].m_xmf4Diffuse = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
 	m_pLights[2].m_xmf4Specular = XMFLOAT4(0.4f, 0.4f, 0.4f, 0.0f);
-	m_pLights[2].m_xmf3Direction = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	m_pLights[2].m_xmf3Direction = XMFLOAT3(1.0f, -1.0f, 1.0f);
 	m_pLights[3].m_bEnable = true;
 	m_pLights[3].m_nType = SPOT_LIGHT;
-	m_pLights[3].m_fRange = 600.0f;
+	m_pLights[3].m_fRange = 1200.0f;
 	m_pLights[3].m_xmf4Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 	m_pLights[3].m_xmf4Diffuse = XMFLOAT4(0.3f, 0.7f, 0.0f, 1.0f);
 	m_pLights[3].m_xmf4Specular = XMFLOAT4(0.3f, 0.3f, 0.3f, 0.0f);
-	m_pLights[3].m_xmf3Position = XMFLOAT3(50.0f, 30.0f, 30.0f);
-	m_pLights[3].m_xmf3Direction = XMFLOAT3(0.0f, 1.0f, 1.0f);
+	m_pLights[3].m_xmf3Position = XMFLOAT3(50.0f, 1000.0f, 30.0f);
+	m_pLights[3].m_xmf3Direction = XMFLOAT3(0.0f, -1.0f, -1.0f);
 	m_pLights[3].m_xmf3Attenuation = XMFLOAT3(1.0f, 0.01f, 0.0001f);
 	m_pLights[3].m_fFalloff = 8.0f;
 	m_pLights[3].m_fPhi = (float)cos(XMConvertToRadians(90.0f));
@@ -88,102 +88,69 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 
 	XMFLOAT3 xmf3Scale(8.0f, 2.0f, 8.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.3f, 0.0f, 0.0f);
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/HeightMap.raw"), 257, 257, xmf3Scale, xmf4Color);
+	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Desert_HeightMap.raw"), 257, 257, xmf3Scale, xmf4Color);
 
 	m_nGameObjects = 3;
 	m_ppGameObjects = new CGameObject*[m_nGameObjects];
 
-	/*CLoadedModelInfo *pLionModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Lion.bin", NULL);
-	m_ppGameObjects[0] = new CLionObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pLionModel, 1);
-	m_ppGameObjects[0]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 1);
-	m_ppGameObjects[0]->SetPosition(240.0f, m_pTerrain->GetHeight(240.0f, 640.0f), 640.0f);
-	if (pLionModel) delete pLionModel;
-
+	/*
 	CLoadedModelInfo *pAngrybotModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Angrybot.bin", NULL);
 	m_ppGameObjects[1] = new CAngrybotObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pAngrybotModel, 1);
 	m_ppGameObjects[1]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
 	m_ppGameObjects[1]->m_pSkinnedAnimationController->SetTrackPosition(0, 0.55f);
 	m_ppGameObjects[1]->m_pSkinnedAnimationController->SetTrackSpeed(0, 0.5f);
 	m_ppGameObjects[1]->SetPosition(380.0f, m_pTerrain->GetHeight(380.0f, 725.0f), 725.0f);
-	if (pAngrybotModel) delete pAngrybotModel;
+	if (pAngrybotModel) delete pAngrybotModel;*/
 
-	CLoadedModelInfo *pElvenWitchModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Elven_Witch.bin", NULL);
-	m_ppGameObjects[2] = new CElvenWitchObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pElvenWitchModel, 1);
-	m_ppGameObjects[2]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-	m_ppGameObjects[2]->SetPosition(330.0f, m_pTerrain->GetHeight(330.0f, 700.0f) + 25.0f, 700.0f);
-	if (pElvenWitchModel) delete pElvenWitchModel;
+	//CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+	//m_ppGameObjects[0] = new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPlayerModel,1);
+	//m_ppGameObjects[0]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 6);
+	//m_ppGameObjects[0]->SetPosition(400.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f);
+	//if (pPlayerModel) delete pPlayerModel;
 
-	CLoadedModelInfo *pMonsterModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/MonsterWeapon.bin", NULL);
-	m_ppGameObjects[3] = new CMonsterWeaponObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pMonsterModel, 1);
-	m_ppGameObjects[3]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-	m_ppGameObjects[3]->SetPosition(300.0f, m_pTerrain->GetHeight(300.0f, 650.0f), 650.0f);
-	if (pMonsterModel) delete pMonsterModel;
+	//CLoadedModelInfo* pMapForest = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Map/Forest_Collision.bin", NULL);
+	//m_ppGameObjects[1] = new CMapObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pMapForest, 0);
+	//m_ppGameObjects[1]->SetPosition(0.0f, 0/*m_pTerrain->GetHeight(400.0f,700.0f)*/, 0);
+	//if (pMapForest)delete pMapForest;
 
-	CLoadedModelInfo *pEagleModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Eagle.bin", NULL);
-	m_ppGameObjects[4] = new CEagleObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pEagleModel, 1);
-	m_ppGameObjects[4]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 0);
-	m_ppGameObjects[4]->SetPosition(230.0f, m_pTerrain->GetHeight(230.0f, 580.0f), 580.0f);
-	1`
-	m_ppGameObjects[5] = new CEagleObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pEagleModel, 1);
-	m_ppGameObjects[5]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 1);
-	m_ppGameObjects[5]->m_pSkinnedAnimationController->SetTrackSpeed(0, 0.5f);
-	m_ppGameObjects[5]->SetPosition(200.0f, m_pTerrain->GetHeight(200.0f, 620.0f) + 20.0f, 620.0f);
-	if (pEagleModel) delete pEagleModel;*/
+	//CLoadedModelInfo* pMapDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Map/Forest_Passable.bin", NULL);
+	//m_ppGameObjects[2] = new CMapObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pMapDesert, 0);
+	//m_ppGameObjects[2]->SetPosition(0, 0/*m_pTerrain->GetHeight(400.0f, 800.0f)*/, 0);
+	//if (pMapDesert)delete pMapDesert;
 
-	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player.bin", NULL);
-	m_ppGameObjects[0] = new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPlayerModel, 1);
+	//CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Desert_Passable.bin", NULL);
+	//m_ppGameObjects[3] = new CMapObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pMapSnow, 0);
+	//m_ppGameObjects[3]->SetPosition(0, 0/*m_pTerrain->GetHeight(400.0f, 800.0f)*/, 0);
+	//if (pMapSnow)delete pMapSnow;
+
+	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
 	m_ppGameObjects[0]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 1);
-	m_ppGameObjects[0]->SetPosition(400.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f);
-	if (pPlayerModel) delete pPlayerModel;
+	m_ppGameObjects[1] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
+	m_ppGameObjects[1]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
+	m_ppGameObjects[2] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1);
+	m_ppGameObjects[2]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
 
-	CLoadedModelInfo* pMapForest = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Forest.bin", NULL);
-	m_ppGameObjects[1] = new CMapObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pMapForest, 0);
-	m_ppGameObjects[1]->SetPosition(0.0f, 0/*m_pTerrain->GetHeight(400.0f,700.0f)*/, 500.0f);
-	if (pMapForest)delete pMapForest;
-
-	CLoadedModelInfo* pMapDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Desert.bin", NULL);
-	m_ppGameObjects[2] = new CMapObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pMapDesert, 0);
-	m_ppGameObjects[2]->SetPosition(4000, 0/*m_pTerrain->GetHeight(400.0f, 800.0f)*/, 500.0f);
-	if (pMapDesert)delete pMapDesert;
-
-	//CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Dragon.bin", NULL);
-	//m_ppGameObjects[2] = new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pDragonModel, 1);
-	//m_ppGameObjects[2]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 4);
-	//m_ppGameObjects[2]->SetPosition(400, m_pTerrain->GetHeight(400.0f, 500.0f), 500.0f);
-	//if (pDragonModel)delete pDragonModel;
+	
+	//m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
-void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+void CScene::AddPlayer(int id, ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	++m_nPlayerObjects;
-	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player.bin", NULL);
-	m_ppPlayerObjects[m_nPlayerObjects - 1].m_Object = new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pPlayerModel, 1);
-	m_ppPlayerObjects[m_nPlayerObjects - 1].m_Object->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 1);
-	m_ppPlayerObjects[m_nPlayerObjects - 1].m_Object->SetPosition(-1000.0f, m_pTerrain->GetHeight(400.0f, 650.0f), -1000.0f);
-	if (pPlayerModel) delete pPlayerModel;
-
+	m_ppPlayerObjects.emplace(id, new CPlayerObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 1));
+	m_ppPlayerObjects[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 3);
+	m_ppPlayerObjects[id]->SetPosition(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f);
 }
 
 void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
 {
-	for (int i = 0; i < m_nPlayerObjects; ++i)
-	{
-		if (m_ppPlayerObjects[i].id = player_num)
-			m_ppPlayerObjects[i].m_Object->SetPosition(pos.x, pos.y, pos.z);
-		break;
-	}
+	m_ppPlayerObjects[player_num]->SetPosition(pos.x, pos.y, pos.z);
 }
 
-void CScene::RotatePlayer(int player_num, float x, float y, float z)
+void CScene::AnimatePlayer(int id, int animation_num)
 {
-	for (int i = 0; i < m_nPlayerObjects; ++i)
-	{
-		if (m_ppPlayerObjects[i].id = player_num)
-			m_ppPlayerObjects[i].m_Object->Rotate(x, y, z);
-		break;
-	}
+	m_ppPlayerObjects[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(animation_num, 3);
 }
 
 void CScene::ReleaseObjects()
@@ -411,7 +378,7 @@ ID3D12RootSignature *CScene::CreateGraphicsRootSignature(ID3D12Device *pd3dDevic
 
 void CScene::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
 {
-	UINT ncbElementBytes = ((sizeof(LIGHTS) + 255) & ~255); //256ÀÇ ¹è¼ö
+	UINT ncbElementBytes = ((sizeof(LIGHTS) + 255) & ~255); //256ï¿½ï¿½ ï¿½ï¿½ï¿½
 	m_pd3dcbLights = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
 
 	m_pd3dcbLights->Map(0, NULL, (void **)&m_pcbMappedLights);
@@ -440,7 +407,19 @@ void CScene::ReleaseUploadBuffers()
 
 	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_nGameObjects; i++) m_ppGameObjects[i]->ReleaseUploadBuffers();
-	for (int i = 0; i < m_nPlayerObjects; i++) m_ppPlayerObjects[i].m_Object->ReleaseUploadBuffers();
+	for (auto p : m_ppPlayerObjects) {
+		p.second->ReleaseUploadBuffers();
+	}
+}
+
+void CScene::CheckCollision()
+{
+
+	for (int i = 0; i < m_nGameObjects; ++i) {
+		if (m_ppGameObjects[i]->m_iHp > 0) {
+			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
+		}
+	}
 }
 
 void CScene::CreateCbvSrvDescriptorHeaps(ID3D12Device *pd3dDevice, int nConstantBufferViews, int nShaderResourceViews)
@@ -599,6 +578,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	if (m_pSkyBox) m_pSkyBox->Render(pd3dCommandList, pCamera);
 	//if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
 
+	if(m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
 	for (int i = 0; i < m_nGameObjects; i++)
 	{
 		if (m_ppGameObjects[i])
@@ -609,13 +589,13 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 		}
 	}
 
-	for (int i = 0; i < m_nGameObjects; i++)
+	for (auto p : m_ppPlayerObjects)
 	{
-		if (m_ppPlayerObjects[i].m_Object)
+		if (p.second)
 		{
-			m_ppPlayerObjects[i].m_Object->Animate(m_fElapsedTime);
-			if (!m_ppPlayerObjects[i].m_Object->m_pSkinnedAnimationController) m_ppPlayerObjects[i].m_Object->UpdateTransform(NULL);
-			m_ppPlayerObjects[i].m_Object->Render(pd3dCommandList, pCamera);
+			p.second->Animate(m_fElapsedTime);
+			if (!p.second->m_pSkinnedAnimationController) p.second->UpdateTransform(NULL);
+			p.second->Render(pd3dCommandList, pCamera);
 		}
 	}
 

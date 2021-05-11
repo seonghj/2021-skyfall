@@ -145,14 +145,7 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::Type_player_login: {
         player_login_packet* p = reinterpret_cast<player_login_packet*>(buf);
-        printf("login %f\n", p->Position.x);
-        if (p->id == client_id)
-            m_pPlayer->SetPosition(p->Position);
-        else {
-            ++OtherPlayerNum;
-            m_pScene->m_ppPlayerObjects[OtherPlayerNum].id = p->id;
-            m_pScene->MovePlayer(p->id, p->Position);
-        }
+        //printf("login id: %d\n", p->id);
         break;
     }
     case PacketType::Type_player_remove: {
@@ -187,14 +180,9 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::Type_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
-        if (p->id == client_id) {
-            m_pPlayer->SetPosition(p->Position);
-            m_pPlayer->Rotate(p->dx, p->dy, p->dz);
-        }
-        else {
-            m_pScene->MovePlayer(p->id, p->Position);
-            m_pScene->RotatePlayer(p->id, 0, p->dz, p->dy);
-        }
+        m_pPlayer->SetPosition(p->Position);
+        m_pPlayer->Rotate(p->dx, p->dy, p->dz);
+        //m_pCamera->Rotate(p->dx, p->dy, p->dz);
         /* m_pPlayer->Update(fTimeElapsed);
          m_pScene->Update(fTimeElapsed);*/
         break;
@@ -206,15 +194,15 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::Type_player_attack: {
-       /* player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
-        m_pScene->Shot(fTimeElapsed, 300.f);
-
-        if (m_pPlayer->GetShooting() && m_pPlayer->GetCamera()->GetMode() == THIRD_PERSON_CAMERA)
-        {
-            printf("Look - X : %f Y : %f Z : %f", m_pPlayer->GetLook().x, m_pPlayer->GetLook().y, m_pPlayer->GetLook().z);
-            m_pPlayer->Shot(fTimeElapsed, m_ChargeTimer.GetTotalTime() * 100.f);
-            m_pPlayer->SetShooting(false);
-        }*/
+        player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
+        if (p->id = client_id) {
+            switch (p->attack_type) {
+            case SWORD1H: {
+                m_pPlayer->LButtonDown();
+                break;
+            }
+            }
+        }
         /*m_pPlayer->Update(fTimeElapsed);
         m_pScene->Update(fTimeElapsed);*/
 

@@ -133,11 +133,12 @@ public:
 public:
 	static CShader					*m_pWireFrameShader;
 	static CShader					*m_pSkinnedAnimationWireFrameShader;
-
+	static CShader					*m_pBoundingBoxShader;
 	static void CMaterial::PrepareShaders(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature);
 
 	void SetWireFrameShader() { CMaterial::SetShader(m_pWireFrameShader); }
 	void SetSkinnedAnimationWireFrameShader() { CMaterial::SetShader(m_pSkinnedAnimationWireFrameShader); }
+	void SetBoundingBoxShader() { CMaterial::SetShader(m_pBoundingBoxShader); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,7 +200,7 @@ public:
 class CAnimationSet
 {
 public:
-	CAnimationSet(float fStartTime, float fEndTime, char *pstrName);
+	CAnimationSet(float fStartTime, float fEndTime, char* pstrName, int nType = ANIMATION_TYPE_LOOP);
 	~CAnimationSet();
 
 public:
@@ -222,7 +223,7 @@ public:
 
 public:
 	void SetPosition(float fTrackPosition);
-
+	void SetType(int nType) { m_nType = nType; }
 	void Animate(float fTrackPosition, float fTrackWeight);
 
 	void SetCallbackKeys(int nCallbackKeys);
@@ -331,6 +332,9 @@ public:
 	void SetAnimationCallbackHandler(int nAnimationSet, CAnimationCallbackHandler *pCallbackHandler);
 
 	void AdvanceTime(float fElapsedTime, CGameObject *pRootGameObject);
+
+	void SetAllTrackDisable();
+	void SetTrackType(int nAnimationTrack, int nType);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -370,11 +374,19 @@ public:
 	CGameObject 					*m_pChild = NULL;
 	CGameObject 					*m_pSibling = NULL;
 
+	int							m_iHp;
+	float						m_fAtkStat;
+	
+	CGameObject* SetBBObject(CCubeMesh* pBoundingBox);
+	CGameObject* SetBBObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,XMFLOAT3 Center,XMFLOAT3 Extents);
+	bool isCollide(CGameObject* pObject);
+
 	void SetMesh(CMesh *pMesh);
 	void SetShader(CShader *pShader);
 	void SetShader(int nMaterial, CShader *pShader);
 	void SetWireFrameShader();
 	void SetSkinnedAnimationWireFrameShader();
+	void SetBoundingBoxShader();
 	void SetMaterial(int nMaterial, CMaterial *pMaterial);
 
 	void SetChild(CGameObject *pChild, bool bReferenceUpdate=false);
@@ -490,9 +502,11 @@ class CMap : public CGameObject
 public:
 	CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
 	virtual ~CMap() {};
+
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 		
 private:
-	CGameObject** m_ppGameObjects = new CGameObject * [9];
+	CGameObject** m_ppMaps = new CGameObject * [9];
 };
 
 
@@ -581,5 +595,52 @@ public:
 	virtual ~CBullet() { CGameObject::~CGameObject(); };
 	void Animate(float fElapsedTime);
 	void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; };
-	//virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera=NULL);
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera=NULL);
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class CMonster : public CGameObject
+{
+private:
+	int Health;
+	int Damage;
+
+public:
+	CMonster();
+	virtual ~CMonster();
+};
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class CDragon : public CMonster
+{
+public:
+	CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks);
+	virtual ~CDragon();
+};
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class CWolf : public CMonster
+{
+public:
+	CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks);
+	virtual ~CWolf();
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class CMetalon : public CMonster
+{
+public:
+	CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks);
+	virtual ~CMetalon();
 };

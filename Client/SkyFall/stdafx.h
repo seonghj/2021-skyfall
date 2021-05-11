@@ -72,6 +72,8 @@ extern HINSTANCE					ghAppInstance;
 #define ANIMATION_CALLBACK_EPSILON	0.015f
 
 #define _WITH_LEFT_HAND_COORDINATES
+#define _WITH_SOUND_RESOURCE
+#define _WITH_SOUND_CALLBACK
 
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d12.lib")

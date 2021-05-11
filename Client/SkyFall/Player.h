@@ -39,12 +39,12 @@ protected:
 	bool						m_isJump;
 	bool						m_isGround;
 	bool						m_isRunning;
-	bool						m_isShooting;
+	bool						m_isAttack;
+	bool						m_isCharging;
 
 	// stat
-	int							m_iHp;
-	float						m_fAtkStat;
 	float						m_fDefStat;
+	float						m_fHitCool;
 
 	LPVOID						m_pPlayerUpdatedContext = NULL;
 	LPVOID						m_pCameraUpdatedContext = NULL;
@@ -70,10 +70,16 @@ public:
 	void SetJump(bool jump) { m_isJump = jump; }
 	void SetRunning(bool run) { m_isRunning = run; }
 	void SetGround(bool ground) { m_isGround = ground; }
-	void SetShooting(bool shoot) { m_isShooting = shoot; }
+	virtual void SetAttack(bool shoot) { m_isAttack = shoot; }
+	void SetCharging(bool charge) { m_isCharging = charge; }
 	void SetHp(int hp) { m_iHp = hp; }
 	void SetAtkStat(float atk) { m_fAtkStat = atk; }
 	void SetDefStat(float def) { m_fDefStat = def; }
+
+	virtual void RButtonDown() {};
+	virtual void RButtonUp() {};
+	virtual void LButtonDown() {};
+	virtual void LButtonUp() {};
 
 	XMFLOAT3& GetVelocity() { return(m_xmf3Velocity); }
 	float GetYaw() const { return(m_fYaw); }
@@ -82,7 +88,8 @@ public:
 	bool  GetJump() const { return(m_isJump); }
 	bool  GetRunning() const { return(m_isRunning); }
 	bool  GetGround() const { return(m_isGround); }
-	bool  GetShooting() const { return(m_isShooting); }
+	bool  GetAttack() const { return(m_isAttack); }
+	bool  GetCharging() const { return(m_isCharging); }
 	int GetHp() const { return(m_iHp); }
 	float GetAtkStat() const { return(m_fAtkStat); }
 	float GetDefStat() const { return(m_fDefStat); }
@@ -123,13 +130,16 @@ public:
 
 	void Shot(float fTimeElapsed, float fSpeed);
 	void DeleteBullet(const int& idx);
+	virtual void CheckCollision(CGameObject* pObject);
+	void RotatePlayer(int iYaw);
 
 protected:
 	int m_nBullets = 0;
 	//vector<CBullet*> m_vpBullets;
-	CBullet** m_ppBullets = 0;
+	CBullet** m_ppBullets = NULL;
 
 	const int MAX_BULLET = 1000;
+public:
 };
 
 class CSoundCallbackHandler : public CAnimationCallbackHandler
@@ -145,6 +155,7 @@ public:
 class CTerrainPlayer : public CPlayer
 {
 public:
+	CTerrainPlayer() :CPlayer() {};
 	CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext=NULL);
 	virtual ~CTerrainPlayer();
 
@@ -158,8 +169,78 @@ public:
 	virtual void Animate(float fTimeElapsed);
 
 #ifdef _WITH_SOUND_CALLBACK
-	virtual void Move(ULONG nDirection, float fDistance, bool bVelocity = false);
+	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
 #endif
+	const int nBasic_Death = 0;
+	const int nBasic_Idle = 1;
+	const int nBasic_Jump = 2;
+	const int nBasic_Run = 3;
+	const int nBasic_Walk = 4;
+
 };
 
+
+class CBowPlayer : public CTerrainPlayer
+{
+public:
+	CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL);
+	virtual ~CBowPlayer();
+
+	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
+	virtual void Update(float fTimeElapsed);
+	virtual void SetAttack(bool shoot);
+
+	virtual void RButtonDown();
+	virtual void RButtonUp();
+	virtual void LButtonDown();
+	virtual void LButtonUp();
+
+	virtual void CheckCollision(CGameObject* pObject);
+
+	const int nBow_Idle = 0;
+	const int nBow_Jump = 1;
+	const int nBow_Run = 2;
+	const int nBow_RunBack = 3;
+	const int nBow_RunLeft = 4;
+	const int nBow_RunRight = 5;
+	const int nBow_ShotHold = 6;
+	const int nBow_ShotReady = 7;
+	const int nBow_ShotRelease = 8;
+	const int nBow_TakeDamage = 9;
+	const int nBow_Walk = 10;
+	const int nBow_Death = 11;
+};
+
+class C1HswordPlayer : public CTerrainPlayer
+{
+public:
+	C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL);
+	virtual ~C1HswordPlayer();
+
+	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
+	virtual void Update(float fTimeElapsed);
+
+	virtual void RButtonDown();
+	virtual void RButtonUp();
+	virtual void LButtonDown();
+	virtual void LButtonUp();
+
+	virtual void CheckCollision(CGameObject* pObject);
+
+	int m_nAttack = 0;
+
+	const int n1Hsword_Idle = 0;
+	const int n1Hsword_Jump = 1;
+	const int n1Hsword_Run = 2;
+	const int n1Hsword_RunBack = 3;
+	const int n1Hsword_RunLeft = 4;
+	const int n1Hsword_RunRight = 5;
+	const int n1Hsword_Attack1 = 6;
+	const int n1Hsword_Attack2 = 7;
+	const int n1Hsword_Attack3 = 8;
+	const int n1Hsword_Attack4 = 9;
+	const int n1Hsword_TakeDamage = 10;
+	const int n1Hsword_Walk = 11;
+	const int n1Hsword_Death = 12;
+};

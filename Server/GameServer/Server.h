@@ -14,6 +14,11 @@
 //    // 0 = session 1 = map
 //};
 
+class Arrow {
+public:
+    DirectX::XMFLOAT3       f3Position;
+
+};
 
 class SESSION
 {

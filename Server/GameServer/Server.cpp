@@ -161,14 +161,14 @@ void Server::Accept()
                 send_login_player_packet(client_id, it->second, roomID);
         }
 
-        if (20 == gameroom.count(roomID))
+        /*if (20 == gameroom.count(roomID))
         {
             if (maps.find(roomID) == maps.end()) {
                 maps.emplace(roomID, Map(roomID));
                 maps[roomID].SetNum(roomID);
                 maps[roomID].init_Map(this);
             }
-        }
+        }*/
         //accept_lock.unlock();
 
         do_recv(client_id);
@@ -190,13 +190,13 @@ void Server::Disconnected(int id, int roomID)
     closesocket(sessions[id].sock);
     sessions[id].connected.store(FALSE);
     sessions.erase(id);
-    std::cout << sessions.count(id);
     //sessions.clear();
 }
 
 void Server::do_recv(int id)
 {
     DWORD flags = 0;
+
 
     SOCKET client_s = sessions[id].sock;
     OVER_EX* over = &sessions[id].over;
@@ -425,6 +425,7 @@ void Server::process_packet(int id, char* buf, int roomID)
         sessions[p->id].dz.store(p->dz);
         //printf("move %f %f\n", sessions[p->id].f3Position.load(std::memory_order_seq_cst).x, sessions[p->id].f3Position.load(std::memory_order_seq_cst).z);
         send_packet_to_players(id, reinterpret_cast<char*>(p), roomID);
+        printf("tlqkf");
         break;
     }
     case PacketType::Type_start_pos: {
@@ -434,7 +435,11 @@ void Server::process_packet(int id, char* buf, int roomID)
         send_packet(id, reinterpret_cast<char*>(p));
         break;
     }
-
+    case PacketType::Type_weapon_swap :{
+         Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
+         send_packet_to_allplayers(roomID, reinterpret_cast<char*>(p));
+         break;
+    }
     case PacketType::Type_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
         switch (p->MoveType) {
@@ -451,7 +456,19 @@ void Server::process_packet(int id, char* buf, int roomID)
     case PacketType::Type_player_attack:{
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
         send_packet_to_players(p->id, reinterpret_cast<char*>(p), roomID);
+        switch (p->attack_type) {
+        case BOW: {
+            // 面倒贸府
+            break;
+        }
+        case SWORD1H: {
+            // 面倒贸府
+
+            break;
+        }
+        }
         break;
+
     }
     }
 }

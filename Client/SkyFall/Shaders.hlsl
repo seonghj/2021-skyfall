@@ -132,9 +132,10 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 		//float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
 		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] ¡æ [-1, 1]
 		//normalW = normalize(mul(vNormal, TBN));
-		cIllumination = Lighting(input.positionW, normalW);
-		cColor = lerp(cColor, cIllumination, 0.5f);
+		//cIllumination = Lighting(input.positionW, normalW);
+		//cColor = lerp(cColor, cIllumination, 0.5f);
 	}
+
 	return(cColor);
 }
 
@@ -258,8 +259,8 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 {
 	float4 cBaseTexColor = gtxtTerrainBaseTexture.Sample(gssWrap, input.uv0);
 	float4 cDetailTexColor = gtxtTerrainDetailTexture.Sample(gssWrap, input.uv1);
-//	float4 cColor = saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
-	float4 cColor = input.color * saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
+	float4 cColor = saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
+	//float4 cColor = input.color * saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
 
 	return(cColor);
 }
@@ -294,4 +295,34 @@ float4 PSSkyBox(VS_SKYBOX_CUBEMAP_OUTPUT input) : SV_TARGET
 	float4 cColor = gtxtSkyCubeTexture.Sample(gssClamp, input.positionL);
 
 	return(cColor);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+
+struct VS_BOUNDINGBOX_INPUT
+{
+	float3 position : POSITION;
+};
+
+struct VS_BOUNDINGBOX_OUTPUT
+{
+	float4 position : SV_POSITION;
+};
+
+VS_BOUNDINGBOX_OUTPUT VSBoundingBox(VS_BOUNDINGBOX_INPUT input)
+{
+	VS_BOUNDINGBOX_OUTPUT output;
+
+	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
+	return output;
+}
+
+float4 PSBoundingBox(VS_BOUNDINGBOX_OUTPUT input) :SV_TARGET
+{
+	float4 cColor = float4(0.f,0.f,1.f,1.f);
+	return(cColor);
+
 }

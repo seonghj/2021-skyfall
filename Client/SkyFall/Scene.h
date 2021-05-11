@@ -37,14 +37,6 @@ struct LIGHTS
 	int									m_nLights;
 };
 
-class PlayerObjects
-{
-public:
-	CGameObject		*m_Object = NULL;
-	int				id;
-	XMFLOAT3		pos;
-};
-
 class CScene
 {
 public:
@@ -60,9 +52,9 @@ public:
 
 	void BuildDefaultLightsAndMaterials();
 	void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
-	void AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	void AddPlayer(int id, ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	void MovePlayer(int player_num, XMFLOAT3 pos);
-	void RotatePlayer(int player_num, float x, float y, float z);
+	void AnimatePlayer(int id, int animation_num);
 	void ReleaseObjects();
 
 	ID3D12RootSignature *CreateGraphicsRootSignature(ID3D12Device *pd3dDevice);
@@ -73,6 +65,8 @@ public:
     void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera=NULL);
 
 	void ReleaseUploadBuffers();
+
+	void CheckCollision();
 
 	CPlayer								*m_pPlayer = NULL;
 
@@ -109,8 +103,7 @@ public:
 
 	int									m_nGameObjects = 0;
 	CGameObject							**m_ppGameObjects = NULL;
-	int									m_nPlayerObjects = 0;
-	array<PlayerObjects, 20>			m_ppPlayerObjects;
+	unordered_map<int, CGameObject*>   m_ppPlayerObjects;
 
 	float								m_fElapsedTime = 0.0f;
 
@@ -127,4 +120,6 @@ public:
 
 	ID3D12Resource						*m_pd3dcbLights = NULL;
 	LIGHTS								*m_pcbMappedLights = NULL;
+
+	CMap								*m_pMap = NULL;
 };

@@ -78,11 +78,11 @@ void Map::Set_wind()
 		if (i < 6)
 		{
 			if (i == 0 || i == 1)
-				wind[i] = calc_windpower(atm[i], atm[i + 1]);
+				wind[i] = calc_windpower(atm[i], atm[i + 1]) * 333;
 			else if (i == 2 || i == 3)
-				wind[i] = calc_windpower(atm[i + 1], atm[i + 2]);
+				wind[i] = calc_windpower(atm[i + 1], atm[i + 2]) * 333;
 			else if (i == 4 || i == 5)
-				wind[i] = calc_windpower(atm[i + 2], atm[i + 3]);
+				wind[i] = calc_windpower(atm[i + 2], atm[i + 3] * 333);
 		}
 		else
 		{
@@ -95,7 +95,7 @@ void Map::Set_cloudpos()
 {
 	std::random_device rd;
 	std::mt19937_64 gen(rd());
-	std::uniform_int_distribution<int> dis(10, 2990);
+	std::uniform_int_distribution<int> dis(10, MAP_SIZE - 5000);
 	Cloud.x = dis(gen);
 	Cloud.y = dis(gen);
 }

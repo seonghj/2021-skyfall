@@ -11,11 +11,12 @@ constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
 
 constexpr int MAX_MAP_BLOCK = 9;
-constexpr int MAP_SIZE = 3000;
-constexpr int MAP_BLOCK_SIZE = 1000;
+constexpr int MAP_SIZE = 99999;
+constexpr int MAP_BLOCK_SIZE = 33333;
 constexpr int MAP_BREAK_TIME = 30;
 
-constexpr float VIEWING_DISTANCE = 500.f;
+constexpr float VIEWING_DISTANCE = 16666.f;
+// 1 = 3cm
 
 #define SERVERIP   "127.0.0.1"
 
@@ -44,10 +45,12 @@ enum PacketType {
 	Type_start_ok,			// S->C
 	Type_game_end,			// S->C
 	Type_player_info,		//	
+	Type_weapon_swap,
 	Type_player_move,		// C->S
 	Type_player_pos,
 	Type_start_pos,
 	Type_player_attack,		//
+	Type_allow_shot,
 	Type_player_Damage,
 	Type_map_set,
 	Type_map_collapse,		// S->C
@@ -77,7 +80,8 @@ enum PlayerMove {
 };
 
 enum PlayerAttackType {
-	SWORD1H
+	SWORD1H,
+	BOW
 };
 
 #define DIR_FORWARD					0x01
@@ -161,7 +165,7 @@ struct player_stat_packet : public Packet {
 	float speed;
 };
 
-struct player_weapon_packet : public Packet {
+struct Weapon_swap_packet : public Packet {
 	char weapon;
 };
 
@@ -173,6 +177,11 @@ struct player_equipment_packet : public Packet {
 
 struct player_attack_packet : public Packet {
 	char attack_type;
+};
+
+struct player_allow_packet : public Packet {
+	char attack_type;
+	float fSpeed;
 };
 
 struct player_damage_packet : public Packet {

@@ -45,6 +45,8 @@ public:
 	LRESULT CALLBACK OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 
 	void Set_m_pPacket(CPacket* t) { m_pPacket = t; };
+	void CheckCollision();
+
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
 	float						m_DegreeY;
@@ -91,14 +93,18 @@ private:
 	CGameTimer					m_ChargeTimer;
 
 	CScene						*m_pScene = NULL;
-	CPlayer						*m_pPlayer = NULL;
-	CPlayer						m_pOtherPlayer[OTHER_PLAYER_NUM];
+	CTerrainPlayer				*m_pPlayer = NULL;
+	CTerrainPlayer				*m_ppOtherPlayer[OTHER_PLAYER_NUM];
 	CCamera						*m_pCamera = NULL;
 
-	CPacket						*m_pPacket = NULL;
+	CPacket* m_pPacket = NULL;
 
 	POINT						m_ptOldCursorPos;
 
 	_TCHAR						m_pszFrameRate[70];
+
+	bool						m_bRotateEnable = 0;
+	float						m_fPitch = 0;
+	float						m_fYaw = 0;
 };
 

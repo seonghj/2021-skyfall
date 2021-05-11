@@ -148,7 +148,7 @@ void CMaterial::ReleaseUploadBuffers()
 
 CShader *CMaterial::m_pWireFrameShader = NULL;
 CShader *CMaterial::m_pSkinnedAnimationWireFrameShader = NULL;
-
+CShader* CMaterial::m_pBoundingBoxShader = NULL;
 void CMaterial::PrepareShaders(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature)
 {
 	m_pWireFrameShader = new CWireFrameShader();
@@ -158,6 +158,10 @@ void CMaterial::PrepareShaders(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationWireFrameShader = new CSkinnedAnimationWireFrameShader();
 	m_pSkinnedAnimationWireFrameShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
 	m_pSkinnedAnimationWireFrameShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	m_pBoundingBoxShader = new CBoundingBoxShader();
+	m_pBoundingBoxShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+	m_pBoundingBoxShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
 void CMaterial::UpdateShaderVariable(ID3D12GraphicsCommandList *pd3dCommandList)
@@ -264,11 +268,12 @@ XMFLOAT4X4 CAnimationLayer::GetSRT(int nBoneFrame, float fPosition, float fTrack
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-CAnimationSet::CAnimationSet(float fStartTime, float fEndTime, char *pstrName)
+CAnimationSet::CAnimationSet(float fStartTime, float fEndTime, char* pstrName, int nType)
 {
 	m_fStartTime = fStartTime;
 	m_fEndTime = fEndTime;
 	m_fLength = fEndTime - fStartTime;
+	m_nType = nType;
 
 	strcpy_s(m_pstrAnimationSetName, 64, pstrName);
 }
@@ -304,12 +309,14 @@ void CAnimationSet::SetPosition(float fElapsedPosition)
 		{
 			m_fPosition += fElapsedPosition;
 			if (m_fPosition >= m_fLength) m_fPosition = 0.0f;
-//			m_fPosition = fmod(fTrackPosition, m_pfKeyFrameTimes[m_nKeyFrames-1]); // m_fPosition = fTrackPosition - int(fTrackPosition / m_pfKeyFrameTimes[m_nKeyFrames-1]) * m_pfKeyFrameTimes[m_nKeyFrames-1];
-//			m_fPosition = fmod(fTrackPosition, m_fLength); //if (m_fPosition < 0) m_fPosition += m_fLength;
-//			m_fPosition = fTrackPosition - int(fTrackPosition / m_fLength) * m_fLength;
+			//m_fPosition = fmod(fTrackPosition, m_pfKeyFrameTimes[m_nKeyFrames-1]); // m_fPosition = fTrackPosition - int(fTrackPosition / m_pfKeyFrameTimes[m_nKeyFrames-1]) * m_pfKeyFrameTimes[m_nKeyFrames-1];
+			//m_fPosition = fmod(fTrackPosition, m_fLength); //if (m_fPosition < 0) m_fPosition += m_fLength;
+			//m_fPosition = fTrackPosition - int(fTrackPosition / m_fLength) * m_fLength;
 			break;
 		}
 		case ANIMATION_TYPE_ONCE:
+			if (m_fPosition < m_fLength)
+				m_fPosition += fElapsedPosition;
 			break;
 		case ANIMATION_TYPE_PINGPONG:
 			break;
@@ -448,7 +455,10 @@ void CAnimationController::SetTrackEnable(int nAnimationTrack, bool bEnable)
 
 void CAnimationController::SetTrackPosition(int nAnimationTrack, float fPosition)
 {
-	if (m_pAnimationTracks) m_pAnimationTracks[nAnimationTrack].SetPosition(fPosition);
+	if (m_pAnimationTracks) {
+		m_pAnimationTracks[nAnimationTrack].SetPosition(fPosition);
+		m_pAnimationSets->m_ppAnimationSets[m_pAnimationTracks[nAnimationTrack].m_nAnimationSet]->m_fPosition = fPosition;
+	}
 }
 
 void CAnimationController::SetTrackSpeed(int nAnimationTrack, float fSpeed)
@@ -490,7 +500,19 @@ void CAnimationController::AdvanceTime(float fTimeElapsed, CGameObject *pRootGam
 			if (m_pAnimationTracks[k].m_bEnable) m_pAnimationSets->m_ppAnimationSets[m_pAnimationTracks[k].m_nAnimationSet]->HandleCallback();
 		}
 	}
-} 
+}
+void CAnimationController::SetAllTrackDisable()
+{
+	for (int i = 0; i < m_nAnimationTracks; ++i)
+		SetTrackEnable(i, false);
+}
+
+void CAnimationController::SetTrackType(int nAnimationTrack, int nType)
+{
+	if (m_pAnimationTracks)
+		m_pAnimationSets->m_ppAnimationSets[m_pAnimationTracks[nAnimationTrack].m_nAnimationSet]->SetType(nType);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -576,6 +598,49 @@ void CGameObject::SetChild(CGameObject *pChild, bool bReferenceUpdate)
 	}
 }
 
+CGameObject* CGameObject::SetBBObject(CCubeMesh* pBoundingBox)
+{
+	CGameObject* pBBObj = new CGameObject();
+	strcpy_s(pBBObj->m_pstrFrameName, "BoundingBox");
+	pBBObj->SetMesh(pBoundingBox);
+	pBBObj->SetBoundingBoxShader();
+	SetChild(pBBObj);
+
+	return pBBObj;
+}
+
+CGameObject* CGameObject::SetBBObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 Center, XMFLOAT3 Extents)
+{
+	CGameObject* pBBObj = new CGameObject();
+	strcpy_s(pBBObj->m_pstrFrameName, "BoundingBox");
+
+	CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, Extents.x*2, Extents.y*2, Extents.z*2);
+	pBBObj->SetMesh(pBoundingBox);
+	pBBObj->SetBoundingBoxShader();
+	pBBObj->Move(Center, 1);
+	pBBObj->m_pMesh->m_xmf3AABBCenter = Center;
+	pBBObj->m_pMesh->m_xmf3AABBExtents = Extents;
+	SetChild(pBBObj);
+
+	return pBBObj;
+}
+
+bool CGameObject::isCollide(CGameObject* pObject)
+{
+	BoundingBox bb = BoundingBox(FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter,
+		FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents);
+	bb.Transform(bb, XMLoadFloat4x4(&m_xmf4x4World));
+
+	BoundingBox bbObject = BoundingBox(pObject->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter,
+		pObject->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents);
+	bbObject.Transform(bbObject, XMLoadFloat4x4(&pObject->m_xmf4x4World));
+
+	if (bb.Contains(bbObject) != DirectX::DISJOINT) {
+		return true;
+	}
+	return false;
+}
+
 void CGameObject::SetMesh(CMesh *pMesh)
 {
 	if (m_pMesh) m_pMesh->Release();
@@ -627,6 +692,17 @@ void CGameObject::SetSkinnedAnimationWireFrameShader()
 	else {
 		m_ppMaterials[0]->SetSkinnedAnimationWireFrameShader();
 	}
+}
+
+void CGameObject::SetBoundingBoxShader()
+{
+	m_nMaterials = 1;
+	m_ppMaterials = new CMaterial * [m_nMaterials];
+	m_ppMaterials[0] = NULL;
+	CMaterial* pMaterial = new CMaterial(0);
+
+	pMaterial->SetBoundingBoxShader();
+	SetMaterial(0, pMaterial);
 }
 
 void CGameObject::SetMaterial(int nMaterial, CMaterial *pMaterial)
@@ -962,16 +1038,16 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 			TCHAR pstrDebug[256] = { 0 };
 			pGameObject->LoadMaterialsFromFile(pd3dDevice, pd3dCommandList, pParent, pInFile, pShader);
 			if (isSkinDeformation) {				
-				_stprintf_s(pstrDebug, 256, _T("[SkinnedAnim] (m_nMaterials: %d)\n"), (int)pGameObject->m_nMaterials);
+				//_stprintf_s(pstrDebug, 256, _T("[SkinnedAnim] (m_nMaterials: %d)\n"), (int)pGameObject->m_nMaterials);
 
 				/**/pGameObject->SetSkinnedAnimationWireFrameShader();
 			}
 			else {
-				_stprintf_s(pstrDebug, 256, _T("[WireFrame] (m_nMaterials: %d)\n"), (int)pGameObject->m_nMaterials);
+				//_stprintf_s(pstrDebug, 256, _T("[WireFrame] (m_nMaterials: %d)\n"), (int)pGameObject->m_nMaterials);
 
 				/**/pGameObject->SetWireFrameShader();
 			}
-			OutputDebugString(pstrDebug);
+			//OutputDebugString(pstrDebug);
 
 		}
 		else if (!strcmp(pstrToken, "<Children>:"))
@@ -1137,6 +1213,25 @@ void CGameObject::LoadMaterialsFromFile(ID3D12Device* pd3dDevice, ID3D12Graphics
 				}
 			}
 		}
+		else if (!strcmp(pstrToken, "<Lambert>:"))
+		{
+			//Ambient
+			m_ppMaterials[0]->m_xmf4AmbientColor.x = ::ReadFloatFromFile(pInFile);
+			m_ppMaterials[0]->m_xmf4AmbientColor.y = ::ReadFloatFromFile(pInFile);
+			m_ppMaterials[0]->m_xmf4AmbientColor.z = ::ReadFloatFromFile(pInFile);
+			//Diffuse
+			m_ppMaterials[0]->m_xmf4DiffuseColor.x = ::ReadFloatFromFile(pInFile);
+			m_ppMaterials[0]->m_xmf4DiffuseColor.y = ::ReadFloatFromFile(pInFile);
+			m_ppMaterials[0]->m_xmf4DiffuseColor.z = ::ReadFloatFromFile(pInFile);
+			//Emissive
+			m_ppMaterials[0]->m_xmf4EmissiveColor.x = ::ReadFloatFromFile(pInFile);
+			m_ppMaterials[0]->m_xmf4EmissiveColor.y = ::ReadFloatFromFile(pInFile);
+			m_ppMaterials[0]->m_xmf4EmissiveColor.z = ::ReadFloatFromFile(pInFile);
+
+			//Transparency Factor
+			::ReadFloatFromFile(pInFile);
+
+		}
 		else if (!strcmp(pstrToken, "<Phong>:"))
 		{
 			//Ambient
@@ -1238,6 +1333,10 @@ void CGameObject::LoadAnimationFromFile(FILE *pInFile, CLoadedModelInfo *pLoaded
 			int nAnimationSet = ::ReadIntegerFromFile(pInFile);
 
 			::ReadStringFromFile(pInFile, pstrToken); //Animation Set Name
+
+			TCHAR pstrDebug[256] = { 0 };
+			_stprintf_s(pstrDebug, 256, _T("Animation Name: %hs\n"), pstrToken);
+			OutputDebugString(pstrDebug);
 
 			float fStartTime = ::ReadFloatFromFile(pInFile);
 			float fEndTime = ::ReadFloatFromFile(pInFile);
@@ -1389,7 +1488,7 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device *pd3dDevice, ID3D12GraphicsCom
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	CTexture *pTerrainBaseTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
-	pTerrainBaseTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Terrain/Base_Texture.dds", 0);
+	pTerrainBaseTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Terrain/Forest_Floor_Texture.dds", 0);
 
 	CTexture *pTerrainDetailTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
 	pTerrainDetailTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Terrain/Detail_Texture_7.dds", 0);
@@ -1457,17 +1556,37 @@ void CSkyBox::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature)
 {
-	for (int i = 0; i < 3; ++i) {
-		CLoadedModelInfo* pMapForest = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Forest.bin", NULL);
-		m_ppGameObjects[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pMapForest, 0);
-		m_ppGameObjects[1]->SetPosition(500.0f, 0/*m_pTerrain->GetHeight(400.0f,700.0f)*/, 500.0f);
-		if (pMapForest)delete pMapForest;
+	CLoadedModelInfo* pMapForest = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Forest_Steppable.bin", NULL);
+	CLoadedModelInfo* pMapDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Steppable.bin", NULL);
+	CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Steppable.bin", NULL);
 
-		CLoadedModelInfo* pMapDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Desert.bin", NULL);
-		m_ppGameObjects[2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pMapDesert, 0);
-		m_ppGameObjects[2]->SetPosition(1500, 0/*m_pTerrain->GetHeight(400.0f, 800.0f)*/, 500.0f);
-		if (pMapDesert)delete pMapDesert;
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			int n = i * 3 + j;
+			if (n % 3 == 0) {
+				m_ppMaps[n] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pMapForest, 0);
+				m_ppMaps[n]->SetPosition(i * 500.0f, 0, j * 500.0f);
+			}
+			else if (n % 3 == 1) {
+				m_ppMaps[n] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pMapDesert, 0);
+				m_ppMaps[n]->SetPosition(i * 500.0f, 0, j * 500.0f);
+			}
+			else {
+				m_ppMaps[n] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pMapSnow, 0);
+				m_ppMaps[n]->SetPosition(i * 500.0f, 0, j * 500.0f);
+			}
+			//m_ppMaps[n]->SetScale(10,10,10);
+		}
 	}
+	if (pMapForest)delete pMapForest;
+	if (pMapDesert)delete pMapDesert;
+	if (pMapSnow)delete pMapSnow;
+}
+
+void CMap::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	for (int i = 0; i < 9; ++i)
+		m_ppMaps[i]->Render(pd3dCommandList, pCamera);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1581,15 +1700,16 @@ CEagleObject::~CEagleObject()
 CPlayerObject::CPlayerObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks)
 {
 	CLoadedModelInfo* pPlayerModel = pModel;
-	if (!pPlayerModel) pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player.bin", NULL);
+	if (!pPlayerModel) pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
 
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pPlayerModel);
 
+	
 	strcpy_s(m_pstrFrameName, "Player");
 
-	Rotate(-90.0f, 0.0f, 0.0f);
-//	SetScale(0.2f, 0.2f, 0.2f);
+	//Rotate(-90.0f, 0.0f, 0.0f);
+	//SetScale(0.2,0.2,0.2);
 }
 
 CPlayerObject::~CPlayerObject()
@@ -1607,8 +1727,9 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	SetChild(pMapModel->m_pModelRootObject, true);
 	//m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMapModel);
 
-	strcpy_s(m_pstrFrameName, "Tree");
-
+	strcpy_s(m_pstrFrameName, "Map");
+	Rotate(0, -90.f, 0);
+	SetScale(20.f, 20.f, 20.f);
 	//Rotate(-90.0f, 0.0f, 0.0f);
 }
 
@@ -1629,8 +1750,133 @@ void CBullet::Animate(float fElapsedTime) {
 	//	std::cout << "---------------------------------------------" << endl;
 	m_xmf3MovingDirection = Vector3::Add(m_xmf3MovingDirection, m_xmf3Gravity, fElapsedTime);
 	XMFLOAT3 look = GetLook();
-	std::cout << "x : " << look.x << "y : " << look.y << "z : " << look.z << endl;
+	//std::cout << "x : " << look.x << "y : " << look.y << "z : " << look.z << endl;
 	m_fRotationX = acos(Vector3::DotProduct(m_xmf3MovingDirection, look) / (Vector3::Length(look) * Vector3::Length(m_xmf3MovingDirection)));
-	std::cout << m_fRotationX << std::endl;
-	Rotate(m_fRotationX / PI * 180, 0, 0);
+	//std::cout << m_fRotationX << std::endl;
+	Rotate(m_fRotationX / PI * 180 , 0, 0);
+}
+
+void CBullet::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	Rotate(90.f, 0, 0);
+	CGameObject::Render(pd3dCommandList, pCamera);
+	Rotate(-90.f, 0, 0);
+}
+
+
+CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks)
+{
+	CLoadedModelInfo* pDragonModel = pModel;
+	if (!pDragonModel) pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
+
+	SetChild(pDragonModel->m_pModelRootObject, true);
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pDragonModel);
+
+	strcpy_s(m_pstrFrameName, "Dragon");
+
+
+	CGameObject* pObject = pDragonModel->m_pModelRootObject->FindFrame("Polygonal_Dragon");
+
+	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
+	/*CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
+
+	SetBBObject(pBoundingBox);*/
+
+	SetBBObject(pd3dDevice, pd3dCommandList,
+		XMFLOAT3(0, bb.Extents.y-200, -50),												// Center
+		XMFLOAT3(80, bb.Extents.y - 100, bb.Extents.z-50));	// Extents
+	
+	SetPosition(300.f, 0, 300.f);
+	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.2f);
+	SetScale(0.5f, 0.5f, 0.5f);
+	Rotate(-90.0f, 0.0f, 0.0f);
+
+
+	m_iHp = 100;
+
+}
+
+CDragon::~CDragon()
+{
+}
+
+CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks)
+{
+	CLoadedModelInfo* pWolfModel = pModel;
+	if (!pWolfModel) pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
+
+	SetChild(pWolfModel->m_pModelRootObject, true);
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pWolfModel);
+
+	strcpy_s(m_pstrFrameName, "Wolf");
+
+
+	CGameObject* pObject = pWolfModel->m_pModelRootObject->FindFrame("Polygonal_Wolf");
+
+	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
+	/*CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
+
+	SetBBObject(pBoundingBox)->MoveForward(-bb.Extents.z);*/
+
+	SetBBObject(pd3dDevice, pd3dCommandList,
+		XMFLOAT3(0, 20, -bb.Extents.z),									// Center
+		XMFLOAT3(bb.Extents.x, bb.Extents.y - 20, bb.Extents.z));	// Extents
+
+	SetPosition(400.f, 0, 400.f);
+	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.5f);
+	SetScale(0.5f, 0.5f, 0.5f);
+	Rotate(-90.0f, 0.0f, 0.0f);
+
+
+	m_iHp = 100;
+
+}
+
+CWolf::~CWolf()
+{
+}
+
+CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks)
+{
+	CLoadedModelInfo* pMetalonModel = pModel;
+	if (!pMetalonModel) pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
+
+	SetChild(pMetalonModel->m_pModelRootObject, true);
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMetalonModel);
+
+	strcpy_s(m_pstrFrameName, "Metalon");
+
+	CGameObject* pObject = pMetalonModel->m_pModelRootObject->FindFrame("Polygonal_Metalon");
+
+	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
+
+	/*CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
+
+	SetBBObject(pBoundingBox);*/
+
+	SetBBObject(pd3dDevice, pd3dCommandList,
+		XMFLOAT3(0, 20, -bb.Extents.z),													// Center
+		XMFLOAT3(bb.Extents.x, bb.Extents.y-20, bb.Extents.z));	// Extents
+
+	SetPosition(500.f, 0, 500.f);
+	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y*0.1f);
+	SetScale(0.1f, 0.1f, 0.1f);
+	Rotate(-90.0f, 0.0f, 0.0f);
+
+
+	m_iHp = 100;
+
+
+}
+
+CMetalon::~CMetalon()
+{
+}
+
+CMonster::CMonster()
+{
+}
+
+CMonster::~CMonster()
+{
 }
