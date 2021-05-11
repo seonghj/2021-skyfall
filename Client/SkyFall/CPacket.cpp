@@ -150,6 +150,8 @@ void CPacket::ProcessPacket(char* buf)
             for (int i = 0; i < MAX_PLAYER; ++i) {
                 if (m_pScene->PlayerIDs[i] == -1) {
                     m_pScene->PlayerIDs[i] = p->id;
+                    m_pScene->m_mPlayer[i]->SetPosition(p->Position);
+                    printf("id: %d x: %f, z: %f\n", p->id, p->Position.x, p->Position.z);
                     break;
                 }
             }
@@ -220,6 +222,7 @@ void CPacket::ProcessPacket(char* buf)
                     case PlayerMove::RUNNING:
                         m_pScene->m_mPlayer[i]->SetRunning(true);
                     }
+                    printf("id %d move\n", p->id);
                     break;
                 }
             }
