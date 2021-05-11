@@ -193,6 +193,7 @@ void CPacket::ProcessPacket(char* buf)
                 for (int i = 0; i < MAX_PLAYER; ++i) {
                     if (m_pScene->PlayerIDs[i] == p->id) {
                         m_pScene->m_mPlayer[i]->SetJump(TRUE);
+                        printf("id %d jump\n", p->id);
                         break;
                     }
                 }
