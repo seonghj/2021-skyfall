@@ -446,9 +446,6 @@ void CScene::ReleaseUploadBuffers()
 
 	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_nGameObjects; i++) m_ppGameObjects[i]->ReleaseUploadBuffers();
-	for (auto p : m_ppPlayerObjects) {
-		p.second->ReleaseUploadBuffers();
-	}
 }
 
 void CScene::CheckCollision()
@@ -628,15 +625,6 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 		}
 	}
 
-	for (auto p : m_ppPlayerObjects)
-	{
-		if (p.second)
-		{
-			p.second->Animate(m_fElapsedTime);
-			if (!p.second->m_pSkinnedAnimationController) p.second->UpdateTransform(NULL);
-			p.second->Render(pd3dCommandList, pCamera);
-		}
-	}
 	//for (auto p : m_mPlayer)
 	//{
 	//	if (p.second)

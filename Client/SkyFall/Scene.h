@@ -105,7 +105,6 @@ public:
 
 	int									m_nGameObjects = 0;
 	CGameObject							**m_ppGameObjects = NULL;
-	unordered_map<int, CGameObject*>   m_ppPlayerObjects;
 	unordered_map<int, CPlayer*>		m_mPlayer;
 
 	float								m_fElapsedTime = 0.0f;
