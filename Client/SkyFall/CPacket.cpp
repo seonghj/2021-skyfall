@@ -151,10 +151,15 @@ void CPacket::ProcessPacket(char* buf)
                 if (m_pScene->PlayerIDs[i] == 0) {
                     m_pScene->PlayerIDs[i] = p->id;
                     m_pScene->m_mPlayer[i]->SetPosition(p->Position);
+                    m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, p->dz);
                     printf("id: %d x: %f, z: %f\n", p->id, p->Position.x, p->Position.z);
                     break;
                 }
             }
+        }
+        else {
+            m_pScene->m_pPlayer->SetPosition(p->Position);
+            m_pScene->m_pPlayer->Rotate(p->dx, p->dy, p->dz);
         }
         break;
     }
@@ -262,7 +267,7 @@ void CPacket::ProcessPacket(char* buf)
                 if (m_pScene->PlayerIDs[i] == p->id) {
                     switch (p->attack_type) {
                     case SWORD1H: {
-                        m_pScene->AnimatePlayer(i, 0);
+                        m_pScene->m_mPlayer[i]->LButtonDown();
                         printf("id: %d SWORD1H attack\n", p->id);
                         break;
                     }

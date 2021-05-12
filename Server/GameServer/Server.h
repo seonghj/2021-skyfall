@@ -105,7 +105,7 @@ public:
 private:
     HANDLE hcp;
     
-    std::unordered_multimap <int, int> gameroom; // <방번호, 플레이아ID>
+    std::unordered_multimap <int, int> gameroom; // <방번호, 플레이어ID>
     std::unordered_map <int, SESSION> sessions;
     std::unordered_map <int, Map> maps;
 

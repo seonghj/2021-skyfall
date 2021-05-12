@@ -125,9 +125,9 @@ void Server::Accept()
         gameroom.emplace(roomID, client_id);
         auto iter = gameroom.equal_range(roomID);
 
-        printf("client_connected: IP =%s, port=%d key = %d\n",
+        printf("client_connected: IP =%s, port=%d key = %d Room = %d\n",
             inet_ntoa(sessions[client_id].clientaddr.sin_addr)
-            , ntohs(sessions[client_id].clientaddr.sin_port), client_id);
+            , ntohs(sessions[client_id].clientaddr.sin_port), client_id, roomID);
 
         sessions[client_id].over.type = 0;
         sessions[client_id].over.dataBuffer.len = BUFSIZE;
@@ -183,13 +183,23 @@ void Server::Accept()
 
 void Server::Disconnected(int id, int roomID)
 {
-    printf("client_end: IP =%s, port=%d key = %d\n",
+    printf("client_end: IP =%s, port=%d key = %d, Room = %d\n",
         inet_ntoa(sessions[id].clientaddr.sin_addr)
-        , ntohs(sessions[id].clientaddr.sin_port), id);
+        , ntohs(sessions[id].clientaddr.sin_port), id, roomID);
     //send_disconnect_player_packet(id);
     closesocket(sessions[id].sock);
-    sessions[id].connected.store(FALSE);
+    auto iter = gameroom.equal_range(roomID);
+    //sessions[id].connected.store(FALSE);
     sessions.erase(id);
+    for (auto i = iter.first; i != iter.second;) {
+        //printf("%d\n", i->second);
+        if (i->second == id) {
+            gameroom.erase(i);
+            printf("room: %d left\n", gameroom.count(roomID));
+            break;
+        }
+        ++i;
+    }
     //sessions.clear();
 }
 
@@ -254,9 +264,12 @@ void Server::send_login_player_packet(int id, int to, int roomID)
     p.id = id;
     p.size = sizeof(player_login_packet);
     p.type = PacketType::Type_player_login;
-    p.Position = sessions[id].f3Position;
+    p.Position = sessions[id].f3Position.load(std::memory_order_seq_cst);
+    p.dx = sessions[id].dx.load(std::memory_order_seq_cst);
+    p.dy = sessions[id].dy.load(std::memory_order_seq_cst);
+    p.dz = sessions[id].dz.load(std::memory_order_seq_cst);
 
-    printf("%d: login to %d\n",id, to);
+    //printf("%d: login to %d\n",id, to);
 
     send_packet(to, reinterpret_cast<char*>(&p));
 }
@@ -333,6 +346,7 @@ void Server::game_end(int roomnum)
             send_packet(it->second, reinterpret_cast<char*>(&packet));
     }
     maps.erase(roomnum);
+    gameroom.erase(roomnum);
 }
 
 float Server::calc_distance(int a, int b)
@@ -420,9 +434,10 @@ void Server::process_packet(int id, char* buf, int roomID)
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
 
         sessions[p->id].f3Position.store(p->Position);
-        sessions[p->id].dx.store(p->dx);
-        sessions[p->id].dy.store(p->dy);
-        sessions[p->id].dz.store(p->dz);
+        float tx = fmodf(sessions[p->id].dx.load() + p->dx, 360.f);
+        sessions[p->id].dx.store(fmodf(sessions[p->id].dx.load() + p->dx, 360.f));
+        sessions[p->id].dy.store(fmodf(sessions[p->id].dy.load() + p->dy, 360.f));
+        sessions[p->id].dz.store(fmodf(sessions[p->id].dz.load() + p->dz, 360.f));
         //printf("move %f %f\n", sessions[p->id].f3Position.load(std::memory_order_seq_cst).x, sessions[p->id].f3Position.load(std::memory_order_seq_cst).z);
         send_packet_to_players(id, reinterpret_cast<char*>(p), roomID);
         break;
