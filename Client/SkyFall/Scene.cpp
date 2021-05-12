@@ -153,7 +153,7 @@ void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
 
 void CScene::AnimatePlayer(int id, int animation_num)
 {
-	switch (id)
+	switch (animation_num)
 	{
 	case 0:	// LbuttonDown
 		m_mPlayer[id]->LButtonDown();

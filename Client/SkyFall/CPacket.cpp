@@ -189,7 +189,6 @@ void CPacket::ProcessPacket(char* buf)
         else {
             switch (p->MoveType) {
             case PlayerMove::JUMP: {
-                m_pPlayer->SetJump(TRUE);
                 for (int i = 0; i < MAX_PLAYER; ++i) {
                     if (m_pScene->PlayerIDs[i] == p->id) {
                         m_pScene->m_mPlayer[i]->SetJump(TRUE);
@@ -221,9 +220,9 @@ void CPacket::ProcessPacket(char* buf)
                     m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, p->dz);
                     switch (p->MoveType) {
                     case PlayerMove::RUNNING:
-                        m_pScene->m_mPlayer[i]->SetRunning(true);
+                        m_pScene->AnimatePlayer(i, 0);
                     }
-                    printf("id %d move (%f, %f)\n", p->id, p->Position.x, p->Position.z);
+                    //printf("id %d move (%f, %f)\n", p->id, p->Position.x, p->Position.z);
                     break;
                 }
             }
