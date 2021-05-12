@@ -553,9 +553,7 @@ void CGameFramework::ProcessInput()
 		{
 			player_attack_packet p;
 			p.attack_type = 0;
-			p.damage = 0;
 			p.id = m_pPacket->Get_clientid();
-			p.Position = m_pPlayer->GetPosition();
 			p.size = sizeof(p);
 			p.type = Type_player_attack;
 			m_pPacket->ChargeTimer = m_ChargeTimer.GetTotalTime();
