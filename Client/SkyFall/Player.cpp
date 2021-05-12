@@ -353,6 +353,8 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	SetPlayerUpdatedContext(pContext);
 	//SetCameraUpdatedContext(pContext);
 
+	m_pSkinnedAnimationController->SetAllTrackDisable();
+	m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
 	if (pPlayerModel) delete pPlayerModel;
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
@@ -582,6 +584,8 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	SetPlayerUpdatedContext(pContext);
 	//SetCameraUpdatedContext(pContext);
+	m_pSkinnedAnimationController->SetAllTrackDisable();
+	m_pSkinnedAnimationController->SetTrackEnable(nBow_Idle, true);
 
 	if (pPlayerModel) delete pPlayerModel;
 
@@ -791,6 +795,8 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	//SetCameraUpdatedContext(pContext);
 
 
+	m_pSkinnedAnimationController->SetAllTrackDisable();
+	m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Idle, true);
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	CGameObject* pBlade = pPlayerModel->m_pModelRootObject->FindFrame("Sword_Blade");
 

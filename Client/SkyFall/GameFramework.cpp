@@ -680,7 +680,6 @@ void CGameFramework::MoveToNextFrame()
 }
 
 //#define _WITH_PLAYER_TOP
-int i = 0;
 void CGameFramework::FrameAdvance()
 {
 	m_GameTimer.Tick(0.0f);
@@ -688,7 +687,6 @@ void CGameFramework::FrameAdvance()
 	ProcessInput();
 	CheckCollision();
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
-	m_pScene->m_mPlayer[0]->Update(m_GameTimer.GetTimeElapsed());
     AnimateObjects();
 
 
@@ -723,9 +721,7 @@ void CGameFramework::FrameAdvance()
 #endif
 	if (m_pBowPlayer) m_pBowPlayer->Render(m_pd3dCommandList, m_pCamera);
 	if (m_p1HswordPlayer) m_p1HswordPlayer->Render(m_pd3dCommandList, m_pCamera);
-	if (m_pScene->m_mPlayer[0]) m_pScene->m_mPlayer[0]->Render(m_pd3dCommandList, m_pCamera);
-	m_pScene->AnimatePlayer(0, i++);
-	i %= 4;
+
 
 	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;

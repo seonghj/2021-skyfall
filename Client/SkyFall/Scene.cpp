@@ -142,7 +142,6 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 {
 	for (int i = 0; i < 20; ++i) {
 		m_mPlayer.emplace(i, new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, m_pTerrain));
-		m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackAnimationSet(0, 3);
 		m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f));
 	}
 }
@@ -589,8 +588,7 @@ void CScene::AnimateObjects(float fTimeElapsed)
 {
 	m_fElapsedTime = fTimeElapsed;
 
-	for (int i = 0; i < m_nShaders; i++) if (m_ppShaders[i]) m_ppShaders[i]->AnimateObjects(fTimeElapsed);
-	
+	m_mPlayer[0]->Animate(fTimeElapsed);
 	if (m_pLights)
 	{
 		m_pLights[1].m_xmf3Position = m_pPlayer->GetPosition();
@@ -625,6 +623,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 		}
 	}
 
+	if (m_mPlayer[0]) m_mPlayer[0]->Render(pd3dCommandList, pCamera);
 	//for (auto p : m_mPlayer)
 	//{
 	//	if (p.second)
