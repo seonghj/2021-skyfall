@@ -313,6 +313,11 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		}
 		break;
 	case WM_LBUTTONUP:
+		player_stop_packet sp;
+		sp.id = m_pPacket->Get_clientid();
+		sp.size = sizeof(sp);
+		sp.type = PacketType::Type_player_stop;
+		m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
 		::ReleaseCapture();
 		m_ChargeTimer.Stop();
 		m_pPlayer->LButtonUp();
@@ -368,6 +373,13 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 					break;
 				case VK_F9:
 					ChangeSwapChainState();
+					break;
+				case 0x41 || 0x44 || 0x53 || 0x57:
+					player_stop_packet sp;
+					sp.id = m_pPacket->Get_clientid();
+					sp.size = sizeof(sp);
+					sp.type = PacketType::Type_player_stop;
+					m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
 					break;
 				default:
 					break;
