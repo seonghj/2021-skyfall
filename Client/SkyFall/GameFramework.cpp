@@ -363,6 +363,9 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 					m_pPlayer = m_p1HswordPlayer;
 					m_pCamera = m_pPlayer->GetCamera();
 					break;
+				case VK_F6:
+					m_bMouseHold = !m_bMouseHold;
+					break;
 				case VK_F9:
 					ChangeSwapChainState();
 					break;
@@ -557,12 +560,14 @@ void CGameFramework::ProcessInput()
 		float cxDelta = 0.0f, cyDelta = 0.0f;
 		if ((GetCapture() == m_hWnd || m_pCamera->GetMode() == FIRST_PERSON_CAMERA) || m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
 		{
-			SetCursor(NULL);
+			if(!m_bMouseHold)
+				SetCursor(NULL);
 			POINT ptCursorPos;
 			GetCursorPos(&ptCursorPos);
 			cxDelta = (float)(ptCursorPos.x - m_ptOldCursorPos.x) / 3.0f;
 			cyDelta = (float)(ptCursorPos.y - m_ptOldCursorPos.y) / 3.0f;
-			SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
+			if(!m_bMouseHold)
+				SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
 		}
 
 		if (m_pPlayer->GetAttack() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA&&

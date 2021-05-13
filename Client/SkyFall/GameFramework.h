@@ -109,5 +109,7 @@ private:
 
 	CBowPlayer					*m_pBowPlayer;
 	C1HswordPlayer				*m_p1HswordPlayer;
+
+	bool						m_bMouseHold = false;
 };
 
