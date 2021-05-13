@@ -149,6 +149,18 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
 {
 	m_mPlayer[player_num]->SetPosition(pos);
+
+	if (m_mPlayer[player_num]->GetGround())
+	{
+		if (m_mPlayer[player_num]->GetRunning()) {
+			m_mPlayer[player_num]->m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_mPlayer[player_num]->m_pSkinnedAnimationController->SetTrackEnable(2, true);
+		}
+		else {
+			m_mPlayer[player_num]->m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_mPlayer[player_num]->m_pSkinnedAnimationController->SetTrackEnable(11, true);
+		}
+	}
 }
 
 void CScene::AnimatePlayer(int id, int animation_num)

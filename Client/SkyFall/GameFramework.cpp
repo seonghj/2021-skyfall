@@ -644,11 +644,6 @@ void CGameFramework::AnimateObjects()
 		m_p1HswordPlayer->Animate(fTimeElapsed);
 	if (m_pBowPlayer)
 		m_pBowPlayer->Animate(fTimeElapsed);
-
-	/*for (int i = 0; i < OTHER_PLAYER_NUM; i++)
-	{
-		m_ppOtherPlayer[i]->Animate(fTimeElapsed);
-	}*/
 }
 
 void CGameFramework::WaitForGpuComplete()
@@ -686,6 +681,8 @@ void CGameFramework::FrameAdvance()
 	ProcessInput();
 	CheckCollision();
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
+	for (auto& p : m_pScene->m_mPlayer)
+		p.second->Update(m_GameTimer.GetTimeElapsed());
     AnimateObjects();
 
 
