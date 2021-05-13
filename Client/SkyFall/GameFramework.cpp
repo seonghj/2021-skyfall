@@ -465,7 +465,6 @@ void CGameFramework::BuildObjects()
 
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
 	m_pScene->MovePlayer(0, XMFLOAT3(80.0f, 50.0f, 0.0f));
-	m_pScene->AnimatePlayer(0,3);
 	//m_pScene->AddPlayer(3, m_pd3dDevice, m_pd3dCommandList);
 	//m_pScene->MovePlayer(/*m_pScene->m_nGameObjects - 1*/3, XMFLOAT3(400.0f, 300.0f, 300.0f));
 

@@ -156,17 +156,45 @@ void CScene::AnimatePlayer(int id, int animation_num)
 	switch (animation_num)
 	{
 	case 0:	// LbuttonDown
-		m_mPlayer[id]->LButtonDown();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+		cout << "0" << endl;
 		break;
 	case 1:	// LbuttonUp
-		m_mPlayer[id]->LButtonUp();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(1, true);
+		cout << "1" << endl;
 		break;
 	case 2: // RbuttonDown
-		m_mPlayer[id]->RButtonDown();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(2, true);
+		cout << "2" << endl;
 		break;
 	case 3:
-		m_mPlayer[id]->RButtonUp();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(3, true);
+		cout << "3" << endl;
 		break;
+	//case 0:	// LbuttonDown
+	//	m_mPlayer[id]->LButtonDown();
+	//	m_mPlayer[id]->Update(0.016);
+	//	cout << "0" << endl;
+	//	break;
+	//case 1:	// LbuttonUp
+	//	m_mPlayer[id]->LButtonUp();
+	//	m_mPlayer[id]->Update(0.016);
+	//	cout << "1" << endl;
+	//	break;
+	//case 2: // RbuttonDown
+	//	m_mPlayer[id]->RButtonDown();
+	//	m_mPlayer[id]->Update(0.016);
+	//	cout << "2" << endl;
+	//	break;
+	//case 3:
+	//	m_mPlayer[id]->RButtonUp();
+	//	m_mPlayer[id]->Update(0.016);
+	//	cout << "3" << endl;
+	//	break;
 	}
 	//m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(animation_num, 3);
 	//if (m_mPlayer[id]->m_pSkinnedAnimationController)
@@ -563,6 +591,18 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
+		case '0':
+			AnimatePlayer(0, 0);
+			break;
+		case '1':
+			AnimatePlayer(0, 1);
+			break;
+		case '2':
+			AnimatePlayer(0, 2);
+			break;
+		case '3':
+			AnimatePlayer(0, 3);
+			break;
 		/*case 'W': m_ppGameObjects[0]->MoveForward(+3.0f); break;
 		case 'S': m_ppGameObjects[0]->MoveForward(-3.0f); break;
 		case 'A': m_ppGameObjects[0]->MoveStrafe(-3.0f); break;
