@@ -222,12 +222,16 @@ void CPacket::ProcessPacket(char* buf)
         else {
             for (int i = 0; i < MAX_PLAYER; ++i) {
                 if (m_pScene->PlayerIDs[i] == p->id) {
+                    switch (p->MoveType) {
+                    case 1:
+                        m_pScene->AnimatePlayer(i, 2);
+                        break;
+                    case 0:
+                        m_pScene->AnimatePlayer(i, 11);
+                        break;
+                    }
                     m_pScene->MovePlayer(i, p->Position);
                     m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, p->dz);
-                    switch (p->MoveType) {
-                    case PlayerMove::RUNNING:
-                        m_pScene->m_mPlayer[i]->SetRunning(TRUE);
-                    }
                     //printf("id %d move (%f, %f)\n", p->id, p->Position.x, p->Position.z);
                     break;
                 }
@@ -268,7 +272,7 @@ void CPacket::ProcessPacket(char* buf)
                 if (m_pScene->PlayerIDs[i] == p->id) {
                     switch (p->attack_type) {
                     case SWORD1H: {
-                        m_pScene->AnimatePlayer(i, 0);
+                        m_pScene->AnimatePlayer(i, 6);
                         printf("id: %d SWORD1H attack\n", p->id);
                         break;
                     }

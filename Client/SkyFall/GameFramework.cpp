@@ -681,8 +681,6 @@ void CGameFramework::FrameAdvance()
 	ProcessInput();
 	CheckCollision();
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
-	for (auto& p : m_pScene->m_mPlayer)
-		p.second->Update(m_GameTimer.GetTimeElapsed());
     AnimateObjects();
 
 
@@ -763,7 +761,8 @@ void CGameFramework::FrameAdvance()
 		p.dz = m_DegreeZ;
 		//p.MoveType = dwDirection;
 		p.size = sizeof(p);
-		p.state = RUNNING;
+		p.state = 1;
+		p.MoveType = m_pPlayer->GetRunning();
 		p.type = Type_player_pos;
 		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 
