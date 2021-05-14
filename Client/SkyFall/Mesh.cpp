@@ -709,7 +709,7 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 				m_d3dPositionBufferView.StrideInBytes = sizeof(XMFLOAT3);
 				m_d3dPositionBufferView.SizeInBytes = sizeof(XMFLOAT3) * m_nVertices;
 				
-				XMFLOAT3 min{ 100,100,100 }, max{ -100,-100,-100 };
+				XMFLOAT3 min{ 10000,10000,10000 }, max{ -10000,-10000,-10000 };
 				for (int i = 0; i < m_nVertices; ++i) {
 					if (m_pxmf3Positions[i].x < min.x)min.x = m_pxmf3Positions[i].x;
 					if (m_pxmf3Positions[i].y < min.y)min.y = m_pxmf3Positions[i].y;
@@ -911,6 +911,9 @@ CCubeMesh::CCubeMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCo
 	m_d3dPositionBufferView.BufferLocation = m_pd3dPositionBuffer->GetGPUVirtualAddress();
 	m_d3dPositionBufferView.StrideInBytes = nStride;
 	m_d3dPositionBufferView.SizeInBytes = nStride * m_nVertices;
+
+	m_xmf3AABBCenter = XMFLOAT3(0, 0, 0);
+	m_xmf3AABBExtents = XMFLOAT3(fx, fy, fz);
 
 	m_nSubMeshes = 1;
 	m_pnSubSetIndices = new int[m_nSubMeshes];

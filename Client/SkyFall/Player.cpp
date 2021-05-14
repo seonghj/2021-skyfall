@@ -620,7 +620,7 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 		m_ppBullets[i]->SetBBObject(pd3dDevice, pd3dCommandList,
 			XMFLOAT3(0, pMesh->m_xmf3AABBExtents.y + 10, 0),	// Center
-			XMFLOAT3(2, 5, 2));									// Extents
+			XMFLOAT3(3, 6, 3));									// Extents
 		m_ppBullets[i]->SetWireFrameShader();
 	}
 }
@@ -705,11 +705,13 @@ void CBowPlayer::CheckCollision(CGameObject* pObject)
 	// Bullet - pObject
 	if (m_ppBullets)
 		for (int i = 0; i < m_nBullets; ++i) {
-			if (pObject->isCollide(m_ppBullets[i])) {
+			if (m_ppBullets[i]->isCollide(pObject)) {
 				cout << "화살 충돌 - " << pObject->m_pstrFrameName << ": Hp = " << pObject->m_iHp << endl;
 				DeleteBullet(i);
 				--pObject->m_iHp;
 			}
+			if(m_ppBullets[i]->GetPosition().y<=0)
+				DeleteBullet(i);
 		}
 
 	// Player - pObject
@@ -726,17 +728,19 @@ void CBowPlayer::Shot(float fTimeElapsed, float fSpeed)
 {
 	CGameObject* pBow = FindFrame("Bow_Main");
 
-	m_ppBullets[m_nBullets]->m_xmf4x4World = pBow->m_xmf4x4World;
+	//m_ppBullets[m_nBullets]->m_xmf4x4World = pBow->m_xmf4x4World;
 
 	XMFLOAT4X4 xmf4x4Scale = Matrix4x4::Identity();
 	xmf4x4Scale._11 = 0.5;
 	xmf4x4Scale._22 = 0.5;
 	xmf4x4Scale._33 = 0.5;
+	m_ppBullets[m_nBullets]->m_xmf4x4ToParent =  Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
+	m_ppBullets[m_nBullets]->SetPosition(pBow->GetPosition());
 
-	m_ppBullets[m_nBullets]->m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
 	m_ppBullets[m_nBullets]->m_xmf3MovingDirection = GetCamera()->GetLookVector();
 	m_ppBullets[m_nBullets]->SetSpeed(fSpeed);
-	m_ppBullets[m_nBullets++]->Move(GetLook(), 10);
+	m_ppBullets[m_nBullets++]->Rotate(90.f, 0, 0);
+	//m_ppBullets[m_nBullets++]->Move(GetCamera()->GetLookVector(), 10);
 }
 
 void CBowPlayer::DeleteBullet(const int& idx)
