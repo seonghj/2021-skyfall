@@ -111,7 +111,7 @@ void CPlayer::Rotate(float x, float y, float z)
 	x = -x; y = -y; z = -z;
 #endif
 	DWORD nCurrentCameraMode = m_pCamera->GetMode();
-	if ((nCurrentCameraMode == FIRST_PERSON_CAMERA) || (nCurrentCameraMode == THIRD_PERSON_CAMERA))
+	if ((/*nCurrentCameraMode == FIRST_PERSON_CAMERA*/true) || (nCurrentCameraMode == THIRD_PERSON_CAMERA))
 	{
 		if (x != 0.0f)
 		{
@@ -284,8 +284,20 @@ void CPlayer::CheckCollision(CGameObject* pObject)
 		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
 		Move(Vector3::ScalarProduct(d, 50.25f, true), true);
 
-		cout << "충돌 - " << pObject->m_pstrFrameName << endl;
+		cout << "몬스터 충돌 - " << pObject->m_pstrFrameName << endl;
 	}
+}
+
+void CPlayer::CheckMap(CGameObject* pMap)
+{
+	/*pMap
+	
+	if (isCollide(pMap)) {
+		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
+		Move(Vector3::ScalarProduct(d, 30.f, true), true);
+
+		cout << "지형 충돌 - " << pObject->m_pstrFrameName << endl;
+	}*/
 }
 
 void CPlayer::RotatePlayer(int iYaw)
@@ -388,6 +400,8 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 	switch (nNewCameraMode)
 	{
 		case FIRST_PERSON_CAMERA:
+			SetGravity(XMFLOAT3(0.0f, 0.f, 0.0f));
+			SetFriction(500);
 			/*SetFriction(250.0f);
 			SetGravity(XMFLOAT3(0.0f, -400.0f, 0.0f));
 			SetMaxVelocityXZ(300.0f);
@@ -400,6 +414,8 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 			m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
 			break;
 		case SPACESHIP_CAMERA:
+			SetGravity(XMFLOAT3(0.0f, 0.f, 0.0f));
+			SetFriction(500);
 			/*SetFriction(125.0f);
 			SetGravity(XMFLOAT3(0.0f, 0.0f, 0.0f));
 			SetMaxVelocityXZ(300.0f);

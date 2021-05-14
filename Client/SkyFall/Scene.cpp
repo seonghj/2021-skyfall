@@ -86,9 +86,9 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 
 	m_pSkyBox = new CSkyBox(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
 
-	XMFLOAT3 xmf3Scale(8.0f, 2.0f, 8.0f);
+	XMFLOAT3 xmf3Scale(8.0f, 4.0f, 8.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.3f, 0.0f, 0.0f);
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Forest_HeightMap.raw"), 257, 257, xmf3Scale, xmf4Color);
+	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Desert_HeightMap.raw"), 257, 257, xmf3Scale, xmf4Color);
 
 	m_nGameObjects = 3;
 	m_ppGameObjects = new CGameObject*[m_nGameObjects];
@@ -462,6 +462,7 @@ void CScene::CheckCollision()
 			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
 		}
 	}
+	m_pMap->CheckCollision(m_pPlayer);
 }
 
 void CScene::CreateCbvSrvDescriptorHeaps(ID3D12Device *pd3dDevice, int nConstantBufferViews, int nShaderResourceViews)
@@ -576,6 +577,14 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 		case 'D': m_ppGameObjects[0]->MoveStrafe(+3.0f); break;
 		case 'Q': m_ppGameObjects[0]->MoveUp(+3.0f); break;
 		case 'R': m_ppGameObjects[0]->MoveUp(-3.0f); break;*/
+		case VK_HOME:
+			cout << "sad";
+			m_pPlayer->Move(DIR_UP,100,false);
+			break;
+		case VK_END:
+			cout << "sad";
+			m_pPlayer->Move(DIR_DOWN, 100, false);
+			break;
 		default:
 			break;
 		}

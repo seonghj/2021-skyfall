@@ -131,6 +131,7 @@ public:
 	virtual void Shot(float fTimeElapsed, float fSpeed) {};
 	virtual void DeleteBullet(const int& idx) {};
 	virtual void CheckCollision(CGameObject* pObject);
+	virtual void CheckMap(CGameObject* pObject);
 	void RotatePlayer(int iYaw);
 
 protected:

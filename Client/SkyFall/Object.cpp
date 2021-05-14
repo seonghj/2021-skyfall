@@ -627,11 +627,13 @@ CGameObject* CGameObject::SetBBObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 
 bool CGameObject::isCollide(CGameObject* pObject)
 {
-	BoundingBox bb = BoundingBox(FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter,
+	BoundingBox bb = BoundingBox(
+		FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter,
 		FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents);
 	bb.Transform(bb, XMLoadFloat4x4(&m_xmf4x4World));
 
-	BoundingBox bbObject = BoundingBox(pObject->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter,
+	BoundingBox bbObject = BoundingBox(
+		pObject->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter,
 		pObject->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents);
 	bbObject.Transform(bbObject, XMLoadFloat4x4(&pObject->m_xmf4x4World));
 
@@ -1017,9 +1019,9 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 			pGameObject->SetMesh(pMesh);
 			isSkinDeformation = false;
 
-			//BoundingBox bb = BoundingBox(pMesh->m_xmf3AABBCenter,pMesh->m_xmf3AABBExtents);
-			//pGameObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,0), bb.Extents);
-			///**/pGameObject->SetWireFrameShader();
+			BoundingBox bb = BoundingBox(pMesh->m_xmf3AABBCenter,pMesh->m_xmf3AABBExtents);
+			pGameObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,0), bb.Extents);
+
 		}
 		else if (!strcmp(pstrToken, "<SkinDeformations>:"))
 		{
@@ -1034,7 +1036,7 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 
 			pGameObject->SetMesh(pSkinnedMesh);
 			isSkinDeformation = true;
-			///**/pGameObject->SetSkinnedAnimationWireFrameShader();
+
 		}
 		else if (!strcmp(pstrToken, "<Materials>:"))
 		{
@@ -1557,16 +1559,17 @@ void CSkyBox::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
-CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature)
+CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
 {
-	CLoadedModelInfo* pDesert_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Collision.bin", NULL);
+	CLoadedModelInfo* pDesert_Test = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Test.bin", NULL);
 	CLoadedModelInfo* pDesert_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Passable.bin", NULL);
 	CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Steppable.bin", NULL);
+	//SetChild(pDesert_Test->m_pModelRootObject, true);
 
-	m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, 0);
-	m_ppMaps[0]->SetPosition(0, 0, 0);
-	m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable, 0);
-	m_ppMaps[1]->SetPosition(0, 0, 0);
+	m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Test, 0);
+	m_ppMaps[0]->SetPosition(0, 257, 0);
+	//m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Test, 0);
+	//m_ppMaps[1]->SetPosition(0, 124, 0);
 
 	//for (int i = 0; i < 3; ++i) {
 	//	for (int j = 0; j < 3; ++j) {
@@ -1587,15 +1590,36 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	//	}
 	//}
 
-	if (pDesert_Collision)delete pDesert_Collision;
+	if (pDesert_Test)delete pDesert_Test;
 	if (pDesert_Passable)delete pDesert_Passable;
 	if (pMapSnow)delete pMapSnow;
 }
 
 void CMap::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
-	for (int i = 0; i < 2; ++i)
+	CGameObject::Render(pd3dCommandList, pCamera);
+
+	for (int i = 0; i < 1; ++i)
 		m_ppMaps[i]->Render(pd3dCommandList, pCamera);
+}
+
+void CMap::CheckCollision(CPlayer* pPlayer)
+{
+	CGameObject* pObject = m_ppMaps[0]->FindFrame("RootNode")->m_pChild;
+	while (pObject->m_pSibling) {
+		if (pPlayer->isCollide(pObject)) {
+			XMFLOAT3 d = Vector3::Subtract(pPlayer->GetPosition(), pObject->GetPosition());
+			pPlayer->Move(Vector3::ScalarProduct(d, 30.f, true), true);
+
+			cout << "지형 충돌 - " << pObject->m_pstrFrameName << endl;
+		}
+		pObject = pObject->m_pSibling;
+	}
+}
+
+CGameObject* CMap::GetMap(int idx) const
+{
+	return m_ppMaps[idx];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1632,8 +1656,9 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	//m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMapModel);
 
 	strcpy_s(m_pstrFrameName, "Map");
-	Rotate(0, -90.f, 0);
-	SetScale(20.f, 20.f, 20.f);
+	Rotate(0, 90.f, 0);
+
+	SetScale(20.5f, 10.25f, 20.5f);
 	//Rotate(-90.0f, 0.0f, 0.0f);
 }
 

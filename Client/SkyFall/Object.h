@@ -500,10 +500,13 @@ public:
 class CMap : public CGameObject
 {
 public:
-	CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
+	CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext=0);
 	virtual ~CMap() {};
 
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
+
+	void CheckCollision(CPlayer* pPlayer);
+	CGameObject* GetMap(int idx) const;
 		
 private:
 	CGameObject** m_ppMaps = new CGameObject * [2];
@@ -512,51 +515,6 @@ private:
 
 
 
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-class CAngrybotObject : public CGameObject
-{
-public:
-	CAngrybotObject(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo *pModel, int nAnimationTracks);
-	virtual ~CAngrybotObject();
-};
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-class CElvenWitchObject : public CGameObject
-{
-public:
-	CElvenWitchObject(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo *pModel, int nAnimationTracks);
-	virtual ~CElvenWitchObject();
-};
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-class CMonsterWeaponObject : public CGameObject
-{
-public:
-	CMonsterWeaponObject(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo *pModel, int nAnimationTracks);
-	virtual ~CMonsterWeaponObject();
-};
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-class CLionObject : public CGameObject
-{
-public:
-	CLionObject(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo *pModel, int nAnimationTracks);
-	virtual ~CLionObject();
-};
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-class CEagleObject : public CGameObject
-{
-public:
-	CEagleObject(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo *pModel, int nAnimationTracks);
-	virtual ~CEagleObject();
-};
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
