@@ -51,7 +51,8 @@ enum PacketType {
 	Type_start_pos,
 	Type_player_attack,		//
 	Type_allow_shot,
-	Type_player_Damage,
+	Type_player_damage,
+	Type_player_stop,
 	Type_map_set,
 	Type_map_collapse,		// S->C
 	Type_cloud_move,		// S->C
@@ -181,13 +182,16 @@ struct player_attack_packet : public Packet {
 	char attack_type;
 };
 
-struct player_allow_packet : public Packet {
+struct player_arrow_packet : public Packet {
 	char attack_type;
 	float fSpeed;
 };
 
 struct player_damage_packet : public Packet {
 	unsigned short damage;
+};
+
+struct player_stop_packet : public Packet {
 };
 
 struct map_block_set : public Packet {

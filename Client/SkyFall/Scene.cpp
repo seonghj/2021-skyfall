@@ -170,12 +170,12 @@ void CScene::AnimatePlayer(int id, int animation_num)
 	case 0:	// LbuttonDown
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
-		cout << "0" << endl;
+		//cout << "0" << endl;
 		break;
 	case 1:	// LbuttonUp
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(1, true);
-		cout << "1" << endl;
+		//cout << "1" << endl;
 		break;
 	case 2: // RbuttonDown
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
@@ -184,12 +184,12 @@ void CScene::AnimatePlayer(int id, int animation_num)
 	case 3:
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(3, true);
-		cout << "3" << endl;
+		//cout << "3" << endl;
 		break;
 	case 6:
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(6, true);
-		cout << "6" << endl;
+		//cout << "6" << endl;
 		break;
 	case 11:
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();

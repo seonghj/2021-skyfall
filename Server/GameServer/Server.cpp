@@ -484,6 +484,11 @@ void Server::process_packet(int id, char* buf, int roomID)
         break;
 
     }
+    case PacketType::Type_player_stop: {
+        player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
+        send_packet_to_players(p->id, reinterpret_cast<char*>(p), roomID);
+        break;
+    }
     }
 }
 

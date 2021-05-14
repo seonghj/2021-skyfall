@@ -197,6 +197,7 @@ void CPacket::ProcessPacket(char* buf)
                 for (int i = 0; i < MAX_PLAYER; ++i) {
                     if (m_pScene->PlayerIDs[i] == p->id) {
                         m_pScene->m_mPlayer[i]->SetJump(TRUE);
+                        m_pScene->AnimatePlayer(i, 1);
                         printf("id %d jump\n", p->id);
                         break;
                     }
@@ -227,7 +228,13 @@ void CPacket::ProcessPacket(char* buf)
                         m_pScene->AnimatePlayer(i, 2);
                         break;
                     case 0:
-                        m_pScene->AnimatePlayer(i, 11);
+                        if (m_pScene->m_mPlayer[i]->GetJump() == false) {
+                            printf("walk\n");
+                            m_pScene->AnimatePlayer(i, 11);
+                        }
+                        break;
+                    default:
+                        m_pScene->AnimatePlayer(i, 0);
                         break;
                     }
                     m_pScene->MovePlayer(i, p->Position);
@@ -282,6 +289,18 @@ void CPacket::ProcessPacket(char* buf)
             }
         }
 
+        break;
+    }
+
+    case PacketType::Type_player_stop: {
+        player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
+        if (p->id != client_id) {
+            for (int i = 0; i < MAX_PLAYER; ++i) {
+                if (m_pScene->PlayerIDs[i] == p->id) {
+                    m_pScene->AnimatePlayer(i, 0);
+                }
+            }
+        }
         break;
     }
 
