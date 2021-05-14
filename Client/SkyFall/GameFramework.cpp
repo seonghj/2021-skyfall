@@ -614,7 +614,7 @@ void CGameFramework::ProcessInput()
 					//m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
 				}
 			}
-			if (dwDirection) {
+			if (dwDirection && (false == m_pPlayer->GetAttack())) {
 				m_pPlayer->Move(dwDirection, 50.25f, true);
 
 				//int Yaw = 0;
@@ -770,33 +770,35 @@ void CGameFramework::FrameAdvance()
 	{
 		/*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
 			m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
-		player_pos_packet p;
-		p.id = m_pPacket->Get_clientid();
-		p.Position = NowPosition;
-		p.dx = m_DegreeX;
-		p.dy = m_DegreeY;
-		p.dz = m_DegreeZ;
-		//p.MoveType = dwDirection;
-		p.size = sizeof(p);
-		p.state = 1;
-		if (m_BeforePosition.x == NowPosition.x && m_BeforePosition.y == NowPosition.y && m_BeforePosition.z == NowPosition.z){
-			p.MoveType = 4;
-			m_pPlayer->SetStanding(true);
-		}
-		else {
-			if (m_pPlayer->GetJump() == true || m_pPlayer->GetGround() == false)
-				p.MoveType = 3;
-			else
-				p.MoveType = m_pPlayer->GetRunning();
-			m_pPlayer->SetStanding(false);
-		}
-		p.type = Type_player_pos;
-		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-		m_BeforePosition = NowPosition;
+		if (false == m_pPlayer->GetAttack()) {
+			player_pos_packet p;
+			p.id = m_pPacket->Get_clientid();
+			p.Position = NowPosition;
+			p.dx = m_DegreeX;
+			p.dy = m_DegreeY;
+			p.dz = m_DegreeZ;
+			//p.MoveType = dwDirection;
+			p.size = sizeof(p);
+			p.state = 1;
+			if (m_BeforePosition.x == NowPosition.x && m_BeforePosition.y == NowPosition.y && m_BeforePosition.z == NowPosition.z) {
+				p.MoveType = 4;
+				m_pPlayer->SetStanding(true);
+			}
+			else {
+				if (m_pPlayer->GetJump() == true || m_pPlayer->GetGround() == false)
+					p.MoveType = 3;
+				else
+					p.MoveType = m_pPlayer->GetRunning();
+				m_pPlayer->SetStanding(false);
+			}
+			p.type = Type_player_pos;
+			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+			m_BeforePosition = NowPosition;
 
-		m_DegreeX = 0.0f;
-		m_DegreeY = 0.0f;
-		m_DegreeZ = 0.0f;
+			m_DegreeX = 0.0f;
+			m_DegreeY = 0.0f;
+			m_DegreeZ = 0.0f;
+		}
 	}
 	else{
 		if (false == m_pPlayer->GetStanding()) {
