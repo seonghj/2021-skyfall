@@ -150,9 +150,10 @@ void CPacket::ProcessPacket(char* buf)
             for (int i = 0; i < MAX_PLAYER; ++i) {
                 if (m_pScene->PlayerIDs[i] == 0) {
                     m_pScene->PlayerIDs[i] = p->id;
-                    m_pScene->m_mPlayer[i]->SetPosition(p->Position);
+                    m_pScene->MovePlayer(i, p->Position);
                     m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, p->dz);
-                    printf("id: %d x: %f, z: %f\n", p->id, p->Position.x, p->Position.z);
+                    m_pScene->AnimatePlayer(i, 0);
+                    //printf("id: %d x: %f, z: %f\n", p->id, p->Position.x, p->Position.z);
                     break;
                 }
             }
@@ -196,7 +197,7 @@ void CPacket::ProcessPacket(char* buf)
             case PlayerMove::JUMP: {
                 for (int i = 0; i < MAX_PLAYER; ++i) {
                     if (m_pScene->PlayerIDs[i] == p->id) {
-                        m_pScene->m_mPlayer[i]->SetJump(TRUE);
+                        //m_pScene->m_mPlayer[i]->SetJump(true);
                         m_pScene->AnimatePlayer(i, 1);
                         printf("id %d jump\n", p->id);
                         break;
@@ -224,14 +225,14 @@ void CPacket::ProcessPacket(char* buf)
             for (int i = 0; i < MAX_PLAYER; ++i) {
                 if (m_pScene->PlayerIDs[i] == p->id) {
                     switch (p->MoveType) {
-                    case 1:
-                        m_pScene->AnimatePlayer(i, 2);
-                        break;
                     case 0:
-                        if (m_pScene->m_mPlayer[i]->GetJump() == false) {
-                            printf("walk\n");
-                            m_pScene->AnimatePlayer(i, 11);
-                        }
+                        m_pScene->AnimatePlayer(i, 11); // 11
+                        break;
+                    case 1:
+                        m_pScene->AnimatePlayer(i, 2); // 2
+                        break;
+                    case 3:
+                        m_pScene->AnimatePlayer(i, 1);
                         break;
                     default:
                         m_pScene->AnimatePlayer(i, 0);

@@ -374,13 +374,13 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				case VK_F9:
 					ChangeSwapChainState();
 					break;
-				case 0x41 || 0x44 || 0x53 || 0x57:
+				/*case 0x41 || 0x44 || 0x53 || 0x57:
 					player_stop_packet sp;
 					sp.id = m_pPacket->Get_clientid();
 					sp.size = sizeof(sp);
 					sp.type = PacketType::Type_player_stop;
 					m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
-					break;
+					break;*/
 				default:
 					break;
 			}
@@ -779,15 +779,34 @@ void CGameFramework::FrameAdvance()
 		//p.MoveType = dwDirection;
 		p.size = sizeof(p);
 		p.state = 1;
-		p.MoveType = m_pPlayer->GetRunning();
+		if (m_BeforePosition.x == NowPosition.x && m_BeforePosition.y == NowPosition.y && m_BeforePosition.z == NowPosition.z){
+			p.MoveType = 4;
+			m_pPlayer->SetStanding(true);
+		}
+		else {
+			if (m_pPlayer->GetJump() == true || m_pPlayer->GetGround() == false)
+				p.MoveType = 3;
+			else
+				p.MoveType = m_pPlayer->GetRunning();
+			m_pPlayer->SetStanding(false);
+		}
 		p.type = Type_player_pos;
 		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-
 		m_BeforePosition = NowPosition;
 
 		m_DegreeX = 0.0f;
 		m_DegreeY = 0.0f;
 		m_DegreeZ = 0.0f;
+	}
+	else{
+		if (false == m_pPlayer->GetStanding()) {
+			m_pPlayer->SetStanding(true);
+			player_stop_packet sp;
+			sp.id = m_pPacket->Get_clientid();
+			sp.size = sizeof(sp);
+			sp.type = PacketType::Type_player_stop;
+			m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
+		}
 	}
 
 	m_GameTimer.GetFrameRate(m_pszFrameRate + 12, 37);

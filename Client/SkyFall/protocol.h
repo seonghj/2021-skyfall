@@ -77,7 +77,8 @@ enum PlayerState {
 enum PlayerMove {
 	WAKING,
 	RUNNING,
-	JUMP
+	JUMP,
+	STAND
 };
 
 enum PlayerAttackType {

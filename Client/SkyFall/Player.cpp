@@ -32,6 +32,7 @@ CPlayer::CPlayer()
 	m_isJump = false;
 	m_isGround = true;
 	m_isRunning = false;
+	m_isStanding = true;
 	m_isAttack = false;
 
 	m_iHp = 0;
