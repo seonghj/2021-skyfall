@@ -82,7 +82,8 @@ enum PlayerMove {
 };
 
 enum PlayerAttackType {
-	SWORD1H,
+	SWORD1HL,
+	SWORD1HR,
 	BOW
 };
 

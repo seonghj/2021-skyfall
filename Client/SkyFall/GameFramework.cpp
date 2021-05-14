@@ -292,12 +292,12 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID)
 	{
-	case WM_LBUTTONDOWN:
+	case WM_LBUTTONDOWN: {
 		player_attack_packet p;
 		p.id = m_pPacket->Get_clientid();
 		p.size = sizeof(p);
 		p.type = PacketType::Type_player_attack;
-		p.attack_type = SWORD1H;
+		p.attack_type = SWORD1HL;
 		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
@@ -307,12 +307,22 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 			m_pPlayer->LButtonDown();
 		}
 		break;
-	case WM_RBUTTONDOWN:
+	}
+	case WM_RBUTTONDOWN: {
+		player_attack_packet p;
+		p.id = m_pPacket->Get_clientid();
+		p.size = sizeof(p);
+		p.type = PacketType::Type_player_attack;
+		p.attack_type = SWORD1HR;
+		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+		::SetCapture(hWnd);
+		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
 			m_pPlayer->RButtonDown();
 		}
 		break;
-	case WM_LBUTTONUP:
+	}
+	case WM_LBUTTONUP: {
 		player_stop_packet sp;
 		sp.id = m_pPacket->Get_clientid();
 		sp.size = sizeof(sp);
@@ -322,9 +332,16 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		m_ChargeTimer.Stop();
 		m_pPlayer->LButtonUp();
 		break;
-	case WM_RBUTTONUP:
+	}
+	case WM_RBUTTONUP: {
+		player_stop_packet sp;
+		sp.id = m_pPacket->Get_clientid();
+		sp.size = sizeof(sp);
+		sp.type = PacketType::Type_player_stop;
+		m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
 		m_pPlayer->RButtonUp();
 		break;
+	}
 	case WM_MOUSEMOVE:
 		break;
 	default:
@@ -781,12 +798,12 @@ void CGameFramework::FrameAdvance()
 			p.size = sizeof(p);
 			p.state = 1;
 			if (m_BeforePosition.x == NowPosition.x && m_BeforePosition.y == NowPosition.y && m_BeforePosition.z == NowPosition.z) {
-				p.MoveType = 4;
+				p.MoveType = PlayerMove::STAND;
 				m_pPlayer->SetStanding(true);
 			}
 			else {
 				if (m_pPlayer->GetJump() == true || m_pPlayer->GetGround() == false)
-					p.MoveType = 3;
+					p.MoveType = PlayerMove::JUMP;
 				else
 					p.MoveType = m_pPlayer->GetRunning();
 				m_pPlayer->SetStanding(false);

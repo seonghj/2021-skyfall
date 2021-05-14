@@ -225,13 +225,13 @@ void CPacket::ProcessPacket(char* buf)
             for (int i = 0; i < MAX_PLAYER; ++i) {
                 if (m_pScene->PlayerIDs[i] == p->id) {
                     switch (p->MoveType) {
-                    case 0:
+                    case PlayerMove::WAKING:
                         m_pScene->AnimatePlayer(i, 11); // 11
                         break;
-                    case 1:
+                    case PlayerMove::RUNNING:
                         m_pScene->AnimatePlayer(i, 2); // 2
                         break;
-                    case 3:
+                    case PlayerMove::JUMP:
                         m_pScene->AnimatePlayer(i, 1);
                         break;
                     default:
@@ -269,7 +269,7 @@ void CPacket::ProcessPacket(char* buf)
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
         if (p->id == client_id) {
             switch (p->attack_type) {
-            case SWORD1H: {
+            case SWORD1HL: {
                 m_pPlayer->LButtonDown();
                 break;
             }
@@ -279,9 +279,14 @@ void CPacket::ProcessPacket(char* buf)
             for (int i = 0; i < MAX_PLAYER; ++i) {
                 if (m_pScene->PlayerIDs[i] == p->id) {
                     switch (p->attack_type) {
-                    case SWORD1H: {
+                    case SWORD1HL: {
                         m_pScene->AnimatePlayer(i, 6);
-                        printf("id: %d SWORD1H attack\n", p->id);
+                        printf("id: %d SWORD1HL attack\n", p->id);
+                        break;
+                    }
+                    case SWORD1HR: {
+                        m_pScene->AnimatePlayer(i, 9);
+                        printf("id: %d SWORD1HR attack\n", p->id);
                         break;
                     }
                     }
@@ -300,7 +305,7 @@ void CPacket::ProcessPacket(char* buf)
                 if (m_pScene->PlayerIDs[i] == p->id) {
                     m_pScene->AnimatePlayer(i, 0);
                     m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(6, 0);
-                    m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(7, 0);
+                    m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(9, 0);
                 }
             }
         }
