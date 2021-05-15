@@ -148,6 +148,18 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
 {
+	/*if (m_mPlayer[player_num]->GetGround())
+	{
+		if (m_mPlayer[player_num]->GetRunning()) {
+			m_mPlayer[player_num]->m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_mPlayer[player_num]->m_pSkinnedAnimationController->SetTrackEnable(2, true);
+		}
+		else {
+			m_mPlayer[player_num]->m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_mPlayer[player_num]->m_pSkinnedAnimationController->SetTrackEnable(11, true);
+		}
+	}*/
+
 	m_mPlayer[player_num]->SetPosition(pos);
 }
 
@@ -158,22 +170,36 @@ void CScene::AnimatePlayer(int id, int animation_num)
 	case 0:	// LbuttonDown
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
-		cout << "0" << endl;
+		//cout << "0" << endl;
 		break;
 	case 1:	// LbuttonUp
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		//m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(1, true);
-		cout << "1" << endl;
+		//cout << "1" << endl;
 		break;
 	case 2: // RbuttonDown
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(2, true);
-		cout << "2" << endl;
 		break;
 	case 3:
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(3, true);
-		cout << "3" << endl;
+		//cout << "3" << endl;
+		break;
+	case 6:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(6, true);
+		//cout << "6" << endl;
+		break;
+	case 9:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(9, true);
+		//cout << "6" << endl;
+		break;
+	case 11:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(11, true);
 		break;
 	//case 0:	// LbuttonDown
 	//	m_mPlayer[id]->LButtonDown();

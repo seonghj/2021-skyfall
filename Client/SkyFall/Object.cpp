@@ -1657,7 +1657,7 @@ void CBullet::Animate(float fElapsedTime) {
 	XMFLOAT3 pos = GetPosition();
 	//std::cout << "x : " << (int)pos.x << ", y : " << (int)pos.y << ", z : " << (int)pos.z << endl;
 	m_fRotationX = acos(Vector3::DotProduct(m_xmf3MovingDirection, look) / (Vector3::Length(look) * Vector3::Length(m_xmf3MovingDirection)));
-	std::cout << m_fRotationX << std::endl;
+	//std::cout << m_fRotationX << std::endl;
 	if (EPSILON <= m_fRotationX)
 		Rotate(m_fRotationX / PI * 180, 0, 0);
 }

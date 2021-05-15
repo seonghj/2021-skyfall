@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #pragma warning(disable : 4996)
 #include "Server.h"
 
@@ -19,7 +19,7 @@ void Server::display_error(const char* msg, int err_no)
         NULL, err_no, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR)&lpMsgBuf, 0, NULL);
     std::cout << msg;
-    std::wcout << L"¿¡·¯ " << lpMsgBuf << std::endl;
+    std::wcout << L"ï¿½ï¿½ï¿½ï¿½ " << lpMsgBuf << std::endl;
     LocalFree(lpMsgBuf);
 }
 
@@ -27,7 +27,9 @@ int Server::SetClientId()
 {
     int count = LOBBY_ID+1;
     while (true){
-        if (!sessions.find(count)->second.connected.load(std::memory_order_seq_cst)) {
+        if (sessions.find(count) == sessions.end())
+            return count;
+        if (false == sessions.find(count)->second.connected.load(std::memory_order_seq_cst)) {
             return count;
         }
         else 
@@ -52,7 +54,7 @@ void Server::ConnectLobby()
     sessions.emplace(LOBBY_ID, SESSION());
     sessions[LOBBY_ID].id = LOBBY_ID;
     sessions[LOBBY_ID].connected.store(TRUE);
-    // À©¼Ó ÃÊ±âÈ­
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
         return;
@@ -95,7 +97,7 @@ void Server::Accept()
     // listen()
     retval = listen(listen_sock, MAX_CLIENT);
 
-    // µ¥ÀÌÅÍ Åë½Å¿¡ »ç¿ëÇÒ º¯¼ö
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     SOCKET client_sock;
     SOCKADDR_IN clientaddr;
     int addrlen = sizeof(SOCKADDR_IN);
@@ -106,8 +108,7 @@ void Server::Accept()
     while (1) {
         client_sock = accept(listen_sock, (struct sockaddr*)&clientaddr, &addrlen);
         if (client_sock == INVALID_SOCKET) {
-            display_error("accept error: ", WSAGetLastError());
-            printf("%d", WSAGetLastError());
+            printf("accept error: %d", WSAGetLastError());
             break;
         }
 
@@ -138,25 +139,25 @@ void Server::Accept()
         sessions[client_id].over.roomID = roomID;
         flags = 0;
 
-        // ¼ÒÄÏ°ú ÀÔÃâ·Â ¿Ï·á Æ÷Æ® ¿¬°á
+        // ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï·ï¿½ ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
 
 
         //printf("create game room - %d\n", roomID);
 
-        // idÀü¼Û
+        // idï¿½ï¿½ï¿½ï¿½
         send_ID_player_packet(client_id, roomID);
 
         sessions[client_id].f3Position.store(XMFLOAT3(0 , 8.0f, 0));
 
 
-        // ·Î±×ÀÎÇÑ Å¬¶óÀÌ¾ðÆ®¿¡ ´Ù¸¥ Å¬¶óÀÌ¾ðÆ® Á¤º¸ Àü´Þ
+        // ï¿½Î±ï¿½ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ ï¿½Ù¸ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         for (auto it = iter.first; it != iter.second; ++it) {
             if (sessions[it->second].connected.load(std::memory_order_seq_cst))
                 send_login_player_packet(it->second, client_id, roomID);
         }
 
-        // ´Ù¸¥ Å¬¶óÀÌ¾ðÆ®¿¡ ·Î±×ÀÎÁ¤º¸ Àü´Þ
+        // ï¿½Ù¸ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ ï¿½Î±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         for (auto it = iter.first; it != iter.second; ++it){
             if (sessions[it->second].connected.load(std::memory_order_seq_cst) && (it->second != client_id))
                 send_login_player_packet(client_id, it->second, roomID);
@@ -178,7 +179,7 @@ void Server::Accept()
     // closesocket()
     closesocket(listen_sock); 
 
-    // À©¼Ó Á¾·á
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     WSACleanup();
 }
 
@@ -273,6 +274,26 @@ void Server::send_login_player_packet(int id, int to, int roomID)
     //printf("%d: login to %d\n",id, to);
 
     send_packet(to, reinterpret_cast<char*>(&p));
+}
+
+void Server::send_playing_player_packet(int to, int roomID)
+{
+    //char* buf;
+
+
+
+    //player_login_packet p;
+    //p.id = id;
+    //p.size = sizeof(player_login_packet);
+    //p.type = PacketType::Type_player_login;
+    //p.Position = sessions[id].f3Position.load(std::memory_order_seq_cst);
+    //p.dx = sessions[id].dx.load(std::memory_order_seq_cst);
+    //p.dy = sessions[id].dy.load(std::memory_order_seq_cst);
+    //p.dz = sessions[id].dz.load(std::memory_order_seq_cst);
+
+    ////printf("%d: login to %d\n",id, to);
+
+    //send_packet(to, reinterpret_cast<char*>(&p));
 }
 
 void Server::send_disconnect_player_packet(int id, int roomID)
@@ -413,7 +434,7 @@ DirectX::XMFLOAT3 Server::move_calc(DWORD dwDirection, float fDistance, int stat
 
 void Server::process_packet(int id, char* buf, int roomID)
 {
-    // Å¬¶óÀÌ¾ðÆ®¿¡¼­ ¹ÞÀº ÆÐÅ¶ Ã³¸®
+    // Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¶ Ã³ï¿½ï¿½
     switch (buf[1]) {
     case PacketType::Type_game_ready: {
         game_ready_packet* p = reinterpret_cast<game_ready_packet*>(buf);
@@ -473,17 +494,22 @@ void Server::process_packet(int id, char* buf, int roomID)
         send_packet_to_players(p->id, reinterpret_cast<char*>(p), roomID);
         switch (p->attack_type) {
         case BOW: {
-            // Ãæµ¹Ã³¸®
+            // ï¿½æµ¹Ã³ï¿½ï¿½
             break;
         }
-        case SWORD1H: {
-            // Ãæµ¹Ã³¸®
+        case SWORD1HL: {
+            // ï¿½æµ¹Ã³ï¿½ï¿½
 
             break;
         }
         }
         break;
 
+    }
+    case PacketType::Type_player_stop: {
+        player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
+        send_packet_to_players(p->id, reinterpret_cast<char*>(p), roomID);
+        break;
     }
     }
 }
@@ -580,19 +606,19 @@ bool Server::Init()
 {
     sessions.clear();
 
-    // À©¼Ó ÃÊ±âÈ­
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
     WSADATA wsa;
     WSAStartup(MAKEWORD(2, 2), &wsa);
 
-    // ÀÔÃâ·Â ¿Ï·á Æ÷Æ® »ý¼º
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï·ï¿½ ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
     hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
     if (hcp == NULL) return 0;
 
-    // CPU °³¼ö È®ÀÎ
+    // CPU ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
     SYSTEM_INFO si;
     GetSystemInfo(&si);
 
-    for (int i = 0; i < (int)si.dwNumberOfProcessors * 2; i++)
+    for (int i = 0; i <(int)si.dwNumberOfProcessors * 2; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
     //ConnectLobby();

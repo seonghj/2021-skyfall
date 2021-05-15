@@ -32,6 +32,7 @@ CPlayer::CPlayer()
 	m_isJump = false;
 	m_isGround = true;
 	m_isRunning = false;
+	m_isStanding = true;
 	m_isAttack = false;
 
 	m_iHp = 0;
@@ -678,13 +679,16 @@ void CBowPlayer::RButtonUp()
 
 void CBowPlayer::LButtonDown()
 {
-	SetCharging(true);
+	if (!m_isCharging && !m_isAttack)
+		SetCharging(true);
 }
 
 void CBowPlayer::LButtonUp()
 {
-	SetAttack(true);
-	SetCharging(false);
+	if (m_isCharging) {
+		SetAttack(true);
+		SetCharging(false);
+	}
 }
 
 

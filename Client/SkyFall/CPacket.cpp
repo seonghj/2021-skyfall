@@ -150,9 +150,10 @@ void CPacket::ProcessPacket(char* buf)
             for (int i = 0; i < MAX_PLAYER; ++i) {
                 if (m_pScene->PlayerIDs[i] == 0) {
                     m_pScene->PlayerIDs[i] = p->id;
-                    m_pScene->m_mPlayer[i]->SetPosition(p->Position);
+                    m_pScene->MovePlayer(i, p->Position);
                     m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, p->dz);
-                    printf("id: %d x: %f, z: %f\n", p->id, p->Position.x, p->Position.z);
+                    m_pScene->AnimatePlayer(i, 0);
+                    //printf("id: %d x: %f, z: %f\n", p->id, p->Position.x, p->Position.z);
                     break;
                 }
             }
@@ -196,7 +197,8 @@ void CPacket::ProcessPacket(char* buf)
             case PlayerMove::JUMP: {
                 for (int i = 0; i < MAX_PLAYER; ++i) {
                     if (m_pScene->PlayerIDs[i] == p->id) {
-                        m_pScene->m_mPlayer[i]->SetJump(TRUE);
+                        //m_pScene->m_mPlayer[i]->SetJump(true);
+                        m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
                         printf("id %d jump\n", p->id);
                         break;
                     }
@@ -215,18 +217,29 @@ void CPacket::ProcessPacket(char* buf)
             m_pPlayer->Rotate(p->dx, p->dy, p->dz);
             switch (p->MoveType) {
             case PlayerMove::RUNNING:
-                m_pPlayer->SetRunning(true);
+                //m_pPlayer->SetRunning(true);
+                break;
             }
         }
         else {
             for (int i = 0; i < MAX_PLAYER; ++i) {
                 if (m_pScene->PlayerIDs[i] == p->id) {
-                    m_pScene->m_mPlayer[i]->SetPosition(p->Position);
-                    m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, p->dz);
                     switch (p->MoveType) {
+                    case PlayerMove::WAKING:
+                        m_pScene->AnimatePlayer(i, 11); // 11
+                        break;
                     case PlayerMove::RUNNING:
+                        m_pScene->AnimatePlayer(i, 2); // 2
+                        break;
+                    case PlayerMove::JUMP:
+                        m_pScene->AnimatePlayer(i, 1);
+                        break;
+                    default:
                         m_pScene->AnimatePlayer(i, 0);
+                        break;
                     }
+                    m_pScene->MovePlayer(i, p->Position);
+                    m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, p->dz);
                     //printf("id %d move (%f, %f)\n", p->id, p->Position.x, p->Position.z);
                     break;
                 }
@@ -256,8 +269,12 @@ void CPacket::ProcessPacket(char* buf)
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
         if (p->id == client_id) {
             switch (p->attack_type) {
-            case SWORD1H: {
+            case SWORD1HL: {
                 m_pPlayer->LButtonDown();
+                break;
+            }
+            case SWORD1HR: {
+                m_pPlayer->RButtonDown();
                 break;
             }
             }
@@ -266,9 +283,14 @@ void CPacket::ProcessPacket(char* buf)
             for (int i = 0; i < MAX_PLAYER; ++i) {
                 if (m_pScene->PlayerIDs[i] == p->id) {
                     switch (p->attack_type) {
-                    case SWORD1H: {
-                        m_pScene->m_mPlayer[i]->LButtonDown();
-                        printf("id: %d SWORD1H attack\n", p->id);
+                    case SWORD1HL: {
+                        m_pScene->AnimatePlayer(i, 6);
+                        printf("id: %d SWORD1HL attack\n", p->id);
+                        break;
+                    }
+                    case SWORD1HR: {
+                        m_pScene->AnimatePlayer(i, 9);
+                        printf("id: %d SWORD1HR attack\n", p->id);
                         break;
                     }
                     }
@@ -277,6 +299,20 @@ void CPacket::ProcessPacket(char* buf)
             }
         }
 
+        break;
+    }
+
+    case PacketType::Type_player_stop: {
+        player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
+        if (p->id != client_id) {
+            for (int i = 0; i < MAX_PLAYER; ++i) {
+                if (m_pScene->PlayerIDs[i] == p->id) {
+                    m_pScene->AnimatePlayer(i, 0);
+                    m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(6, 0);
+                    m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(9, 0);
+                }
+            }
+        }
         break;
     }
 

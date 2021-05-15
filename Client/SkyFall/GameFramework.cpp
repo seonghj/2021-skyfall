@@ -292,12 +292,12 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID)
 	{
-	case WM_LBUTTONDOWN:
+	case WM_LBUTTONDOWN: {
 		player_attack_packet p;
 		p.id = m_pPacket->Get_clientid();
 		p.size = sizeof(p);
 		p.type = PacketType::Type_player_attack;
-		p.attack_type = SWORD1H;
+		p.attack_type = SWORD1HL;
 		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
@@ -307,19 +307,41 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 			m_pPlayer->LButtonDown();
 		}
 		break;
-	case WM_RBUTTONDOWN:
+	}
+	case WM_RBUTTONDOWN: {
+		player_attack_packet p;
+		p.id = m_pPacket->Get_clientid();
+		p.size = sizeof(p);
+		p.type = PacketType::Type_player_attack;
+		p.attack_type = SWORD1HR;
+		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+		::SetCapture(hWnd);
+		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
 			m_pPlayer->RButtonDown();
 		}
 		break;
-	case WM_LBUTTONUP:
+	}
+	case WM_LBUTTONUP: {
+		player_stop_packet sp;
+		sp.id = m_pPacket->Get_clientid();
+		sp.size = sizeof(sp);
+		sp.type = PacketType::Type_player_stop;
+		m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
 		::ReleaseCapture();
 		m_ChargeTimer.Stop();
 		m_pPlayer->LButtonUp();
 		break;
-	case WM_RBUTTONUP:
+	}
+	case WM_RBUTTONUP: {
+		player_stop_packet sp;
+		sp.id = m_pPacket->Get_clientid();
+		sp.size = sizeof(sp);
+		sp.type = PacketType::Type_player_stop;
+		m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
 		m_pPlayer->RButtonUp();
 		break;
+	}
 	case WM_MOUSEMOVE:
 		break;
 	default:
@@ -354,18 +376,32 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				case VK_F4:
 					if(m_pScene)
 						m_pScene->m_pPlayer = m_pBowPlayer;
-					m_pPlayer = m_pBowPlayer;
+					m_pPacket->m_pPlayer = m_pPlayer = m_pBowPlayer;
 					m_pCamera = m_pPlayer->GetCamera();
+
+					m_pPlayer->SetCPacket(m_pPacket);
 					break;
 				case VK_F5:
 					if (m_pScene)
 						m_pScene->m_pPlayer = m_p1HswordPlayer;
-					m_pPlayer = m_p1HswordPlayer;
+					m_pPacket->m_pPlayer = m_pPlayer = m_p1HswordPlayer;
 					m_pCamera = m_pPlayer->GetCamera();
+
+					m_pPlayer->SetCPacket(m_pPacket);
+					break;
+				case VK_F6:
+					m_bMouseHold = !m_bMouseHold;
 					break;
 				case VK_F9:
 					ChangeSwapChainState();
 					break;
+				/*case 0x41 || 0x44 || 0x53 || 0x57:
+					player_stop_packet sp;
+					sp.id = m_pPacket->Get_clientid();
+					sp.size = sizeof(sp);
+					sp.type = PacketType::Type_player_stop;
+					m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
+					break;*/
 				default:
 					break;
 			}
@@ -557,12 +593,14 @@ void CGameFramework::ProcessInput()
 		float cxDelta = 0.0f, cyDelta = 0.0f;
 		if ((GetCapture() == m_hWnd || m_pCamera->GetMode() == FIRST_PERSON_CAMERA) || m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
 		{
-			SetCursor(NULL);
+			if(!m_bMouseHold)
+				SetCursor(NULL);
 			POINT ptCursorPos;
 			GetCursorPos(&ptCursorPos);
 			cxDelta = (float)(ptCursorPos.x - m_ptOldCursorPos.x) / 3.0f;
 			cyDelta = (float)(ptCursorPos.y - m_ptOldCursorPos.y) / 3.0f;
-			SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
+			if(!m_bMouseHold)
+				SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
 		}
 
 		if (m_pPlayer->GetAttack() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA&&
@@ -597,7 +635,7 @@ void CGameFramework::ProcessInput()
 					//m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
 				}
 			}
-			if (dwDirection) {
+			if (dwDirection && (false == m_pPlayer->GetAttack())) {
 				m_pPlayer->Move(dwDirection, 50.25f, true);
 
 				//int Yaw = 0;
@@ -644,11 +682,6 @@ void CGameFramework::AnimateObjects()
 		m_p1HswordPlayer->Animate(fTimeElapsed);
 	if (m_pBowPlayer)
 		m_pBowPlayer->Animate(fTimeElapsed);
-
-	/*for (int i = 0; i < OTHER_PLAYER_NUM; i++)
-	{
-		m_ppOtherPlayer[i]->Animate(fTimeElapsed);
-	}*/
 }
 
 void CGameFramework::WaitForGpuComplete()
@@ -758,23 +791,45 @@ void CGameFramework::FrameAdvance()
 	{
 		/*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
 			m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
-		player_pos_packet p;
-		p.id = m_pPacket->Get_clientid();
-		p.Position = NowPosition;
-		p.dx = m_DegreeX;
-		p.dy = m_DegreeY;
-		p.dz = m_DegreeZ;
-		//p.MoveType = dwDirection;
-		p.size = sizeof(p);
-		p.state = RUNNING;
-		p.type = Type_player_pos;
-		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+		if (false == m_pPlayer->GetAttack()) {
+			player_pos_packet p;
+			p.id = m_pPacket->Get_clientid();
+			p.Position = NowPosition;
+			p.dx = m_DegreeX;
+			p.dy = m_DegreeY;
+			p.dz = m_DegreeZ;
+			//p.MoveType = dwDirection;
+			p.size = sizeof(p);
+			p.state = 1;
+			if (m_BeforePosition.x == NowPosition.x && m_BeforePosition.y == NowPosition.y && m_BeforePosition.z == NowPosition.z) {
+				p.MoveType = PlayerMove::STAND;
+				m_pPlayer->SetStanding(true);
+			}
+			else {
+				if (m_pPlayer->GetJump() == true || m_pPlayer->GetGround() == false)
+					p.MoveType = PlayerMove::JUMP;
+				else
+					p.MoveType = m_pPlayer->GetRunning();
+				m_pPlayer->SetStanding(false);
+			}
+			p.type = Type_player_pos;
+			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+			m_BeforePosition = NowPosition;
 
-		m_BeforePosition = NowPosition;
-
-		m_DegreeX = 0.0f;
-		m_DegreeY = 0.0f;
-		m_DegreeZ = 0.0f;
+			m_DegreeX = 0.0f;
+			m_DegreeY = 0.0f;
+			m_DegreeZ = 0.0f;
+		}
+	}
+	else{
+		if (false == m_pPlayer->GetStanding()) {
+			m_pPlayer->SetStanding(true);
+			player_stop_packet sp;
+			sp.id = m_pPacket->Get_clientid();
+			sp.size = sizeof(sp);
+			sp.type = PacketType::Type_player_stop;
+			m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
+		}
 	}
 
 	m_GameTimer.GetFrameRate(m_pszFrameRate + 12, 37);
