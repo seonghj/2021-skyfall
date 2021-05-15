@@ -749,7 +749,6 @@ CGameObject *CGameObject::FindFrame(char *pstrFrameName)
 
 	if (!strcmp(m_pstrFrameName, pstrFrameName)) return(this);
 
-	if (m_pSibling) if (pFrameObject = m_pSibling->FindFrame(pstrFrameName)) return(pFrameObject);
 	if (m_pChild) if (pFrameObject = m_pChild->FindFrame(pstrFrameName)) return(pFrameObject);
 	if (m_pSibling) if (pFrameObject = m_pSibling->FindFrame(pstrFrameName)) return(pFrameObject);
 
@@ -1680,7 +1679,7 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	while (true) {
 		BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
 		pObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, bb.Center.y, 0), bb.Extents);
-		pObject->UpdateTransform();
+		//pObject->UpdateTransform();
 		if (pObject->m_pSibling)
 			pObject = pObject->m_pSibling;
 		else
