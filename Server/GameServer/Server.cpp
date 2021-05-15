@@ -153,7 +153,7 @@ void Server::Accept()
         // id����
         send_ID_player_packet(client_id, roomID);
 
-        sessions[client_id].f3Position.store(XMFLOAT3(0 , 8.0f, 0));
+        sessions[client_id].f3Position.store(XMFLOAT3(50.f, 150.0f, 50.f));
 
 
         // 로그인한 클라이언트에 다른 클라이언트 정보 전달
@@ -202,7 +202,7 @@ void Server::Disconnected(int id, int roomID)
         //printf("%d\n", i->second);
         if (i->second == id) {
             gameroom.erase(i);
-            printf("room: %d left\n", gameroom.count(roomID));
+            printf("room %d: %d left\n",roomID, gameroom.count(roomID));
             break;
         }
         ++i;
