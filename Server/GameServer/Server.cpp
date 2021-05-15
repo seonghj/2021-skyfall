@@ -27,7 +27,9 @@ int Server::SetClientId()
 {
     int count = LOBBY_ID+1;
     while (true){
-        if (!sessions.find(count)->second.connected.load(std::memory_order_seq_cst)) {
+        if (sessions.find(count) == sessions.end())
+            return count;
+        if (false == sessions.find(count)->second.connected.load(std::memory_order_seq_cst)) {
             return count;
         }
         else 
@@ -616,7 +618,7 @@ bool Server::Init()
     SYSTEM_INFO si;
     GetSystemInfo(&si);
 
-    for (int i = 0; i < (int)si.dwNumberOfProcessors * 2; i++)
+    for (int i = 0; i <(int)si.dwNumberOfProcessors * 2; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
     //ConnectLobby();
