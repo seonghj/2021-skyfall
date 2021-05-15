@@ -90,7 +90,6 @@ public:
 
     void send_ID_player_packet(int id, int roomID);
     void send_login_player_packet(int id, int to, int roomID);
-    void send_playing_player_packet(int to, int roomID);
     void send_disconnect_player_packet(int id,int roomID);
     void send_packet_to_players(int id, char* buf, int roomID);
     void send_packet_to_allplayers(int roomnum, char* buf);
