@@ -3,7 +3,7 @@
 
 constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
-constexpr int BUFSIZE = 1024;
+constexpr int BUFSIZE = 128;
 constexpr int MAX_CLIENT = 3000;
 constexpr int MAX_PLAYER = 20;
 
