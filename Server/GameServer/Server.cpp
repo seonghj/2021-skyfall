@@ -106,7 +106,7 @@ void Server::Accept()
     while (1) {
         client_sock = accept(listen_sock, (struct sockaddr*)&clientaddr, &addrlen);
         if (client_sock == INVALID_SOCKET) {
-            display_error("accept error: ", WSAGetLastError());
+            printf("accept error: %d", WSAGetLastError());
             break;
         }
 
@@ -272,6 +272,26 @@ void Server::send_login_player_packet(int id, int to, int roomID)
     //printf("%d: login to %d\n",id, to);
 
     send_packet(to, reinterpret_cast<char*>(&p));
+}
+
+void Server::send_playing_player_packet(int to, int roomID)
+{
+    //char* buf;
+
+
+
+    //player_login_packet p;
+    //p.id = id;
+    //p.size = sizeof(player_login_packet);
+    //p.type = PacketType::Type_player_login;
+    //p.Position = sessions[id].f3Position.load(std::memory_order_seq_cst);
+    //p.dx = sessions[id].dx.load(std::memory_order_seq_cst);
+    //p.dy = sessions[id].dy.load(std::memory_order_seq_cst);
+    //p.dz = sessions[id].dz.load(std::memory_order_seq_cst);
+
+    ////printf("%d: login to %d\n",id, to);
+
+    //send_packet(to, reinterpret_cast<char*>(&p));
 }
 
 void Server::send_disconnect_player_packet(int id, int roomID)
@@ -475,7 +495,7 @@ void Server::process_packet(int id, char* buf, int roomID)
             // 面倒贸府
             break;
         }
-        case SWORD1H: {
+        case SWORD1HL: {
             // 面倒贸府
 
             break;
