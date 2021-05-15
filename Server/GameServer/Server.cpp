@@ -278,22 +278,23 @@ void Server::send_login_player_packet(int id, int to, int roomID)
 
 void Server::send_playing_player_packet(int to, int roomID)
 {
-    //char* buf;
+    char* buf;
 
+    player_login_packet p;
 
+    auto iter = gameroom.equal_range(roomID);
 
-    //player_login_packet p;
-    //p.id = id;
-    //p.size = sizeof(player_login_packet);
-    //p.type = PacketType::Type_player_login;
-    //p.Position = sessions[id].f3Position.load(std::memory_order_seq_cst);
-    //p.dx = sessions[id].dx.load(std::memory_order_seq_cst);
-    //p.dy = sessions[id].dy.load(std::memory_order_seq_cst);
-    //p.dz = sessions[id].dz.load(std::memory_order_seq_cst);
+    for (auto& i = iter.first; i != iter.second; ++i) {
+        p.id = i->second;
+        p.size = sizeof(player_login_packet);
+        p.type = PacketType::Type_player_login;
+        p.Position = sessions[i->second].f3Position.load(std::memory_order_seq_cst);
+        p.dx = sessions[i->second].dx.load(std::memory_order_seq_cst);
+        p.dy = sessions[i->second].dy.load(std::memory_order_seq_cst);
+        p.dz = sessions[i->second].dz.load(std::memory_order_seq_cst);
+    }
 
-    ////printf("%d: login to %d\n",id, to);
-
-    //send_packet(to, reinterpret_cast<char*>(&p));
+    send_packet(to, reinterpret_cast<char*>(&p));
 }
 
 void Server::send_disconnect_player_packet(int id, int roomID)
