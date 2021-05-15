@@ -107,6 +107,7 @@ void Server::Accept()
         client_sock = accept(listen_sock, (struct sockaddr*)&clientaddr, &addrlen);
         if (client_sock == INVALID_SOCKET) {
             display_error("accept error: ", WSAGetLastError());
+            printf("%d", WSAGetLastError());
             break;
         }
 
