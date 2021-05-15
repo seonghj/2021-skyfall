@@ -148,7 +148,7 @@ void Server::Accept()
         // id����
         send_ID_player_packet(client_id, roomID);
 
-        sessions[client_id].f3Position.store(XMFLOAT3(0 , 8.0f, 0));
+        sessions[client_id].f3Position.store(XMFLOAT3(50.f , 8.0f, 50.f));
 
 
         // �α����� Ŭ���̾�Ʈ�� �ٸ� Ŭ���̾�Ʈ ���� ����
@@ -274,30 +274,6 @@ void Server::send_login_player_packet(int id, int to, int roomID)
     //printf("%d: login to %d\n",id, to);
 
     send_packet(to, reinterpret_cast<char*>(&p));
-}
-
-void Server::send_playing_player_packet(int to, int roomID)
-{
-    char* buf;
-    int ptr = 0;
-    player_login_packet p;
-
-    auto iter = gameroom.equal_range(roomID);
-
-    for (auto& i = iter.first; i != iter.second; ++i) {
-        p.id = i->second;
-        p.size = sizeof(player_login_packet);
-        p.type = PacketType::Type_player_login;
-        p.Position = sessions[i->second].f3Position.load(std::memory_order_seq_cst);
-        p.dx = sessions[i->second].dx.load(std::memory_order_seq_cst);
-        p.dy = sessions[i->second].dy.load(std::memory_order_seq_cst);
-        p.dz = sessions[i->second].dz.load(std::memory_order_seq_cst);
-
-        memcpy(buf + ptr, reinterpret_cast<char*>(&p), sizeof(p));
-        ptr = sizeof(buf);
-    }
-
-    send_packet(to, buf);
 }
 
 void Server::send_disconnect_player_packet(int id, int roomID)
