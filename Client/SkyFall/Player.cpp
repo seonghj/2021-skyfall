@@ -737,8 +737,6 @@ void CBowPlayer::Shot(float fTimeElapsed, float fSpeed)
 	xmf4x4Scale._33 = 0.5;
 	m_ppBullets[m_nBullets]->m_xmf4x4ToParent =  Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
 	m_ppBullets[m_nBullets]->SetPosition(pBow->GetPosition());
-
-	m_ppBullets[m_nBullets]->m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
 	m_ppBullets[m_nBullets]->m_xmf3MovingDirection = GetCamera()->GetLookVector();
 	m_ppBullets[m_nBullets]->SetSpeed(fSpeed);
 	m_ppBullets[m_nBullets++]->Rotate(90.f, 0, 0);
