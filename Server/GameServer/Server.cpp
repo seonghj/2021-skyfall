@@ -279,7 +279,7 @@ void Server::send_login_player_packet(int id, int to, int roomID)
 void Server::send_playing_player_packet(int to, int roomID)
 {
     char* buf;
-
+    int ptr = 0;
     player_login_packet p;
 
     auto iter = gameroom.equal_range(roomID);
@@ -292,9 +292,12 @@ void Server::send_playing_player_packet(int to, int roomID)
         p.dx = sessions[i->second].dx.load(std::memory_order_seq_cst);
         p.dy = sessions[i->second].dy.load(std::memory_order_seq_cst);
         p.dz = sessions[i->second].dz.load(std::memory_order_seq_cst);
+
+        memcpy(buf + ptr, reinterpret_cast<char*>(&p), sizeof(p));
+        ptr = sizeof(buf);
     }
 
-    send_packet(to, reinterpret_cast<char*>(&p));
+    send_packet(to, buf);
 }
 
 void Server::send_disconnect_player_packet(int id, int roomID)
