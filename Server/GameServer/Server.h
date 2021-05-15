@@ -14,6 +14,12 @@
 //    // 0 = session 1 = map
 //};
 
+class Arrow {
+public:
+    DirectX::XMFLOAT3       f3Position;
+
+};
+
 
 class SESSION
 {
@@ -21,23 +27,23 @@ public:
 
     SESSION() {}
     SESSION(const SESSION& session) {}
+    SESSION(BOOL b) : connected(b) {}
     ~SESSION() {}
 
-    OVER_EX     over;
-    SOCKET      sock;
-    SOCKADDR_IN clientaddr;
-    int         addrlen;
-    char        packet_buf[BUFSIZE];
+    OVER_EX                  over;
+    SOCKET                   sock;
+    SOCKADDR_IN              clientaddr;
+    int                      addrlen;
+    char                     packet_buf[BUFSIZE];
+        
+    char*                    packet_start;
+    char*                    recv_start;
 
-    char*       packet_start;
-    char*       recv_start;
-
-    bool        connected = false;
-    bool        isready = false;
-    bool        playing = false;
-    int         prev_size;
-    int         id;
-    int         gameroom_num;
+    std::atomic<bool>        connected = false;
+    bool                     isready = false;
+    bool                     playing = false;
+    int                      prev_size;
+    int                      id;
 
     // 0 죽음 / 1 생존
     std::atomic<bool>       state = 0;
@@ -68,42 +74,46 @@ public:
     void display_error(const char* msg, int err_no);
 
     int SetClientId();
-    int SetGameNum();
+    int SetroomID();
 
     void ConnectLobby();
 
     bool Init();
     void Thread_join();
-    void Disconnected(int id);
+    void Disconnected(int id, int roomID);
 
     void Accept();
     void WorkerFunc();
 
-    void do_recv(char id);
+    void do_recv(int id);
     void send_packet(int to, char* packet);
-    void process_packet(char id, char* buf);
+    void process_packet(int id, char* buf, int roomID);
 
-    void send_ID_player_packet(char id);
-    void send_login_player_packet(char id, int to);
-    void send_disconnect_player_packet(char id);
-    void send_packet_to_players(char id, char* buf);
-    void send_packet_to_players(int game_num, char* buf);
-    void send_map_collapse_packet(int num, int map_num);
-    void send_cloud_move_packet(float x, float z, int map_num);
+    void send_ID_player_packet(int id, int roomID);
+    void send_login_player_packet(int id, int to, int roomID);
+    void send_playing_player_packet(int to, int roomID);
+    void send_disconnect_player_packet(int id,int roomID);
+    void send_packet_to_players(int id, char* buf, int roomID);
+    void send_packet_to_allplayers(int roomnum, char* buf);
+    void send_map_collapse_packet(int num, int roomID);
+    void send_cloud_move_packet(float x, float z, int roomID);
     
-    void game_end(int game_num);
+    void game_end(int roomnum);
 
     float calc_distance(int a, int b);
+    unsigned short calc_attack(int id, char attacktype);
     DirectX::XMFLOAT3 move_calc(DWORD dwDirection, float fDistance, int state, int id);
 
 private:
     HANDLE hcp;
     
-    std::unordered_multimap <int, int> gameroom; // <방번호, 플레이아ID>
+    std::unordered_multimap <int, int> gameroom; // <방번호, 플레이어ID>
     std::unordered_map <int, SESSION> sessions;
     std::unordered_map <int, Map> maps;
 
     std::vector <std::thread> working_threads;
     std::thread accept_thread;
     std::vector <std::thread> map_threads;
+
+    std::mutex accept_lock;
 };

@@ -4,18 +4,19 @@
 constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
 constexpr int BUFSIZE = 1024;
-constexpr int MAX_CLIENT = 100;
+constexpr int MAX_CLIENT = 3000;
 constexpr int MAX_PLAYER = 20;
 
 constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
 
 constexpr int MAX_MAP_BLOCK = 9;
-constexpr int MAP_SIZE = 3000;
-constexpr int MAP_BLOCK_SIZE = 1000;
+constexpr int MAP_SIZE = 99999;
+constexpr int MAP_BLOCK_SIZE = 33333;
 constexpr int MAP_BREAK_TIME = 30;
 
-constexpr float VIEWING_DISTANCE = 500.f;
+constexpr float VIEWING_DISTANCE = 16666.f;
+// 1 = 3cm
 
 #define SERVERIP   "127.0.0.1"
 
@@ -26,6 +27,7 @@ struct OVER_EX
 	char			messageBuffer[BUFSIZE];
 	bool			is_recv;
 	int             type;
+	int				roomID;
 	// 0 = session 1 = map
 };
 
@@ -43,10 +45,14 @@ enum PacketType {
 	Type_start_ok,			// S->C
 	Type_game_end,			// S->C
 	Type_player_info,		//	
+	Type_weapon_swap,
 	Type_player_move,		// C->S
 	Type_player_pos,
 	Type_start_pos,
 	Type_player_attack,		//
+	Type_allow_shot,
+	Type_player_damage,
+	Type_player_stop,
 	Type_map_set,
 	Type_map_collapse,		// S->C
 	Type_cloud_move,		// S->C
@@ -59,6 +65,7 @@ enum PacketType {
 };
 
 enum EventType {
+	Mapset,
 	Cloud_move
 };
 
@@ -70,9 +77,15 @@ enum PlayerState {
 enum PlayerMove {
 	WAKING,
 	RUNNING,
-	JUMP
+	JUMP,
+	STAND
 };
 
+enum PlayerAttackType {
+	SWORD1HL,
+	SWORD1HR,
+	BOW
+};
 #define DIR_FORWARD					0x01
 #define DIR_BACKWARD				0x02
 #define DIR_LEFT					0x04
@@ -82,19 +95,21 @@ enum PlayerMove {
 
 #pragma pack(push, 1)
 
-// 0: size // 1: type // 2: id
+// 0: size // 1: type // 2: id;
 
 struct Packet {
 public:
 	char size;
 	char type;
-	char id;
+	unsigned short id;
 };
 
 struct player_ID_packet :public Packet {
 };
 
 struct player_login_packet : public Packet {
+	DirectX::XMFLOAT3 Position;
+	float dx, dy, dz;
 };
 
 struct game_ready_packet :public Packet {
@@ -131,6 +146,7 @@ struct player_pos_packet : public Packet {
 	char state;
 	DirectX::XMFLOAT3 Position;
 	float dx, dy, dz;
+	DWORD MoveType;
 };
 
 struct player_start_pos : public Packet {
@@ -153,7 +169,7 @@ struct player_stat_packet : public Packet {
 	float speed;
 };
 
-struct player_weapon_packet : public Packet {
+struct Weapon_swap_packet : public Packet {
 	char weapon;
 };
 
@@ -165,8 +181,18 @@ struct player_equipment_packet : public Packet {
 
 struct player_attack_packet : public Packet {
 	char attack_type;
-	DirectX::XMFLOAT3 Position;
-	float damage;
+};
+
+struct player_arrow_packet : public Packet {
+	char attack_type;
+	float fSpeed;
+};
+
+struct player_damage_packet : public Packet {
+	unsigned short damage;
+};
+
+struct player_stop_packet : public Packet {
 };
 
 struct map_block_set : public Packet {

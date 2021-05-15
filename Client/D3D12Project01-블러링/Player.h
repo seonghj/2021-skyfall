@@ -10,6 +10,10 @@
 #include "Object.h"
 #include "Camera.h"
 
+class CPacket;
+
+class CCamera;
+
 class CPlayer : public CGameObject
 {
 protected:
@@ -46,6 +50,7 @@ protected:
 	CCamera						*m_pCamera = NULL;
 
 	CShader						*m_pShader = NULL;
+	CPacket					* m_pPacket = NULL;
 	
 public:
 	CPlayer();
@@ -84,6 +89,9 @@ public:
 
 	CCamera *GetCamera() { return(m_pCamera); }
 	void SetCamera(CCamera *pCamera) { m_pCamera = pCamera; }
+
+	CPacket* GetCPacket() { return(m_pPacket); }
+	void SetCPacket(CPacket* pCPacket) { m_pPacket = pCPacket; }
 
 	void Move(ULONG nDirection, float fDistance, bool bVelocity = false);
 	void Move(const XMFLOAT3& xmf3Shift, bool bVelocity = false);

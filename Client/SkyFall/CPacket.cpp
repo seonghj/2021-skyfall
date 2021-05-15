@@ -109,8 +109,8 @@ void CPacket::SendPacket(char* buf)
     wsabuf.buf = buf;
     retval = WSASend(sock, &wsabuf, 1, &sendbytes, 0, NULL, NULL);
     if (retval == SOCKET_ERROR) {
-        /*printf("%d: ", WSAGetLastError());
-        err_display("send()");*/
+        printf("%d: ", WSAGetLastError());
+        err_display("send()");
     }
 }
 
@@ -130,7 +130,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::Type_player_ID: {
         player_ID_packet* p = reinterpret_cast<player_ID_packet*>(buf);
         client_id = buf[2];
-        //printf("recv id from server: %d\n", p->id);
+        printf("recv id from server: %d\n", p->id);
 
         /*player_info_packet pp;
         pp.id = Get_clientid();
@@ -145,7 +145,23 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::Type_player_login: {
         player_login_packet* p = reinterpret_cast<player_login_packet*>(buf);
-        //printf("login id: %d\n", p->id);
+        printf("login id: %d\n", p->id);
+        if (p->id != client_id) {
+            for (int i = 0; i < MAX_PLAYER; ++i) {
+                if (m_pScene->PlayerIDs[i] == 0) {
+                    m_pScene->PlayerIDs[i] = p->id;
+                    m_pScene->MovePlayer(i, p->Position);
+                    m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, p->dz);
+                    m_pScene->AnimatePlayer(i, 0);
+                    //printf("id: %d x: %f, z: %f\n", p->id, p->Position.x, p->Position.z);
+                    break;
+                }
+            }
+        }
+        else {
+            m_pScene->m_pPlayer->SetPosition(p->Position);
+            m_pScene->m_pPlayer->Rotate(p->dx, p->dy, p->dz);
+        }
         break;
     }
     case PacketType::Type_player_remove: {
@@ -169,9 +185,28 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::Type_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
 
-        switch (p->MoveType) {
-        case PlayerMove::JUMP:
-            m_pPlayer->SetJump(TRUE);
+        if (p->id == client_id) {
+            switch (p->MoveType) {
+            case PlayerMove::JUMP: {
+                m_pPlayer->SetJump(TRUE);
+                break;
+            }
+            }
+        }
+        else {
+            switch (p->MoveType) {
+            case PlayerMove::JUMP: {
+                for (int i = 0; i < MAX_PLAYER; ++i) {
+                    if (m_pScene->PlayerIDs[i] == p->id) {
+                        //m_pScene->m_mPlayer[i]->SetJump(true);
+                        m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
+                        printf("id %d jump\n", p->id);
+                        break;
+                    }
+                }
+                break;
+            }
+            }
         }
 
         //if (client_id == 1)
@@ -180,31 +215,107 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::Type_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
-        m_pPlayer->SetPosition(p->Position);
-        m_pPlayer->Rotate(p->dx, p->dy, p->dz);
+        if (p->id == client_id) {
+            m_pPlayer->SetPosition(p->Position);
+            m_pPlayer->Rotate(p->dx, p->dy, p->dz);
+            switch (p->MoveType) {
+            case PlayerMove::RUNNING:
+                //m_pPlayer->SetRunning(true);
+                break;
+            }
+        }
+        else {
+            for (int i = 0; i < MAX_PLAYER; ++i) {
+                if (m_pScene->PlayerIDs[i] == p->id) {
+                    switch (p->MoveType) {
+                    case PlayerMove::WAKING:
+                        m_pScene->AnimatePlayer(i, 11); // 11
+                        break;
+                    case PlayerMove::RUNNING:
+                        m_pScene->AnimatePlayer(i, 2); // 2
+                        break;
+                    case PlayerMove::JUMP:
+                        m_pScene->AnimatePlayer(i, 1);
+                        break;
+                    default:
+                        m_pScene->AnimatePlayer(i, 0);
+                        break;
+                    }
+                    m_pScene->MovePlayer(i, p->Position);
+                    m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, p->dz);
+                    //printf("id %d move (%f, %f)\n", p->id, p->Position.x, p->Position.z);
+                    break;
+                }
+            }
+        }
+        //m_pCamera->Rotate(p->dx, p->dy, p->dz);
         /* m_pPlayer->Update(fTimeElapsed);
          m_pScene->Update(fTimeElapsed);*/
         break;
     }
     case PacketType::Type_start_pos: {
         player_start_pos* p = reinterpret_cast<player_start_pos*>(buf);
-
-        m_pScene->MovePlayer(p->id, p->Position);
+        if (p->id == client_id) {
+            m_pPlayer->SetPosition(p->Position);
+        }
+        else {
+            for (int i = 0; i < MAX_PLAYER; ++i) {
+                if (m_pScene->PlayerIDs[i] == p->id) {
+                    m_pScene->m_mPlayer[i]->SetPosition(p->Position);
+                    break;
+                }
+            }
+        }
         break;
     }
     case PacketType::Type_player_attack: {
-       /* player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
-        m_pScene->Shot(fTimeElapsed, 300.f);
+        player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
+        if (p->id == client_id) {
+            switch (p->attack_type) {
+            case SWORD1HL: {
+                m_pPlayer->LButtonDown();
+                break;
+            }
+            case SWORD1HR: {
+                m_pPlayer->RButtonDown();
+                break;
+            }
+            }
+        }
+        else {
+            for (int i = 0; i < MAX_PLAYER; ++i) {
+                if (m_pScene->PlayerIDs[i] == p->id) {
+                    switch (p->attack_type) {
+                    case SWORD1HL: {
+                        m_pScene->AnimatePlayer(i, 6);
+                        printf("id: %d SWORD1HL attack\n", p->id);
+                        break;
+                    }
+                    case SWORD1HR: {
+                        m_pScene->AnimatePlayer(i, 9);
+                        printf("id: %d SWORD1HR attack\n", p->id);
+                        break;
+                    }
+                    }
+                    break;
+                }
+            }
+        }
 
-        if (m_pPlayer->GetAttack() && m_pPlayer->GetCamera()->GetMode() == THIRD_PERSON_CAMERA)
-        {
-            printf("Look - X : %f Y : %f Z : %f", m_pPlayer->GetLook().x, m_pPlayer->GetLook().y, m_pPlayer->GetLook().z);
-            m_pPlayer->Shot(fTimeElapsed, m_ChargeTimer.GetTotalTime() * 100.f);
-            m_pPlayer->SetAttack(false);
-        }*/
-        /*m_pPlayer->Update(fTimeElapsed);
-        m_pScene->Update(fTimeElapsed);*/
+        break;
+    }
 
+    case PacketType::Type_player_stop: {
+        player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
+        if (p->id != client_id) {
+            for (int i = 0; i < MAX_PLAYER; ++i) {
+                if (m_pScene->PlayerIDs[i] == p->id) {
+                    m_pScene->AnimatePlayer(i, 0);
+                    m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(6, 0);
+                    m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(9, 0);
+                }
+            }
+        }
         break;
     }
 

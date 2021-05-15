@@ -4,12 +4,47 @@ void Map::init_Map(Server* s)
 {
 	m_pServer = s;
 
+	memset(&over, 0, sizeof(over));
+	over.is_recv = true;
+	over.dataBuffer.len = BUFSIZE;
+	over.dataBuffer.buf = over.messageBuffer;
+	over.type = 1;
+	over.roomID = roomnum;
+
+	// 맵생성 이벤트 전달
+	map_block_set p;
+	p.type = EventType::Mapset;
+	p.size = sizeof(p);
+	p.id = roomnum;
+	over.dataBuffer.len = sizeof(p);
+	strcpy_s(over.messageBuffer, reinterpret_cast<char*>(&p));
+	DWORD Transferred = 0;
+	BOOL ret = PostQueuedCompletionStatus(m_pServer->Gethcp(), Transferred
+		, (ULONG_PTR)&(roomnum), (LPOVERLAPPED)&over.overlapped);
+
+	game_time = 0;
+
+	//hMove = CreateEvent(NULL, TRUE, TRUE, NULL);
+	ismove = true;
+
+	Set_wind();
+	Set_cloudpos();
+	//print_Map();
+	cloud_move();
+}
+
+void Map::Set_map()
+{
 	int num_count[3] = { 0 };
 	int n;
 
+	map_block_set p;
+	p.type = EventType::Mapset;
+	p.size = sizeof(p);
+	p.id = roomnum;
+
 	for (int i = 0; i < MAX_MAP_BLOCK; i++)
 	{
-		
 		while (1)
 		{
 			int n = rand() % 3;
@@ -17,11 +52,11 @@ void Map::init_Map(Server* s)
 			{
 				num_count[n]++;
 				Map_num[i] = n;
+				p.block_num[i] = n;
 				break;
 			}
 		}
 	}
-
 	for (int i = 0; i < 9; i++)
 	{
 		atm[i] = 1000 + rand() % 100;
@@ -31,29 +66,9 @@ void Map::init_Map(Server* s)
 			atm[i] += 100;
 		isMap_block[i] = TRUE;
 	}
-
-	map_block_set p;
-	p.type = PacketType::Type_map_set;
-	p.size = sizeof(p);
-	for (int i = 0; i < MAX_MAP_BLOCK; ++i)
-		p.block_num[i] = Map_num[i];
-	m_pServer->send_packet_to_players(game_num, reinterpret_cast<char*>(&p));
-
-	game_time = 0;
-
-	memset(&over, 0, sizeof(over));
-	over.is_recv = true;
-	over.dataBuffer.len = BUFSIZE;
-	over.dataBuffer.buf = over.messageBuffer;
-	over.type = 1;
-
-	//hMove = CreateEvent(NULL, TRUE, TRUE, NULL);
-	ismove = true;
-
-	Set_wind();
-	Set_cloudpos();
-	print_Map();
-	cloud_move();
+	over.dataBuffer.len = sizeof(p);
+	strcpy_s(over.messageBuffer, reinterpret_cast<char*>(&p));
+	m_pServer->send_packet_to_allplayers(p.id, reinterpret_cast<char*>(&p));
 }
 
 void Map::Set_wind()
@@ -63,11 +78,11 @@ void Map::Set_wind()
 		if (i < 6)
 		{
 			if (i == 0 || i == 1)
-				wind[i] = calc_windpower(atm[i], atm[i + 1]);
+				wind[i] = calc_windpower(atm[i], atm[i + 1]) * 333;
 			else if (i == 2 || i == 3)
-				wind[i] = calc_windpower(atm[i + 1], atm[i + 2]);
+				wind[i] = calc_windpower(atm[i + 1], atm[i + 2]) * 333;
 			else if (i == 4 || i == 5)
-				wind[i] = calc_windpower(atm[i + 2], atm[i + 3]);
+				wind[i] = calc_windpower(atm[i + 2], atm[i + 3] * 333);
 		}
 		else
 		{
@@ -80,7 +95,7 @@ void Map::Set_cloudpos()
 {
 	std::random_device rd;
 	std::mt19937_64 gen(rd());
-	std::uniform_int_distribution<int> dis(10, 2990);
+	std::uniform_int_distribution<int> dis(10, MAP_SIZE - 5000);
 	Cloud.x = dis(gen);
 	Cloud.y = dis(gen);
 }
@@ -113,7 +128,7 @@ void Map::cloud_move()
 	if (ismove) {
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		std::thread::id Thread_id = std::this_thread::get_id();
-		printf("thread id: %d - ", Thread_id);
+		//printf("thread id: %d - ", Thread_id);
 		//ismove = false;
 		for (int i = 0; i < 3; i++)
 		{
@@ -160,16 +175,17 @@ void Map::cloud_move()
 		/*printf("cloud x: %f | y: %f\n\n", Cloud.x, Cloud.y);
 
 
-		m_pServer->send_cloud_move_packet(Cloud.x, Cloud.y, game_num);*/
+		m_pServer->send_cloud_move_packet(Cloud.x, Cloud.y, roomnum);*/
 
 
 		cloud_move_packet p;
 		p.type = EventType::Cloud_move;
 		p.size = sizeof(p);
-		p.id = game_num;
+		p.id = roomnum;
 		p.x = Cloud.x;
 		p.z = Cloud.y;
 		over.dataBuffer.len = sizeof(p);
+		over.type = 2;
 		memcpy(over.dataBuffer.buf, reinterpret_cast<char*>(&p), sizeof(p));
 
 		++game_time;
@@ -177,7 +193,7 @@ void Map::cloud_move()
 			Map_collapse();
 		DWORD Transferred = 0;
 		BOOL ret = PostQueuedCompletionStatus(m_pServer->Gethcp(), Transferred
-			, (ULONG_PTR) & (game_num), (LPOVERLAPPED)&over.overlapped);
+			, (ULONG_PTR) & (roomnum), (LPOVERLAPPED)&over.overlapped);
 		ismove = true;
 	}
 }
@@ -226,10 +242,10 @@ void Map::Map_collapse()
 		else if (num == 7)
 			wind[4] = 0, wind[5] = 0, wind[10] = 0;
 	}*/
-	m_pServer->send_map_collapse_packet(num, game_num);
-	print_Map();
+	m_pServer->send_map_collapse_packet(num, roomnum);
+	//print_Map();
 
 	if (num == 9) {
-		m_pServer->game_end(game_num);
+		m_pServer->game_end(roomnum);
 	}
 }

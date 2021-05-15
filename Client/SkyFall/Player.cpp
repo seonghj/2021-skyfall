@@ -32,6 +32,7 @@ CPlayer::CPlayer()
 	m_isJump = false;
 	m_isGround = true;
 	m_isRunning = false;
+	m_isStanding = true;
 	m_isAttack = false;
 
 	m_iHp = 0;
@@ -284,20 +285,13 @@ void CPlayer::CheckCollision(CGameObject* pObject)
 		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
 		Move(Vector3::ScalarProduct(d, 50.25f, true), true);
 
-		cout << "몬스터 충돌 - " << pObject->m_pstrFrameName << endl;
+		cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
 	}
 }
 
 void CPlayer::CheckMap(CGameObject* pMap)
 {
-	/*pMap
 	
-	if (isCollide(pMap)) {
-		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
-		Move(Vector3::ScalarProduct(d, 30.f, true), true);
-
-		cout << "지형 충돌 - " << pObject->m_pstrFrameName << endl;
-	}*/
 }
 
 void CPlayer::RotatePlayer(int iYaw)
@@ -365,6 +359,8 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	SetPlayerUpdatedContext(pContext);
 	//SetCameraUpdatedContext(pContext);
 
+	m_pSkinnedAnimationController->SetAllTrackDisable();
+	m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
 	if (pPlayerModel) delete pPlayerModel;
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
@@ -598,6 +594,8 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	SetPlayerUpdatedContext(pContext);
 	//SetCameraUpdatedContext(pContext);
+	m_pSkinnedAnimationController->SetAllTrackDisable();
+	m_pSkinnedAnimationController->SetTrackEnable(nBow_Idle, true);
 
 	if (pPlayerModel) delete pPlayerModel;
 
@@ -620,7 +618,7 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 		m_ppBullets[i]->SetBBObject(pd3dDevice, pd3dCommandList,
 			XMFLOAT3(0, pMesh->m_xmf3AABBExtents.y + 10, 0),	// Center
-			XMFLOAT3(3, 6, 3));									// Extents
+			XMFLOAT3(2, 5, 2));									// Extents
 		m_ppBullets[i]->SetWireFrameShader();
 	}
 }
@@ -690,13 +688,16 @@ void CBowPlayer::RButtonUp()
 
 void CBowPlayer::LButtonDown()
 {
-	SetCharging(true);
+	if (!m_isCharging && !m_isAttack)
+		SetCharging(true);
 }
 
 void CBowPlayer::LButtonUp()
 {
-	SetAttack(true);
-	SetCharging(false);
+	if (m_isCharging) {
+		SetAttack(true);
+		SetCharging(false);
+	}
 }
 
 
@@ -706,7 +707,7 @@ void CBowPlayer::CheckCollision(CGameObject* pObject)
 	if (m_ppBullets)
 		for (int i = 0; i < m_nBullets; ++i) {
 			if (m_ppBullets[i]->isCollide(pObject)) {
-				cout << "화살 충돌 - " << pObject->m_pstrFrameName << ": Hp = " << pObject->m_iHp << endl;
+				cout << "Bullet Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->m_iHp << endl;
 				DeleteBullet(i);
 				--pObject->m_iHp;
 			}
@@ -720,7 +721,7 @@ void CBowPlayer::CheckCollision(CGameObject* pObject)
 		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
 		CPlayer::Move(Vector3::ScalarProduct(d, 50.25f, true), true);
 
-		cout << "충돌 - " << pObject->m_pstrFrameName << endl;
+		cout << "Collsion - " << pObject->m_pstrFrameName << endl;
 	}
 }
 
@@ -737,6 +738,7 @@ void CBowPlayer::Shot(float fTimeElapsed, float fSpeed)
 	m_ppBullets[m_nBullets]->m_xmf4x4ToParent =  Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
 	m_ppBullets[m_nBullets]->SetPosition(pBow->GetPosition());
 
+	m_ppBullets[m_nBullets]->m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
 	m_ppBullets[m_nBullets]->m_xmf3MovingDirection = GetCamera()->GetLookVector();
 	m_ppBullets[m_nBullets]->SetSpeed(fSpeed);
 	m_ppBullets[m_nBullets++]->Rotate(90.f, 0, 0);
@@ -811,6 +813,8 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	//SetCameraUpdatedContext(pContext);
 
 
+	m_pSkinnedAnimationController->SetAllTrackDisable();
+	m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Idle, true);
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	CGameObject* pBlade = pPlayerModel->m_pModelRootObject->FindFrame("Sword_Blade");
 
@@ -915,12 +919,12 @@ void C1HswordPlayer::CheckCollision(CGameObject* pObject)
 		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
 		CPlayer::Move(Vector3::ScalarProduct(d, 50.25f, true), true);
 
-		cout << "충돌 - " << pObject->m_pstrFrameName << endl;
+		cout << "Collsion - " << pObject->m_pstrFrameName << endl;
 	}
 	if (m_isAttack) {
 		CGameObject* pBlade = FindFrame("Sword_Blade");
 		if (pObject->isCollide(pBlade)) {
-			cout << "검 충돌 - " << pObject->m_pstrFrameName << ": Hp = " << pObject->m_iHp << endl;
+			cout << "Sword Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->m_iHp << endl;
 			--pObject->m_iHp;
 		}
 	}

@@ -46,7 +46,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 		freopen("CONOUT$", "wb", stderr);
 	}
 
-	//std::thread	connect_thread = std::thread(&CPacket::GameConnect, gCPacket);
+	std::thread	connect_thread = std::thread(&CPacket::GameConnect, gCPacket);
 
 	while (1)
 	{

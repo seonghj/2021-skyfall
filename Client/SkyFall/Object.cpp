@@ -621,6 +621,8 @@ CGameObject* CGameObject::SetBBObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	pBBObj->SetMesh(pBoundingBox);
 	pBBObj->SetBoundingBoxShader();
 	pBBObj->Move(Center, 1);
+	pBBObj->m_pMesh->m_xmf3AABBCenter = Center;
+	pBBObj->m_pMesh->m_xmf3AABBExtents = Extents;
 	SetChild(pBBObj);
 
 	return pBBObj;
@@ -747,6 +749,7 @@ CGameObject *CGameObject::FindFrame(char *pstrFrameName)
 
 	if (!strcmp(m_pstrFrameName, pstrFrameName)) return(this);
 
+	if (m_pSibling) if (pFrameObject = m_pSibling->FindFrame(pstrFrameName)) return(pFrameObject);
 	if (m_pChild) if (pFrameObject = m_pChild->FindFrame(pstrFrameName)) return(pFrameObject);
 	if (m_pSibling) if (pFrameObject = m_pSibling->FindFrame(pstrFrameName)) return(pFrameObject);
 
@@ -1013,7 +1016,7 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 			nReads = (UINT)::fread(&pGameObject->m_xmf3Scale, sizeof(XMFLOAT3), 1, pInFile);
 			nReads = (UINT)::fread(&pGameObject->m_xmf3Rotation, sizeof(XMFLOAT3), 1, pInFile);
 			nReads = (UINT)::fread(&pGameObject->m_xmf3Translation, sizeof(XMFLOAT3), 1, pInFile);
-
+			 
 
 			//XMMATRIX S = XMMatrixScaling(pGameObject->m_xmf3Scale.x, pGameObject->m_xmf3Scale.y, pGameObject->m_xmf3Scale.z);
 			//XMMATRIX R = XMMatrixRotationRollPitchYaw(pGameObject->m_xmf3Rotation.x, pGameObject->m_xmf3Rotation.y, pGameObject->m_xmf3Rotation.z);
@@ -1024,7 +1027,7 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 			//XMStoreFloat4x4(&xmf4x4Transform, XMMatrixMultiply(XMMatrixMultiply(S, R), T));
 			//pGameObject->UpdateTransform(&xmf4x4Transform);
 
-		}
+	}
 		else if (!strcmp(pstrToken, "<Mesh>:"))
 		{
 			CStandardMesh *pMesh = new CStandardMesh(pd3dDevice, pd3dCommandList);
@@ -1624,7 +1627,7 @@ void CMap::CheckCollision(CPlayer* pPlayer)
 			XMFLOAT3 d = Vector3::Subtract(pPlayer->GetPosition(), pObject->GetPosition());
 			pPlayer->Move(Vector3::ScalarProduct(d, 50.25f, true), true);
 
-			cout << "지형 충돌 - " << pObject->m_pstrFrameName << endl;
+			cout << "Map Collision - " << pObject->m_pstrFrameName << endl;
 			return;
 		}
 		if (pObject->m_pSibling)
@@ -1735,9 +1738,7 @@ void CBullet::Animate(float fElapsedTime) {
 
 void CBullet::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
-	//Rotate(90.f, 0, 0);
 	CGameObject::Render(pd3dCommandList, pCamera);
-	//Rotate(-90.f, 0, 0);
 }
 
 
@@ -1755,6 +1756,9 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	CGameObject* pObject = pDragonModel->m_pModelRootObject->FindFrame("Polygonal_Dragon");
 
 	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
+	/*CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
+
+	SetBBObject(pBoundingBox);*/
 
 	SetBBObject(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, bb.Extents.y-350, -50),					// Center

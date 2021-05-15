@@ -1,5 +1,8 @@
 #pragma once
-#include "stdafx.h"
+#include"stdafx.h"
+#include "player.h"
+#include "Scene.h"
+#include "protocol.h"
 
 
 constexpr int GAMESERVERPORT = 3500;
@@ -53,80 +56,9 @@ enum MoveType {
 
 struct Packet {
 public:
-	char size;
-	char type;
-};
 
-struct player_ID_packet :public Packet {
-	char id;
-};
-
-struct player_login_packet : public Packet {
-	char id;
-};
-
-struct game_ready_packet :public Packet {
-	char id;
-};
-
-struct game_start_packet :public Packet {
-	char id;
-};
-
-struct start_ok_packet :public Packet {
-	// 0 = no / 1 = ok
-	char value;
-};
-
-struct game_end_packet :public Packet {
-	char id;
-};
-
-
-struct player_remove_packet : public Packet {
-	char id;
-};
-
-struct player_info_packet : public Packet {
-	char id;
-	char state;
-	char weapon;
-	char armor;
-	char helmet;
-	char shoes;
-	float hp;
-	float lv;
-	float speed;
-};
-
-struct player_move_packet : public Packet {
-	char id;
-	char MoveType;
-	float x, y, z;
-	float degree;
-};
-
-struct player_attack_packet : public Packet {
-	char id;
-	char attack_type;
-	float damage;
-};
-
-struct map_collapse_packet : public Packet {
-	char block_num;
-};
-
-struct cloud_move_packet : public Packet {
-	float x, z;
-};
-
-#pragma pack(pop)
-
-class PacketFunc {
-public:
-
-	PacketFunc();
-	~PacketFunc();
+	CPacket();
+	~CPacket();
 
 	WSAOVERLAPPED overlapped;
 	SOCKET sock;
@@ -136,6 +68,12 @@ public:
 	DWORD sendbytes;
 	WSABUF wsabuf;
 	HANDLE SendEvent;
+
+	CPlayer* m_pPlayer = NULL;
+	CScene* m_pScene = NULL;
+
+	float fTimeElapsed;
+	float ChargeTimer;
 
 	void err_quit(char* msg);
 	void err_display(char* msg);

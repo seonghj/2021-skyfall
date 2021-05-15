@@ -40,6 +40,7 @@ protected:
 	bool						m_isGround;
 	bool						m_isRunning;
 	bool						m_isAttack;
+	bool						m_isStanding;
 	bool						m_isCharging;
 
 	// stat
@@ -70,6 +71,7 @@ public:
 	void SetJump(bool jump) { m_isJump = jump; }
 	void SetRunning(bool run) { m_isRunning = run; }
 	void SetGround(bool ground) { m_isGround = ground; }
+	void SetStanding(bool stand) { m_isStanding = stand; }
 	virtual void SetAttack(bool shoot) { m_isAttack = shoot; }
 	void SetCharging(bool charge) { m_isCharging = charge; }
 	void SetHp(int hp) { m_iHp = hp; }
@@ -89,6 +91,7 @@ public:
 	bool  GetRunning() const { return(m_isRunning); }
 	bool  GetGround() const { return(m_isGround); }
 	bool  GetAttack() const { return(m_isAttack); }
+	bool  GetStanding() const { return(m_isStanding); }
 	bool  GetCharging() const { return(m_isCharging); }
 	int GetHp() const { return(m_iHp); }
 	float GetAtkStat() const { return(m_fAtkStat); }

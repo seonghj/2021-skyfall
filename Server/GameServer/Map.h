@@ -9,7 +9,7 @@ class Server;
 class Map{
 public:
 	Map() { }
-	Map(const int& num) { game_num = num; }
+	Map(const int& num):roomnum(num) { }
 	~Map() {}
 
 	OVER_EX     over;
@@ -26,11 +26,16 @@ public:
 
 	bool ismove;
 
-	void SetNum(int n) { game_num = n; }
+	void SetNum(int n) { roomnum = n; }
+
 	void init_Map(Server* s);
+
+	void Set_map();
 	void Set_wind();
 	void Set_cloudpos();
+
 	void print_Map();
+
 	float calc_windpower(float a, float b);
 	void cloud_move();
 	void Map_collapse();
@@ -38,5 +43,5 @@ public:
 private:
 	int game_time;
 	Server* m_pServer = NULL;
-	int game_num = -1;
+	int roomnum = -1;
 };
