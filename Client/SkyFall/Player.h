@@ -235,7 +235,7 @@ public:
 	virtual void CheckCollision(CGameObject* pObject);
 
 	int m_nAttack = 0;
-	bool m_bHit;
+	bool m_bHit = false;
 	
 	const int n1Hsword_Idle = 0;
 	const int n1Hsword_Jump = 1;

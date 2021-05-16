@@ -65,21 +65,8 @@ VS_STANDARD_OUTPUT VSStandard(VS_STANDARD_INPUT input)
 
 float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
 {
-
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
 
-
-	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
-
-	//if (gnTexturesMask & MATERIAL_NORMAL_MAP)
-	//{
-	//	float3 normalW = input.normalW;
-	//	float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-	//	float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] ¡æ [-1, 1]
-	//	normalW = normalize(mul(vNormal, TBN));
-	//	cIllumination = Lighting(input.positionW, normalW);
-	//	cColor = lerp(cColor, cIllumination, 0.5f);
-	//}
 	return(cColor);
 }
 
@@ -129,9 +116,9 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 	if (/*gnTexturesMask & MATERIAL_NORMAL_MAP*/true)
 	{
 		float3 normalW = input.normalW;
-		//float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] ¡æ [-1, 1]
-		//normalW = normalize(mul(vNormal, TBN));
+		float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
+		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] ¡æ [-1, 1]
+		normalW = normalize(mul(vNormal, TBN));
 		cIllumination = Lighting(input.positionW, normalW);
 		cColor = lerp(cColor, cIllumination, 0.5f);
 	}

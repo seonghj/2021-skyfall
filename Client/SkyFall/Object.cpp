@@ -1047,8 +1047,8 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 			pGameObject->SetMesh(pMesh);
 			isSkinDeformation = false;
 
-			BoundingBox bb = BoundingBox(pMesh->m_xmf3AABBCenter,pMesh->m_xmf3AABBExtents);
-			pGameObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,0), bb.Extents);
+			/*BoundingBox bb = BoundingBox(pMesh->m_xmf3AABBCenter,pMesh->m_xmf3AABBExtents);
+			pGameObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,0), bb.Extents);*/
 		}
 		else if (!strcmp(pstrToken, "<SkinDeformations>:"))
 		{
@@ -1612,21 +1612,21 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	CLoadedModelInfo* pSnow_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
 	//SetChild(pDesert_Test->m_pModelRootObject, true);
 
-	m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, 0);
-	m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable, 0);
-	m_ppMaps[2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable, 0);
+	m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
+	m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
+	m_ppMaps[2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
 
-	m_ppMaps[3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Collision, 0);
-	m_ppMaps[4] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Steppable, 0);
-	m_ppMaps[5] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable, 0);
+	m_ppMaps[3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Collision, true);
+	m_ppMaps[4] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable);
+	m_ppMaps[5] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable);
 
 	m_ppMaps[3]->SetPosition(-2048.0f, 0.0f, 0.0f);
 	m_ppMaps[4]->SetPosition(-2048.0f, 0.0f, 0.0f);
 	m_ppMaps[5]->SetPosition(-2048.0f, 0.0f, 0.0f);
 
-	m_ppMaps[6] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Collision, 0);
-	m_ppMaps[7] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Steppable, 0);
-	m_ppMaps[8] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable, 0);
+	m_ppMaps[6] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Collision, true);
+	m_ppMaps[7] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable);
+	m_ppMaps[8] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable);
 
 	m_ppMaps[6]->SetPosition(2048.0f, 0.0f, 0.0f);
 	m_ppMaps[7]->SetPosition(2048.0f, 0.0f, 0.0f);
@@ -1670,31 +1670,34 @@ void CMap::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 
 void CMap::CheckCollision(CPlayer* pPlayer)
 {
-	CGameObject* pObject = m_ppMaps[0]->FindFrame("RootNode")->m_pChild->m_pChild;
-	while (true) {
-		if (pPlayer->isCollide(pObject)) {
-			XMFLOAT3 d = Vector3::Subtract(pPlayer->GetPosition(), pObject->GetPosition());
-			pPlayer->Move(Vector3::ScalarProduct(d, 50.25f, true), true);
+	CGameObject* pObject;
+	for (int i = 0; i < 3; ++i) {
+		pObject = m_ppMaps[3 * i]->FindFrame("RootNode")->m_pChild->m_pChild;
+		while (true) {
+			if (pPlayer->isCollide(pObject)) {
+				XMFLOAT3 d = Vector3::Subtract(pPlayer->GetPosition(), pObject->GetPosition());
+				pPlayer->Move(Vector3::ScalarProduct(d, 50.25f, true), true);
 
-			cout << "Map Collision - " << pObject->m_pstrFrameName << endl;
-			return;
+				cout << "Map Collision - " << pObject->m_pstrFrameName << endl;
+				return;
+			}
+			if (pObject->m_pSibling)
+				pObject = pObject->m_pSibling;
+			else
+				return;
 		}
-		if (pObject->m_pSibling)
-			pObject = pObject->m_pSibling;
-		else 
-			return;
 	}
 }
 
 void CMap::ReleaseUploadBuffers()
 {
-	for (int i = 0; i < 2; ++i)
+	for (int i = 0; i < 9; ++i)
 		m_ppMaps[i]->ReleaseUploadBuffers();
 }
 
 void CMap::Release()
 {
-	for (int i = 0; i < 2; ++i)
+	for (int i = 0; i < 9; ++i)
 		if(m_ppMaps[i])
 			m_ppMaps[i]->Release();
 }
@@ -1729,25 +1732,24 @@ CPlayerObject::~CPlayerObject()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 
 
-CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks)
+CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel,bool bCollide)
 {
 	CLoadedModelInfo* pMapModel = pModel;
 	if (!pMapModel) pMapModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Tree.bin", NULL);
 
 	SetChild(pMapModel->m_pModelRootObject, true);
-	//m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMapModel);
 
 	CGameObject* pObject = FindFrame("RootNode")->m_pChild->m_pChild;	
 
-	//while (true) {
-	//	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
-	//	pObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, bb.Center.y, 0), bb.Extents);
-	//	//pObject->UpdateTransform();
-	//	if (pObject->m_pSibling)
-	//		pObject = pObject->m_pSibling;
-	//	else
-	//		break;
-	//}
+	while (bCollide) {
+		BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
+		pObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 0), bb.Extents);
+		//pObject->UpdateTransform();
+		if (pObject->m_pSibling)
+			pObject = pObject->m_pSibling;
+		else
+			break;
+	}
 
 	strcpy_s(m_pstrFrameName, "Map");
 	Rotate(0, 90.f, 0);
