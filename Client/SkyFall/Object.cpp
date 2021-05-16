@@ -1576,12 +1576,12 @@ void CSkyBox::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
 {
-	CLoadedModelInfo* pDesert_Test = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Collision.bin", NULL);
+	CLoadedModelInfo* pDesert_Test = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Collision.bin", NULL);
 	CLoadedModelInfo* pDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert.bin", NULL);
 	CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Steppable.bin", NULL);
 	//SetChild(pDesert_Test->m_pModelRootObject, true);
 
-	m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Test, 0);
+	m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert, 0);
 
 	//m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Test, 0);
 	//m_ppMaps[1]->SetPosition(0, 124, 0);
@@ -1620,7 +1620,7 @@ void CMap::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 
 void CMap::CheckCollision(CPlayer* pPlayer)
 {
-	CGameObject* pObject = m_ppMaps[0]->FindFrame("RootNode")->m_pChild->m_pChild;
+	/*CGameObject* pObject = m_ppMaps[0]->FindFrame("RootNode")->m_pChild->m_pChild;
 	while (true) {
 		if (pPlayer->isCollide(pObject)) {
 			XMFLOAT3 d = Vector3::Subtract(pPlayer->GetPosition(), pObject->GetPosition());
@@ -1633,7 +1633,7 @@ void CMap::CheckCollision(CPlayer* pPlayer)
 			pObject = pObject->m_pSibling;
 		else 
 			return;
-	}
+	}*/
 }
 
 CGameObject* CMap::GetMap(int idx) const
@@ -1676,15 +1676,15 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	CGameObject* pObject = FindFrame("RootNode")->m_pChild->m_pChild;	
 
-	while (true) {
-		BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
-		pObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, bb.Center.y, 0), bb.Extents);
-		//pObject->UpdateTransform();
-		if (pObject->m_pSibling)
-			pObject = pObject->m_pSibling;
-		else
-			break;
-	}
+	//while (true) {
+	//	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
+	//	pObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, bb.Center.y, 0), bb.Extents);
+	//	//pObject->UpdateTransform();
+	//	if (pObject->m_pSibling)
+	//		pObject = pObject->m_pSibling;
+	//	else
+	//		break;
+	//}
 
 	strcpy_s(m_pstrFrameName, "Map");
 	//Rotate(0, 90.f, 0);
