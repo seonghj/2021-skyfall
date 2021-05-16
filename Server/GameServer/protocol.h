@@ -88,10 +88,11 @@ enum PlayerAttackType {
 };
 
 enum PlayerType {
-	BASIC,
-	SWORD1H,
-	BOW
+	PT_BASIC,
+	PT_SWORD1H,
+	PT_BOW
 };
+
 
 #define DIR_FORWARD					0x01
 #define DIR_BACKWARD				0x02
