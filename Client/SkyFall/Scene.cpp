@@ -91,8 +91,8 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Desert.raw"), 257, 257, xmf3Scale, xmf4Color,0);
 	m_pForestTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Forest.raw"), 257, 257, xmf3Scale, xmf4Color,1);
 	m_pSnowTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Snow.raw"), 257, 257, xmf3Scale, xmf4Color,2);
-	m_pForestTerrain->SetPosition(-2000.0f, 0.0f, 0.0f);
-	m_pSnowTerrain->SetPosition(2000.0f, 125.0f, 0.0f);
+	m_pForestTerrain->SetPosition(-2048.0f, 0.0f, 0.0f);
+	m_pSnowTerrain->SetPosition(2048.0f, 125.0f, 0.0f);
 
 	m_nGameObjects = 4;
 	m_ppGameObjects = new CMonster*[m_nGameObjects];

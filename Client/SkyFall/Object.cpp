@@ -1618,17 +1618,17 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	m_ppMaps[4] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Steppable, 0);
 	m_ppMaps[5] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable, 0);
 
-	m_ppMaps[3]->SetPosition(-2000.0f, 0.0f, 0.0f);
-	m_ppMaps[4]->SetPosition(-2000.0f, 0.0f, 0.0f);
-	m_ppMaps[5]->SetPosition(-2000.0f, 0.0f, 0.0f);
+	m_ppMaps[3]->SetPosition(-2048.0f, 0.0f, 0.0f);
+	m_ppMaps[4]->SetPosition(-2048.0f, 0.0f, 0.0f);
+	m_ppMaps[5]->SetPosition(-2048.0f, 0.0f, 0.0f);
 
 	m_ppMaps[6] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Collision, 0);
 	m_ppMaps[7] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Steppable, 0);
 	m_ppMaps[8] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable, 0);
 
-	m_ppMaps[6]->SetPosition(2000.0f, 0.0f, 0.0f);
-	m_ppMaps[7]->SetPosition(2000.0f, 0.0f, 0.0f);
-	m_ppMaps[8]->SetPosition(2000.0f, 0.0f, 0.0f);
+	m_ppMaps[6]->SetPosition(2048.0f, 0.0f, 0.0f);
+	m_ppMaps[7]->SetPosition(2048.0f, 0.0f, 0.0f);
+	m_ppMaps[8]->SetPosition(2048.0f, 0.0f, 0.0f);
 
 	//for (int i = 0; i < 3; ++i) {
 	//	for (int j = 0; j < 3; ++j) {
@@ -1652,6 +1652,10 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	if (pDesert_Collision)delete pDesert_Collision;
 	if (pDesert_Steppable)delete pDesert_Steppable;
 	if (pDesert_Passable)delete pDesert_Passable;
+}
+
+CMap::~CMap()
+{
 }
 
 void CMap::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)

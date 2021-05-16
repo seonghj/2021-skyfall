@@ -681,12 +681,26 @@ void CGameFramework::AnimateObjects()
 {
 	float fTimeElapsed = m_GameTimer.GetTimeElapsed();
 
-	if (m_pScene) m_pScene->AnimateObjects(fTimeElapsed);
+	if (m_pScene) {
+		m_pScene->AnimateObjects(fTimeElapsed);
 
+		// 임시방편
+		if (m_pPlayer->GetPosition().x < 0) {
+			m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pForestTerrain);
+		}
+		else if (m_pPlayer->GetPosition().x < 2048) {
+			m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pTerrain);
+		}
+		else {
+			m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pSnowTerrain);
+		}
+
+	}
 	if(m_p1HswordPlayer)
 		m_p1HswordPlayer->Animate(fTimeElapsed);
 	if (m_pBowPlayer)
 		m_pBowPlayer->Animate(fTimeElapsed);
+	
 
 	/*for (int i = 0; i < OTHER_PLAYER_NUM; i++)
 	{
