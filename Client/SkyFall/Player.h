@@ -44,8 +44,6 @@ protected:
 	bool						m_isCharging;
 
 	// stat
-	float						m_fDefStat;
-	float						m_fHitCool;
 
 	LPVOID						m_pPlayerUpdatedContext = NULL;
 	LPVOID						m_pCameraUpdatedContext = NULL;
@@ -74,9 +72,6 @@ public:
 	void SetStanding(bool stand) { m_isStanding = stand; }
 	virtual void SetAttack(bool shoot) { m_isAttack = shoot; }
 	void SetCharging(bool charge) { m_isCharging = charge; }
-	void SetHp(int hp) { m_iHp = hp; }
-	void SetAtkStat(float atk) { m_fAtkStat = atk; }
-	void SetDefStat(float def) { m_fDefStat = def; }
 
 	virtual void RButtonDown() {};
 	virtual void RButtonUp() {};
@@ -93,9 +88,6 @@ public:
 	bool  GetAttack() const { return(m_isAttack); }
 	bool  GetStanding() const { return(m_isStanding); }
 	bool  GetCharging() const { return(m_isCharging); }
-	int GetHp() const { return(m_iHp); }
-	float GetAtkStat() const { return(m_fAtkStat); }
-	float GetDefStat() const { return(m_fDefStat); }
 
 	void SetScale(XMFLOAT3& xmf3Scale) { m_xmf3Scale = xmf3Scale; }
 
@@ -156,7 +148,7 @@ class CTerrainPlayer : public CPlayer
 {
 public:
 	CTerrainPlayer() :CPlayer() {};
-	CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext=NULL);
+	CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void *pContext=NULL);
 	virtual ~CTerrainPlayer();
 
 public:
@@ -189,7 +181,7 @@ public:
 	void DeleteBullet(const int& idx);
 	void Animate(float fTimeElapsed);
 
-	CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL);
+	CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void* pContext = NULL);
 	virtual ~CBowPlayer();
 
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
@@ -229,7 +221,7 @@ protected:
 class C1HswordPlayer : public CTerrainPlayer
 {
 public:
-	C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL);
+	C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void* pContext = NULL);
 	virtual ~C1HswordPlayer();
 
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
@@ -243,7 +235,8 @@ public:
 	virtual void CheckCollision(CGameObject* pObject);
 
 	int m_nAttack = 0;
-
+	bool m_bHit;
+	
 	const int n1Hsword_Idle = 0;
 	const int n1Hsword_Jump = 1;
 	const int n1Hsword_Run = 2;

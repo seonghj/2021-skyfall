@@ -35,10 +35,10 @@ CPlayer::CPlayer()
 	m_isStanding = true;
 	m_isAttack = false;
 
-	m_iHp = 0;
-	m_fAtkStat = 0;
-	m_fDefStat = 0;
-	m_fHitCool = 0.f;
+	m_iHp = 100;
+	m_iAtkStat = 10;
+	m_iDefStat = 0;
+	m_fHitCool = 1.f;
 
 	m_pPlayerUpdatedContext = NULL;
 	m_pCameraUpdatedContext = NULL;
@@ -171,6 +171,9 @@ void CPlayer::Rotate(float x, float y, float z)
 
 void CPlayer::Update(float fTimeElapsed)
 {
+	if(m_fHitCool>0)
+		m_fHitCool -= fTimeElapsed;
+
 	// jump
 	if (GetJump() && GetGround())
 	{
@@ -269,10 +272,10 @@ void CPlayer::OnPrepareRender()
 
 void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
 {
-	DWORD nCameraMode = (pCamera) ? pCamera->GetMode() : 0x00;
-	//if (nCameraMode == THIRD_PERSON_CAMERA) {
-		CGameObject::Render(pd3dCommandList, pCamera);
-	//}
+
+
+	CGameObject::Render(pd3dCommandList, pCamera);
+
 }
 
 
@@ -280,8 +283,12 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 void CPlayer::CheckCollision(CGameObject* pObject)
 {
 	// Player - pObject
-	if (m_fHitCool <= 0 && isCollide(pObject)) {
-		m_fHitCool = 0.f;
+	if (isCollide(pObject)) {
+		if (m_fHitCool <= 0) {
+			m_fHitCool = 1.f;
+			TakeDamage(pObject->GetAtkStat());
+			cout << "damage : "  << pObject->GetAtkStat() << endl;
+		}
 		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
 		Move(Vector3::ScalarProduct(d, 50.25f, true), true);
 
@@ -321,11 +328,11 @@ void CSoundCallbackHandler::HandleCallback(void *pCallbackData, float fTrackPosi
 #endif
 }
 
-CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, void *pContext)
+CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void *pContext)
 {
 	strcpy_s(m_pstrFrameName, "Player_Basic");
 
-	CLoadedModelInfo *pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+	CLoadedModelInfo* pPlayerModel = pModel;
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 
 	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,30), XMFLOAT3(10,10,30));
@@ -361,7 +368,6 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 
 	m_pSkinnedAnimationController->SetAllTrackDisable();
 	m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
-	if (pPlayerModel) delete pPlayerModel;
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -554,7 +560,7 @@ void CTerrainPlayer::Update(float fTimeElapsed)
 }
 #endif
 
-CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
+CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void* pContext)
 {
 	strcpy_s(m_pstrFrameName, "Player_Bow");
 	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
@@ -596,8 +602,6 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	//SetCameraUpdatedContext(pContext);
 	m_pSkinnedAnimationController->SetAllTrackDisable();
 	m_pSkinnedAnimationController->SetTrackEnable(nBow_Idle, true);
-
-	if (pPlayerModel) delete pPlayerModel;
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -707,22 +711,16 @@ void CBowPlayer::CheckCollision(CGameObject* pObject)
 	if (m_ppBullets)
 		for (int i = 0; i < m_nBullets; ++i) {
 			if (m_ppBullets[i]->isCollide(pObject)) {
-				cout << "Bullet Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->m_iHp << endl;
+				cout << "Bullet Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
 				DeleteBullet(i);
-				--pObject->m_iHp;
+				pObject->TakeDamage(m_iAtkStat);
 			}
 			if(m_ppBullets[i]->GetPosition().y<=0)
 				DeleteBullet(i--);
 		}
 
 	// Player - pObject
-	if (m_fHitCool <= 0 && isCollide(pObject)) {
-		m_fHitCool = 0.f;
-		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
-		CPlayer::Move(Vector3::ScalarProduct(d, 50.25f, true), true);
-
-		cout << "Collsion - " << pObject->m_pstrFrameName << endl;
-	}
+	CPlayer::CheckCollision(pObject);
 }
 
 void CBowPlayer::Shot(float fTimeElapsed, float fSpeed)
@@ -783,18 +781,18 @@ void CBowPlayer::Animate(float fTimeElapsed)
 void CBowPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	DWORD nCameraMode = (pCamera) ? pCamera->GetMode() : 0x00;
-	if (nCameraMode == THIRD_PERSON_CAMERA) {
-		CGameObject::Render(pd3dCommandList, pCamera);
-	}
+
+	CGameObject::Render(pd3dCommandList, pCamera);
+
 	for (int i = 0; i < m_nBullets; ++i) {
 		m_ppBullets[i]->Render(pd3dCommandList, pCamera);
 	}
 }
 
-C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
+C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void* pContext)
 {
 	strcpy_s(m_pstrFrameName, "Player_1Hsword");
-	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
+	CLoadedModelInfo* pPlayerModel = pModel;
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 
 	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(10, 10, 30));
@@ -812,13 +810,15 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Attack3, n1Hsword_Attack3);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Attack4, n1Hsword_Attack4);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_TakeDamage, n1Hsword_TakeDamage);
-
 	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Jump, n1Hsword_Jump);
-	m_pSkinnedAnimationController->SetTrackType(n1Hsword_Jump, ANIMATION_TYPE_ONCE);
-
 	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Death, n1Hsword_Death);
-	m_pSkinnedAnimationController->SetTrackType(n1Hsword_Death, ANIMATION_TYPE_ONCE);
 
+	m_pSkinnedAnimationController->SetTrackType(n1Hsword_Jump, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackType(n1Hsword_Death, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackType(n1Hsword_Attack1, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackType(n1Hsword_Attack2, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackSpeed(n1Hsword_Attack1, 1.5f);
+	m_pSkinnedAnimationController->SetTrackSpeed(n1Hsword_Attack2, 1.5f);
 
 #ifdef _WITH_SOUND_CALLBACK
 	m_pSkinnedAnimationController->SetCallbackKeys(n1Hsword_Walk, 1);
@@ -843,7 +843,6 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 		XMFLOAT3(0,0,0),
 		XMFLOAT3(bb.Extents.x, bb.Extents.y, bb.Extents.z));
 
-	if (pPlayerModel) delete pPlayerModel;
 }
 
 C1HswordPlayer::~C1HswordPlayer()
@@ -879,6 +878,18 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 			m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Jump, true);
 		}
 		else if (m_isAttack) {
+			float d = m_pSkinnedAnimationController->GetTrackPosition(n1Hsword_Attack1 + m_nAttack);
+			
+			if (abs(d-0.2f)<=fTimeElapsed) {
+				m_bHit = true;
+			}
+			if (m_pSkinnedAnimationController->IsTrackFinish(n1Hsword_Attack1 + m_nAttack))	{
+				if (m_nAttack <= 1) {
+					m_pSkinnedAnimationController->SetTrackPosition(n1Hsword_Attack1 + m_nAttack, 0);
+					m_nAttack = m_nAttack == 0 ? 1 : 0;
+					m_pSkinnedAnimationController->SetTrackPosition(n1Hsword_Attack1 + m_nAttack, 0);
+				}
+			}
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Attack1 + m_nAttack, true);
 		}
@@ -903,6 +914,7 @@ void C1HswordPlayer::LButtonUp()
 {
 	if (m_isAttack) {
 		m_isAttack = false;
+		m_bHit = false;
 		m_pSkinnedAnimationController->SetTrackPosition(n1Hsword_Attack1, 0);
 		m_pSkinnedAnimationController->SetTrackPosition(n1Hsword_Attack2, 0);
 	}
@@ -923,7 +935,8 @@ void C1HswordPlayer::RButtonDown()
 void C1HswordPlayer::RButtonUp()
 {
 	if (m_isAttack) {
-		m_isAttack = false;
+		m_isAttack = false; 
+		m_bHit = false;
 		m_pSkinnedAnimationController->SetTrackPosition(n1Hsword_Attack3, 0);
 		m_pSkinnedAnimationController->SetTrackPosition(n1Hsword_Attack4, 0);
 	}
@@ -933,18 +946,14 @@ void C1HswordPlayer::RButtonUp()
 void C1HswordPlayer::CheckCollision(CGameObject* pObject)
 {
 	// Player - pObject
-	if (m_fHitCool <= 0 && isCollide(pObject)) {
-		m_fHitCool = 0.f;
-		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
-		CPlayer::Move(Vector3::ScalarProduct(d, 50.25f, true), true);
+	CPlayer::CheckCollision(pObject);
 
-		cout << "Collsion - " << pObject->m_pstrFrameName << endl;
-	}
-	if (m_isAttack) {
+	if (m_isAttack&& m_bHit) {
 		CGameObject* pBlade = FindFrame("Sword_Blade");
 		if (pObject->isCollide(pBlade)) {
-			cout << "Sword Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->m_iHp << endl;
-			--pObject->m_iHp;
+			pObject->TakeDamage(m_iAtkStat * (1.f + m_nAttack / 4.f));
+			cout << "Sword Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
+			m_bHit = false;
 		}
 	}
 }

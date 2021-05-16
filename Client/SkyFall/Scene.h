@@ -104,7 +104,7 @@ public:
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUSrvDescriptorNextHandle() { return(m_d3dSrvGPUDescriptorNextHandle); }
 
 	int									m_nGameObjects = 0;
-	CGameObject							**m_ppGameObjects = NULL;
+	CMonster							**m_ppGameObjects = NULL;
 	unordered_map<int, CPlayer*>		m_mPlayer;
 
 	float								m_fElapsedTime = 0.0f;

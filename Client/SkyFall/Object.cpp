@@ -504,7 +504,9 @@ void CAnimationController::AdvanceTime(float fTimeElapsed, CGameObject *pRootGam
 void CAnimationController::SetAllTrackDisable()
 {
 	for (int i = 0; i < m_nAnimationTracks; ++i)
+	{
 		SetTrackEnable(i, false);
+	}
 }
 
 void CAnimationController::SetTrackType(int nAnimationTrack, int nType)
@@ -513,6 +515,16 @@ void CAnimationController::SetTrackType(int nAnimationTrack, int nType)
 		m_pAnimationSets->m_ppAnimationSets[m_pAnimationTracks[nAnimationTrack].m_nAnimationSet]->SetType(nType);
 }
 
+bool CAnimationController::IsTrackFinish(int nAnimationTrack)
+{
+	return 	m_pAnimationSets->m_ppAnimationSets[m_pAnimationTracks[nAnimationTrack].m_nAnimationSet]->m_fPosition >=
+		m_pAnimationSets->m_ppAnimationSets[m_pAnimationTracks[nAnimationTrack].m_nAnimationSet]->m_fLength;
+}
+
+float CAnimationController::GetTrackPosition(int nAnimationTrack)
+{
+	return m_pAnimationSets->m_ppAnimationSets[m_pAnimationTracks[nAnimationTrack].m_nAnimationSet]->m_fPosition;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -623,7 +635,7 @@ CGameObject* CGameObject::SetBBObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	pBBObj->Move(Center, 1);
 	pBBObj->m_pMesh->m_xmf3AABBCenter = Center;
 	pBBObj->m_pMesh->m_xmf3AABBExtents = Extents;
-	SetChild(pBBObj);
+	SetChild(pBBObj,true);
 
 	return pBBObj;
 }
@@ -1578,7 +1590,7 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 {
 	CLoadedModelInfo* pDesert_Test = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Collision.bin", NULL);
 	CLoadedModelInfo* pDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Steppable.bin", NULL);
-	CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Steppable.bin", NULL);
+	//CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Steppable.bin", NULL);
 	//SetChild(pDesert_Test->m_pModelRootObject, true);
 
 	m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Test, 0);
@@ -1606,7 +1618,13 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 
 	if (pDesert_Test)delete pDesert_Test;
 	if (pDesert)delete pDesert;
-	if (pMapSnow)delete pMapSnow;
+	//if (pMapSnow)delete pMapSnow;
+}
+
+CMap::~CMap()
+{
+	for (int i = 0; i < 2; ++i)
+		m_ppMaps[i]->Release();
 }
 
 void CMap::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
@@ -1633,6 +1651,19 @@ void CMap::CheckCollision(CPlayer* pPlayer)
 		else 
 			return;
 	}
+}
+
+void CMap::ReleaseUploadBuffers()
+{
+	for (int i = 0; i < 2; ++i)
+		m_ppMaps[i]->ReleaseUploadBuffers();
+}
+
+void CMap::Release()
+{
+	for (int i = 0; i < 2; ++i)
+		if(m_ppMaps[i])
+			m_ppMaps[i]->Release();
 }
 
 CGameObject* CMap::GetMap(int idx) const
@@ -1692,7 +1723,6 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 
 	
-
 	//Rotate(-90.0f, 0.0f, 0.0f);
 }
 
@@ -1733,10 +1763,9 @@ void CBullet::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamer
 }
 
 
-CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks,void* pContext)
+CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks,void* pContext, int nAnimationCount) :CMonster()
 {
-	CLoadedModelInfo* pDragonModel = pModel;
-	if (!pDragonModel) pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
+	CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
 
 	SetChild(pDragonModel->m_pModelRootObject, true);
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pDragonModel);
@@ -1763,23 +1792,32 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, 20.0f, 0.0f);
 
+	m_nTrackOffSet = nAnimationCount;
+	InitAnimation();
 
-	m_iHp = 100;
-
+	delete pDragonModel;
 }
 
 CDragon::~CDragon()
 {
 }
 
-CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext)
+void CDragon::Update(float fTimeElapsed)
 {
-	CLoadedModelInfo* pWolfModel = pModel;
-	if (!pWolfModel) pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
+	CMonster::Update(fTimeElapsed);
+	if (m_pSkinnedAnimationController->IsTrackFinish(MonsterState::Die )) {
+		SetIdle();
+		SetActive("BoundingBox", false);
+		SetActive("Polygonal_Dragon", false);
+	}
+}
 
+CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext, int nAnimationCount) :CMonster()
+{
+	CLoadedModelInfo* pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
+	
 	SetChild(pWolfModel->m_pModelRootObject, true);
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pWolfModel);
-
 	strcpy_s(m_pstrFrameName, "Wolf");
 
 
@@ -1801,19 +1839,29 @@ CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, -40.0f, 0.0f);
 
+	m_nTrackOffSet = nAnimationCount;
+	InitAnimation();
 
-	m_iHp = 100;
-
+	delete pWolfModel;
 }
 
 CWolf::~CWolf()
 {
 }
 
-CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext)
+void CWolf::Update(float fTimeElapsed)
 {
-	CLoadedModelInfo* pMetalonModel = pModel;
-	if (!pMetalonModel) pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
+	CMonster::Update(fTimeElapsed);
+	if (m_pSkinnedAnimationController->IsTrackFinish(MonsterState::Die )) {
+		SetIdle();
+		SetActive("BoundingBox", false);
+		SetActive("Polygonal_Wolf", false);
+	}
+}
+
+CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext, int nAnimationCount) :CMonster()
+{
+	CLoadedModelInfo* pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
 
 	SetChild(pMetalonModel->m_pModelRootObject, true);
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMetalonModel);
@@ -1839,20 +1887,79 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 	SetScale(0.1f, 0.1f, 0.1f);
 	Rotate(-90.0f, 0.0f, 0.0f);
 
+	m_nTrackOffSet = nAnimationCount;
+	InitAnimation();
 
-	m_iHp = 100;
-
-
+	delete pMetalonModel;
 }
 
 CMetalon::~CMetalon()
 {
 }
 
+void CMetalon::Update(float fTimeElapsed)
+{
+	CMonster::Update(fTimeElapsed);
+	if (m_pSkinnedAnimationController->IsTrackFinish(MonsterState::Die )) {
+		SetIdle();
+		SetActive("Polygonal_Metalon", false);
+		SetActive("BoundingBox", false);
+	}
+}
+
 CMonster::CMonster()
 {
+	m_nAnimations = 3;
+	m_iHp = 100;
+	m_iAtkStat = 10;
+	m_iDefStat = 0;
+	m_iState = Idle;
 }
 
 CMonster::~CMonster()
 {
+}
+
+void CMonster::TakeDamage(int iDamage)
+{
+	CGameObject::TakeDamage(iDamage);
+	if (m_iHp > 0)
+		m_iState = MonsterState::TakeDamage;
+	else {
+		m_iState = MonsterState::Die;
+	}
+	m_pSkinnedAnimationController->SetAllTrackDisable();
+	m_pSkinnedAnimationController->SetTrackPosition(m_iState , 0);
+	m_pSkinnedAnimationController->SetTrackEnable(m_iState , true);
+}
+
+void CMonster::Update(float fTimeElapsed)
+{
+	if (m_pSkinnedAnimationController->IsTrackFinish(MonsterState::TakeDamage )) {
+		SetIdle();
+	}
+}
+
+void CMonster::SetIdle()
+{
+	m_pSkinnedAnimationController->SetTrackEnable(m_iState , false);
+	m_pSkinnedAnimationController->SetTrackPosition(m_iState , 0);
+	m_iState = MonsterState::Idle;
+	m_pSkinnedAnimationController->SetTrackPosition(m_iState , 0);
+	m_pSkinnedAnimationController->SetTrackEnable(m_iState , true);
+}
+
+void CMonster::InitAnimation()
+{
+	m_nTrackOffSet *= m_nAnimations;
+
+	for (int i = 0; i < m_nAnimations; ++i)
+		m_pSkinnedAnimationController->SetTrackAnimationSet(i , i);
+
+	m_pSkinnedAnimationController->SetTrackType(nMonster_Die, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackType(nMonster_TakeDamage, ANIMATION_TYPE_ONCE);
+
+	m_pSkinnedAnimationController->SetAllTrackDisable();
+	m_pSkinnedAnimationController->SetTrackEnable(nMonster_Idle , true);
+	m_iState = Idle;
 }

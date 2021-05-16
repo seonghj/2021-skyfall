@@ -485,11 +485,16 @@ void CGameFramework::BuildObjects()
 	m_pScene = new CScene();
 	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
 	m_pScene->InitPlayerIDs();
-	C1HswordPlayer* p1HswordPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain);
-	m_p1HswordPlayer = p1HswordPlayer;
 
-	CBowPlayer* pBowPlayer = new CBowPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pScene->m_pTerrain);
+	CLoadedModelInfo* pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_1Hsword.bin", NULL);
+	C1HswordPlayer* p1HswordPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pSwordModel, m_pScene->m_pTerrain);
+	m_p1HswordPlayer = p1HswordPlayer;
+	if (pSwordModel) delete pSwordModel;
+	
+	CLoadedModelInfo* pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Bow.bin", NULL);
+	CBowPlayer* pBowPlayer = new CBowPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pBowModel, m_pScene->m_pTerrain);
 	m_pBowPlayer = pBowPlayer;
+	if (pBowModel) delete pBowModel;
 
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
 	for (int i = 0; i < 20 ; ++i)
@@ -520,6 +525,8 @@ void CGameFramework::BuildObjects()
 void CGameFramework::ReleaseObjects()
 {
 	if (m_pPlayer) m_pPlayer->Release();
+	if (m_p1HswordPlayer) m_p1HswordPlayer->Release();
+	if (m_pBowPlayer) m_pBowPlayer->Release();
 
 	if (m_pScene) m_pScene->ReleaseObjects();
 	if (m_pScene) delete m_pScene;
@@ -618,8 +625,10 @@ void CGameFramework::ProcessInput()
 					m_fYaw += cxDelta;
 					m_pCamera->Rotate(cyDelta, cxDelta, 0);
 				}
-				m_DegreeX = cyDelta;
-				m_DegreeY = cxDelta;
+				else {
+					m_DegreeX = cyDelta;
+					m_DegreeY = cxDelta;
+				}
 			}
 			if (dwDirection && (false == m_pPlayer->GetAttack())) {
 				m_pPlayer->Move(dwDirection, 50.25f, true);
