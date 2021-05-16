@@ -1613,11 +1613,11 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	//SetChild(pDesert_Test->m_pModelRootObject, true);
 
 	m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
-	m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
+	m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
 	m_ppMaps[2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
 
 	m_ppMaps[3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Collision, true);
-	m_ppMaps[4] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable);
+	m_ppMaps[4] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Steppable);
 	m_ppMaps[5] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable);
 
 	m_ppMaps[3]->SetPosition(-2048.0f, 0.0f, 0.0f);
@@ -1625,12 +1625,12 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	m_ppMaps[5]->SetPosition(-2048.0f, 0.0f, 0.0f);
 
 	m_ppMaps[6] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Collision, true);
-	m_ppMaps[7] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable);
+	m_ppMaps[7] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Steppable);
 	m_ppMaps[8] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable);
 
-	m_ppMaps[6]->SetPosition(2048.0f, 0.0f, 0.0f);
-	m_ppMaps[7]->SetPosition(2048.0f, 0.0f, 0.0f);
-	m_ppMaps[8]->SetPosition(2048.0f, 0.0f, 0.0f);
+	m_ppMaps[6]->SetPosition(2048.0f, 60.0f, 0.0f);
+	m_ppMaps[7]->SetPosition(2048.0f, 60.0f, 0.0f);
+	m_ppMaps[8]->SetPosition(2048.0f, 60.0f, 0.0f);
 
 	//for (int i = 0; i < 3; ++i) {
 	//	for (int j = 0; j < 3; ++j) {
