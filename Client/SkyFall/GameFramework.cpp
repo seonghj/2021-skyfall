@@ -293,52 +293,38 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	switch (nMessageID)
 	{
 	case WM_LBUTTONDOWN: {
-		player_attack_packet p;
-		p.id = m_pPacket->Get_clientid();
-		p.size = sizeof(p);
-		p.type = PacketType::Type_player_attack;
-		p.attack_type = SWORD1HL;
-		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+			m_pPacket->Send_attack_packet(SWORD1HL);
+		//else if (strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
 			m_ChargeTimer.Reset();
 			m_ChargeTimer.Start();
-			m_pPlayer->LButtonDown();
+			//m_pPlayer->LButtonDown();
 		}
 		break;
 	}
 	case WM_RBUTTONDOWN: {
-		player_attack_packet p;
-		p.id = m_pPacket->Get_clientid();
-		p.size = sizeof(p);
-		p.type = PacketType::Type_player_attack;
-		p.attack_type = SWORD1HR;
-		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+			m_pPacket->Send_attack_packet(SWORD1HR);
+		//else if (strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
-			m_pPlayer->RButtonDown();
+			//m_pPlayer->RButtonDown();
 		}
 		break;
 	}
 	case WM_LBUTTONUP: {
-		player_stop_packet sp;
-		sp.id = m_pPacket->Get_clientid();
-		sp.size = sizeof(sp);
-		sp.type = PacketType::Type_player_stop;
-		m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
+		m_pPacket->Send_animation_stop_packet();
 		::ReleaseCapture();
 		m_ChargeTimer.Stop();
 		m_pPlayer->LButtonUp();
 		break;
 	}
 	case WM_RBUTTONUP: {
-		player_stop_packet sp;
-		sp.id = m_pPacket->Get_clientid();
-		sp.size = sizeof(sp);
-		sp.type = PacketType::Type_player_stop;
-		m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
+		m_pPacket->Send_animation_stop_packet();
 		m_pPlayer->RButtonUp();
 		break;
 	}

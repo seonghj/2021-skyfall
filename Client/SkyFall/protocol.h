@@ -82,9 +82,9 @@ enum PlayerMove {
 };
 
 enum PlayerAttackType {
-	SWORD1HL,
-	SWORD1HR,
-	BOW
+	SWORD1HL = 0,
+	SWORD1HR = 1,
+	BOW		 = 2
 };
 
 #define DIR_FORWARD					0x01

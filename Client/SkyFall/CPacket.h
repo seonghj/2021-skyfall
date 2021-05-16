@@ -31,6 +31,8 @@ public:
 	void RecvPacket();
 	void SendPacket(char* buf);
 	void Send_ready_packet();
+	void Send_attack_packet(int type);
+	void Send_animation_stop_packet();
 	void ProcessPacket(char* buf);
 
 	void Set_clientid(int n);

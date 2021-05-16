@@ -123,6 +123,26 @@ void CPacket::Send_ready_packet()
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
+void CPacket::Send_attack_packet(int type)
+{
+    player_attack_packet p;
+    p.id = client_id;
+    p.size = sizeof(p);
+    p.type = PacketType::Type_player_attack;
+    p.attack_type = type;
+    SendPacket(reinterpret_cast<char*>(&p));
+    printf("tlqkf\n");
+}
+
+void CPacket::Send_animation_stop_packet()
+{
+    player_stop_packet sp;
+    sp.id = client_id;
+    sp.size = sizeof(sp);
+    sp.type = PacketType::Type_player_stop;
+    SendPacket(reinterpret_cast<char*>(&sp));
+}
+
 void CPacket::ProcessPacket(char* buf)
 {
     switch (buf[1])
