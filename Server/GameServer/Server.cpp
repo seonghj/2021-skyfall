@@ -269,7 +269,6 @@ void Server::send_login_player_packet(int id, int to, int roomID)
     p.Position = sessions[id].f3Position.load(std::memory_order_seq_cst);
     p.dx = sessions[id].dx.load(std::memory_order_seq_cst);
     p.dy = sessions[id].dy.load(std::memory_order_seq_cst);
-    p.dz = sessions[id].dz.load(std::memory_order_seq_cst);
 
     //printf("%d: login to %d\n",id, to);
 
@@ -439,7 +438,6 @@ void Server::process_packet(int id, char* buf, int roomID)
         float tx = fmodf(sessions[p->id].dx.load() + p->dx, 360.f);
         sessions[p->id].dx.store(fmodf(sessions[p->id].dx.load() + p->dx, 360.f));
         sessions[p->id].dy.store(fmodf(sessions[p->id].dy.load() + p->dy, 360.f));
-        sessions[p->id].dz.store(fmodf(sessions[p->id].dz.load() + p->dz, 360.f));
         //printf("move %f %f\n", sessions[p->id].f3Position.load(std::memory_order_seq_cst).x, sessions[p->id].f3Position.load(std::memory_order_seq_cst).z);
         send_packet_to_players(id, reinterpret_cast<char*>(p), roomID);
         break;

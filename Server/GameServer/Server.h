@@ -50,7 +50,6 @@ public:
     std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<float>      dx = 0;
     std::atomic<float>      dy = 0;
-    std::atomic<float>      dz = 0;
     
     std::atomic<short>      weapon = PlayerType::PT_BASIC;
     std::atomic<short>      helmet = 0;
