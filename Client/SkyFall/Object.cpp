@@ -1505,7 +1505,7 @@ CLoadedModelInfo *CGameObject::LoadGeometryAndAnimationFromFile(ID3D12Device *pd
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-CHeightMapTerrain::CHeightMapTerrain(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, LPCTSTR pFileName, int nWidth, int nLength, XMFLOAT3 xmf3Scale, XMFLOAT4 xmf4Color) : CGameObject(1)
+CHeightMapTerrain::CHeightMapTerrain(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, LPCTSTR pFileName, int nWidth, int nLength, XMFLOAT3 xmf3Scale, XMFLOAT4 xmf4Color, int texture) : CGameObject(1)
 {
 	m_nWidth = nWidth;
 	m_nLength = nLength;
@@ -1520,8 +1520,17 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device *pd3dDevice, ID3D12GraphicsCom
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	CTexture *pTerrainBaseTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
-	pTerrainBaseTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Terrain/Forest_Floor_Texture.dds", 0);
-
+	switch (texture) {
+	case 0:
+		pTerrainBaseTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Terrain/Desert_Floor_Texture.dds", 0);
+		break;
+	case 1:
+		pTerrainBaseTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Terrain/Grass_02.dds", 0);
+		break;
+	case 2:
+		pTerrainBaseTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Terrain/Snow.dds", 0);
+		break;
+	}
 	CTexture *pTerrainDetailTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
 	pTerrainDetailTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Terrain/Detail_Texture_7.dds", 0);
 
@@ -1588,14 +1597,38 @@ void CSkyBox::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
 {
-	CLoadedModelInfo* pDesert_Test = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Collision.bin", NULL);
-	CLoadedModelInfo* pDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Steppable.bin", NULL);
-	//CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Steppable.bin", NULL);
+	CLoadedModelInfo* pDesert_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Collision.bin", NULL);
+	CLoadedModelInfo* pDesert_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Steppable.bin", NULL);
+	CLoadedModelInfo* pDesert_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
+
+	CLoadedModelInfo* pForest_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Collision.bin", NULL);
+	CLoadedModelInfo* pForest_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Steppable.bin", NULL);
+	CLoadedModelInfo* pForest_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Passable.bin", NULL);
+
+	CLoadedModelInfo* pSnow_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Collision.bin", NULL);
+	CLoadedModelInfo* pSnow_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Steppable.bin", NULL);
+	CLoadedModelInfo* pSnow_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
 	//SetChild(pDesert_Test->m_pModelRootObject, true);
 
-	m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Test, 0);
-	m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert, 0);
+	m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, 0);
+	m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable, 0);
+	m_ppMaps[2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable, 0);
 
+	m_ppMaps[3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Collision, 0);
+	m_ppMaps[4] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Steppable, 0);
+	m_ppMaps[5] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable, 0);
+
+	m_ppMaps[3]->SetPosition(-2000.0f, 0.0f, 0.0f);
+	m_ppMaps[4]->SetPosition(-2000.0f, 0.0f, 0.0f);
+	m_ppMaps[5]->SetPosition(-2000.0f, 0.0f, 0.0f);
+
+	m_ppMaps[6] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Collision, 0);
+	m_ppMaps[7] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Steppable, 0);
+	m_ppMaps[8] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable, 0);
+
+	m_ppMaps[6]->SetPosition(2000.0f, 0.0f, 0.0f);
+	m_ppMaps[7]->SetPosition(2000.0f, 0.0f, 0.0f);
+	m_ppMaps[8]->SetPosition(2000.0f, 0.0f, 0.0f);
 
 	//for (int i = 0; i < 3; ++i) {
 	//	for (int j = 0; j < 3; ++j) {
@@ -1616,22 +1649,16 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	//	}
 	//}
 
-	if (pDesert_Test)delete pDesert_Test;
-	if (pDesert)delete pDesert;
-	//if (pMapSnow)delete pMapSnow;
-}
-
-CMap::~CMap()
-{
-	for (int i = 0; i < 2; ++i)
-		m_ppMaps[i]->Release();
+	if (pDesert_Collision)delete pDesert_Collision;
+	if (pDesert_Steppable)delete pDesert_Steppable;
+	if (pDesert_Passable)delete pDesert_Passable;
 }
 
 void CMap::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	CGameObject::Render(pd3dCommandList, pCamera);
 
-	for (int i = 0; i < 1; ++i)
+	for (int i = 0; i < 9; ++i)
 		m_ppMaps[i]->Render(pd3dCommandList, pCamera);
 }
 

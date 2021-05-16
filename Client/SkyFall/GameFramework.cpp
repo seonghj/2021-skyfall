@@ -394,6 +394,11 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 					sp.type = PacketType::Type_player_stop;
 					m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
 					break;*/
+				case VK_UP:
+					XMFLOAT3 pos = m_pPlayer->GetPosition();
+					m_pPlayer->SetPosition(XMFLOAT3(pos.x, 1000.0f, pos.z));
+					m_pPlayer->SetGravity(XMFLOAT3(0.0f, -400.f, 0.0f));
+					break;
 				default:
 					break;
 			}
@@ -403,6 +408,11 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			{
 			case VK_CONTROL:
 				m_bRotateEnable = true;
+				break;
+			case VK_UP:
+				XMFLOAT3 pos = m_pPlayer->GetPosition();
+				m_pPlayer->SetPosition(XMFLOAT3(pos.x, 1000.0f, pos.z));
+				m_pPlayer->SetGravity(XMFLOAT3(0.0f, 0.0f, 0.0f));
 				break;
 			}
 			break;
