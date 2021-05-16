@@ -110,7 +110,7 @@ struct player_ID_packet :public Packet {
 
 struct player_login_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
-	float dx, dy, dz;
+	float dx, dy;
 };
 
 struct game_ready_packet :public Packet {
@@ -133,7 +133,7 @@ struct player_remove_packet : public Packet {
 struct player_info_packet : public Packet {
 	char state;
 	DirectX::XMFLOAT3 Position;
-	float dx, dy, dz;
+	float dx, dy;
 	char weapon;
 	char armor;
 	char helmet;
@@ -146,7 +146,7 @@ struct player_info_packet : public Packet {
 struct player_pos_packet : public Packet {
 	char state;
 	DirectX::XMFLOAT3 Position;
-	float dx, dy, dz;
+	float dx, dy;
 	DWORD MoveType;
 };
 
@@ -157,7 +157,7 @@ struct player_start_pos : public Packet {
 struct player_move_packet : public Packet {
 	char state;
 	DWORD MoveType;
-	float dx, dy, dz;
+	float dx, dy;
 };
 
 struct player_status_packet : public Packet {

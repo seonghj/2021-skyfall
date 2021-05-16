@@ -151,7 +151,7 @@ void CPacket::ProcessPacket(char* buf)
                 if (m_pScene->PlayerIDs[i] == 0) {
                     m_pScene->PlayerIDs[i] = p->id;
                     m_pScene->MovePlayer(i, p->Position);
-                    m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, p->dz);
+                    m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, 0);
                     m_pScene->AnimatePlayer(i, 0);
                     //printf("id: %d x: %f, z: %f\n", p->id, p->Position.x, p->Position.z);
                     break;
@@ -160,7 +160,7 @@ void CPacket::ProcessPacket(char* buf)
         }
         else {
             m_pScene->m_pPlayer->SetPosition(p->Position);
-            m_pScene->m_pPlayer->Rotate(p->dx, p->dy, p->dz);
+            m_pScene->m_pPlayer->Rotate(p->dx, p->dy, 0);
         }
         break;
     }
@@ -217,7 +217,7 @@ void CPacket::ProcessPacket(char* buf)
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
         if (p->id == client_id) {
             m_pPlayer->SetPosition(p->Position);
-            m_pPlayer->Rotate(p->dx, p->dy, p->dz);
+            m_pPlayer->Rotate(p->dx, p->dy, 0);
             switch (p->MoveType) {
             case PlayerMove::RUNNING:
                 //m_pPlayer->SetRunning(true);
@@ -242,7 +242,7 @@ void CPacket::ProcessPacket(char* buf)
                         break;
                     }
                     m_pScene->MovePlayer(i, p->Position);
-                    m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, p->dz);
+                    m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, 0);
                     //printf("id %d move (%f, %f)\n", p->id, p->Position.x, p->Position.z);
                     break;
                 }
