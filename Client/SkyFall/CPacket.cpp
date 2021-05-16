@@ -133,6 +133,7 @@ void CPacket::Send_attack_packet(int type)
         p.type = PacketType::Type_player_attack;
         p.attack_type = type;
         SendPacket(reinterpret_cast<char*>(&p));
+        printf("tlqkf\n");
         break;
     }
     default: {
@@ -162,10 +163,8 @@ void CPacket::ProcessPacket(char* buf)
     {
     case PacketType::Type_player_ID: {
         player_ID_packet* p = reinterpret_cast<player_ID_packet*>(buf);
-        if (p->id != 0) {
-            client_id = p->id;
-            printf("recv id from server: %d\n", p->id);
-        }
+        client_id = buf[2];
+        printf("recv id from server: %d\n", p->id);
 
         /*player_info_packet pp;
         pp.id = Get_clientid();
@@ -183,14 +182,14 @@ void CPacket::ProcessPacket(char* buf)
         printf("login id: %d\n", p->id);
         if (p->id != client_id) {
             for (int i = 0; i < MAX_PLAYER; ++i) {
-                if (m_pScene->PlayerIDs[i] == -1) {
+                if (m_pScene->PlayerIDs[i] == 0) {
                     m_pScene->PlayerIDs[i] = p->id;
                     m_pScene->MovePlayer(i, p->Position);
                     m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, 0);
                     m_pScene->AnimatePlayer(i, 0);
+                    //printf("id: %d x: %f, z: %f\n", p->id, p->Position.x, p->Position.z);
                     break;
                 }
-                //printf("id: %d x: %f, z: %f\n", p->id, p->Position.x, p->Position.z);
             }
         }
         else {
@@ -345,8 +344,7 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::Type_allow_shot: {
         player_shot_packet* p = reinterpret_cast<player_shot_packet*>(buf);
-        m_pPlayer->Shot(p->fTimeElapsed, p->ChargeTimer, p->Look);
-        printf("%f %f\n", p->fTimeElapsed, p->ChargeTimer);
+        m_pPlayer->ShotOtherPlayer(fTimeElapsed, ChargeTimer, p->Look);
         m_pPlayer->SetAttack(false);
         break;
     }

@@ -666,8 +666,7 @@ void CScene::AnimateObjects(float fTimeElapsed)
 {
 	m_fElapsedTime = fTimeElapsed;
 
-	for (int i = 0; i < 20; ++i)
-		m_mPlayer[i]->Animate(fTimeElapsed);
+	m_mPlayer[0]->Animate(fTimeElapsed);
 	if (m_pLights)
 	{
 		m_pLights[1].m_xmf3Position = m_pPlayer->GetPosition();
@@ -702,8 +701,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 		}
 	}
 
-	for (int i = 0; i < 20; ++i)
-		if (m_mPlayer[i]) m_mPlayer[i]->Render(pd3dCommandList, pCamera);
+	if (m_mPlayer[0]) m_mPlayer[0]->Render(pd3dCommandList, pCamera);
 	//for (auto p : m_mPlayer)
 	//{
 	//	if (p.second)
