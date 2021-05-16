@@ -67,7 +67,7 @@ public:
 	void ReleaseUploadBuffers();
 
 	void CheckCollision();
-	void InitPlayerIDs() { for (int i = 0; i < 20; ++i) PlayerIDs[i] = 0; }
+	void InitPlayerIDs() { for (int i = 0; i < 20; ++i) PlayerIDs[i] = -1; }
 
 	CPlayer								*m_pPlayer = NULL;
 	int									PlayerIDs[20];

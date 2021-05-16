@@ -309,7 +309,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	case WM_RBUTTONDOWN: {
 		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
 			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
-		else if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
+		else if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
 			m_pPacket->Send_attack_packet(PlayerAttackType::BOW);
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
@@ -492,7 +492,8 @@ void CGameFramework::BuildObjects()
 	m_pBowPlayer = pBowPlayer;
 
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
-	m_pScene->MovePlayer(0, XMFLOAT3(80.0f, 50.0f, 0.0f));
+	for (int i = 0; i < 20 ; ++i)
+		m_pScene->MovePlayer(i, XMFLOAT3(80.0f, 50.0f, 0.0f));
 	//m_pScene->AddPlayer(3, m_pd3dDevice, m_pd3dCommandList);
 	//m_pScene->MovePlayer(/*m_pScene->m_nGameObjects - 1*/3, XMFLOAT3(400.0f, 300.0f, 300.0f));
 
@@ -602,10 +603,10 @@ void CGameFramework::ProcessInput()
 			p.size = sizeof(p);
 			p.type = Type_allow_shot;
 			p.Look = m_pCamera->GetLookVector();
-			m_pPacket->fTimeElapsed = fTimeElapsed;
-			m_pPacket->ChargeTimer = m_ChargeTimer.GetTotalTime();
+			p.fTimeElapsed = fTimeElapsed;
+			p.ChargeTimer = m_ChargeTimer.GetTotalTime();
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-			printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
+			//printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
 		}
 
 		if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))

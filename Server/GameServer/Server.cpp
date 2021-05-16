@@ -125,7 +125,6 @@ void Server::Accept()
 
         int roomID = SetroomID();
         gameroom.emplace(roomID, client_id);
-        auto iter = gameroom.equal_range(roomID);
 
         printf("client_connected: IP =%s, port=%d key = %d Room = %d\n",
             inet_ntoa(sessions[client_id].clientaddr.sin_addr)
@@ -150,6 +149,7 @@ void Server::Accept()
 
         sessions[client_id].f3Position.store(XMFLOAT3(50.f , 8.0f, 50.f));
 
+        auto iter = gameroom.equal_range(roomID);
 
         // �α����� Ŭ���̾�Ʈ�� �ٸ� Ŭ���̾�Ʈ ���� ����
         for (auto it = iter.first; it != iter.second; ++it) {

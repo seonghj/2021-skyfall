@@ -47,15 +47,14 @@ public:
 
     // 0 Á×À½ / 1 »ýÁ¸
     std::atomic<bool>       state = 0;
-    std::atomic<short>      PlayerType = PlayerType::BASIC;
     std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<float>      dx = 0;
     std::atomic<float>      dy = 0;
     std::atomic<float>      dz = 0;
     
-    std::atomic<short>        weapon = 0;
-    std::atomic<short>        helmet = 0;
-    std::atomic<short>        shoes = 0;
+    std::atomic<short>      weapon = PlayerType::PT_BASIC;
+    std::atomic<short>      helmet = 0;
+    std::atomic<short>      shoes = 0;
 
     std::atomic<float>      hp = 0;
     std::atomic<float>      lv = 0;
@@ -91,7 +90,6 @@ public:
 
     void send_ID_player_packet(int id, int roomID);
     void send_login_player_packet(int id, int to, int roomID);
-    void send_playing_player_packet(int to, int roomID);
     void send_disconnect_player_packet(int id,int roomID);
     void send_packet_to_players(int id, char* buf, int roomID);
     void send_packet_to_allplayers(int roomnum, char* buf);

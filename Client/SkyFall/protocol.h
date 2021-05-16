@@ -88,10 +88,11 @@ enum PlayerAttackType {
 };
 
 enum PlayerType {
-	BASIC,
-	SWORD1H,
-	BOW
+	PT_BASIC,
+	PT_SWORD1H,
+	PT_BOW
 };
+
 
 #define DIR_FORWARD					0x01
 #define DIR_BACKWARD				0x02
@@ -193,6 +194,8 @@ struct player_attack_packet : public Packet {
 
 struct player_shot_packet : public Packet {
 	DirectX::XMFLOAT3 Look;
+	float fTimeElapsed;
+	float ChargeTimer;
 };
 
 struct player_arrow_packet : public Packet {
