@@ -912,9 +912,6 @@ CCubeMesh::CCubeMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCo
 	m_d3dPositionBufferView.StrideInBytes = nStride;
 	m_d3dPositionBufferView.SizeInBytes = nStride * m_nVertices;
 
-	m_xmf3AABBCenter = XMFLOAT3(0, 0, 0);
-	m_xmf3AABBExtents = XMFLOAT3(fx, fy, fz);
-
 	m_nSubMeshes = 1;
 	m_pnSubSetIndices = new int[m_nSubMeshes];
 	m_ppnSubSetIndices = new UINT * [m_nSubMeshes];

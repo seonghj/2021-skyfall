@@ -46,9 +46,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 		freopen("CONOUT$", "wb", stderr);
 	}
 
-	std::thread	connect_thread = std::thread(&CPacket::GameConnect, gCPacket);
-
-	gGameFramework.Set_m_pPacket(gCPacket);
+	//std::thread	connect_thread = std::thread(&CPacket::GameConnect, gCPacket);
 
 	while (1)
 	{
@@ -63,6 +61,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 		}
 		else
 		{
+			gGameFramework.Set_m_pPacket(gCPacket);
 			gGameFramework.FrameAdvance();
 		}
 	}

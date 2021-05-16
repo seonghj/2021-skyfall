@@ -615,9 +615,6 @@ CGameObject* CGameObject::SetBBObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	strcpy_s(pBBObj->m_pstrFrameName, "BoundingBox");
 
 	CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, Extents.x*2, Extents.y*2, Extents.z*2);
-	pBoundingBox->m_xmf3AABBCenter = Center;
-	pBoundingBox->m_xmf3AABBExtents = Extents;
-
 	pBBObj->SetMesh(pBoundingBox);
 	pBBObj->SetBoundingBoxShader();
 	pBBObj->Move(Center, 1);
@@ -630,20 +627,17 @@ CGameObject* CGameObject::SetBBObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 
 bool CGameObject::isCollide(CGameObject* pObject)
 {
-	BoundingOrientedBox bb = BoundingOrientedBox(
+	BoundingBox bb = BoundingBox(
 		FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter,
-		FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents,
-		XMFLOAT4(0, 0, 0, 1));
-
+		FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents);
 	bb.Transform(bb, XMLoadFloat4x4(&m_xmf4x4World));
 
-	BoundingOrientedBox bbObject = BoundingOrientedBox(
+	BoundingBox bbObject = BoundingBox(
 		pObject->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter,
-		pObject->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents,
-		XMFLOAT4(0, 0, 0, 1));
+		pObject->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents);
 	bbObject.Transform(bbObject, XMLoadFloat4x4(&pObject->m_xmf4x4World));
 
-	if (bb.Contains(bbObject) != DirectX::DISJOINT||bb.Intersects(bbObject)) {
+	if (bb.Contains(bbObject) != DirectX::DISJOINT) {
 		return true;
 	}
 	return false;
@@ -749,8 +743,8 @@ CGameObject *CGameObject::FindFrame(char *pstrFrameName)
 
 	if (!strcmp(m_pstrFrameName, pstrFrameName)) return(this);
 
-	if (m_pChild) if (pFrameObject = m_pChild->FindFrame(pstrFrameName)) return(pFrameObject);
 	if (m_pSibling) if (pFrameObject = m_pSibling->FindFrame(pstrFrameName)) return(pFrameObject);
+	if (m_pChild) if (pFrameObject = m_pChild->FindFrame(pstrFrameName)) return(pFrameObject);
 
 	return(NULL);
 }
@@ -1016,16 +1010,6 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 			nReads = (UINT)::fread(&pGameObject->m_xmf3Rotation, sizeof(XMFLOAT3), 1, pInFile);
 			nReads = (UINT)::fread(&pGameObject->m_xmf3Translation, sizeof(XMFLOAT3), 1, pInFile);
 			 
-
-			//XMMATRIX S = XMMatrixScaling(pGameObject->m_xmf3Scale.x, pGameObject->m_xmf3Scale.y, pGameObject->m_xmf3Scale.z);
-			//XMMATRIX R = XMMatrixRotationRollPitchYaw(pGameObject->m_xmf3Rotation.x, pGameObject->m_xmf3Rotation.y, pGameObject->m_xmf3Rotation.z);
-			////XMMATRIX R = XMMatrixMultiply(XMMatrixMultiply(XMMatrixRotationX(xmf3R.x * fWeight), XMMatrixRotationY(xmf3R.y * fWeight)), XMMatrixRotationZ(xmf3R.z * fWeight));
-			//XMMATRIX T = XMMatrixTranslation(pGameObject->m_xmf3Translation.x, pGameObject->m_xmf3Translation.y, pGameObject->m_xmf3Translation.z);
-
-			//XMFLOAT4X4 xmf4x4Transform;
-			//XMStoreFloat4x4(&xmf4x4Transform, XMMatrixMultiply(XMMatrixMultiply(S, R), T));
-			//pGameObject->UpdateTransform(&xmf4x4Transform);
-
 	}
 		else if (!strcmp(pstrToken, "<Mesh>:"))
 		{
@@ -1035,8 +1019,9 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 			pGameObject->SetMesh(pMesh);
 			isSkinDeformation = false;
 
-			/*BoundingBox bb = BoundingBox(pMesh->m_xmf3AABBCenter,pMesh->m_xmf3AABBExtents);
-			pGameObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,bb.Center.y,0), bb.Extents);*/
+			BoundingBox bb = BoundingBox(pMesh->m_xmf3AABBCenter,pMesh->m_xmf3AABBExtents);
+			pGameObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,0), bb.Extents);
+
 		}
 		else if (!strcmp(pstrToken, "<SkinDeformations>:"))
 		{
@@ -1576,13 +1561,12 @@ void CSkyBox::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
 {
-	CLoadedModelInfo* pDesert_Test = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Steppable.bin", NULL);
-	CLoadedModelInfo* pDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert.bin", NULL);
+	CLoadedModelInfo* pDesert_Test = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Collision.bin", NULL);
+	CLoadedModelInfo* pDesert_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Passable.bin", NULL);
 	CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Steppable.bin", NULL);
 	//SetChild(pDesert_Test->m_pModelRootObject, true);
 
 	m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Test, 0);
-
 	//m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Test, 0);
 	//m_ppMaps[1]->SetPosition(0, 124, 0);
 
@@ -1606,7 +1590,7 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	//}
 
 	if (pDesert_Test)delete pDesert_Test;
-	if (pDesert)delete pDesert;
+	if (pDesert_Passable)delete pDesert_Passable;
 	if (pMapSnow)delete pMapSnow;
 }
 
@@ -1621,18 +1605,14 @@ void CMap::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 void CMap::CheckCollision(CPlayer* pPlayer)
 {
 	CGameObject* pObject = m_ppMaps[0]->FindFrame("RootNode")->m_pChild;
-	while (true) {
+	while (pObject->m_pSibling) {
 		if (pPlayer->isCollide(pObject)) {
 			XMFLOAT3 d = Vector3::Subtract(pPlayer->GetPosition(), pObject->GetPosition());
-			pPlayer->Move(Vector3::ScalarProduct(d, 50.25f, true), true);
+			pPlayer->Move(Vector3::ScalarProduct(d, 30.f, true), true);
 
-			cout << "Map Collision - " << pObject->m_pstrFrameName << endl;
-			return;
+			cout << "지형 충돌 - " << pObject->m_pstrFrameName << endl;
 		}
-		if (pObject->m_pSibling)
-			pObject = pObject->m_pSibling;
-		else 
-			return;
+		pObject = pObject->m_pSibling;
 	}
 }
 
@@ -1674,32 +1654,8 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	SetChild(pMapModel->m_pModelRootObject, true);
 	//m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMapModel);
 
-	CGameObject* pObject = FindFrame("RootNode")->m_pChild;
-
-	while (true) {
-		BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
-		pObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, bb.Center.y, 0), bb.Extents);
-		//pObject->UpdateTransform();
-		if (pObject->m_pSibling)
-			pObject = pObject->m_pSibling;
-		else
-			break;
-	}
-
 	strcpy_s(m_pstrFrameName, "Map");
-	//Rotate(0, 90.f, 0);
-
-	//SetScale(20.5f, 10.25f, 20.5f);
-
-
-	/*CGameObject* pObject = FindFrame("RootNode")->m_pChild;
-	while (true) {
-		pObject->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter*=
-		if (pObject->m_pSibling)
-			pObject = pObject->m_pSibling;
-		else
-			return;
-	}*/
+	Rotate(0, 90.f, 0);
 
 	//Rotate(-90.0f, 0.0f, 0.0f);
 }
@@ -1720,24 +1676,20 @@ void CBullet::Animate(float fElapsedTime) {
 	//if (m_xmf3MovingDirection.y <= m_xmf3Gravity.y)
 	//	std::cout << "---------------------------------------------" << endl;
 	m_xmf3MovingDirection = Vector3::Add(m_xmf3MovingDirection, m_xmf3Gravity, fElapsedTime);
-
-	Rotate(-90.f,0,0);
 	XMFLOAT3 look = GetLook();
-	Rotate(90.f, 0, 0);
-
 	XMFLOAT3 pos = GetPosition();
-	std::cout << "Bullet - x : " << (int)pos.x << ", y : " << (int)pos.y << ", z : " << (int)pos.z << endl;
-	pos = m_pChild->GetPosition();
-	cout << "BoundingBox - x: " << (int)pos.x << ", y : " << (int)pos.y << ", z : " << (int)pos.z << endl << endl;
+	//std::cout << "x : " << (int)pos.x << ", y : " << (int)pos.y << ", z : " << (int)pos.z << endl;
 	m_fRotationX = acos(Vector3::DotProduct(m_xmf3MovingDirection, look) / (Vector3::Length(look) * Vector3::Length(m_xmf3MovingDirection)));
-	//std::cout << m_fRotationX << std::endl;
+	std::cout << m_fRotationX << std::endl;
 	if (EPSILON <= m_fRotationX)
 		Rotate(m_fRotationX / PI * 180, 0, 0);
 }
 
 void CBullet::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
+	Rotate(90.f, 0, 0);
 	CGameObject::Render(pd3dCommandList, pCamera);
+	Rotate(-90.f, 0, 0);
 }
 
 
@@ -1760,8 +1712,8 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	SetBBObject(pBoundingBox);*/
 
 	SetBBObject(pd3dDevice, pd3dCommandList,
-		XMFLOAT3(0, bb.Extents.y-350, -50),					// Center
-		XMFLOAT3(80, bb.Extents.y - 250, bb.Extents.z-50));	// Extents
+		XMFLOAT3(0, bb.Extents.y-200, -50),					// Center
+		XMFLOAT3(80, bb.Extents.y - 100, bb.Extents.z-50));	// Extents
 
 
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
@@ -1769,7 +1721,7 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	SetPosition(300.f, pTerrain->GetHeight(300.f, 300.f), 300.f);
 	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.2f);
 	SetScale(0.5f, 0.5f, 0.5f);
-	Rotate(-90.0f, 20.0f, 0.0f);
+	Rotate(-90.0f, 0.0f, 0.0f);
 
 
 	m_iHp = 100;
@@ -1807,7 +1759,7 @@ CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 	SetPosition(400.f, pTerrain->GetHeight(400.f, 400.f), 400.f);
 	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.5f);
 	SetScale(0.5f, 0.5f, 0.5f);
-	Rotate(-90.0f, -40.0f, 0.0f);
+	Rotate(-90.0f, 0.0f, 0.0f);
 
 
 	m_iHp = 100;
@@ -1836,7 +1788,7 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 
 	SetBBObject(pBoundingBox);*/
 
-	pObject->SetBBObject(pd3dDevice, pd3dCommandList,
+	SetBBObject(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, 20, -bb.Extents.z),													// Center
 		XMFLOAT3(bb.Extents.x, bb.Extents.y-20, bb.Extents.z));	// Extents
 

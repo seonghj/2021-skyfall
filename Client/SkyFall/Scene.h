@@ -52,7 +52,7 @@ public:
 
 	void BuildDefaultLightsAndMaterials();
 	void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
-	void AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	void AddPlayer(int id, ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	void MovePlayer(int player_num, XMFLOAT3 pos);
 	void AnimatePlayer(int id, int animation_num);
 	void ReleaseObjects();
@@ -67,10 +67,8 @@ public:
 	void ReleaseUploadBuffers();
 
 	void CheckCollision();
-	void InitPlayerIDs() { for (int i = 0; i < 20; ++i) PlayerIDs[i] = 0; }
 
 	CPlayer								*m_pPlayer = NULL;
-	int									PlayerIDs[20];
 
 protected:
 	ID3D12RootSignature					*m_pd3dGraphicsRootSignature = NULL;
@@ -105,7 +103,8 @@ public:
 
 	int									m_nGameObjects = 0;
 	CGameObject							**m_ppGameObjects = NULL;
-	unordered_map<int, CPlayer*>		m_mPlayer;
+	unordered_map<int, CGameObject*>   m_ppPlayerObjects;
+	unordered_map<int, C1HswordPlayer*>		m_mPlayer;
 
 	float								m_fElapsedTime = 0.0f;
 
