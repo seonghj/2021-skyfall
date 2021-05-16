@@ -209,7 +209,7 @@ void Server::Disconnected(int id, int roomID)
         //printf("%d\n", i->second);
         if (gameroom[roomID].ID[i] == id) {
             gameroom[roomID].ID[i] = -1;
-            printf("disconnected %d\n", gameroom[roomID].ID[i]);
+            //printf("disconnected %d\n", gameroom[roomID].ID[i]);
             break;
         }
     }
@@ -281,7 +281,7 @@ void Server::send_login_player_packet(int id, int to, int roomID)
     p.dx = sessions[id].dx.load(std::memory_order_seq_cst);
     p.dy = sessions[id].dy.load(std::memory_order_seq_cst);
 
-    printf("%d: login to %d\n",id, to);
+    //printf("%d: login to %d\n",id, to);
 
     send_packet(to, reinterpret_cast<char*>(&p));
 }
@@ -459,7 +459,7 @@ void Server::process_packet(int id, char* buf, int roomID)
     }
     case PacketType::Type_weapon_swap :{
          Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
-         send_packet_to_allplayers(roomID, reinterpret_cast<char*>(p));
+         send_packet_to_players(p->id, reinterpret_cast<char*>(p), roomID);
          break;
     }
     case PacketType::Type_player_move: {

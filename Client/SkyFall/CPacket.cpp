@@ -303,20 +303,32 @@ void CPacket::ProcessPacket(char* buf)
         }
         break;
     }
+    case PacketType::Type_weapon_swap: {
+        Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
+        if (p->weapon == PT_BOW) {
+            for (int i = 0; i < MAX_PLAYER; ++i) {
+                if (m_pScene->PlayerIDs[i] == p->id) {
+                    //m_pScene->m_mPlayer[i] =
+                }
+            }
+        }
+
+        break;
+    }
     case PacketType::Type_player_attack: {
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
         if (p->id == client_id) {
             switch (p->attack_type) {
-            case BOW: {
-                m_pPlayer->LButtonDown();
-                break;
-            }
             case SWORD1HL: {
                 m_pPlayer->LButtonDown();
                 break;
             }
             case SWORD1HR: {
                 m_pPlayer->RButtonDown();
+                break;
+            }
+            case BOW: {
+                m_pPlayer->LButtonDown();
                 break;
             }
             }
@@ -335,6 +347,10 @@ void CPacket::ProcessPacket(char* buf)
                         printf("id: %d SWORD1HR attack\n", p->id);
                         break;
                     }
+                    case BOW: {
+                        m_pScene->m_mPlayer[i]->LButtonDown();
+                        printf("id: %d SWORD1HR attack\n", p->id);
+                    }
                     }
                     break;
                 }
@@ -345,8 +361,18 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::Type_allow_shot: {
         player_shot_packet* p = reinterpret_cast<player_shot_packet*>(buf);
-        m_pPlayer->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
-        m_pPlayer->SetAttack(false);
+        if (p->id == client_id) {
+            m_pPlayer->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
+            m_pPlayer->SetAttack(false);
+        }
+        else {
+            for (int i = 0; i < MAX_PLAYER; ++i) {
+                if (m_pScene->PlayerIDs[i] == p->id) {
+                    m_pScene->m_mPlayer[i]->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
+                    m_pScene->m_mPlayer[i]->SetAttack(false);
+                }
+            }
+        }
         break;
     }
     case PacketType::Type_player_stop: {
