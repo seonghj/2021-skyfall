@@ -60,6 +60,17 @@ public:
     std::atomic<float>      speed = 20;
 };
 
+class PlayerIDs {
+public:
+    PlayerIDs() {}
+    PlayerIDs(const PlayerIDs& PlayerIDs) {}
+    ~PlayerIDs() {}
+
+    int ID[MAX_PLAYER]; // -1 = disconnected
+
+    void init() { for (int i = 0; i < MAX_PLAYER; ++i) ID[i] = -1; }
+};
+
 class Map;
 
 class Server {
@@ -104,7 +115,7 @@ public:
 private:
     HANDLE hcp;
     
-    std::unordered_multimap <int, int> gameroom; // <방번호, 플레이어ID>
+    std::unordered_map <int, PlayerIDs> gameroom; // <방번호, 플레이어ID>
     std::unordered_map <int, SESSION> sessions;
     std::unordered_map <int, Map> maps;
 
