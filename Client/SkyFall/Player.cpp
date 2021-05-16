@@ -467,9 +467,10 @@ void CTerrainPlayer::OnPlayerUpdateCallback(float fTimeElapsed)
 	CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)m_pPlayerUpdatedContext;
 	XMFLOAT3 xmf3Scale = pTerrain->GetScale();
 	XMFLOAT3 xmf3PlayerPosition = GetPosition();
+	XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
 	int z = (int)(xmf3PlayerPosition.z / xmf3Scale.z);
 	bool bReverseQuad = ((z % 2) != 0);
-	float fHeight = pTerrain->GetHeight(xmf3PlayerPosition.x, xmf3PlayerPosition.z, bReverseQuad) + 0.0f;
+	float fHeight = pTerrain->GetHeight(xmf3PlayerPosition.x - xmf3TerrainPosition.x, xmf3PlayerPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
 	
 	//SetFriction(1000.f);
 	if (xmf3PlayerPosition.y <= fHeight)
