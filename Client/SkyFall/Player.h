@@ -132,7 +132,7 @@ public:
 
 
 	virtual void Shot(float fTimeElapsed, float fSpeed) {};
-	virtual void ShotOtherPlayer(float fTimeElapsed, float fSpeed, XMFLOAT3 Look) {};
+	virtual void Shot(float fTimeElapsed, float fSpeed, XMFLOAT3 Look) {};
 	virtual void DeleteBullet(const int& idx) {};
 	virtual void CheckCollision(CGameObject* pObject);
 	void RotatePlayer(int iYaw);
@@ -184,7 +184,7 @@ class CBowPlayer : public CTerrainPlayer
 {
 public:
 	void Shot(float fTimeElapsed, float fSpeed);
-	void ShotOtherPlayer(float fTimeElapsed, float fSpeed, XMFLOAT3 Look);
+	void Shot(float fTimeElapsed, float fSpeed, XMFLOAT3 Look);
 	void DeleteBullet(const int& idx);
 	void Animate(float fTimeElapsed);
 
