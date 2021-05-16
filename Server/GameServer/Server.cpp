@@ -130,7 +130,6 @@ void Server::Accept()
             gameroom.emplace(roomID, PlayerIDs());
             gameroom[roomID].init();
             gameroom[roomID].ID[0] = client_id;
-            printf("무야\n");
             printf("create game room - %d\n", roomID);
         }
         else {
@@ -139,7 +138,6 @@ void Server::Accept()
                     gameroom[roomID].ID[i] = client_id;
                     break;
                 }
-            printf("호\n");
         }
 
         sessions[client_id].over.type = 0;
@@ -164,17 +162,18 @@ void Server::Accept()
 
 
         // 로그인한 플레이어에게 이미 로그인한 플레이어 전송
-        for (int i : gameroom[roomID].ID)
-            if (i != -1)
-                if (true == sessions[i].connected.load(std::memory_order_seq_cst))
-                    send_login_player_packet(i, client_id, roomID);
+        for (int i = 0; i < MAX_PLAYER; ++i) {
+            if (gameroom[roomID].ID[i] != -1)
+                if (true == sessions[gameroom[roomID].ID[i]].connected.load(std::memory_order_seq_cst))
+                    send_login_player_packet(gameroom[roomID].ID[i], client_id, roomID);
+        }
 
         // 다른 플레이어에게 로그인한 플레이어 전송
-        for (int i : gameroom[roomID].ID)
-            if (i != -1)
-                if ((true == sessions[i].connected.load(std::memory_order_seq_cst)) && (i != client_id))
-                    send_login_player_packet(client_id, i, roomID);
-
+        for (int i = 0; i < MAX_PLAYER; ++i) {
+            if (gameroom[roomID].ID[i] != -1)
+                if ((true == sessions[gameroom[roomID].ID[i]].connected.load(std::memory_order_seq_cst)) && (gameroom[roomID].ID[i] != client_id))
+                    send_login_player_packet(client_id, gameroom[roomID].ID[i], roomID);
+        }
 
         /*if (20 == gameroom.count(roomID))
         {
@@ -204,12 +203,13 @@ void Server::Disconnected(int id, int roomID)
         , ntohs(sessions[id].clientaddr.sin_port), id, roomID);
     //send_disconnect_player_packet(id);
     closesocket(sessions[id].sock);
-    //sessions[id].connected.store(FALSE);
+    sessions[id].connected.store(FALSE);
     sessions.erase(id);
-    for (int i : gameroom[roomID].ID) {
+    for (int i = 0; i < MAX_PLAYER; ++i) {
         //printf("%d\n", i->second);
-        if (i == id) {
-            i = -1;
+        if (gameroom[roomID].ID[i] == id) {
+            gameroom[roomID].ID[i] = -1;
+            printf("disconnected %d\n", gameroom[roomID].ID[i]);
             break;
         }
     }
@@ -293,31 +293,31 @@ void Server::send_disconnect_player_packet(int id, int roomID)
     p.size = sizeof(player_remove_packet);
     p.type = PacketType::Type_player_remove;
 
-    for (int i : gameroom[roomID].ID) {
-        if (i != -1)
-            if (sessions[i].connected.load(std::memory_order_seq_cst))
-                send_packet(i, reinterpret_cast<char*>(&p));
+    for (int i = 0; i < MAX_PLAYER; ++i) {
+        if (gameroom[roomID].ID[i] != -1)
+            if (sessions[gameroom[roomID].ID[i]].connected.load(std::memory_order_seq_cst))
+                send_packet(gameroom[roomID].ID[i], reinterpret_cast<char*>(&p));
     }
     Disconnected(id, roomID);
 }
 
 void Server::send_packet_to_players(int id, char* buf, int roomID)
 {
-    for (int i : gameroom[roomID].ID) {
-        if (i != -1)
-            if (sessions[i].connected.load(std::memory_order_seq_cst))
-                if (calc_distance(id, i) <= VIEWING_DISTANCE) {
-                    send_packet(i, buf);
+    for (int i = 0; i < MAX_PLAYER; ++i) {
+        if (gameroom[roomID].ID[i] != -1)
+            if (sessions[gameroom[roomID].ID[i]].connected.load(std::memory_order_seq_cst))
+                if (calc_distance(id, gameroom[roomID].ID[i]) <= VIEWING_DISTANCE) {
+                    send_packet(gameroom[roomID].ID[i], buf);
                 }
     }
 }
 
 void Server::send_packet_to_allplayers(int roomID, char* buf)
 {
-    for (int i : gameroom[roomID].ID) {
-        if (i != -1)
-            if (sessions[i].connected.load(std::memory_order_seq_cst)){
-                    send_packet(i, buf);
+    for (int i = 0; i < MAX_PLAYER; ++i) {
+        if (gameroom[roomID].ID[i] != -1)
+            if (sessions[gameroom[roomID].ID[i]].connected.load(std::memory_order_seq_cst)){
+                    send_packet(gameroom[roomID].ID[i], buf);
                 }
     }
 }
