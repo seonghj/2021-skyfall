@@ -41,10 +41,12 @@ int Server::SetroomID()
 {
     int count = 1;
     while (1) {
-        if (gameroom.count(count) >= 20)
-            ++count;
-        else {
+        if (gameroom.find(count) == gameroom.end())
             return count;
+        if (gameroom[count].ID[MAX_PLAYER - 1] == -1)
+            return count;
+        else {
+           ++count;
         }
     }
 }
@@ -124,7 +126,21 @@ void Server::Accept()
             , &sessions[client_id].addrlen);
 
         int roomID = SetroomID();
-        gameroom.emplace(roomID, client_id);
+        if (gameroom.count(roomID) == 0) {
+            gameroom.emplace(roomID, PlayerIDs());
+            gameroom[roomID].init();
+            gameroom[roomID].ID[0] = client_id;
+            printf("무야\n");
+            printf("create game room - %d\n", roomID);
+        }
+        else {
+            for (int i = 0; i < MAX_PLAYER; ++i)
+                if (gameroom[roomID].ID[i] == -1) {
+                    gameroom[roomID].ID[i] = client_id;
+                    break;
+                }
+            printf("호\n");
+        }
 
         sessions[client_id].over.type = 0;
         sessions[client_id].over.dataBuffer.len = BUFSIZE;
@@ -137,9 +153,6 @@ void Server::Accept()
         // ���ϰ� ����� �Ϸ� ��Ʈ ����
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
 
-
-        //printf("create game room - %d\n", roomID);
-
         // id����
         send_ID_player_packet(client_id, roomID);
 
@@ -149,19 +162,18 @@ void Server::Accept()
             inet_ntoa(sessions[client_id].clientaddr.sin_addr)
             , ntohs(sessions[client_id].clientaddr.sin_port), client_id, roomID);
 
-        auto iter = gameroom.equal_range(roomID);
-
-        // 다른 플레이어에게 로그인한 플레이어 전송
-        for (auto it = iter.first; it != iter.second; ++it) {
-            if ((true == sessions[it->second].connected.load(std::memory_order_seq_cst)) && (it->second != client_id))
-                send_login_player_packet(client_id, it->second, roomID);
-        }
 
         // 로그인한 플레이어에게 이미 로그인한 플레이어 전송
-        for (auto it = iter.first; it != iter.second; ++it) {
-            if (true == sessions[it->second].connected.load(std::memory_order_seq_cst))
-                send_login_player_packet(it->second, client_id, roomID);
-        }
+        for (int i : gameroom[roomID].ID)
+            if (i != -1)
+                if (true == sessions[i].connected.load(std::memory_order_seq_cst))
+                    send_login_player_packet(i, client_id, roomID);
+
+        // 다른 플레이어에게 로그인한 플레이어 전송
+        for (int i : gameroom[roomID].ID)
+            if (i != -1)
+                if ((true == sessions[i].connected.load(std::memory_order_seq_cst)) && (i != client_id))
+                    send_login_player_packet(client_id, i, roomID);
 
 
         /*if (20 == gameroom.count(roomID))
@@ -192,17 +204,14 @@ void Server::Disconnected(int id, int roomID)
         , ntohs(sessions[id].clientaddr.sin_port), id, roomID);
     //send_disconnect_player_packet(id);
     closesocket(sessions[id].sock);
-    auto iter = gameroom.equal_range(roomID);
     //sessions[id].connected.store(FALSE);
     sessions.erase(id);
-    for (auto i = iter.first; i != iter.second;) {
+    for (int i : gameroom[roomID].ID) {
         //printf("%d\n", i->second);
-        if (i->second == id) {
-            gameroom.erase(i);
-            printf("room: %d left\n", gameroom.count(roomID));
+        if (i == id) {
+            i = -1;
             break;
         }
-        ++i;
     }
     //sessions.clear();
 }
@@ -284,32 +293,32 @@ void Server::send_disconnect_player_packet(int id, int roomID)
     p.size = sizeof(player_remove_packet);
     p.type = PacketType::Type_player_remove;
 
-    auto iter = gameroom.equal_range(roomID);
-    for (auto it = iter.first; it != iter.second; ++it) {
-        if (sessions[it->second].connected.load(std::memory_order_seq_cst))
-            send_packet(it->second, reinterpret_cast<char*>(&p));
-
+    for (int i : gameroom[roomID].ID) {
+        if (i != -1)
+            if (sessions[i].connected.load(std::memory_order_seq_cst))
+                send_packet(i, reinterpret_cast<char*>(&p));
     }
     Disconnected(id, roomID);
 }
 
 void Server::send_packet_to_players(int id, char* buf, int roomID)
 {
-    auto iter = gameroom.equal_range(roomID);
-    for (auto it = iter.first; it != iter.second; ++it) {
-        if (sessions[it->second].connected.load(std::memory_order_seq_cst))
-            if (calc_distance(id, it->second) <= VIEWING_DISTANCE) {
-                send_packet(it->second, buf);
-            }
+    for (int i : gameroom[roomID].ID) {
+        if (i != -1)
+            if (sessions[i].connected.load(std::memory_order_seq_cst))
+                if (calc_distance(id, i) <= VIEWING_DISTANCE) {
+                    send_packet(i, buf);
+                }
     }
 }
 
-void Server::send_packet_to_allplayers(int roomnum, char* buf)
+void Server::send_packet_to_allplayers(int roomID, char* buf)
 {
-    auto iter = gameroom.equal_range(roomnum);
-    for (auto it = iter.first; it != iter.second; ++it) {
-        if (sessions[it->second].connected.load(std::memory_order_seq_cst))
-            send_packet(it->second, buf);
+    for (int i : gameroom[roomID].ID) {
+        if (i != -1)
+            if (sessions[i].connected.load(std::memory_order_seq_cst)){
+                    send_packet(i, buf);
+                }
     }
 }
 
@@ -343,11 +352,8 @@ void Server::game_end(int roomnum)
     packet.size = sizeof(packet);
     packet.type = PacketType::Type_game_end;
 
-    auto iter = gameroom.equal_range(roomnum);
-    for (auto it = iter.first; it != iter.second; ++it) {
-        if (sessions[it->second].connected.load(std::memory_order_seq_cst))
-            send_packet(it->second, reinterpret_cast<char*>(&packet));
-    }
+    send_packet_to_allplayers(roomnum, reinterpret_cast<char*>(&packet));
+    gameroom[roomnum].init();
     maps.erase(roomnum);
     gameroom.erase(roomnum);
 }
