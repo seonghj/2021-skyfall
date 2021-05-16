@@ -112,7 +112,7 @@ void Server::Accept()
             break;
         }
 
-        //accept_lock.lock();
+        accept_lock.lock();
         int client_id = SetClientId();
         sessions.emplace(client_id, SESSION());
         memset(&sessions[client_id], 0x00, sizeof(SESSION));
@@ -125,10 +125,6 @@ void Server::Accept()
 
         int roomID = SetroomID();
         gameroom.emplace(roomID, client_id);
-
-        printf("client_connected: IP =%s, port=%d key = %d Room = %d\n",
-            inet_ntoa(sessions[client_id].clientaddr.sin_addr)
-            , ntohs(sessions[client_id].clientaddr.sin_port), client_id, roomID);
 
         sessions[client_id].over.type = 0;
         sessions[client_id].over.dataBuffer.len = BUFSIZE;
@@ -147,21 +143,26 @@ void Server::Accept()
         // id����
         send_ID_player_packet(client_id, roomID);
 
-        sessions[client_id].f3Position.store(XMFLOAT3(50.f , 8.0f, 50.f));
+        sessions[client_id].f3Position.store(XMFLOAT3(50.f , 150.0f, 50.f));
+
+        printf("client_connected: IP =%s, port=%d key = %d Room = %d\n",
+            inet_ntoa(sessions[client_id].clientaddr.sin_addr)
+            , ntohs(sessions[client_id].clientaddr.sin_port), client_id, roomID);
 
         auto iter = gameroom.equal_range(roomID);
 
-        // �α����� Ŭ���̾�Ʈ�� �ٸ� Ŭ���̾�Ʈ ���� ����
+        // 다른 플레이어에게 로그인한 플레이어 전송
         for (auto it = iter.first; it != iter.second; ++it) {
-            if (sessions[it->second].connected.load(std::memory_order_seq_cst))
+            if ((true == sessions[it->second].connected.load(std::memory_order_seq_cst)) && (it->second != client_id))
+                send_login_player_packet(client_id, it->second, roomID);
+        }
+
+        // 로그인한 플레이어에게 이미 로그인한 플레이어 전송
+        for (auto it = iter.first; it != iter.second; ++it) {
+            if (true == sessions[it->second].connected.load(std::memory_order_seq_cst))
                 send_login_player_packet(it->second, client_id, roomID);
         }
 
-        // �ٸ� Ŭ���̾�Ʈ�� �α������� ����
-        for (auto it = iter.first; it != iter.second; ++it){
-            if (sessions[it->second].connected.load(std::memory_order_seq_cst) && (it->second != client_id))
-                send_login_player_packet(client_id, it->second, roomID);
-        }
 
         /*if (20 == gameroom.count(roomID))
         {
@@ -171,7 +172,8 @@ void Server::Accept()
                 maps[roomID].init_Map(this);
             }
         }*/
-        //accept_lock.unlock();
+
+        accept_lock.unlock();
 
         do_recv(client_id);
     }
@@ -243,7 +245,7 @@ void Server::send_packet(int to, char* packet)
         0, &(over->overlapped), NULL)) {
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
-            printf("to: %d packet: %d send error: %d\n", to, packet[1], err_no);
+            //printf("to: %d packet: %d send error: %d\n", to, packet[1], err_no);
             //Disconnected(to, sessions[to].over.roomID);
         }
     }
@@ -270,7 +272,7 @@ void Server::send_login_player_packet(int id, int to, int roomID)
     p.dx = sessions[id].dx.load(std::memory_order_seq_cst);
     p.dy = sessions[id].dy.load(std::memory_order_seq_cst);
 
-    //printf("%d: login to %d\n",id, to);
+    printf("%d: login to %d\n",id, to);
 
     send_packet(to, reinterpret_cast<char*>(&p));
 }
