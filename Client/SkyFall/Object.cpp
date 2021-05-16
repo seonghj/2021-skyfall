@@ -1576,7 +1576,7 @@ void CSkyBox::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
 {
-	CLoadedModelInfo* pDesert_Test = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Steppable.bin", NULL);
+	CLoadedModelInfo* pDesert_Test = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Collision.bin", NULL);
 	CLoadedModelInfo* pDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert.bin", NULL);
 	CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Steppable.bin", NULL);
 	//SetChild(pDesert_Test->m_pModelRootObject, true);
@@ -1620,7 +1620,7 @@ void CMap::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 
 void CMap::CheckCollision(CPlayer* pPlayer)
 {
-	CGameObject* pObject = m_ppMaps[0]->FindFrame("RootNode")->m_pChild;
+	CGameObject* pObject = m_ppMaps[0]->FindFrame("RootNode")->m_pChild->m_pChild;
 	while (true) {
 		if (pPlayer->isCollide(pObject)) {
 			XMFLOAT3 d = Vector3::Subtract(pPlayer->GetPosition(), pObject->GetPosition());
@@ -1674,7 +1674,7 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	SetChild(pMapModel->m_pModelRootObject, true);
 	//m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMapModel);
 
-	CGameObject* pObject = FindFrame("RootNode")->m_pChild;
+	CGameObject* pObject = FindFrame("RootNode")->m_pChild->m_pChild;	
 
 	while (true) {
 		BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
