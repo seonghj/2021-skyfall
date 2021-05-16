@@ -345,7 +345,8 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::Type_allow_shot: {
         player_shot_packet* p = reinterpret_cast<player_shot_packet*>(buf);
-        m_pPlayer->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
+        m_pPlayer->Shot(p->fTimeElapsed, p->ChargeTimer, p->Look);
+        printf("%f %f\n", p->fTimeElapsed, p->ChargeTimer);
         m_pPlayer->SetAttack(false);
         break;
     }
