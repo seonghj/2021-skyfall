@@ -293,52 +293,44 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	switch (nMessageID)
 	{
 	case WM_LBUTTONDOWN: {
-		player_attack_packet p;
-		p.id = m_pPacket->Get_clientid();
-		p.size = sizeof(p);
-		p.type = PacketType::Type_player_attack;
-		p.attack_type = SWORD1HL;
-		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL);
+		else if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
+			m_pPacket->Send_attack_packet(PlayerAttackType::BOW);
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
 			m_ChargeTimer.Reset();
 			m_ChargeTimer.Start();
-			m_pPlayer->LButtonDown();
+			//m_pPlayer->LButtonDown();
 		}
 		break;
 	}
 	case WM_RBUTTONDOWN: {
-		player_attack_packet p;
-		p.id = m_pPacket->Get_clientid();
-		p.size = sizeof(p);
-		p.type = PacketType::Type_player_attack;
-		p.attack_type = SWORD1HR;
-		m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
+		else if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+			m_pPacket->Send_attack_packet(PlayerAttackType::BOW);
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
-			m_pPlayer->RButtonDown();
+			//m_pPlayer->RButtonDown();
 		}
 		break;
 	}
 	case WM_LBUTTONUP: {
-		player_stop_packet sp;
-		sp.id = m_pPacket->Get_clientid();
-		sp.size = sizeof(sp);
-		sp.type = PacketType::Type_player_stop;
-		m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
+		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow")) {
+
+		}
+		else
+			m_pPacket->Send_animation_stop_packet();
 		::ReleaseCapture();
 		m_ChargeTimer.Stop();
 		m_pPlayer->LButtonUp();
 		break;
 	}
 	case WM_RBUTTONUP: {
-		player_stop_packet sp;
-		sp.id = m_pPacket->Get_clientid();
-		sp.size = sizeof(sp);
-		sp.type = PacketType::Type_player_stop;
-		m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
+		m_pPacket->Send_animation_stop_packet();
 		m_pPlayer->RButtonUp();
 		break;
 	}
@@ -500,7 +492,8 @@ void CGameFramework::BuildObjects()
 	m_pBowPlayer = pBowPlayer;
 
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
-	m_pScene->MovePlayer(0, XMFLOAT3(80.0f, 50.0f, 0.0f));
+	for (int i = 0; i < 20 ; ++i)
+		m_pScene->MovePlayer(i, XMFLOAT3(80.0f, 50.0f, 0.0f));
 	//m_pScene->AddPlayer(3, m_pd3dDevice, m_pd3dCommandList);
 	//m_pScene->MovePlayer(/*m_pScene->m_nGameObjects - 1*/3, XMFLOAT3(400.0f, 300.0f, 300.0f));
 
@@ -605,16 +598,15 @@ void CGameFramework::ProcessInput()
 		if (m_pPlayer->GetAttack() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA&&
 			!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
 		{
-			player_attack_packet p;
-			p.attack_type = 0;
+			player_shot_packet p;
 			p.id = m_pPacket->Get_clientid();
 			p.size = sizeof(p);
-			p.type = Type_player_attack;
-			m_pPacket->ChargeTimer = m_ChargeTimer.GetTotalTime();
+			p.type = Type_allow_shot;
+			p.Look = m_pCamera->GetLookVector();
+			p.fTimeElapsed = fTimeElapsed;
+			p.ChargeTimer = m_ChargeTimer.GetTotalTime();
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-			printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
-			m_pPlayer->Shot(fTimeElapsed, m_ChargeTimer.GetTotalTime() * 100.f);
-			m_pPlayer->SetAttack(false);
+			//printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
 		}
 
 		if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
