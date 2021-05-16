@@ -731,6 +731,23 @@ void CBowPlayer::Shot(float fTimeElapsed, float fSpeed)
 	m_ppBullets[m_nBullets++]->Move(GetLook(), 10);
 }
 
+void CBowPlayer::ShotOtherPlayer(float fTimeElapsed, float fSpeed, XMFLOAT3 Look)
+{
+	CGameObject* pBow = FindFrame("Bow_Main");
+
+	m_ppBullets[m_nBullets]->m_xmf4x4World = pBow->m_xmf4x4World;
+
+	XMFLOAT4X4 xmf4x4Scale = Matrix4x4::Identity();
+	xmf4x4Scale._11 = 0.5;
+	xmf4x4Scale._22 = 0.5;
+	xmf4x4Scale._33 = 0.5;
+
+	m_ppBullets[m_nBullets]->m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
+	m_ppBullets[m_nBullets]->m_xmf3MovingDirection = GetCamera()->GetLookVector();
+	m_ppBullets[m_nBullets]->SetSpeed(fSpeed);
+	m_ppBullets[m_nBullets++]->Move(Look, 10);
+}
+
 void CBowPlayer::DeleteBullet(const int& idx)
 {
 	for (int i = idx; i < m_nBullets - 1; ++i) {

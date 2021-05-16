@@ -3,7 +3,7 @@
 
 constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
-constexpr int BUFSIZE = 1024;
+constexpr int BUFSIZE = 128;
 constexpr int MAX_CLIENT = 3000;
 constexpr int MAX_PLAYER = 20;
 
@@ -82,11 +82,10 @@ enum PlayerMove {
 };
 
 enum PlayerAttackType {
-	SWORD1HL = 0,
-	SWORD1HR = 1,
-	BOW		 = 2
+	SWORD1HL,
+	SWORD1HR,
+	BOW
 };
-
 #define DIR_FORWARD					0x01
 #define DIR_BACKWARD				0x02
 #define DIR_LEFT					0x04
@@ -110,7 +109,8 @@ struct player_ID_packet :public Packet {
 
 struct player_login_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
-	float dx, dy, dz;
+	float dx, dy;
+	short PlayerType;
 };
 
 struct game_ready_packet :public Packet {
@@ -133,7 +133,7 @@ struct player_remove_packet : public Packet {
 struct player_info_packet : public Packet {
 	char state;
 	DirectX::XMFLOAT3 Position;
-	float dx, dy, dz;
+	float dx, dy;
 	char weapon;
 	char armor;
 	char helmet;
@@ -146,7 +146,7 @@ struct player_info_packet : public Packet {
 struct player_pos_packet : public Packet {
 	char state;
 	DirectX::XMFLOAT3 Position;
-	float dx, dy, dz;
+	float dx, dy;
 	DWORD MoveType;
 };
 
@@ -157,7 +157,7 @@ struct player_start_pos : public Packet {
 struct player_move_packet : public Packet {
 	char state;
 	DWORD MoveType;
-	float dx, dy, dz;
+	float dx, dy;
 };
 
 struct player_status_packet : public Packet {
@@ -182,6 +182,10 @@ struct player_equipment_packet : public Packet {
 
 struct player_attack_packet : public Packet {
 	char attack_type;
+};
+
+struct player_shot_packet : public Packet {
+	DirectX::XMFLOAT3 Look;
 };
 
 struct player_arrow_packet : public Packet {

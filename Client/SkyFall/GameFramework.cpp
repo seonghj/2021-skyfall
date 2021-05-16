@@ -294,8 +294,9 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	{
 	case WM_LBUTTONDOWN: {
 		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-			m_pPacket->Send_attack_packet(SWORD1HL);
-		//else if (strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
+			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL);
+		else if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
+			m_pPacket->Send_attack_packet(PlayerAttackType::BOW);
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
@@ -307,8 +308,9 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	}
 	case WM_RBUTTONDOWN: {
 		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-			m_pPacket->Send_attack_packet(SWORD1HR);
-		//else if (strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
+			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
+		else if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
+			m_pPacket->Send_attack_packet(PlayerAttackType::BOW);
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
@@ -317,7 +319,11 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		break;
 	}
 	case WM_LBUTTONUP: {
-		m_pPacket->Send_animation_stop_packet();
+		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow")) {
+
+		}
+		else
+			m_pPacket->Send_animation_stop_packet();
 		::ReleaseCapture();
 		m_ChargeTimer.Stop();
 		m_pPlayer->LButtonUp();
@@ -592,16 +598,15 @@ void CGameFramework::ProcessInput()
 		if (m_pPlayer->GetAttack() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA&&
 			!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
 		{
-			player_attack_packet p;
-			p.attack_type = 0;
+			player_shot_packet p;
 			p.id = m_pPacket->Get_clientid();
 			p.size = sizeof(p);
-			p.type = Type_player_attack;
+			p.type = Type_allow_shot;
+			p.Look = m_pCamera->GetLookVector();
+			m_pPacket->fTimeElapsed = fTimeElapsed;
 			m_pPacket->ChargeTimer = m_ChargeTimer.GetTotalTime();
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 			printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
-			m_pPlayer->Shot(fTimeElapsed, m_ChargeTimer.GetTotalTime() * 100.f);
-			m_pPlayer->SetAttack(false);
 		}
 
 		if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))

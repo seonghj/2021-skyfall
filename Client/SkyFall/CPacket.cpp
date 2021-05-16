@@ -125,13 +125,27 @@ void CPacket::Send_ready_packet()
 
 void CPacket::Send_attack_packet(int type)
 {
-    player_attack_packet p;
-    p.id = client_id;
-    p.size = sizeof(p);
-    p.type = PacketType::Type_player_attack;
-    p.attack_type = type;
-    SendPacket(reinterpret_cast<char*>(&p));
-    printf("tlqkf\n");
+    switch (type) {
+    case PlayerAttackType::BOW: {
+        player_attack_packet p;
+        p.id = client_id;
+        p.size = sizeof(p);
+        p.type = PacketType::Type_player_attack;
+        p.attack_type = type;
+        SendPacket(reinterpret_cast<char*>(&p));
+        printf("tlqkf\n");
+        break;
+    }
+    default: {
+        player_attack_packet p;
+        p.id = client_id;
+        p.size = sizeof(p);
+        p.type = PacketType::Type_player_attack;
+        p.attack_type = type;
+        SendPacket(reinterpret_cast<char*>(&p));
+        break;
+    }
+    }
 }
 
 void CPacket::Send_animation_stop_packet()
@@ -289,6 +303,10 @@ void CPacket::ProcessPacket(char* buf)
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
         if (p->id == client_id) {
             switch (p->attack_type) {
+            case BOW: {
+                m_pPlayer->LButtonDown();
+                break;
+            }
             case SWORD1HL: {
                 m_pPlayer->LButtonDown();
                 break;
@@ -321,7 +339,12 @@ void CPacket::ProcessPacket(char* buf)
 
         break;
     }
-
+    case PacketType::Type_allow_shot: {
+        player_shot_packet* p = reinterpret_cast<player_shot_packet*>(buf);
+        m_pPlayer->ShotOtherPlayer(fTimeElapsed, ChargeTimer, p->Look);
+        m_pPlayer->SetAttack(false);
+        break;
+    }
     case PacketType::Type_player_stop: {
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
         if (p->id != client_id) {

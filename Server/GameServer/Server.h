@@ -46,7 +46,7 @@ public:
 
     // 0 Á×À½ / 1 »ýÁ¸
     std::atomic<bool>       state = 0;
-
+    std::atomic<short>      PlayerType = PlayerType::BASIC;
     std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<float>      dx = 0;
     std::atomic<float>      dy = 0;
