@@ -86,6 +86,14 @@ enum PlayerAttackType {
 	SWORD1HR,
 	BOW
 };
+
+enum PlayerType {
+	PT_BASIC,
+	PT_SWORD1H,
+	PT_BOW
+};
+
+
 #define DIR_FORWARD					0x01
 #define DIR_BACKWARD				0x02
 #define DIR_LEFT					0x04
@@ -110,6 +118,7 @@ struct player_ID_packet :public Packet {
 struct player_login_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
 	float dx, dy, dz;
+	short PlayerType;
 };
 
 struct game_ready_packet :public Packet {
@@ -181,6 +190,10 @@ struct player_equipment_packet : public Packet {
 
 struct player_attack_packet : public Packet {
 	char attack_type;
+};
+
+struct player_shot_packet : public Packet {
+	DirectX::XMFLOAT3 Look;
 };
 
 struct player_arrow_packet : public Packet {

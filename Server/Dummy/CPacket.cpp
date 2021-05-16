@@ -100,7 +100,7 @@ void CPacket::WorkerThread()
             char packet_size = 0;
             if (0 < players[id].prev_size)
                 packet_size = players[id].packet_buf[0];
-            /*while (rest_size > 0) {
+            while (rest_size > 0) {
                 if (0 == packet_size) packet_size = buf_ptr[0];
                 int required = packet_size - players[id].prev_size;
                 if (rest_size >= required) {
@@ -116,9 +116,9 @@ void CPacket::WorkerThread()
                         buf_ptr, rest_size);
                     rest_size = 0;
                 }
-            }*/
+            }
             //printf("%d\n", over_ex->messageBuffer[1]);
-            ProcessPacket(id, over_ex->messageBuffer);
+            //ProcessPacket(id, over_ex->messageBuffer);
             do_recv(id);
         }
        /* else {
@@ -173,7 +173,7 @@ void CPacket::ProcessPacket(int id, char* buf)
     }
     case PacketType::Type_player_login: {
         player_login_packet* p = reinterpret_cast<player_login_packet*>(buf);
-        //printf("login id: %d\n", p->id);
+        printf("login id: %d\n", p->id);
         break;
     }
     case PacketType::Type_player_remove: {
@@ -282,8 +282,8 @@ void CPacket::TestGameConnect()
         memset(&players[num_connections].over.overlapped, 0, sizeof(players[num_connections].over.overlapped));
         players[num_connections].connected = true;
 
-        players[num_connections].pos.x = rand() % 3000;
-        players[num_connections].pos.y = rand() % 3000;
+        /*players[num_connections].pos.x = rand() % 3000;
+        players[num_connections].pos.y = rand() % 3000;*/
 
         player_start_pos p;
         p.size = sizeof(p);
@@ -345,11 +345,7 @@ void CPacket::Test_Thread()
             case 3: {
                 //std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 player_attack_packet p1;
-                p1.Position.x = players[i].pos.x;
-                p1.Position.z = players[i].pos.y;
-                p1.Position.y = 0;
                 p1.attack_type = 0;
-                p1.damage = 100;
                 p1.id = i;
                 p1.size = sizeof(p1);
                 p1.type = PacketType::Type_player_attack;
