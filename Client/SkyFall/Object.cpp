@@ -1576,13 +1576,13 @@ void CSkyBox::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
 {
-	CLoadedModelInfo* pDesert_Test = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Test.bin", NULL);
+	CLoadedModelInfo* pDesert_Test = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Steppable.bin", NULL);
 	CLoadedModelInfo* pDesert = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert.bin", NULL);
 	CLoadedModelInfo* pMapSnow = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Steppable.bin", NULL);
 	//SetChild(pDesert_Test->m_pModelRootObject, true);
 
 	m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Test, 0);
-	m_ppMaps[0]->SetPosition(0, 124, 0);
+
 	//m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Test, 0);
 	//m_ppMaps[1]->SetPosition(0, 124, 0);
 
@@ -1687,9 +1687,9 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	}
 
 	strcpy_s(m_pstrFrameName, "Map");
-	Rotate(0, 90.f, 0);
+	//Rotate(0, 90.f, 0);
 
-	SetScale(20.5f, 10.25f, 20.5f);
+	//SetScale(20.5f, 10.25f, 20.5f);
 
 
 	/*CGameObject* pObject = FindFrame("RootNode")->m_pChild;
