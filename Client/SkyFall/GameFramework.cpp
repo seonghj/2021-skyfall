@@ -37,7 +37,7 @@ CGameFramework::CGameFramework()
 
 	m_ptOldCursorPos.x = FRAME_BUFFER_WIDTH / 2;
 	m_ptOldCursorPos.y = FRAME_BUFFER_HEIGHT / 2;
-	_tcscpy_s(m_pszFrameRate, _T("LabProject ("));
+	_tcscpy_s(m_pszFrameRate, _T("SkyFall ("));
 }
 
 CGameFramework::~CGameFramework()
@@ -624,15 +624,10 @@ void CGameFramework::ProcessInput()
 				if (m_bRotateEnable) {
 					m_fPitch += cyDelta;
 					m_fYaw += cxDelta;
-					m_DegreeX = cyDelta;
-					m_DegreeY = cxDelta;
 					m_pCamera->Rotate(cyDelta, cxDelta, 0);
 				}
-				else {
-					m_DegreeX = cyDelta;
-					m_DegreeY = cxDelta;
-					//m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
-				}
+				m_DegreeX = cyDelta;
+				m_DegreeY = cxDelta;
 			}
 			if (dwDirection && (false == m_pPlayer->GetAttack())) {
 				m_pPlayer->Move(dwDirection, 50.25f, true);
@@ -837,7 +832,7 @@ void CGameFramework::FrameAdvance()
 		}
 	}
 
-	m_GameTimer.GetFrameRate(m_pszFrameRate + 12, 37);
+	m_GameTimer.GetFrameRate(m_pszFrameRate + 9, 37);
 	size_t nLength = _tcslen(m_pszFrameRate);
 	XMFLOAT3 xmf3Position = m_pPlayer->GetPosition();
 	_stprintf_s(m_pszFrameRate + nLength, 70 - nLength, _T("(%4f, %4f, %4f)"), xmf3Position.x, xmf3Position.y, xmf3Position.z);

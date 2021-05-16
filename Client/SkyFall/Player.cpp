@@ -712,7 +712,7 @@ void CBowPlayer::CheckCollision(CGameObject* pObject)
 				--pObject->m_iHp;
 			}
 			if(m_ppBullets[i]->GetPosition().y<=0)
-				DeleteBullet(i);
+				DeleteBullet(i--);
 		}
 
 	// Player - pObject
@@ -755,8 +755,12 @@ void CBowPlayer::Animate(float fTimeElapsed)
 {
 	CTerrainPlayer::Animate(fTimeElapsed);
 
-	for (int i = 0; i < m_nBullets; ++i)
+	for (int i = 0; i < m_nBullets; ++i) {
 		m_ppBullets[i]->Animate(fTimeElapsed);
+		if (m_ppBullets[i]->GetPosition().y <= 0) {
+			DeleteBullet(i--);
+		}
+	}
 }
 
 void CBowPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
