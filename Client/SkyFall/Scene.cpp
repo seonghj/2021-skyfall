@@ -617,6 +617,9 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
+		case 'z': case 'Z':
+			gbShowBoundingBox = !gbShowBoundingBox;
+			break;
 		case '0':
 			AnimatePlayer(0, 0);
 			break;

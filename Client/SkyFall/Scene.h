@@ -126,4 +126,5 @@ public:
 	LIGHTS								*m_pcbMappedLights = NULL;
 
 	CMap								*m_pMap = NULL;
+
 };

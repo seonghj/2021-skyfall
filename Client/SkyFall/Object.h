@@ -526,6 +526,7 @@ public:
 	virtual void ReleaseUploadBuffers();
 	virtual void Release();
 	CGameObject* GetMap(int idx) const;
+
 		
 private:
 	CGameObject** m_ppMaps = new CGameObject * [9];
