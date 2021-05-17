@@ -364,12 +364,14 @@ void CPacket::ProcessPacket(char* buf)
         if (p->id == client_id) {
             m_pPlayer->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
             m_pPlayer->SetAttack(false);
+            m_pPlayer->SetCharging(false);
         }
         else {
             for (int i = 0; i < MAX_PLAYER; ++i) {
                 if (m_pScene->PlayerIDs[i] == p->id) {
                     m_pScene->m_mPlayer[i]->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
                     m_pScene->m_mPlayer[i]->SetAttack(false);
+
                 }
             }
         }

@@ -295,8 +295,10 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	case WM_LBUTTONDOWN: {
 		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
 			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL);
-		else if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
-			m_pPacket->Send_attack_packet(PlayerAttackType::BOW);
+		else if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow")) {
+			if (!m_pPlayer->GetCharging())
+				m_pPacket->Send_attack_packet(PlayerAttackType::BOW);
+		}
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
@@ -309,12 +311,14 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	case WM_RBUTTONDOWN: {
 		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
 			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
-		else if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+		else if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow")) {
 			m_pPacket->Send_attack_packet(PlayerAttackType::BOW);
+		}
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
-			//m_pPlayer->RButtonDown();
+			m_ChargeTimer.Reset();
+			m_ChargeTimer.Start();
 		}
 		break;
 	}
@@ -323,15 +327,20 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 
 		}
 		else
-			m_pPacket->Send_animation_stop_packet();
+		m_pPacket->Send_animation_stop_packet();
 		::ReleaseCapture();
 		m_ChargeTimer.Stop();
 		m_pPlayer->LButtonUp();
 		break;
 	}
 	case WM_RBUTTONUP: {
-		m_pPacket->Send_animation_stop_packet();
-		m_pPlayer->RButtonUp();
+		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow")) {
+
+		}
+		else {
+			m_pPacket->Send_animation_stop_packet();
+			m_pPlayer->RButtonUp();
+		}
 		break;
 	}
 	case WM_MOUSEMOVE:

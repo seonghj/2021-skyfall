@@ -493,7 +493,8 @@ void Server::process_packet(int id, char* buf, int roomID)
 
     }
     case PacketType::Type_allow_shot: {
-        player_arrow_packet* p = reinterpret_cast<player_arrow_packet*>(buf);
+        player_shot_packet* p = reinterpret_cast<player_shot_packet*>(buf);
+        printf("%f, %f\n", p->fTimeElapsed, p->ChargeTimer);
         send_packet_to_players(p->id, reinterpret_cast<char*>(p), roomID);
         break;
     }
