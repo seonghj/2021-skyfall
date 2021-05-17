@@ -175,14 +175,14 @@ void Server::Accept()
                     send_login_player_packet(client_id, gameroom[roomID].ID[i], roomID);
         }
 
-        /*if (20 == gameroom.count(roomID))
+        if (20 == gameroom.count(roomID))
         {
             if (maps.find(roomID) == maps.end()) {
                 maps.emplace(roomID, Map(roomID));
                 maps[roomID].SetNum(roomID);
                 maps[roomID].init_Map(this);
             }
-        }*/
+        }
 
         accept_lock.unlock();
 
@@ -281,7 +281,7 @@ void Server::send_login_player_packet(int id, int to, int roomID)
     p.dx = sessions[id].dx.load(std::memory_order_seq_cst);
     p.dy = sessions[id].dy.load(std::memory_order_seq_cst);
 
-    //printf("%d: login to %d\n",id, to);
+    printf("%d send login to %d\n",id, to);
 
     send_packet(to, reinterpret_cast<char*>(&p));
 }

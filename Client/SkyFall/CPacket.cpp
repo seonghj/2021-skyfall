@@ -162,7 +162,7 @@ void CPacket::ProcessPacket(char* buf)
     {
     case PacketType::Type_player_ID: {
         player_ID_packet* p = reinterpret_cast<player_ID_packet*>(buf);
-        if (p->id != 0) {
+        if (p->id != 0 && client_id == 0) {
             client_id = p->id;
             printf("recv id from server: %d\n", p->id);
         }
