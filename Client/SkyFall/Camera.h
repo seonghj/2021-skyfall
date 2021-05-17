@@ -117,6 +117,7 @@ public:
 	CFirstPersonCamera(CCamera *pCamera);
 	virtual ~CFirstPersonCamera() { }
 
+	virtual void SetLookAt(XMFLOAT3& vLookAt);
 	virtual void Rotate(float fPitch = 0.0f, float fYaw = 0.0f, float fRoll = 0.0f);
 };
 

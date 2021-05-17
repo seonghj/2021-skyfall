@@ -1782,10 +1782,7 @@ void CBullet::Animate(float fElapsedTime) {
 	XMFLOAT3 look = GetLook();
 	Rotate(90.f, 0, 0);
 
-	XMFLOAT3 pos = GetPosition();
-	std::cout << "Bullet - x : " << (int)pos.x << ", y : " << (int)pos.y << ", z : " << (int)pos.z << endl;
-	pos = m_pChild->GetPosition();
-	cout << "BoundingBox - x: " << (int)pos.x << ", y : " << (int)pos.y << ", z : " << (int)pos.z << endl << endl;
+
 	m_fRotationX = acos(Vector3::DotProduct(m_xmf3MovingDirection, look) / (Vector3::Length(look) * Vector3::Length(m_xmf3MovingDirection)));
 	//std::cout << m_fRotationX << std::endl;
 	if (EPSILON <= m_fRotationX)

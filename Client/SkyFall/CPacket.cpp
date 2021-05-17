@@ -126,7 +126,8 @@ void CPacket::Send_ready_packet()
 void CPacket::Send_attack_packet(int type)
 {
     switch (type) {
-    case PlayerAttackType::BOW: {
+    case PlayerAttackType::BOWL:
+    case PlayerAttackType::BOWR:
         player_attack_packet p;
         p.id = client_id;
         p.size = sizeof(p);
@@ -134,7 +135,6 @@ void CPacket::Send_attack_packet(int type)
         p.attack_type = type;
         SendPacket(reinterpret_cast<char*>(&p));
         break;
-    }
     default: {
         player_attack_packet p;
         p.id = client_id;
@@ -327,8 +327,12 @@ void CPacket::ProcessPacket(char* buf)
                 m_pPlayer->RButtonDown();
                 break;
             }
-            case BOW: {
+            case BOWL: {
                 m_pPlayer->LButtonDown();
+                break;
+            }
+            case BOWR: {
+                m_pPlayer->RButtonDown();
                 break;
             }
             }
@@ -347,9 +351,13 @@ void CPacket::ProcessPacket(char* buf)
                         printf("id: %d SWORD1HR attack\n", p->id);
                         break;
                     }
-                    case BOW: {
+                    case BOWL: {
                         m_pScene->m_mPlayer[i]->LButtonDown();
-                        printf("id: %d SWORD1HR attack\n", p->id);
+                        printf("id: %d BOWL attack\n", p->id);
+                    }
+                    case BOWR: {
+                        m_pScene->m_mPlayer[i]->RButtonDown();
+                        printf("id: %d BOWR attack\n", p->id);
                     }
                     }
                     break;

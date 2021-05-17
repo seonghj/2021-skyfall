@@ -208,6 +208,8 @@ CFirstPersonCamera::CFirstPersonCamera(CCamera *pCamera) : CCamera(pCamera)
 	m_nMode = FIRST_PERSON_CAMERA;
 	if (pCamera)
 	{
+		m_fPitch = pCamera->GetPitch();
+		m_fRoll = pCamera->GetRoll();
 		if (pCamera->GetMode() == SPACESHIP_CAMERA)
 		{
 			m_xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
@@ -219,14 +221,29 @@ CFirstPersonCamera::CFirstPersonCamera(CCamera *pCamera) : CCamera(pCamera)
 	}
 }
 
+void CFirstPersonCamera::SetLookAt(XMFLOAT3& xmf3LookAt)
+{
+	XMFLOAT3 xmf3PlayerUp = m_pPlayer->GetUpVector();
+#ifdef _WITH_LEFT_HAND_COORDINATES
+	XMFLOAT4X4 mtxLookAt = Matrix4x4::LookAtLH(m_xmf3Position, xmf3LookAt, xmf3PlayerUp);
+#else
+	XMFLOAT4X4 mtxLookAt = Matrix4x4::LookAtRH(m_xmf3Position, xmf3LookAt, xmf3PlayerUp);
+#endif
+	m_xmf3Right = XMFLOAT3(mtxLookAt._11, mtxLookAt._21, mtxLookAt._31);
+	m_xmf3Up = XMFLOAT3(mtxLookAt._12, mtxLookAt._22, mtxLookAt._32);
+	m_xmf3Look = XMFLOAT3(mtxLookAt._13, mtxLookAt._23, mtxLookAt._33);
+}
+
 void CFirstPersonCamera::Rotate(float x, float y, float z)
 {
 	if (x != 0.0f)
 	{
+
 		XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Right), XMConvertToRadians(x));
 		m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, xmmtxRotate);
 		m_xmf3Up = Vector3::TransformNormal(m_xmf3Up, xmmtxRotate);
 		m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, xmmtxRotate);
+
 	}
 	if (m_pPlayer && (y != 0.0f))
 	{
@@ -235,6 +252,10 @@ void CFirstPersonCamera::Rotate(float x, float y, float z)
 		m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, xmmtxRotate);
 		m_xmf3Up = Vector3::TransformNormal(m_xmf3Up, xmmtxRotate);
 		m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, xmmtxRotate);
+
+		XMFLOAT3 v = Vector3::Subtract(m_xmf3Position, m_pPlayer->GetPosition());
+		v = Vector3::TransformCoord(v, xmmtxRotate);
+		m_xmf3Position = Vector3::Add(m_pPlayer->GetPosition(), v);
 	}
 	if (m_pPlayer && (z != 0.0f))
 	{

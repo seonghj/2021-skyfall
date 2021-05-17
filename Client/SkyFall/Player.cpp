@@ -112,7 +112,7 @@ void CPlayer::Rotate(float x, float y, float z)
 	x = -x; y = -y; z = -z;
 #endif
 	DWORD nCurrentCameraMode = m_pCamera->GetMode();
-	if ((/*nCurrentCameraMode == FIRST_PERSON_CAMERA*/true) || (nCurrentCameraMode == THIRD_PERSON_CAMERA))
+	if ((nCurrentCameraMode == FIRST_PERSON_CAMERA) || (nCurrentCameraMode == THIRD_PERSON_CAMERA))
 	{
 		if (x != 0.0f)
 		{
@@ -239,8 +239,6 @@ CCamera *CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
 		m_xmf3Up = Vector3::Normalize(XMFLOAT3(0.0f, 1.0f, 0.0f));
 		m_xmf3Look = Vector3::Normalize(XMFLOAT3(m_xmf3Look.x, 0.0f, m_xmf3Look.z));
 
-		m_fPitch = 0.0f;
-		m_fRoll = 0.0f;
 		m_fYaw = Vector3::Angle(XMFLOAT3(0.0f, 0.0f, 1.0f), m_xmf3Look);
 		if (m_xmf3Look.x < 0.0f) m_fYaw = -m_fYaw;
 	}
@@ -250,6 +248,8 @@ CCamera *CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
 		m_xmf3Up = m_pCamera->GetUpVector();
 		m_xmf3Look = m_pCamera->GetLookVector();
 	}
+	m_fPitch = 0.0f;
+	m_fRoll = 0.0f;
 
 	if (pNewCamera)
 	{
@@ -397,29 +397,32 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 {
 	DWORD nCurrentCameraMode = (m_pCamera) ? m_pCamera->GetMode() : 0x00;
 	if (nCurrentCameraMode == nNewCameraMode) return(m_pCamera);
+	XMFLOAT3 pos = m_xmf3Position;
+
 	//SetFriction(2.5f);
 	SetGravity(XMFLOAT3(0.0f, -400.f, 0.0f));
 	SetMaxVelocityXZ(1000.0f);
 	SetMaxVelocityY(200.f);
 	switch (nNewCameraMode)
 	{
-		case FIRST_PERSON_CAMERA:
-			SetGravity(XMFLOAT3(0.0f, 0.f, 0.0f));
-			SetFriction(500);
+		case FIRST_PERSON_CAMERA:			
 			/*SetFriction(250.0f);
 			SetGravity(XMFLOAT3(0.0f, -400.0f, 0.0f));
 			SetMaxVelocityXZ(300.0f);
 			SetMaxVelocityY(400.0f);*/
 			m_pCamera = OnChangeCamera(FIRST_PERSON_CAMERA, nCurrentCameraMode);
 			m_pCamera->SetTimeLag(0.0f);
-			m_pCamera->SetOffset(XMFLOAT3(0.0f, 20.0f, 0.0f));
+			m_pCamera->SetOffset(XMFLOAT3(0.0f, 50.0f, 0.0f));
+			m_pCamera->SetPosition(m_xmf3Position);
+			m_pCamera->Move(XMFLOAT3(0, 50, 0));
+			pos.y += 40;
+			pos = Vector3::Add(pos, Vector3::ScalarProduct(Vector3::Normalize(m_xmf3Look), 50));
+			m_pCamera->SetLookAt(pos);
 			m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 			m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 			m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
 			break;
 		case SPACESHIP_CAMERA:
-			SetGravity(XMFLOAT3(0.0f, 0.f, 0.0f));
-			SetFriction(500);
 			/*SetFriction(125.0f);
 			SetGravity(XMFLOAT3(0.0f, 0.0f, 0.0f));
 			SetMaxVelocityXZ(300.0f);
@@ -447,7 +450,6 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 			m_pCamera->SetOffset(XMFLOAT3(0.0f, 110.0f, -50.0f));
 			m_pCamera->SetPosition(Vector3::Subtract(m_xmf3Position, Vector3::ScalarProduct(Vector3::Normalize(m_xmf3Look), Vector3::Length(m_pCamera->GetOffset()))));
 			//m_pCamera->SetPosition(Vector3::Subtract(pos,Vector3::ScalarProduct(GetLook(),10,false)));
-			XMFLOAT3 pos = m_xmf3Position;
 			pos.y += 50;
 			m_pCamera->SetLookAt(pos);
 			m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
@@ -458,6 +460,7 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		default:
 			break;
 	}
+	cout << "x: " << m_pCamera->GetPosition().x << ",z : " << m_pCamera->GetPosition().y << ", y: " << m_pCamera->GetPosition().z << endl;
 	//m_pCamera->SetPosition(Vector3::Add(m_xmf3Position, m_pCamera->GetOffset()));
 	Update(fTimeElapsed);
 
@@ -691,6 +694,10 @@ void CBowPlayer::RButtonDown()
 
 void CBowPlayer::RButtonUp()
 {
+	if (m_pCamera->GetMode() == FIRST_PERSON_CAMERA)
+		m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
+	else
+		m_pCamera = ChangeCamera(FIRST_PERSON_CAMERA, 0.0f);
 }
 
 void CBowPlayer::LButtonDown()
@@ -748,15 +755,16 @@ void CBowPlayer::Shot(float fTimeElapsed, float fSpeed, XMFLOAT3 Look)
 {
 	CGameObject* pBow = FindFrame("Bow_Main");
 
-	m_ppBullets[m_nBullets]->m_xmf4x4World = pBow->m_xmf4x4World;
-
 	XMFLOAT4X4 xmf4x4Scale = Matrix4x4::Identity();
 	xmf4x4Scale._11 = 0.5;
 	xmf4x4Scale._22 = 0.5;
 	xmf4x4Scale._33 = 0.5;
 
 	m_ppBullets[m_nBullets]->m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
+	m_ppBullets[m_nBullets]->SetPosition(pBow->GetPosition());
 	m_ppBullets[m_nBullets]->m_xmf3MovingDirection = Look;
+	printf("%f, %f, %f\n", Look.x, Look.y, Look.z);
+
 	m_ppBullets[m_nBullets]->SetSpeed(fSpeed);
 	m_ppBullets[m_nBullets++]->Move(Look, 10);
 }
@@ -783,9 +791,15 @@ void CBowPlayer::Animate(float fTimeElapsed)
 
 void CBowPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
+	pCamera = m_pCamera;
 	DWORD nCameraMode = (pCamera) ? pCamera->GetMode() : 0x00;
-
-	CGameObject::Render(pd3dCommandList, pCamera);
+	if (nCameraMode == FIRST_PERSON_CAMERA) {
+		CGameObject* pObject = FindFrame("Bow_Pivot");
+		pObject->Render(pd3dCommandList, pCamera);
+		FindFrame("Arrow_Pivot")->Render(pd3dCommandList, pCamera);
+	}
+	else
+		CGameObject::Render(pd3dCommandList, pCamera);
 
 	for (int i = 0; i < m_nBullets; ++i) {
 		m_ppBullets[i]->Render(pd3dCommandList, pCamera);
@@ -903,6 +917,18 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 		}
 	}
 	CPlayer::Update(fTimeElapsed);
+}
+
+void C1HswordPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	pCamera = m_pCamera;
+	DWORD nCameraMode = (pCamera) ? pCamera->GetMode() : 0x00;
+	if (nCameraMode == FIRST_PERSON_CAMERA) {
+		CGameObject* pObject = FindFrame("Sword_Pivot");
+		pObject->Render(pd3dCommandList, pCamera);
+	}
+	else
+		CGameObject::Render(pd3dCommandList, pCamera);
 }
 
 void C1HswordPlayer::LButtonDown()

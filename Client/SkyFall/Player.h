@@ -226,6 +226,7 @@ public:
 
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 
 	virtual void RButtonDown();
 	virtual void RButtonUp();
