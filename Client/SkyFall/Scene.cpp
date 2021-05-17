@@ -712,7 +712,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 		}
 	}
 
-	for (int i = 0; i < 1; ++i)
+	for (int i = 0; i < 20; ++i)
 		if (m_mPlayer[i]) m_mPlayer[i]->Render(pd3dCommandList, pCamera);
 	//for (auto p : m_mPlayer)
 	//{
