@@ -44,7 +44,7 @@ public:
 
 
 private:
-	int client_id;
+	int client_id = 0;
 	unsigned long currentfps = 1;
 
 	std::thread Recv_thread;

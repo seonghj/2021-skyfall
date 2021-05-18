@@ -162,7 +162,7 @@ void CPacket::ProcessPacket(char* buf)
     {
     case PacketType::Type_player_ID: {
         player_ID_packet* p = reinterpret_cast<player_ID_packet*>(buf);
-        if (p->id != 0) {
+        if (p->id != 0 && client_id == 0) {
             client_id = p->id;
             printf("recv id from server: %d\n", p->id);
         }
@@ -372,12 +372,14 @@ void CPacket::ProcessPacket(char* buf)
         if (p->id == client_id) {
             m_pPlayer->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
             m_pPlayer->SetAttack(false);
+            m_pPlayer->SetCharging(false);
         }
         else {
             for (int i = 0; i < MAX_PLAYER; ++i) {
                 if (m_pScene->PlayerIDs[i] == p->id) {
                     m_pScene->m_mPlayer[i]->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
                     m_pScene->m_mPlayer[i]->SetAttack(false);
+
                 }
             }
         }

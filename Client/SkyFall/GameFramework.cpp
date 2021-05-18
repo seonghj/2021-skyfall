@@ -314,7 +314,8 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
-			//m_pPlayer->RButtonDown();
+			m_ChargeTimer.Reset();
+			m_ChargeTimer.Start();
 		}
 		break;
 	}

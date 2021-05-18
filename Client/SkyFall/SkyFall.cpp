@@ -12,6 +12,8 @@
 #pragma warning(disable : 4996)
 
 HINSTANCE						ghAppInstance;
+
+bool							gbShowBoundingBox = true;
 TCHAR							szTitle[MAX_LOADSTRING];
 TCHAR							szWindowClass[MAX_LOADSTRING];
 

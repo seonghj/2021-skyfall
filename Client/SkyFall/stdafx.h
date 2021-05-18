@@ -56,6 +56,7 @@ using Microsoft::WRL::ComPtr;
 
 extern HINSTANCE					ghAppInstance;
 
+extern bool								gbShowBoundingBox;
 //#define _WITH_SWAPCHAIN_FULLSCREEN_STATE
 
 #define FRAME_BUFFER_WIDTH			640

@@ -617,6 +617,9 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
+		case 'z': case 'Z':
+			gbShowBoundingBox = !gbShowBoundingBox;
+			break;
 		case '0':
 			AnimatePlayer(0, 0);
 			break;
@@ -712,7 +715,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 		}
 	}
 
-	for (int i = 0; i < 1; ++i)
+	for (int i = 0; i < 20; ++i)
 		if (m_mPlayer[i]) m_mPlayer[i]->Render(pd3dCommandList, pCamera);
 	//for (auto p : m_mPlayer)
 	//{
