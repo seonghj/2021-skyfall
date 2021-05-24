@@ -6,7 +6,7 @@ constexpr int LOBBYPORT = 4000;
 constexpr int BUFSIZE = 128;
 constexpr int MAX_CLIENT = 3000;
 constexpr int MAX_PLAYER = 20;
-
+constexpr int INVALIDID = -1;
 constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
 
@@ -87,7 +87,8 @@ enum PlayerMove {
 enum PlayerAttackType {
 	SWORD1HL,
 	SWORD1HR,
-	BOW
+	BOWL,
+	BOWR,
 };
 
 enum PlayerType {
@@ -112,8 +113,8 @@ struct Packet {
 public:
 	char size;
 	char type;
-	unsigned short id;
-	unsigned short roomid;
+	unsigned int id;
+	unsigned int roomid;
 };
 
 struct player_ID_packet :public Packet {
@@ -123,6 +124,9 @@ struct player_login_packet :public Packet {
 };
 
 struct player_loginOK_packet :public Packet {
+	DirectX::XMFLOAT3 Position;
+	float dx, dy;
+	short PlayerType;
 };
 
 struct player_add_packet : public Packet {

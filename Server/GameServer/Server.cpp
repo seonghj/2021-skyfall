@@ -2,6 +2,28 @@
 #pragma warning(disable : 4996)
 #include "Server.h"
 
+void SESSION::init() 
+{
+    memset(this, 0x00, sizeof(SESSION));
+    connected = false;
+    isready = false;
+    playing = false;
+    id = -1;
+
+    state = 0;
+    f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+    dx = 0;
+    dy = 0;
+
+    weapon = PlayerType::PT_BASIC;
+    helmet = 0;
+    shoes = 0;
+
+    hp = 0;
+    lv = 0;
+    speed = 20;
+}
+
 Server::Server()
 {
 
@@ -23,46 +45,53 @@ void Server::display_error(const char* msg, int err_no)
     LocalFree(lpMsgBuf);
 }
 
-int Server::SetClientId()
+int Server::SetClientId(int roomID)
 {
-    int count = LOBBY_ID+1;
+    int cnt = 0;
     while (true){
-        if (sessions.find(count) == sessions.end())
-            return count;
-        if (false == sessions.find(count)->second.connected.load(std::memory_order_seq_cst)) {
-            return count;
-        }
+        if (cnt == 20)
+            return -1;
+        if (FALSE == sessions[roomID][cnt].connected)
+            return cnt;
         else 
-            ++count;
+            ++cnt;
     }
 }
 
 int Server::SetroomID()
 {
-    int count = 1;
+    int cnt = 1;
     while (1) {
-        if (gameroom.find(count) == gameroom.end())
-            return count;
-        if (gameroom[count].ID[MAX_PLAYER - 1] == -1)
-            return count;
+        if (sessions.find(cnt) == sessions.end()) {
+            std::array<SESSION, 20> s{};
+            sessions.emplace(cnt, s);
+            for (auto& ss : sessions[cnt])
+                ss.init();
+            printf("create game room - %d\n", cnt);
+
+            return cnt;
+        }
+        if (FALSE == sessions[cnt][MAX_PLAYER - 1].connected)
+            return cnt;
         else {
-           ++count;
+           ++cnt;
         }
     }
 }
 
 void Server::ConnectLobby()
 {
-    sessions.emplace(LOBBY_ID, SESSION());
-    sessions[LOBBY_ID].id = LOBBY_ID;
-    sessions[LOBBY_ID].connected.store(TRUE);
+    std::array<SESSION, 20> s{};
+    sessions.emplace(LOBBY_ID, s);
+    sessions[LOBBY_ID][0].id = LOBBY_ID;
+    sessions[LOBBY_ID][0].connected = TRUE;
     // ���� �ʱ�ȭ
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
         return;
 
     // socket()
-    sessions[LOBBY_ID].sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+    sessions[LOBBY_ID][0].sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 
     // connect()
     SOCKADDR_IN lobbyaddr;
@@ -70,17 +99,17 @@ void Server::ConnectLobby()
     lobbyaddr.sin_family = AF_INET;
     lobbyaddr.sin_addr.s_addr = inet_addr(SERVERIP);
     lobbyaddr.sin_port = htons(LOBBYPORT);
-    connect(sessions[LOBBY_ID].sock, (SOCKADDR*)&lobbyaddr, sizeof(lobbyaddr));
+    connect(sessions[LOBBY_ID][0].sock, (SOCKADDR*)&lobbyaddr, sizeof(lobbyaddr));
 
-    memset(&sessions[LOBBY_ID].over.overlapped, 0, sizeof(sessions[LOBBY_ID].over.overlapped));
-    sessions[LOBBY_ID].over.is_recv = true;
-    sessions[LOBBY_ID].over.dataBuffer.len = BUFSIZE;
-    sessions[LOBBY_ID].over.dataBuffer.buf =
-        sessions[LOBBY_ID].over.messageBuffer;
+    memset(&sessions[LOBBY_ID][0].over.overlapped, 0, sizeof(sessions[LOBBY_ID][0].over.overlapped));
+    sessions[LOBBY_ID][0].over.is_recv = true;
+    sessions[LOBBY_ID][0].over.dataBuffer.len = BUFSIZE;
+    sessions[LOBBY_ID][0].over.dataBuffer.buf =
+        sessions[LOBBY_ID][0].over.messageBuffer;
 
-    CreateIoCompletionPort((HANDLE)sessions[LOBBY_ID].sock, hcp, LOBBY_ID, 0);
+    CreateIoCompletionPort((HANDLE)sessions[LOBBY_ID][0].sock, hcp, LOBBY_ID, 0);
 
-    do_recv(LOBBY_ID);
+    do_recv(LOBBY_ID, 0);
 }
 
 void Server::Accept()
@@ -114,76 +143,64 @@ void Server::Accept()
             break;
         }
 
-        accept_lock.lock();
-        int client_id = SetClientId();
-        sessions.emplace(client_id, SESSION());
-        memset(&sessions[client_id], 0x00, sizeof(SESSION));
-        sessions[client_id].connected.store(TRUE);
-        sessions[client_id].id = client_id;
-        sessions[client_id].sock = client_sock;
-        sessions[client_id].clientaddr = clientaddr;
-        getpeername(client_sock, (SOCKADDR*)&sessions[client_id].clientaddr
-            , &sessions[client_id].addrlen);
-
+        //accept_lock.lock();
         int roomID = SetroomID();
-        if (gameroom.count(roomID) == 0) {
-            gameroom.emplace(roomID, PlayerIDs());
-            gameroom[roomID].init();
-            gameroom[roomID].ID[0] = client_id;
-            printf("create game room - %d\n", roomID);
-        }
-        else {
-            for (int i = 0; i < MAX_PLAYER; ++i)
-                if (gameroom[roomID].ID[i] == -1) {
-                    gameroom[roomID].ID[i] = client_id;
-                    break;
-                }
-        }
+        int client_id = SetClientId(roomID);
+        if (client_id == -1)
+            break;
 
-        sessions[client_id].over.type = 0;
-        sessions[client_id].over.dataBuffer.len = BUFSIZE;
-        sessions[client_id].over.dataBuffer.buf =
-            sessions[client_sock].over.messageBuffer;
-        sessions[client_id].over.is_recv = true;
-        sessions[client_id].over.roomID = roomID;
+        sessions[roomID][client_id].connected = TRUE;
+        sessions[roomID][client_id].id = client_id;
+        sessions[roomID][client_id].sock = client_sock;
+        sessions[roomID][client_id].clientaddr = clientaddr;
+        getpeername(client_sock, (SOCKADDR*)&sessions[roomID][client_id].clientaddr
+            , &sessions[roomID][client_id].addrlen);
+
+
+        sessions[roomID][client_id].over.type = 0;
+        sessions[roomID][client_id].over.dataBuffer.len = BUFSIZE;
+        sessions[roomID][client_id].over.dataBuffer.buf =
+            sessions[roomID][client_sock].over.messageBuffer;
+        sessions[roomID][client_id].over.is_recv = true;
+        sessions[roomID][client_id].over.roomID = roomID;
         flags = 0;
 
         // ���ϰ� ����� �Ϸ� ��Ʈ ����
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
 
-        sessions[client_id].f3Position.store(XMFLOAT3(50.f , 150.0f, 50.f));
+        sessions[roomID][client_id].f3Position = XMFLOAT3(50.f , 150.0f, 50.f);
 
         // id����
-        send_ID_player_packet(client_id, roomID);
+        send_player_loginOK_packet(client_id, roomID);
 
         printf("client_connected: IP =%s, port=%d key = %d Room = %d\n",
-            inet_ntoa(sessions[client_id].clientaddr.sin_addr)
-            , ntohs(sessions[client_id].clientaddr.sin_port), client_id, roomID);
+            inet_ntoa(sessions[roomID][client_id].clientaddr.sin_addr)
+            , ntohs(sessions[roomID][client_id].clientaddr.sin_port), client_id, roomID);
 
 
         for (int i = 0; i < MAX_PLAYER; ++i) {
-            if (gameroom[roomID].ID[i] != -1)
-                if (true == sessions[gameroom[roomID].ID[i]].connected.load(std::memory_order_seq_cst) && (gameroom[roomID].ID[i] != client_id))
-                    send_add_player_packet(gameroom[roomID].ID[i], client_id, roomID);
+            if (TRUE == sessions[roomID][i].connected)
+                if (true == sessions[roomID][sessions[roomID][i].id].connected && (sessions[roomID][i].id != client_id))
+                    send_add_player_packet(sessions[roomID][i].id, client_id, roomID);
         }
         for (int i = 0; i < MAX_PLAYER; ++i) {
-            if (gameroom[roomID].ID[i] != -1)
-                if ((true == sessions[gameroom[roomID].ID[i]].connected.load(std::memory_order_seq_cst)) && (gameroom[roomID].ID[i] != client_id))
-                    send_add_player_packet(client_id, gameroom[roomID].ID[i], roomID);
+            if (TRUE == sessions[roomID][i].connected)
+                if ((true == sessions[roomID][sessions[roomID][i].id].connected) && (sessions[roomID][i].id != client_id))
+                    send_add_player_packet(client_id, sessions[roomID][i].id, roomID);
         }
 
-        if (20 == gameroom.count(roomID))
+      /*  if (TRUE == sessions[roomID][MAX_PLAYER - 1].connected.load())
         {
             if (maps.find(roomID) == maps.end()) {
                 maps.emplace(roomID, Map(roomID));
                 maps[roomID].SetNum(roomID);
                 maps[roomID].init_Map(this);
             }
-        }
+        }*/
 
-        accept_lock.unlock();
+        //accept_lock.unlock();
 
-        do_recv(client_id);
+        do_recv(client_id, roomID);
     }
 
     // closesocket()
@@ -195,49 +212,48 @@ void Server::Accept()
 
 void Server::Disconnected(int id, int roomID)
 {
-    printf("client_end: IP =%s, port=%d key = %d, Room = %d\n",
-        inet_ntoa(sessions[id].clientaddr.sin_addr)
-        , ntohs(sessions[id].clientaddr.sin_port), id, roomID);
-    //send_disconnect_player_packet(id);
-    closesocket(sessions[id].sock);
-    sessions[id].connected.store(FALSE);
-    sessions.erase(id);
     for (int i = 0; i < MAX_PLAYER; ++i) {
         //printf("%d\n", i->second);
-        if (gameroom[roomID].ID[i] == id) {
-            gameroom[roomID].ID[i] = -1;
+        if (sessions[roomID][i].id == id) {
+            printf("client_end: IP =%s, port=%d key = %d, Room = %d\n",
+                inet_ntoa(sessions[roomID][i].clientaddr.sin_addr)
+                , ntohs(sessions[roomID][i].clientaddr.sin_port), id, roomID);
+            //send_disconnect_player_packet(id);
+            closesocket(sessions[roomID][i].sock);
+            sessions[roomID][i].connected= FALSE;
+            sessions[roomID][i].id = -1;
             //printf("disconnected %d\n", gameroom[roomID].ID[i]);
             break;
         }
     }
-    //sessions.clear();
+    //sessions[roomID].clear();
 }
 
-void Server::do_recv(int id)
+void Server::do_recv(int id, int roomID)
 {
     DWORD flags = 0;
 
 
-    SOCKET client_s = sessions[id].sock;
-    OVER_EX* over = &sessions[id].over;
+    SOCKET client_s = sessions[roomID][id].sock;
+    OVER_EX* over = &sessions[roomID][id].over;
 
     over->dataBuffer.len = BUFSIZE;
     over->dataBuffer.buf = over->messageBuffer;
     ZeroMemory(&over->overlapped, sizeof(over->overlapped));
 
-    if (WSARecv(client_s, &over->dataBuffer, 1, (LPDWORD)sessions[id].prev_size,
+    if (WSARecv(client_s, &over->dataBuffer, 1, (LPDWORD)sessions[roomID][id].prev_size,
         &flags, &(over->overlapped), NULL)){
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
             printf("id: %d recv error: %d\n", id, err_no);
-            Disconnected(id, sessions[id].over.roomID);
+            Disconnected(id, sessions[roomID][id].over.roomID);
         }
     }
 }
 
-void Server::send_packet(int to, char* packet)
+void Server::send_packet(int to, char* packet, int roomID)
 {
-    SOCKET client_s = sessions[to].sock;
+    SOCKET client_s = sessions[roomID][to].sock;
     OVER_EX* over = new OVER_EX;
     ZeroMemory(over, sizeof(OVER_EX));
     over->dataBuffer.buf = packet;
@@ -252,7 +268,7 @@ void Server::send_packet(int to, char* packet)
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
             //printf("to: %d packet: %d send error: %d\n", to, packet[1], err_no);
-            //Disconnected(to, sessions[to].over.roomID);
+            //Disconnected(to, sessions[roomID][to].over.roomID);
         }
     }
 }
@@ -264,7 +280,23 @@ void Server::send_ID_player_packet(int id, int roomID)
     p.id = id;
     p.size = sizeof(player_ID_packet);
     p.type = PacketType::Type_player_ID;
-    send_packet(id, reinterpret_cast<char*>(&p));
+    p.roomid = roomID;
+    send_packet(id, reinterpret_cast<char*>(&p), roomID);
+}
+
+void Server::send_player_loginOK_packet(int id, int roomID)
+{
+    player_loginOK_packet p;
+
+    p.id = id;
+    p.size = sizeof(player_loginOK_packet);
+    p.type = PacketType::Type_player_loginOK;
+    p.roomid = roomID;
+    p.Position = sessions[roomID][id].f3Position;
+    p.dx = sessions[roomID][id].dx;
+    p.dy = sessions[roomID][id].dy;
+    send_packet(id, reinterpret_cast<char*>(&p), roomID);
+    printf("send loginOK\n");
 }
 
 void Server::send_add_player_packet(int id, int to, int roomID)
@@ -274,13 +306,14 @@ void Server::send_add_player_packet(int id, int to, int roomID)
     p.id = id;
     p.size = sizeof(player_add_packet);
     p.type = PacketType::Type_player_add;
-    p.Position = sessions[id].f3Position.load(std::memory_order_seq_cst);
-    p.dx = sessions[id].dx.load(std::memory_order_seq_cst);
-    p.dy = sessions[id].dy.load(std::memory_order_seq_cst);
+    p.roomid = roomID;
+    p.Position = sessions[roomID][id].f3Position;
+    p.dx = sessions[roomID][id].dx;
+    p.dy = sessions[roomID][id].dy;
 
     printf("%d send login to %d\n",id, to);
 
-    send_packet(to, reinterpret_cast<char*>(&p));
+    send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
 void Server::send_disconnect_player_packet(int id, int roomID)
@@ -289,11 +322,12 @@ void Server::send_disconnect_player_packet(int id, int roomID)
     p.id = id;
     p.size = sizeof(player_remove_packet);
     p.type = PacketType::Type_player_remove;
+    p.roomid = roomID;
 
     for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (gameroom[roomID].ID[i] != -1)
-            if (sessions[gameroom[roomID].ID[i]].connected.load(std::memory_order_seq_cst))
-                send_packet(gameroom[roomID].ID[i], reinterpret_cast<char*>(&p));
+        if (sessions[roomID][i].connected == TRUE)
+            if (sessions[roomID][i].connected)
+                send_packet(i, reinterpret_cast<char*>(&p), roomID);
     }
     Disconnected(id, roomID);
 }
@@ -301,10 +335,10 @@ void Server::send_disconnect_player_packet(int id, int roomID)
 void Server::send_packet_to_players(int id, char* buf, int roomID)
 {
     for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (gameroom[roomID].ID[i] != -1)
-            if (sessions[gameroom[roomID].ID[i]].connected.load(std::memory_order_seq_cst))
-                if (calc_distance(id, gameroom[roomID].ID[i]) <= VIEWING_DISTANCE) {
-                    send_packet(gameroom[roomID].ID[i], buf);
+        if (sessions[roomID][i].connected == TRUE)
+            if (sessions[roomID][i].connected)
+                if (calc_distance(id, sessions[roomID][i].id, roomID) <= VIEWING_DISTANCE) {
+                    send_packet(i, buf, roomID);
                 }
     }
 }
@@ -312,53 +346,54 @@ void Server::send_packet_to_players(int id, char* buf, int roomID)
 void Server::send_packet_to_allplayers(int roomID, char* buf)
 {
     for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (gameroom[roomID].ID[i] != -1)
-            if (sessions[gameroom[roomID].ID[i]].connected.load(std::memory_order_seq_cst)){
-                    send_packet(gameroom[roomID].ID[i], buf);
-                }
+        if (sessions[roomID][i].connected == TRUE)
+            if (sessions[roomID][i].connected.load(std::memory_order_seq_cst))
+                send_packet(i, buf, roomID);
     }
 }
 
 void Server::send_map_collapse_packet(int num, int map_num)
 {
-    map_collapse_packet packet;
-    packet.size = sizeof(map_collapse_packet);
-    packet.type = PacketType::Type_map_collapse;
-    packet.block_num = num;
-    packet.id = 0;
+    map_collapse_packet p;
+    p.size = sizeof(map_collapse_packet);
+    p.type = PacketType::Type_map_collapse;
+    p.block_num = num;
+    p.id = 0;
+    p.roomid = map_num;
 
-    send_packet_to_allplayers(map_num, reinterpret_cast<char*>(&packet));
+    send_packet_to_allplayers(map_num, reinterpret_cast<char*>(&p));
 }
 
 void Server::send_cloud_move_packet(float x, float z, int map_num)
 {
-    cloud_move_packet packet;
-    packet.size = sizeof(cloud_move_packet);
-    packet.type = PacketType::Type_cloud_move;
-    packet.x = x;
-    packet.z = z;
-    packet.id = 0;
+    cloud_move_packet p;
+    p.size = sizeof(cloud_move_packet);
+    p.type = PacketType::Type_cloud_move;
+    p.x = x;
+    p.z = z;
+    p.id = 0;
+    p.roomid = map_num;
 
-    send_packet_to_allplayers(map_num, reinterpret_cast<char*>(&packet));
+    send_packet_to_allplayers(map_num, reinterpret_cast<char*>(&p));
 }
 
 void Server::game_end(int roomnum)
 {
-    game_end_packet packet;
-    packet.id = 0;
-    packet.size = sizeof(packet);
-    packet.type = PacketType::Type_game_end;
+    game_end_packet p;
+    p.id = 0;
+    p.size = sizeof(p);
+    p.type = PacketType::Type_game_end;
+    p.roomid = roomnum;
 
-    send_packet_to_allplayers(roomnum, reinterpret_cast<char*>(&packet));
-    gameroom[roomnum].init();
+    send_packet_to_allplayers(roomnum, reinterpret_cast<char*>(&p));
     maps.erase(roomnum);
-    gameroom.erase(roomnum);
+    sessions.erase(roomnum);
 }
 
-float Server::calc_distance(int a, int b)
+float Server::calc_distance(int a, int b, int roomID)
 {
-    float value = pow(((short)sessions[a].f3Position.load(std::memory_order_seq_cst).x - (short)sessions[b].f3Position.load(std::memory_order_seq_cst).x), 2)
-        + pow(((short)sessions[a].f3Position.load(std::memory_order_seq_cst).z - (short)sessions[b].f3Position.load(std::memory_order_seq_cst).z), 2);
+    float value = pow(((short)sessions[roomID][a].f3Position.x - (short)sessions[roomID][b].f3Position.x), 2)
+        + pow(((short)sessions[roomID][a].f3Position.z - (short)sessions[roomID][b].f3Position.z), 2);
 
     if (value < 0)
         return sqrt(-value);
@@ -371,58 +406,13 @@ unsigned short Server::calc_attack(int id, char attacktype)
     return 0;
 }
 
-DirectX::XMFLOAT3 Server::move_calc(DWORD dwDirection, float fDistance, int state, int id)
-{
-    XMFLOAT3 xmf3Right = XMFLOAT3(1.0f, 0.0f, 0.0f);
-    XMFLOAT3 xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
-    XMFLOAT3 xmf3Look = XMFLOAT3(0.0f, 0.0f, 1.0f);
-
-    XMFLOAT3 xmf3Shift = XMFLOAT3(0, 0, 0);
-
-    switch (dwDirection) {
-    case DIR_FORWARD: {
-        xmf3Shift = Add(xmf3Shift, xmf3Look, fDistance);
-        break;
-    }
-    case DIR_BACKWARD: {
-        xmf3Shift = Add(xmf3Shift, xmf3Look, -fDistance);
-        break;
-    }
-    case DIR_LEFT: {
-        xmf3Shift = Add(xmf3Shift, xmf3Right, -fDistance);
-        break;
-    }
-    case DIR_RIGHT: {
-        xmf3Shift = Add(xmf3Shift, xmf3Right, fDistance);
-        break;
-    }
-    }
-
-    XMFLOAT3 xmf3Velocity;
-
-    xmf3Velocity.x = 0;
-    xmf3Velocity.y = 0;
-    xmf3Velocity.z = 0;
-
-    xmf3Velocity = Add(xmf3Velocity, xmf3Shift);
-    if (state == PlayerMove::RUNNING)
-    {
-        xmf3Velocity.x *= 3.3;
-        xmf3Velocity.z *= 3.3;
-    }
-
-    xmf3Shift = Add(sessions[id].f3Position.load(std::memory_order_seq_cst), xmf3Shift);
-
-    return xmf3Shift;
-}
-
 void Server::process_packet(int id, char* buf, int roomID)
 {
     // Ŭ���̾�Ʈ���� ���� ��Ŷ ó��
     switch (buf[1]) {
     case PacketType::Type_game_ready: {
         game_ready_packet* p = reinterpret_cast<game_ready_packet*>(buf);
-        sessions[p->id].isready = true;
+        sessions[roomID][p->id].isready = true;
         break;
     }
     case PacketType::Type_game_start: {
@@ -433,25 +423,24 @@ void Server::process_packet(int id, char* buf, int roomID)
     }
     case PacketType::Type_player_info:{
         player_info_packet* p = reinterpret_cast<player_info_packet*>(buf);
-        sessions[p->id].f3Position.store(p->Position);
+        sessions[roomID][p->id].f3Position = p->Position;
         break;
     }
     case PacketType::Type_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
-
-        sessions[p->id].f3Position.store(p->Position);
-        float tx = fmodf(sessions[p->id].dx.load() + p->dx, 360.f);
-        sessions[p->id].dx.store(fmodf(sessions[p->id].dx.load() + p->dx, 360.f));
-        sessions[p->id].dy.store(fmodf(sessions[p->id].dy.load() + p->dy, 360.f));
-        //printf("move %f %f\n", sessions[p->id].f3Position.load(std::memory_order_seq_cst).x, sessions[p->id].f3Position.load(std::memory_order_seq_cst).z);
+        sessions[roomID][p->id].f3Position = p->Position;
+        float tx = fmodf(sessions[roomID][p->id].dx.load() + p->dx, 360.f);
+        sessions[roomID][p->id].dx.store(fmodf(sessions[roomID][p->id].dx.load() + p->dx, 360.f));
+        sessions[roomID][p->id].dy.store(fmodf(sessions[roomID][p->id].dy.load() + p->dy, 360.f));
+        //printf("move %f %f\n", sessions[roomID][p->id].f3Position.load(std::memory_order_seq_cst).x, sessions[roomID][p->id].f3Position.load(std::memory_order_seq_cst).z);
         send_packet_to_players(id, reinterpret_cast<char*>(p), roomID);
         break;
     }
     case PacketType::Type_start_pos: {
         player_start_pos* p = reinterpret_cast<player_start_pos*>(buf);
-        sessions[p->id].f3Position.store(p->Position);
+        sessions[roomID][p->id].f3Position = p->Position;
 
-        send_packet(id, reinterpret_cast<char*>(p));
+        send_packet(id, reinterpret_cast<char*>(p), roomID);
         break;
     }
     case PacketType::Type_weapon_swap :{
@@ -476,7 +465,7 @@ void Server::process_packet(int id, char* buf, int roomID)
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
         send_packet_to_players(p->id, reinterpret_cast<char*>(p), roomID);
         switch (p->attack_type) {
-        case BOW: {
+        case BOWL: {
             // �浹ó��
             break;
         }
@@ -537,26 +526,26 @@ void Server::WorkerFunc()
                 int rest_size = Transferred;
                 char* buf_ptr = over_ex->messageBuffer;
                 char packet_size = 0;
-                if (0 < sessions[id].prev_size)
-                    packet_size = sessions[id].packet_buf[0];
+                if (0 < sessions[roomID][id].prev_size)
+                    packet_size = sessions[roomID][id].packet_buf[0];
                 while (rest_size > 0) {
                     if (0 == packet_size) packet_size = buf_ptr[0];
-                    int required = packet_size - sessions[id].prev_size;
+                    int required = packet_size - sessions[roomID][id].prev_size;
                     if (rest_size >= required) {
-                        memcpy(sessions[id].packet_buf + sessions[id].
+                        memcpy(sessions[roomID][id].packet_buf + sessions[roomID][id].
                             prev_size, buf_ptr, required);
-                        process_packet(id, sessions[id].packet_buf, roomID);
+                        process_packet(id, sessions[roomID][id].packet_buf, roomID);
                         rest_size -= required;
                         buf_ptr += required;
                         packet_size = 0;
                     }
                     else {
-                        memcpy(sessions[id].packet_buf + sessions[id].prev_size,
+                        memcpy(sessions[roomID][id].packet_buf + sessions[roomID][id].prev_size,
                             buf_ptr, rest_size);
                         rest_size = 0;
                     }
                 }
-                do_recv(id);
+                do_recv(id, roomID);
             }
             else {
                 delete over_ex;

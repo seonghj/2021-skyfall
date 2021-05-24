@@ -6,7 +6,7 @@ constexpr int LOBBYPORT = 4000;
 constexpr int BUFSIZE = 128;
 constexpr int MAX_CLIENT = 3000;
 constexpr int MAX_PLAYER = 20;
-
+constexpr int INVALIDID = -1;
 constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
 
@@ -18,8 +18,8 @@ constexpr int MAP_BREAK_TIME = 30;
 constexpr float VIEWING_DISTANCE = 16666.f;
 // 1 = 3cm
 
-//#define SERVERIP   "127.0.0.1"
-#define SERVERIP   "39.120.192.92"
+#define SERVERIP   "127.0.0.1"
+//#define SERVERIP   "39.120.192.92"
 
 struct OVER_EX
 {
@@ -39,7 +39,9 @@ enum OVER_EX_Type {
 
 enum PacketType {
 	Type_player_ID,			// S->C
-	Type_player_login,		// S->C
+	Type_player_login,
+	Type_player_loginOK,
+	Type_player_add,		// S->C
 	Type_player_remove,		// S->C
 	Type_game_ready,		// C->S
 	Type_game_start,		// C->S
@@ -111,13 +113,23 @@ struct Packet {
 public:
 	char size;
 	char type;
-	unsigned short id;
+	unsigned int id;
+	unsigned int roomid;
 };
 
 struct player_ID_packet :public Packet {
 };
 
-struct player_login_packet : public Packet {
+struct player_login_packet :public Packet {
+};
+
+struct player_loginOK_packet :public Packet {
+	DirectX::XMFLOAT3 Position;
+	float dx, dy;
+	short PlayerType;
+};
+
+struct player_add_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
 	float dx, dy;
 	short PlayerType;

@@ -21,6 +21,7 @@ public:
 };
 
 
+
 class SESSION
 {
 public:
@@ -43,11 +44,11 @@ public:
     bool                     isready = false;
     bool                     playing = false;
     int                      prev_size;
-    int                      id;
+    int                      id = -1;
 
     // 0 죽음 / 1 생존
     std::atomic<bool>       state = 0;
-    std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+    DirectX::XMFLOAT3       f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<float>      dx = 0;
     std::atomic<float>      dy = 0;
     
@@ -58,17 +59,9 @@ public:
     std::atomic<float>      hp = 0;
     std::atomic<float>      lv = 0;
     std::atomic<float>      speed = 20;
-};
 
-class PlayerIDs {
-public:
-    PlayerIDs() {}
-    PlayerIDs(const PlayerIDs& PlayerIDs) {}
-    ~PlayerIDs() {}
-
-    int ID[MAX_PLAYER]; // -1 = disconnected
-
-    void init() { for (int i = 0; i < MAX_PLAYER; ++i) ID[i] = -1; }
+    void init();
+    void Setf3Posion(DirectX::XMFLOAT3 f) { f3Position = f; }
 };
 
 class Map;
@@ -82,7 +75,7 @@ public:
 
     void display_error(const char* msg, int err_no);
 
-    int SetClientId();
+    int SetClientId(int roomID);
     int SetroomID();
 
     void ConnectLobby();
@@ -94,11 +87,12 @@ public:
     void Accept();
     void WorkerFunc();
 
-    void do_recv(int id);
-    void send_packet(int to, char* packet);
+    void do_recv(int id, int roomID);
+    void send_packet(int to, char* packet, int roomID);
     void process_packet(int id, char* buf, int roomID);
 
     void send_ID_player_packet(int id, int roomID);
+    void send_player_loginOK_packet(int id, int roomID);
     void send_add_player_packet(int id, int to, int roomID);
     void send_disconnect_player_packet(int id,int roomID);
     void send_packet_to_players(int id, char* buf, int roomID);
@@ -108,16 +102,14 @@ public:
     
     void game_end(int roomnum);
 
-    float calc_distance(int a, int b);
+    float calc_distance(int a, int b, int roomID);
     unsigned short calc_attack(int id, char attacktype);
-    DirectX::XMFLOAT3 move_calc(DWORD dwDirection, float fDistance, int state, int id);
+
+    std::unordered_map <int, std::array<SESSION, 20>> sessions; // 방ID, Player배열
 
 private:
     HANDLE hcp;
     
-    std::unordered_map <int, PlayerIDs> gameroom; // <방번호, 플레이어ID>
-    std::unordered_map <int, SESSION> sessions;
-    //std::unordered_map <int, SESSION[20]> sessions;
     std::unordered_map <int, Map> maps;
 
     std::vector <std::thread> working_threads;
@@ -125,4 +117,6 @@ private:
     std::vector <std::thread> map_threads;
 
     std::mutex accept_lock;
+    std::mutex sm_lock;
+    std::mutex mm_lock;
 };

@@ -44,7 +44,8 @@ public:
 
 
 private:
-	int client_id = 0;
+	int client_id = INVALIDID;
+	int roomID = INVALIDID;
 	unsigned long currentfps = 1;
 
 	std::thread Recv_thread;

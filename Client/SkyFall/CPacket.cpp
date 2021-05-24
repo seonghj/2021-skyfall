@@ -162,7 +162,7 @@ void CPacket::ProcessPacket(char* buf)
     {
     case PacketType::Type_player_ID: {
         player_ID_packet* p = reinterpret_cast<player_ID_packet*>(buf);
-        if (p->id != 0 && client_id == 0) {
+        if (p->id != -1 && client_id == 0) {
             client_id = p->id;
             printf("recv id from server: %d\n", p->id);
         }
@@ -178,8 +178,19 @@ void CPacket::ProcessPacket(char* buf)
         //Send_ready_packet();
         break;
     }
-    case PacketType::Type_player_login: {
-        player_login_packet* p = reinterpret_cast<player_login_packet*>(buf);
+    case PacketType::Type_player_loginOK: {
+        player_loginOK_packet* p = reinterpret_cast<player_loginOK_packet*>(buf);
+        if (p->id != -1) {
+            client_id = p->id;
+            roomID = p->roomid;
+            m_pScene->m_pPlayer->SetPosition(p->Position);
+            m_pScene->m_pPlayer->Rotate(p->dx, p->dy, 0);
+            printf("recv id from server: %d\n", p->id);
+        }
+        break;
+    }
+    case PacketType::Type_player_add: {
+        player_add_packet* p = reinterpret_cast<player_add_packet*>(buf);
         printf("login id: %d\n", p->id);
         if (p->id != client_id) {
             for (int i = 0; i < MAX_PLAYER; ++i) {

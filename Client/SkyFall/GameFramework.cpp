@@ -840,7 +840,8 @@ void CGameFramework::FrameAdvance()
 				m_pPlayer->SetStanding(false);
 			}
 			p.type = Type_player_pos;
-			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+			if (m_pPacket->Get_clientid() != -1)
+				m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 
 			m_BeforePosition = NowPosition;
 
