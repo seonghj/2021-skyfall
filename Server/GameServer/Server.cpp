@@ -151,28 +151,25 @@ void Server::Accept()
         // ���ϰ� ����� �Ϸ� ��Ʈ ����
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
 
+        sessions[client_id].f3Position.store(XMFLOAT3(50.f , 150.0f, 50.f));
+
         // id����
         send_ID_player_packet(client_id, roomID);
-
-        sessions[client_id].f3Position.store(XMFLOAT3(50.f , 150.0f, 50.f));
 
         printf("client_connected: IP =%s, port=%d key = %d Room = %d\n",
             inet_ntoa(sessions[client_id].clientaddr.sin_addr)
             , ntohs(sessions[client_id].clientaddr.sin_port), client_id, roomID);
 
 
-        // 로그인한 플레이어에게 이미 로그인한 플레이어 전송
         for (int i = 0; i < MAX_PLAYER; ++i) {
             if (gameroom[roomID].ID[i] != -1)
-                if (true == sessions[gameroom[roomID].ID[i]].connected.load(std::memory_order_seq_cst))
-                    send_login_player_packet(gameroom[roomID].ID[i], client_id, roomID);
+                if (true == sessions[gameroom[roomID].ID[i]].connected.load(std::memory_order_seq_cst) && (gameroom[roomID].ID[i] != client_id))
+                    send_add_player_packet(gameroom[roomID].ID[i], client_id, roomID);
         }
-
-        // 다른 플레이어에게 로그인한 플레이어 전송
         for (int i = 0; i < MAX_PLAYER; ++i) {
             if (gameroom[roomID].ID[i] != -1)
                 if ((true == sessions[gameroom[roomID].ID[i]].connected.load(std::memory_order_seq_cst)) && (gameroom[roomID].ID[i] != client_id))
-                    send_login_player_packet(client_id, gameroom[roomID].ID[i], roomID);
+                    send_add_player_packet(client_id, gameroom[roomID].ID[i], roomID);
         }
 
         if (20 == gameroom.count(roomID))
@@ -265,18 +262,18 @@ void Server::send_ID_player_packet(int id, int roomID)
     player_ID_packet p;
 
     p.id = id;
-    p.size = sizeof(player_login_packet);
+    p.size = sizeof(player_ID_packet);
     p.type = PacketType::Type_player_ID;
     send_packet(id, reinterpret_cast<char*>(&p));
 }
 
-void Server::send_login_player_packet(int id, int to, int roomID)
+void Server::send_add_player_packet(int id, int to, int roomID)
 {
-    player_login_packet p;
+    player_add_packet p;
 
     p.id = id;
-    p.size = sizeof(player_login_packet);
-    p.type = PacketType::Type_player_login;
+    p.size = sizeof(player_add_packet);
+    p.type = PacketType::Type_player_add;
     p.Position = sessions[id].f3Position.load(std::memory_order_seq_cst);
     p.dx = sessions[id].dx.load(std::memory_order_seq_cst);
     p.dy = sessions[id].dy.load(std::memory_order_seq_cst);

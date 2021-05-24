@@ -1,5 +1,5 @@
 #pragma once
-#include"stdafx.h"
+#include "stdafx.h"
 #include "DB.h"
 #include "Map.h"
 #include "protocol.h"
@@ -99,7 +99,7 @@ public:
     void process_packet(int id, char* buf, int roomID);
 
     void send_ID_player_packet(int id, int roomID);
-    void send_login_player_packet(int id, int to, int roomID);
+    void send_add_player_packet(int id, int to, int roomID);
     void send_disconnect_player_packet(int id,int roomID);
     void send_packet_to_players(int id, char* buf, int roomID);
     void send_packet_to_allplayers(int roomnum, char* buf);
@@ -117,6 +117,7 @@ private:
     
     std::unordered_map <int, PlayerIDs> gameroom; // <방번호, 플레이어ID>
     std::unordered_map <int, SESSION> sessions;
+    //std::unordered_map <int, SESSION[20]> sessions;
     std::unordered_map <int, Map> maps;
 
     std::vector <std::thread> working_threads;

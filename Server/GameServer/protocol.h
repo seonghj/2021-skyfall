@@ -39,7 +39,9 @@ enum OVER_EX_Type {
 
 enum PacketType {
 	Type_player_ID,			// S->C
-	Type_player_login,		// S->C
+	Type_player_login,
+	Type_player_loginOK,
+	Type_player_add,		// S->C
 	Type_player_remove,		// S->C
 	Type_game_ready,		// C->S
 	Type_game_start,		// C->S
@@ -111,12 +113,19 @@ public:
 	char size;
 	char type;
 	unsigned short id;
+	unsigned short roomid;
 };
 
 struct player_ID_packet :public Packet {
 };
 
-struct player_login_packet : public Packet {
+struct player_login_packet :public Packet {
+};
+
+struct player_loginOK_packet :public Packet {
+};
+
+struct player_add_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
 	float dx, dy;
 	short PlayerType;
