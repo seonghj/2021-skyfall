@@ -63,10 +63,10 @@ int Server::SetroomID()
     int cnt = 1;
     while (1) {
         if (sessions.find(cnt) == sessions.end()) {
+            sm_lock.lock();
             std::array<SESSION, 20> s{};
             sessions.emplace(cnt, s);
-            for (auto& ss : sessions[cnt])
-                ss.init();
+            sm_lock.unlock();
             printf("create game room - %d\n", cnt);
 
             return cnt;
@@ -143,12 +143,13 @@ void Server::Accept()
             break;
         }
 
-        //accept_lock.lock();
+        accept_lock.lock();
         int roomID = SetroomID();
         int client_id = SetClientId(roomID);
         if (client_id == -1)
             break;
 
+        memset(&sessions[roomID][client_id], 0x00, sizeof(SESSION));
         sessions[roomID][client_id].connected = TRUE;
         sessions[roomID][client_id].id = client_id;
         sessions[roomID][client_id].sock = client_sock;
@@ -198,7 +199,7 @@ void Server::Accept()
             }
         }*/
 
-        //accept_lock.unlock();
+        accept_lock.unlock();
 
         do_recv(client_id, roomID);
     }
@@ -212,6 +213,7 @@ void Server::Accept()
 
 void Server::Disconnected(int id, int roomID)
 {
+    std::lock_guard<std::mutex> lock_guard(sm_lock);
     for (int i = 0; i < MAX_PLAYER; ++i) {
         //printf("%d\n", i->second);
         if (sessions[roomID][i].id == id) {
@@ -292,11 +294,10 @@ void Server::send_player_loginOK_packet(int id, int roomID)
     p.size = sizeof(player_loginOK_packet);
     p.type = PacketType::Type_player_loginOK;
     p.roomid = roomID;
-    p.Position = sessions[roomID][id].f3Position;
-    p.dx = sessions[roomID][id].dx;
-    p.dy = sessions[roomID][id].dy;
+    p.Position = sessions[roomID][id].f3Position.load();
+    p.dx = sessions[roomID][id].dx.load();
+    p.dy = sessions[roomID][id].dy.load();
     send_packet(id, reinterpret_cast<char*>(&p), roomID);
-    printf("send loginOK\n");
 }
 
 void Server::send_add_player_packet(int id, int to, int roomID)
@@ -307,11 +308,11 @@ void Server::send_add_player_packet(int id, int to, int roomID)
     p.size = sizeof(player_add_packet);
     p.type = PacketType::Type_player_add;
     p.roomid = roomID;
-    p.Position = sessions[roomID][id].f3Position;
-    p.dx = sessions[roomID][id].dx;
-    p.dy = sessions[roomID][id].dy;
+    p.Position = sessions[roomID][id].f3Position.load();
+    p.dx = sessions[roomID][id].dx.load();
+    p.dy = sessions[roomID][id].dy.load();
 
-    printf("%d send login to %d\n",id, to);
+    //printf("%d send login to %d\n",id, to);
 
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
@@ -334,6 +335,7 @@ void Server::send_disconnect_player_packet(int id, int roomID)
 
 void Server::send_packet_to_players(int id, char* buf, int roomID)
 {
+    std::lock_guard<std::mutex> lock_guard(sm_lock);
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == TRUE)
             if (sessions[roomID][i].connected)
@@ -345,6 +347,7 @@ void Server::send_packet_to_players(int id, char* buf, int roomID)
 
 void Server::send_packet_to_allplayers(int roomID, char* buf)
 {
+    std::lock_guard<std::mutex> lock_guard(sm_lock);
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == TRUE)
             if (sessions[roomID][i].connected.load(std::memory_order_seq_cst))
@@ -386,14 +389,18 @@ void Server::game_end(int roomnum)
     p.roomid = roomnum;
 
     send_packet_to_allplayers(roomnum, reinterpret_cast<char*>(&p));
+    mm_lock.lock();
     maps.erase(roomnum);
+    mm_lock.unlock();
+    sm_lock.lock();
     sessions.erase(roomnum);
+    sm_lock.unlock();
 }
 
 float Server::calc_distance(int a, int b, int roomID)
 {
-    float value = pow(((short)sessions[roomID][a].f3Position.x - (short)sessions[roomID][b].f3Position.x), 2)
-        + pow(((short)sessions[roomID][a].f3Position.z - (short)sessions[roomID][b].f3Position.z), 2);
+    float value = pow(((short)sessions[roomID][a].f3Position.load().x - (short)sessions[roomID][b].f3Position.load().x), 2)
+        + pow(((short)sessions[roomID][a].f3Position.load().z - (short)sessions[roomID][b].f3Position.load().z), 2);
 
     if (value < 0)
         return sqrt(-value);
@@ -419,6 +426,10 @@ void Server::process_packet(int id, char* buf, int roomID)
         start_ok_packet* p = reinterpret_cast<start_ok_packet*>(buf);
         p->size = sizeof(p);
         p->type = Type_start_ok;
+        break;
+    }
+    case PacketType::Type_game_end: {
+
         break;
     }
     case PacketType::Type_player_info:{

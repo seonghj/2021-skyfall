@@ -31,6 +31,8 @@ public:
     SESSION(BOOL b) : connected(b) {}
     ~SESSION() {}
 
+    std::mutex               s_lock;
+
     OVER_EX                  over;
     SOCKET                   sock;
     SOCKADDR_IN              clientaddr;
@@ -44,11 +46,11 @@ public:
     bool                     isready = false;
     bool                     playing = false;
     int                      prev_size;
-    int                      id = -1;
+    std::atomic<int>         id = -1;
 
     // 0 죽음 / 1 생존
     std::atomic<bool>       state = 0;
-    DirectX::XMFLOAT3       f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+    std::atomic<DirectX::XMFLOAT3>       f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<float>      dx = 0;
     std::atomic<float>      dy = 0;
     
@@ -61,7 +63,6 @@ public:
     std::atomic<float>      speed = 20;
 
     void init();
-    void Setf3Posion(DirectX::XMFLOAT3 f) { f3Position = f; }
 };
 
 class Map;
@@ -105,11 +106,10 @@ public:
     float calc_distance(int a, int b, int roomID);
     unsigned short calc_attack(int id, char attacktype);
 
-    std::unordered_map <int, std::array<SESSION, 20>> sessions; // 방ID, Player배열
-
 private:
     HANDLE hcp;
-    
+
+    std::unordered_map <int, std::array<SESSION, 20>> sessions; // 방ID, Player배열
     std::unordered_map <int, Map> maps;
 
     std::vector <std::thread> working_threads;
