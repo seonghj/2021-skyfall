@@ -103,7 +103,7 @@ public:
     
     void game_end(int roomnum);
 
-    float calc_distance(int a, int b, int roomID);
+    bool in_VisualField(int a, int b, int roomID);
     unsigned short calc_attack(int id, char attacktype);
 
 private:

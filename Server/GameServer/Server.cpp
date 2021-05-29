@@ -339,7 +339,7 @@ void Server::send_packet_to_players(int id, char* buf, int roomID)
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == TRUE)
             if (sessions[roomID][i].connected)
-                if (calc_distance(id, sessions[roomID][i].id, roomID) <= VIEWING_DISTANCE) {
+                if (in_VisualField(id, sessions[roomID][i].id, roomID)) {
                     send_packet(i, buf, roomID);
                 }
     }
@@ -397,15 +397,18 @@ void Server::game_end(int roomnum)
     sm_lock.unlock();
 }
 
-float Server::calc_distance(int a, int b, int roomID)
+bool Server::in_VisualField(int a, int b, int roomID)
 {
     float value = pow(((short)sessions[roomID][a].f3Position.load().x - (short)sessions[roomID][b].f3Position.load().x), 2)
         + pow(((short)sessions[roomID][a].f3Position.load().z - (short)sessions[roomID][b].f3Position.load().z), 2);
 
-    if (value < 0)
-        return sqrt(-value);
-    else
-        return sqrt(value);
+    if (value < 0) {
+        if (sqrt(-value) <= VIEWING_DISTANCE) return true;
+    }
+    else {
+        if (sqrt(value) <= VIEWING_DISTANCE) return true;
+    }
+    return false;
 }
 
 unsigned short Server::calc_attack(int id, char attacktype)
