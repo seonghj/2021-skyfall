@@ -421,7 +421,8 @@ void CPacket::ProcessPacket(char* buf)
         printf("id: %d cloud move x = %f, z = %f\n", client_id, p->x, p->z);
         break;
     }
-
+    default:
+        break;
     }
 }
 

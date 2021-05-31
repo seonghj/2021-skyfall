@@ -3,6 +3,7 @@
 #include "DB.h"
 #include "Map.h"
 #include "protocol.h"
+#include "Timer.h"
 
 //struct OVER_EX
 //{
@@ -73,11 +74,13 @@ public:
     ~Server();
 
     HANDLE Gethcp() { return hcp; }
+    Timer* Get_pTimer() { return m_pTimer; }
 
     void display_error(const char* msg, int err_no);
 
     int SetClientId(int roomID);
     int SetroomID();
+    void Set_pTimer(Timer* t) { m_pTimer = t; }
 
     void ConnectLobby();
 
@@ -106,17 +109,19 @@ public:
     bool in_VisualField(int a, int b, int roomID);
     unsigned short calc_attack(int id, char attacktype);
 
+
 private:
-    HANDLE hcp;
+    HANDLE                         hcp;
+    Timer*                         m_pTimer = NULL;
 
     std::unordered_map <int, std::array<SESSION, 20>> sessions; // ¹æID, Player¹è¿­
-    std::unordered_map <int, Map> maps;
+    std::unordered_map <int, Map>                     maps;
 
-    std::vector <std::thread> working_threads;
-    std::thread accept_thread;
-    std::vector <std::thread> map_threads;
+    std::vector <std::thread>      working_threads;
+    std::thread                    accept_thread;
+    std::vector <std::thread>      map_threads;
 
-    std::mutex accept_lock;
-    std::mutex sm_lock;
-    std::mutex mm_lock;
+    std::mutex                     accept_lock;
+    std::mutex                     sm_lock;
+    std::mutex                     mm_lock;
 };

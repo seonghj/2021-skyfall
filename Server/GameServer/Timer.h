@@ -6,7 +6,7 @@
 struct Timer_event {
 	int key;
 	std::chrono::system_clock::time_point start_time;
-	OVER_EX_Type OE_Type;
+	int OE_Type;
 	char event_message[BUFSIZE];
 
 	constexpr bool operator< (const Timer_event& other) const {
@@ -17,10 +17,9 @@ struct Timer_event {
 class Timer {
 public:
 	std::priority_queue<Timer_event> m_Timer_queue;
-	std::mutex m_timer_lock;
 
 	void init(HANDLE h_cp);
-	void push_event(int key, OVER_EX_Type type, int start_time, char* message);
+	void push_event(int key, int event_type, int delaystart_time, char* message);
 	void Timer_main();
 
 	void Set_isRun(bool value) { m_isRun = value; }
@@ -28,4 +27,5 @@ public:
 private:
 	int m_isRun;
 	HANDLE m_hiocp;
+	std::mutex m_timer_lock;
 };

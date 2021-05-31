@@ -1,8 +1,9 @@
 #include "Map.h"
 
-void Map::init_Map(Server* s)
+void Map::init_Map(Server* s, Timer* t)
 {
 	m_pServer = s;
+	m_pTimer = t;
 
 	memset(&over, 0, sizeof(over));
 	over.is_recv = true;
@@ -20,17 +21,13 @@ void Map::init_Map(Server* s)
 	strcpy_s(over.messageBuffer, reinterpret_cast<char*>(&p));
 	DWORD Transferred = 0;
 	BOOL ret = PostQueuedCompletionStatus(m_pServer->Gethcp(), Transferred
-		, (ULONG_PTR)&(roomnum), (LPOVERLAPPED)&over.overlapped);
+		, (ULONG_PTR)&roomnum, (LPOVERLAPPED)&over);
 
 	game_time = 0;
 
 	//hMove = CreateEvent(NULL, TRUE, TRUE, NULL);
 	ismove = true;
-
-	Set_wind();
-	Set_cloudpos();
-	//print_Map();
-	cloud_move();
+	//cloud_move();
 }
 
 void Map::Set_map()
@@ -39,7 +36,7 @@ void Map::Set_map()
 	int n;
 
 	map_block_set p;
-	p.type = EventType::Mapset;
+	p.type = PacketType::Type_map_set;
 	p.size = sizeof(p);
 	p.id = roomnum;
 
@@ -78,15 +75,15 @@ void Map::Set_wind()
 		if (i < 6)
 		{
 			if (i == 0 || i == 1)
-				wind[i] = calc_windpower(atm[i], atm[i + 1]) * 333;
+				wind[i] = calc_windpower(atm[i], atm[i + 1]) * 3.f;
 			else if (i == 2 || i == 3)
-				wind[i] = calc_windpower(atm[i + 1], atm[i + 2]) * 333;
+				wind[i] = calc_windpower(atm[i + 1], atm[i + 2]) * 3.f;
 			else if (i == 4 || i == 5)
-				wind[i] = calc_windpower(atm[i + 2], atm[i + 3] * 333);
+				wind[i] = calc_windpower(atm[i + 2], atm[i + 3] * 3.f);
 		}
 		else
 		{
-			wind[i] = -calc_windpower(atm[i - 6], atm[i - 3]);
+			wind[i] = -calc_windpower(atm[i - 6], atm[i - 3] * 3.f);
 		}
 	}
 }
@@ -115,7 +112,7 @@ void Map::print_Map()
 		printf("%d | %f\n", i, wind[i]);
 
 	printf("\n");
-	printf("x: %f | y: %f\n", Cloud.x, Cloud.y);
+	//printf("x: %f | y: %f\n", Cloud.x, Cloud.y);
 }
 
 float Map::calc_windpower(float a, float b)
@@ -125,77 +122,69 @@ float Map::calc_windpower(float a, float b)
 
 void Map::cloud_move()
 {
-	if (ismove) {
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-		std::thread::id Thread_id = std::this_thread::get_id();
-		//printf("thread id: %d - ", Thread_id);
-		//ismove = false;
-		for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++)
+	{
+		if (MAP_BLOCK_SIZE * i < Cloud.y && Cloud.y <= MAP_BLOCK_SIZE * (i + 1))
 		{
-			if (MAP_BLOCK_SIZE * i < Cloud.y && Cloud.y <= MAP_BLOCK_SIZE * (i + 1))
+			if (0 < Cloud.x && Cloud.x <= MAP_BLOCK_SIZE * 1.5f)
 			{
-				if (0 < Cloud.x && Cloud.x <= MAP_BLOCK_SIZE * 1.5f)
-				{
-					Cloud.x += wind[i * 2];
-					//printf("%d", i * 2);
+				Cloud.x += wind[i * 2];
+				//printf("%d", i * 2);
 
-				}
-				else if (MAP_BLOCK_SIZE * 1.5f < Cloud.x && Cloud.x < MAP_BLOCK_SIZE * 3)
-				{
-					Cloud.x += wind[i * 2 + 1];
-					//printf("%d", i * 2 + 1);
+			}
+			else if (MAP_BLOCK_SIZE * 1.5f < Cloud.x && Cloud.x < MAP_BLOCK_SIZE * 3)
+			{
+				Cloud.x += wind[i * 2 + 1];
+				//printf("%d", i * 2 + 1);
 
-				}
 			}
 		}
+	}
 
-		for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++)
+	{
+		if (MAP_BLOCK_SIZE * i < Cloud.x && Cloud.x <= MAP_BLOCK_SIZE * (i + 1))
 		{
-			if (MAP_BLOCK_SIZE * i < Cloud.x && Cloud.x <= MAP_BLOCK_SIZE * (i + 1))
+			if (0 < Cloud.y && Cloud.y <= MAP_BLOCK_SIZE * 1.5f)
 			{
-				if (0 < Cloud.y && Cloud.y <= MAP_BLOCK_SIZE * 1.5f)
-				{
-					Cloud.y += wind[i + 6];
-					//printf("%d", i + 6);
+				Cloud.y += wind[i + 6];
+				//printf("%d", i + 6);
 
-				}
-				else if (MAP_BLOCK_SIZE * 1.5f < Cloud.y && Cloud.y < MAP_BLOCK_SIZE * 3)
-				{
-					Cloud.y += wind[i + 9];
-					//printf("%d", i + 9);
+			}
+			else if (MAP_BLOCK_SIZE * 1.5f < Cloud.y && Cloud.y < MAP_BLOCK_SIZE * 3)
+			{
+				Cloud.y += wind[i + 9];
+				//printf("%d", i + 9);
 
-				}
 			}
 		}
+	}
 
-		if (Cloud.x < 0 || Cloud.y < 0) {
-			Set_cloudpos();
-		}
-
-		/*printf("cloud x: %f | y: %f\n\n", Cloud.x, Cloud.y);
-
-
-		m_pServer->send_cloud_move_packet(Cloud.x, Cloud.y, roomnum);*/
+	if (Cloud.x < 0 || Cloud.y < 0) {
+		Set_cloudpos();
+	}
 
 
-		cloud_move_packet p;
-		p.type = EventType::Cloud_move;
-		p.size = sizeof(p);
-		p.id = roomnum;
-		p.x = Cloud.x;
-		p.z = Cloud.y;
-		over.dataBuffer.len = sizeof(p);
-		over.type = 2;
-		memcpy(over.dataBuffer.buf, reinterpret_cast<char*>(&p), sizeof(p));
+	cloud_move_packet p;
+	p.type = EventType::Cloud_move;
+	p.size = sizeof(cloud_move_packet);
+	p.id = roomnum;
+	p.roomid = roomnum;
+	p.x = Cloud.x;
+	p.z = Cloud.y;
+	/*over.dataBuffer.len = sizeof(p);
+	over.type = 2;
+	memcpy(over.dataBuffer.buf, reinterpret_cast<char*>(&p), sizeof(p));*/
 
-		++game_time;
-		if (game_time % MAP_BREAK_TIME == 0)
-			Map_collapse();
-		DWORD Transferred = 0;
+	m_pTimer->push_event(roomnum, OE_map, 1000, reinterpret_cast<char*>(&p));
+
+	/*++game_time;
+	if (game_time % MAP_BREAK_TIME == 0)
+		Map_collapse();*/
+		/*DWORD Transferred = 0;
 		BOOL ret = PostQueuedCompletionStatus(m_pServer->Gethcp(), Transferred
 			, (ULONG_PTR) & (roomnum), (LPOVERLAPPED)&over.overlapped);
-		ismove = true;
-	}
+		ismove = true;*/
 }
 
 void Map::Map_collapse()

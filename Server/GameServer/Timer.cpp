@@ -10,39 +10,45 @@ void Timer::init(HANDLE h_cp)
 	std::priority_queue<Timer_event> empty_queue;
 	std::swap(m_Timer_queue, empty_queue);
 
-	Timer_main();
 	m_isRun = TRUE;
+	printf("Timer ready\n");
+	Timer_main();
 }
 
-void Timer::push_event(int key, OVER_EX_Type type, int time_ms, char* message)
+void Timer::push_event(int key, int event_type, int delaytime_ms, char* message)
 {
+	//std::lock_guard <std::mutex> lg{ m_timer_lock };
 	Timer_event te;
 	te.key = key;
-	te.OE_Type = type;
-	te.start_time = system_clock::now() + milliseconds(time_ms);
-	memcpy(te.event_message, message, sizeof(message));
-	std::lock_guard <std::mutex> lg{ m_timer_lock };
+	te.OE_Type = event_type;
+	te.start_time = system_clock::now() + milliseconds(delaytime_ms);
+	strcpy_s(te.event_message, message);
+	//m_timer_lock.lock();
 	m_Timer_queue.push(te);
+	//m_timer_lock.unlock();
 }
 
 void Timer::Timer_main()
 {
 	while (m_isRun) {
-		std::lock_guard <std::mutex> lg{ m_timer_lock };
+		//std::lock_guard <std::mutex> lg{ m_timer_lock };
+		//m_timer_lock.lock();
 		if ((m_Timer_queue.empty() == FALSE)
 			&& (m_Timer_queue.top().start_time <= system_clock::now())) {
 			Timer_event te = m_Timer_queue.top();
 			m_Timer_queue.pop();
-
+			//m_timer_lock.unlock();
 			OVER_EX* over_ex = new OVER_EX;
 			over_ex->type = te.OE_Type;
-			memcpy(over_ex->messageBuffer, te.event_message, sizeof(te.event_message));
+			strcpy_s(over_ex->messageBuffer, te.event_message);
 			over_ex->dataBuffer.buf = over_ex->messageBuffer;
-			over_ex->dataBuffer.len = sizeof(te.event_message);
+			over_ex->dataBuffer.len = BUFSIZE;
 
-			PostQueuedCompletionStatus(m_hiocp, NULL, te.key, &over_ex->overlapped);
+			PostQueuedCompletionStatus(m_hiocp, 1, (ULONG_PTR)(&te.key), (LPOVERLAPPED)over_ex);
 		}
-		else
-			std::this_thread::sleep_for(10ms);
+		else {
+			//m_timer_lock.unlock();
+			std::this_thread::sleep_for(100ms);
+		}
 	}
 }

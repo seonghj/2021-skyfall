@@ -5,6 +5,7 @@
 
 //struct OVER_EX;
 class Server;
+class Timer;
 
 class Map{
 public:
@@ -28,7 +29,7 @@ public:
 
 	void SetNum(int n) { roomnum = n; }
 
-	void init_Map(Server* s);
+	void init_Map(Server* s, Timer* t);
 
 	void Set_map();
 	void Set_wind();
@@ -42,6 +43,7 @@ public:
 
 private:
 	int game_time;
-	Server* m_pServer = NULL;
+	Server* m_pServer = NULL; 
+	Timer* m_pTimer = NULL;
 	int roomnum = -1;
 };

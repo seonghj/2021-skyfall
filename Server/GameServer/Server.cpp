@@ -51,8 +51,9 @@ int Server::SetClientId(int roomID)
     while (true){
         if (cnt == 20)
             return -1;
-        if (FALSE == sessions[roomID][cnt].connected)
+        if (FALSE == sessions[roomID][cnt].connected){
             return cnt;
+        }
         else 
             ++cnt;
     }
@@ -64,8 +65,8 @@ int Server::SetroomID()
     while (1) {
         if (sessions.find(cnt) == sessions.end()) {
             sm_lock.lock();
-            std::array<SESSION, 20> s{};
-            sessions.emplace(cnt, s);
+            //std::array<SESSION, 20> s{};
+            sessions.emplace(cnt, std::array<SESSION, 20>{});
             sm_lock.unlock();
             printf("create game room - %d\n", cnt);
 
@@ -157,15 +158,13 @@ void Server::Accept()
         getpeername(client_sock, (SOCKADDR*)&sessions[roomID][client_id].clientaddr
             , &sessions[roomID][client_id].addrlen);
 
-
         sessions[roomID][client_id].over.type = 0;
         sessions[roomID][client_id].over.dataBuffer.len = BUFSIZE;
         sessions[roomID][client_id].over.dataBuffer.buf =
-            sessions[roomID][client_sock].over.messageBuffer;
+            sessions[roomID][client_id].over.messageBuffer;
         sessions[roomID][client_id].over.is_recv = true;
         sessions[roomID][client_id].over.roomID = roomID;
         flags = 0;
-
         // ���ϰ� ����� �Ϸ� ��Ʈ ����
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
 
@@ -190,14 +189,18 @@ void Server::Accept()
                     send_add_player_packet(client_id, sessions[roomID][i].id, roomID);
         }
 
-      /*  if (TRUE == sessions[roomID][MAX_PLAYER - 1].connected.load())
+       /* if (TRUE == sessions[roomID][MAX_PLAYER - 1].connected.load())
         {
             if (maps.find(roomID) == maps.end()) {
                 maps.emplace(roomID, Map(roomID));
                 maps[roomID].SetNum(roomID);
-                maps[roomID].init_Map(this);
+                maps[roomID].init_Map(this, m_pTimer);
             }
         }*/
+
+        maps.emplace(roomID, Map(roomID));
+        maps[roomID].SetNum(roomID);
+        maps[roomID].init_Map(this, m_pTimer);
 
         accept_lock.unlock();
 
@@ -335,7 +338,7 @@ void Server::send_disconnect_player_packet(int id, int roomID)
 
 void Server::send_packet_to_players(int id, char* buf, int roomID)
 {
-    std::lock_guard<std::mutex> lock_guard(sm_lock);
+   // sm_lock.lock();
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == TRUE)
             if (sessions[roomID][i].connected)
@@ -343,16 +346,18 @@ void Server::send_packet_to_players(int id, char* buf, int roomID)
                     send_packet(i, buf, roomID);
                 }
     }
+    //sm_lock.unlock();
 }
 
 void Server::send_packet_to_allplayers(int roomID, char* buf)
 {
-    std::lock_guard<std::mutex> lock_guard(sm_lock);
+   // sm_lock.lock();
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == TRUE)
             if (sessions[roomID][i].connected.load(std::memory_order_seq_cst))
                 send_packet(i, buf, roomID);
     }
+   // sm_lock.unlock();
 }
 
 void Server::send_map_collapse_packet(int num, int map_num)
@@ -572,17 +577,25 @@ void Server::WorkerFunc()
         case OE_map: {
             if (FALSE == retval)
                 continue;
-            switch (over_ex->messageBuffer[1]) {
+            switch (over_ex->messageBuffer[1]){
             case EventType::Mapset: {
                 map_block_set* p = reinterpret_cast<map_block_set*>(over_ex->messageBuffer);
                 maps[roomID].Set_map();
+                maps[roomID].ismove = true;
+                maps[roomID].Set_wind();
+                maps[roomID].Set_cloudpos();
+                maps[roomID].print_Map();
+                maps[roomID].cloud_move();
+                //delete over_ex;
                 break;
             }
             case EventType::Cloud_move: {
                 cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(over_ex->messageBuffer);
                 send_cloud_move_packet(p->x, p->z, p->id);
-                //printf("cloud x: %f | y: %f\n\n", p->x, p->z);
-                maps[p->id].cloud_move();
+                printf("room: %d cloud x: %f | y: %f\n\n", p->id, p->x, p->z);
+                maps[roomID].ismove = true;
+                maps[roomID].cloud_move();
+                //delete over_ex;
                 break;
             }
             }
