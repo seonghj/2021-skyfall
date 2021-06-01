@@ -119,6 +119,7 @@ private:
 
     std::vector <std::thread>      working_threads;
     std::thread                    accept_thread;
+    std::thread                    timer_thread;
     std::vector <std::thread>      map_threads;
 
     std::mutex                     accept_lock;

@@ -418,7 +418,7 @@ void CPacket::ProcessPacket(char* buf)
 
     case PacketType::Type_cloud_move: {
         cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(buf);
-        printf("id: %d cloud move x = %f, z = %f\n", client_id, p->x, p->z);
+        printf("id: %d cloud move x = %f, z = %f\n",p->roomid, p->x, p->z);
         break;
     }
     default:

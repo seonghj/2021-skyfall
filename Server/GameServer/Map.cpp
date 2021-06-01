@@ -18,10 +18,10 @@ void Map::init_Map(Server* s, Timer* t)
 	p.size = sizeof(p);
 	p.id = roomnum;
 	over.dataBuffer.len = sizeof(p);
-	strcpy_s(over.messageBuffer, reinterpret_cast<char*>(&p));
+	memcpy(over.dataBuffer.buf, reinterpret_cast<char*>(&p), sizeof(p));
 	DWORD Transferred = 0;
 	BOOL ret = PostQueuedCompletionStatus(m_pServer->Gethcp(), Transferred
-		, (ULONG_PTR)&roomnum, (LPOVERLAPPED)&over);
+		,roomnum, &over.overlapped);
 
 	game_time = 0;
 
@@ -66,6 +66,12 @@ void Map::Set_map()
 	over.dataBuffer.len = sizeof(p);
 	strcpy_s(over.messageBuffer, reinterpret_cast<char*>(&p));
 	m_pServer->send_packet_to_allplayers(p.id, reinterpret_cast<char*>(&p));
+
+	ismove = true;
+	Set_wind();
+	Set_cloudpos();
+	print_Map();
+	cloud_move();
 }
 
 void Map::Set_wind()
@@ -99,6 +105,7 @@ void Map::Set_cloudpos()
 
 void Map::print_Map()
 {
+	printf("\n");
 	for (int i = 0; i < 3; i++)
 	{
 		for (int j = 0; j < 3; j++)
@@ -121,7 +128,7 @@ float Map::calc_windpower(float a, float b)
 }
 
 void Map::cloud_move()
-{
+{;
 	for (int i = 0; i < 3; i++)
 	{
 		if (MAP_BLOCK_SIZE * i < Cloud.y && Cloud.y <= MAP_BLOCK_SIZE * (i + 1))
@@ -172,12 +179,8 @@ void Map::cloud_move()
 	p.roomid = roomnum;
 	p.x = Cloud.x;
 	p.z = Cloud.y;
-	/*over.dataBuffer.len = sizeof(p);
-	over.type = 2;
-	memcpy(over.dataBuffer.buf, reinterpret_cast<char*>(&p), sizeof(p));*/
-
-	m_pTimer->push_event(roomnum, OE_map, 1000, reinterpret_cast<char*>(&p));
-
+	m_pTimer->push_event(roomnum, OE_gEvent, 1000, reinterpret_cast<char*>(&p));
+	
 	/*++game_time;
 	if (game_time % MAP_BREAK_TIME == 0)
 		Map_collapse();*/

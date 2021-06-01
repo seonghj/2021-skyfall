@@ -6,7 +6,6 @@
 
 Server*		server = new Server;
 DB*			db = new DB;
-Timer*		timer = new Timer;
 
 int main(int argc, char* argv[])
 {
@@ -14,15 +13,10 @@ int main(int argc, char* argv[])
    //db->Connection();
 
 	server->Init();
-	std::thread Timer_thread( &Timer::init, timer, server->Gethcp() );
-	server->Set_pTimer(timer);
-
-	Timer_thread.join();
 	server->Thread_join();
 
    //mysql_close(db->connection);
 
 	delete server;
 	delete db;
-	delete timer;
 }

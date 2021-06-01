@@ -7,7 +7,7 @@ struct Timer_event {
 	int key;
 	std::chrono::system_clock::time_point start_time;
 	int OE_Type;
-	char event_message[BUFSIZE];
+	char event_message[BUFSIZE+1];
 
 	constexpr bool operator< (const Timer_event& other) const {
 		return start_time > other.start_time;

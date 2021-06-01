@@ -512,18 +512,19 @@ void Server::process_packet(int id, char* buf, int roomID)
 
 void Server::WorkerFunc()
 {
-    while (1) {
-        DWORD Transferred;
-        SOCKET client_sock;
-        ULONG id;
-        ULONG roomID;
-        OVER_EX* over_ex;
 
+    DWORD Transferred;
+    SOCKET client_sock;
+    ULONG id;
+    WSAOVERLAPPED* over;
+
+    while (1) {
         BOOL retval = GetQueuedCompletionStatus(hcp, &Transferred,
-            (PULONG_PTR)&id, (LPOVERLAPPED*)&over_ex, INFINITE);
+            (PULONG_PTR)&id, (LPOVERLAPPED*)&over, INFINITE);
 
         //std::thread::id Thread_id = std::this_thread::get_id();
-        roomID = over_ex->roomID;
+        OVER_EX* over_ex = reinterpret_cast<OVER_EX*>(over);
+        int roomID = over_ex->roomID;
         switch (over_ex->type) {
         case OE_session: {
             if (FALSE == retval)
@@ -574,30 +575,30 @@ void Server::WorkerFunc()
             }
             break;
         }
-        case OE_map: {
+        case OE_gEvent: {
             if (FALSE == retval)
                 continue;
-            switch (over_ex->messageBuffer[1]){
-            case EventType::Mapset: {
+            switch (over_ex->messageBuffer[1]) {
+            case EventType::Mapset:{
                 map_block_set* p = reinterpret_cast<map_block_set*>(over_ex->messageBuffer);
-                maps[roomID].Set_map();
-                maps[roomID].ismove = true;
-                maps[roomID].Set_wind();
-                maps[roomID].Set_cloudpos();
-                maps[roomID].print_Map();
-                maps[roomID].cloud_move();
-                //delete over_ex;
+                maps[id].Set_map();
+                
+                game_end_packet ep;
+                ep.roomid = id;
+                ep.size = sizeof(ep);
+                ep.type = EventType::game_end;
+                m_pTimer->push_event(id, OE_gEvent, 1000 * (MAP_BREAK_TIME*9), reinterpret_cast<char*>(&ep));
                 break;
             }
             case EventType::Cloud_move: {
                 cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(over_ex->messageBuffer);
-                send_cloud_move_packet(p->x, p->z, p->id);
-                printf("room: %d cloud x: %f | y: %f\n\n", p->id, p->x, p->z);
-                maps[roomID].ismove = true;
-                maps[roomID].cloud_move();
-                //delete over_ex;
+                send_cloud_move_packet(p->x, p->z, p->roomid);
+                printf("room: %d cloud x: %f | y: %f\n\n", p->roomid, p->x, p->z);
+                maps[id].ismove = true;
+                maps[id].cloud_move();
                 break;
             }
+
             }
         }
         break;
@@ -627,6 +628,9 @@ bool Server::Init()
 
     //ConnectLobby();
 
+    m_pTimer = new Timer;
+
+    timer_thread = std::thread(&Timer::init, m_pTimer, Gethcp());
     accept_thread = std::thread(&Server::Accept, this);
 
     return 1;
@@ -635,11 +639,14 @@ bool Server::Init()
 void Server::Thread_join()
 {
     accept_thread.join();
+    timer_thread.join();
+
     for (auto& t : working_threads)
         t.join();
 
     for (auto& t : map_threads)
         t.join();
 
+    delete m_pTimer;
     CloseHandle(hcp);
 }

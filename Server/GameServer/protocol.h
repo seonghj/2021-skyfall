@@ -3,7 +3,7 @@
 
 constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
-constexpr int BUFSIZE = 1024;
+constexpr int BUFSIZE = 128;
 constexpr int MAX_CLIENT = 3000;
 constexpr int MAX_PLAYER = 20;
 constexpr int INVALIDID = -1;
@@ -34,7 +34,7 @@ struct OVER_EX
 
 enum OVER_EX_Type {
 	OE_session,
-	OE_map
+	OE_gEvent
 };
 
 enum PacketType {
@@ -69,7 +69,8 @@ enum PacketType {
 
 enum EventType {
 	Mapset,
-	Cloud_move
+	Cloud_move,
+	game_end
 };
 
 enum PlayerState {
