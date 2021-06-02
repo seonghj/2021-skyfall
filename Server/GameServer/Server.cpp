@@ -338,7 +338,7 @@ void Server::send_disconnect_player_packet(int id, int roomID)
 
 void Server::send_packet_to_players(int id, char* buf, int roomID)
 {
-   // sm_lock.lock();
+   sm_lock.lock();
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == TRUE)
             if (sessions[roomID][i].connected)
@@ -346,18 +346,18 @@ void Server::send_packet_to_players(int id, char* buf, int roomID)
                     send_packet(i, buf, roomID);
                 }
     }
-    //sm_lock.unlock();
+    sm_lock.unlock();
 }
 
 void Server::send_packet_to_allplayers(int roomID, char* buf)
 {
-   // sm_lock.lock();
+   sm_lock.lock();
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == TRUE)
             if (sessions[roomID][i].connected.load(std::memory_order_seq_cst))
                 send_packet(i, buf, roomID);
     }
-   // sm_lock.unlock();
+   sm_lock.unlock();
 }
 
 void Server::send_map_collapse_packet(int num, int map_num)
