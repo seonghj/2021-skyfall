@@ -22,6 +22,7 @@
 #include <atomic>
 #include <DirectXMath.h>
 #include <chrono>
+#include <unordered_set>
 
 #pragma comment(lib, "libmySQL.lib")
 

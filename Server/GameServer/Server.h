@@ -21,8 +21,6 @@ public:
 
 };
 
-
-
 class SESSION
 {
 public:
@@ -48,6 +46,8 @@ public:
     bool                     playing = false;
     int                      prev_size;
     std::atomic<int>         id = -1;
+
+    std::unordered_set<int> near_monster;
 
     // 0 Á×À½ / 1 »ýÁ¸
     std::atomic<bool>       state = 0;

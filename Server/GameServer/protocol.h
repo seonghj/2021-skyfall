@@ -9,6 +9,7 @@ constexpr int MAX_PLAYER = 20;
 constexpr int INVALIDID = -1;
 constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
+constexpr int AI_ID = 5000;
 
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 99999;
@@ -16,6 +17,7 @@ constexpr int MAP_BLOCK_SIZE = 33333;
 constexpr int MAP_BREAK_TIME = 30;
 
 constexpr float VIEWING_DISTANCE = 16666.f;
+
 // 1 = 3cm
 
 #define SERVERIP   "127.0.0.1"
@@ -38,33 +40,44 @@ enum OVER_EX_Type {
 };
 
 enum PacketType {
-	Type_player_ID,			// S->C
-	Type_player_login,
-	Type_player_loginOK,
-	Type_player_add,		// S->C
-	Type_player_remove,		// S->C
-	Type_game_ready,		// C->S
-	Type_game_start,		// C->S
-	Type_start_ok,			// S->C
-	Type_game_end,			// S->C
-	Type_player_info,		//	
-	Type_weapon_swap,
-	Type_player_move,		// C->S
-	Type_player_pos,
-	Type_start_pos,
-	Type_player_attack,		//
-	Type_allow_shot,
-	Type_player_damage,
-	Type_player_stop,
-	Type_map_set,
-	Type_map_collapse,		// S->C
-	Type_cloud_move,		// S->C
-	Type_bot_ID,			//	
-	Type_bot_remove,
-	Type_bot_info,
-	Type_bot_move,
-	Type_bot_pos,
-	Type_bot_attack,
+	SC_player_ID,			
+	SC_player_loginOK,
+	SC_player_add,		
+	SC_player_remove,		
+	SC_start_ok,			
+	SC_game_end,			
+	SC_player_info,	
+	SC_weapon_swap,
+	SC_player_pos,
+	SC_player_move,
+	SC_start_pos,
+	SC_player_attack,
+	SC_allow_shot,
+	SC_allow_shot,
+	SC_player_damage,
+	SC_player_stop,
+	SC_map_set,
+	SC_map_collapse,		
+	SC_cloud_move,		
+	SC_bot_ID,			
+	SC_bot_remove,
+	SC_bot_info,
+	SC_bot_move,
+	SC_bot_pos,
+	SC_bot_attack,
+
+
+	CS_player_login,
+	CS_game_ready,		
+	CS_game_start,		
+	CS_player_info,
+	CS_weapon_swap,
+	CS_player_move,		
+	CS_player_pos,
+	CS_start_pos,
+	CS_player_attack,
+	CS_player_stop,
+	CS_allow_shot,
 };
 
 enum EventType {
