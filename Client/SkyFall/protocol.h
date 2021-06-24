@@ -1,5 +1,4 @@
 #pragma once
-#include"stdafx.h"
 
 constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
@@ -9,6 +8,7 @@ constexpr int MAX_PLAYER = 20;
 constexpr int INVALIDID = -1;
 constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
+constexpr int AI_ID = 5000;
 
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 99999;
@@ -16,6 +16,7 @@ constexpr int MAP_BLOCK_SIZE = 33333;
 constexpr int MAP_BREAK_TIME = 30;
 
 constexpr float VIEWING_DISTANCE = 16666.f;
+
 // 1 = 3cm
 
 #define SERVERIP   "127.0.0.1"
@@ -34,12 +35,13 @@ struct OVER_EX
 
 enum OVER_EX_Type {
 	OE_session,
-	OE_map
+	OE_gEvent
 };
 
 enum PacketType {
-	SC_player_ID,
+	SC_player_key,
 	SC_player_loginOK,
+	SC_player_loginFail,
 	SC_player_add,
 	SC_player_remove,
 	SC_start_ok,
@@ -50,7 +52,6 @@ enum PacketType {
 	SC_player_move,
 	SC_start_pos,
 	SC_player_attack,
-	SC_allow_shot,
 	SC_allow_shot,
 	SC_player_damage,
 	SC_player_stop,
@@ -80,7 +81,8 @@ enum PacketType {
 
 enum EventType {
 	Mapset,
-	Cloud_move
+	Cloud_move,
+	game_end
 };
 
 enum PlayerState {
@@ -118,20 +120,21 @@ enum PlayerType {
 
 #pragma pack(push, 1)
 
-// 0: size // 1: type // 2: id;
+// 0: size // 1: type // 2: key;
 
 struct Packet {
 public:
 	char size;
 	char type;
-	unsigned int id;
+	unsigned int key;
 	unsigned int roomid;
 };
 
-struct player_ID_packet :public Packet {
+struct player_key_packet :public Packet {
 };
 
 struct player_login_packet :public Packet {
+	char id[50];
 };
 
 struct player_loginOK_packet :public Packet {
@@ -139,6 +142,10 @@ struct player_loginOK_packet :public Packet {
 	float dx, dy;
 	short PlayerType;
 };
+
+struct player_loginFail_packet :public Packet {
+};
+
 
 struct player_add_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
@@ -165,15 +172,14 @@ struct player_remove_packet : public Packet {
 
 struct player_info_packet : public Packet {
 	char state;
-	DirectX::XMFLOAT3 Position;
 	float dx, dy;
 	char weapon;
 	char armor;
 	char helmet;
 	char shoes;
-	float hp;
-	float lv;
-	float speed;
+	short hp;
+	short lv;
+	short speed;
 };
 
 struct player_pos_packet : public Packet {

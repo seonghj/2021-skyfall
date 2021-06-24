@@ -20,6 +20,8 @@ TCHAR							szWindowClass[MAX_LOADSTRING];
 CGameFramework					gGameFramework;
 CPacket*						gCPacket = new CPacket;
 
+std::thread						Connect_thread;
+
 ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -27,6 +29,14 @@ INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
+
+	if (AllocConsole())
+	{
+		freopen("CONIN$", "rb", stdin);
+		freopen("CONOUT$", "wb", stdout);
+		freopen("CONOUT$", "wb", stderr);
+	}
+
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
@@ -41,15 +51,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 	hAccelTable = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SKYFALL));
 
-	if (AllocConsole())
-	{
-		freopen("CONIN$", "rb", stdin);
-		freopen("CONOUT$", "wb", stdout);
-		freopen("CONOUT$", "wb", stderr);
-	}
-
-	std::thread	connect_thread = std::thread(&CPacket::GameConnect, gCPacket);
-
+	Connect_thread = std::thread(&CPacket::GameConnect, gCPacket);
 	gGameFramework.Set_m_pPacket(gCPacket);
 
 	while (1)
@@ -71,9 +73,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	gGameFramework.OnDestroy();
 
 	closesocket(gCPacket->sock);
+	gCPacket->Recv_thread.join();
+	Connect_thread.join();
 	delete gCPacket;
-
-	//connect_thread.join();
 
 	return((int)msg.wParam);
 }

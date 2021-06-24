@@ -33,21 +33,24 @@ public:
 	void Send_ready_packet();
 	void Send_attack_packet(int type);
 	void Send_animation_stop_packet();
+	void Send_login_packet(char* id);
 	void ProcessPacket(char* buf);
 
-	void Set_clientid(int n);
-	int Get_clientid();
+	void Login();
+
+	void Set_clientkey(int n);
+	int Get_clientkey();
 	void Set_currentfps(unsigned long FrameRate);
 
 	void LobbyConnect();
 	void GameConnect();
 
+	std::thread Recv_thread;
 
 private:
-	int client_id = INVALIDID;
+	int client_key = INVALIDID;
 	int roomID = INVALIDID;
+	char userID[50];
 	unsigned long currentfps = 1;
-
-	std::thread Recv_thread;
 	//static DWORD WINAPI ServerConnect(LPVOID arg);
 };

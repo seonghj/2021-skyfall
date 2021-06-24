@@ -460,7 +460,7 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		default:
 			break;
 	}
-	cout << "x: " << m_pCamera->GetPosition().x << ",z : " << m_pCamera->GetPosition().y << ", y: " << m_pCamera->GetPosition().z << endl;
+	//cout << "x: " << m_pCamera->GetPosition().x << ",z : " << m_pCamera->GetPosition().y << ", y: " << m_pCamera->GetPosition().z << endl;
 	//m_pCamera->SetPosition(Vector3::Add(m_xmf3Position, m_pCamera->GetOffset()));
 	Update(fTimeElapsed);
 

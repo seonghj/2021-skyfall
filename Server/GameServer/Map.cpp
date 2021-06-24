@@ -16,7 +16,7 @@ void Map::init_Map(Server* s, Timer* t)
 	map_block_set p;
 	p.type = EventType::Mapset;
 	p.size = sizeof(p);
-	p.id = roomnum;
+	p.key = roomnum;
 	over.dataBuffer.len = sizeof(p);
 	memcpy(over.dataBuffer.buf, reinterpret_cast<char*>(&p), sizeof(p));
 	DWORD Transferred = 0;
@@ -36,9 +36,9 @@ void Map::Set_map()
 	int n;
 
 	map_block_set p;
-	p.type = PacketType::Type_map_set;
+	p.type = PacketType::SC_map_set;
 	p.size = sizeof(p);
-	p.id = roomnum;
+	p.key = roomnum;
 
 	for (int i = 0; i < MAX_MAP_BLOCK; i++)
 	{
@@ -65,7 +65,7 @@ void Map::Set_map()
 	}
 	over.dataBuffer.len = sizeof(p);
 	strcpy_s(over.messageBuffer, reinterpret_cast<char*>(&p));
-	m_pServer->send_packet_to_allplayers(p.id, reinterpret_cast<char*>(&p));
+	m_pServer->send_packet_to_allplayers(p.key, reinterpret_cast<char*>(&p));
 
 	ismove = true;
 	Set_wind();
@@ -175,7 +175,7 @@ void Map::cloud_move()
 	cloud_move_packet p;
 	p.type = EventType::Cloud_move;
 	p.size = sizeof(cloud_move_packet);
-	p.id = roomnum;
+	p.key = roomnum;
 	p.roomid = roomnum;
 	p.x = Cloud.x;
 	p.z = Cloud.y;

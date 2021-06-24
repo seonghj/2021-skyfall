@@ -1,5 +1,4 @@
 #pragma once
-#include"stdafx.h"
 
 constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
@@ -40,26 +39,26 @@ enum OVER_EX_Type {
 };
 
 enum PacketType {
-	SC_player_ID,			
+	SC_player_key,
 	SC_player_loginOK,
-	SC_player_add,		
-	SC_player_remove,		
-	SC_start_ok,			
-	SC_game_end,			
-	SC_player_info,	
+	SC_player_loginFail,
+	SC_player_add,
+	SC_player_remove,
+	SC_start_ok,
+	SC_game_end,
+	SC_player_info,
 	SC_weapon_swap,
 	SC_player_pos,
 	SC_player_move,
 	SC_start_pos,
 	SC_player_attack,
 	SC_allow_shot,
-	SC_allow_shot,
 	SC_player_damage,
 	SC_player_stop,
 	SC_map_set,
-	SC_map_collapse,		
-	SC_cloud_move,		
-	SC_bot_ID,			
+	SC_map_collapse,
+	SC_cloud_move,
+	SC_bot_ID,
 	SC_bot_remove,
 	SC_bot_info,
 	SC_bot_move,
@@ -68,11 +67,11 @@ enum PacketType {
 
 
 	CS_player_login,
-	CS_game_ready,		
-	CS_game_start,		
+	CS_game_ready,
+	CS_game_start,
 	CS_player_info,
 	CS_weapon_swap,
-	CS_player_move,		
+	CS_player_move,
 	CS_player_pos,
 	CS_start_pos,
 	CS_player_attack,
@@ -121,20 +120,21 @@ enum PlayerType {
 
 #pragma pack(push, 1)
 
-// 0: size // 1: type // 2: id;
+// 0: size // 1: type // 2: key;
 
 struct Packet {
 public:
 	char size;
 	char type;
-	unsigned int id;
+	unsigned int key;
 	unsigned int roomid;
 };
 
-struct player_ID_packet :public Packet {
+struct player_key_packet :public Packet {
 };
 
 struct player_login_packet :public Packet {
+	char id[50];
 };
 
 struct player_loginOK_packet :public Packet {
@@ -142,6 +142,10 @@ struct player_loginOK_packet :public Packet {
 	float dx, dy;
 	short PlayerType;
 };
+
+struct player_loginFail_packet :public Packet {
+};
+
 
 struct player_add_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
@@ -168,15 +172,14 @@ struct player_remove_packet : public Packet {
 
 struct player_info_packet : public Packet {
 	char state;
-	DirectX::XMFLOAT3 Position;
 	float dx, dy;
 	char weapon;
 	char armor;
 	char helmet;
 	char shoes;
-	float hp;
-	float lv;
-	float speed;
+	short hp;
+	short lv;
+	short speed;
 };
 
 struct player_pos_packet : public Packet {

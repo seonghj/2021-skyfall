@@ -575,14 +575,14 @@ void CGameFramework::ProcessInput()
 			{
 				//m_pPlayer->SetJump(true);
 				player_move_packet p;
-				p.id = m_pPacket->Get_clientid();
+				p.key = m_pPacket->Get_clientkey();
 				p.dx = m_DegreeX;
 				p.dy = m_DegreeY;
 				//p.MoveType = dwDirection;
 				p.size = sizeof(p);
 				p.state = 1;
 				p.MoveType = PlayerMove::JUMP;
-				p.type = Type_player_move;
+				p.type = CS_player_move;
 				m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 				m_pPlayer->SetFriction(0.f);
 			}
@@ -619,9 +619,9 @@ void CGameFramework::ProcessInput()
 			!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
 		{
 			player_shot_packet p;
-			p.id = m_pPacket->Get_clientid();
+			p.key = m_pPacket->Get_clientkey();
 			p.size = sizeof(p);
-			p.type = Type_allow_shot;
+			p.type = CS_allow_shot;
 			p.Look = m_pCamera->GetLookVector();
 			p.fTimeElapsed = fTimeElapsed;
 			p.ChargeTimer = m_ChargeTimer.GetTotalTime();
@@ -820,7 +820,7 @@ void CGameFramework::FrameAdvance()
 			m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
 		if (false == m_pPlayer->GetAttack()) {
 			player_pos_packet p;
-			p.id = m_pPacket->Get_clientid();
+			p.key = m_pPacket->Get_clientkey();
 			p.Position = NowPosition;
 			p.dx = m_DegreeX;
 			p.dy = m_DegreeY;
@@ -839,9 +839,10 @@ void CGameFramework::FrameAdvance()
 					p.MoveType = m_pPlayer->GetRunning();
 				m_pPlayer->SetStanding(false);
 			}
-			p.type = Type_player_pos;
-			if (m_pPacket->Get_clientid() != -1)
+			p.type = CS_player_pos;
+			if (m_pPacket->Get_clientkey() != -1) {
 				m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+			}
 
 			m_BeforePosition = NowPosition;
 
@@ -854,9 +855,9 @@ void CGameFramework::FrameAdvance()
 		if (false == m_pPlayer->GetStanding()) {
 			m_pPlayer->SetStanding(true);
 			player_stop_packet sp;
-			sp.id = m_pPacket->Get_clientid();
+			sp.key = m_pPacket->Get_clientkey();
 			sp.size = sizeof(sp);
-			sp.type = PacketType::Type_player_stop;
+			sp.type = PacketType::CS_player_stop;
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
 		}
 	}

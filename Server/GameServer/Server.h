@@ -45,7 +45,8 @@ public:
     bool                     isready = false;
     bool                     playing = false;
     int                      prev_size;
-    std::atomic<int>         id = -1;
+    std::atomic<int>         key = -1;
+    char                     id[50];
 
     std::unordered_set<int> near_monster;
 
@@ -78,7 +79,7 @@ public:
 
     void display_error(const char* msg, int err_no);
 
-    int SetClientId(int roomID);
+    int SetClientKey(int roomID);
     int SetroomID();
     void Set_pTimer(Timer* t) { m_pTimer = t; }
 
@@ -86,20 +87,20 @@ public:
 
     bool Init();
     void Thread_join();
-    void Disconnected(int id, int roomID);
+    void Disconnected(int key, int roomID);
 
     void Accept();
     void WorkerFunc();
 
-    void do_recv(int id, int roomID);
+    void do_recv(int key, int roomID);
     void send_packet(int to, char* packet, int roomID);
-    void process_packet(int id, char* buf, int roomID);
+    void process_packet(int key, char* buf, int roomID);
 
-    void send_ID_player_packet(int id, int roomID);
-    void send_player_loginOK_packet(int id, int roomID);
-    void send_add_player_packet(int id, int to, int roomID);
-    void send_disconnect_player_packet(int id,int roomID);
-    void send_packet_to_players(int id, char* buf, int roomID);
+    void send_player_key_packet(int key, int roomID);
+    void send_player_loginOK_packet(int key, int roomID);
+    void send_add_player_packet(int key, int to, int roomID);
+    void send_disconnect_player_packet(int key,int roomID);
+    void send_packet_to_players(int key, char* buf, int roomID);
     void send_packet_to_allplayers(int roomnum, char* buf);
     void send_map_collapse_packet(int num, int roomID);
     void send_cloud_move_packet(float x, float z, int roomID);
@@ -107,7 +108,7 @@ public:
     void game_end(int roomnum);
 
     bool in_VisualField(int a, int b, int roomID);
-    unsigned short calc_attack(int id, char attacktype);
+    unsigned short calc_attack(int key, char attacktype);
 
 
 private:

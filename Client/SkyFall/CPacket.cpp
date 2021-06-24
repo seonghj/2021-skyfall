@@ -82,7 +82,7 @@ void CPacket::RecvPacket()
                 std::memcpy(buffer + saved_packet_size, buf_ptr, packet_size - saved_packet_size);
                 //std::printf("[TCP 클라이언트] %d바이트를 받았습니다. %d\r\n", recvbytes, recvbuf[1]);
 
-                if (buffer[1] == PacketType::Type_start_ok) {
+                if (buffer[1] == PacketType::SC_start_ok) {
                     printf("start\n");
                     isRun = false;
 
@@ -117,9 +117,9 @@ void CPacket::SendPacket(char* buf)
 void CPacket::Send_ready_packet()
 {
     game_ready_packet p;
-    p.id = client_id;
+    p.key = client_key;
     p.size = sizeof(p);
-    p.type = PacketType::Type_game_ready;
+    p.type = PacketType::CS_game_ready;
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
@@ -129,17 +129,17 @@ void CPacket::Send_attack_packet(int type)
     case PlayerAttackType::BOWL:
     case PlayerAttackType::BOWR:
         player_attack_packet p;
-        p.id = client_id;
+        p.key = client_key;
         p.size = sizeof(p);
-        p.type = PacketType::Type_player_attack;
+        p.type = PacketType::CS_player_attack;
         p.attack_type = type;
         SendPacket(reinterpret_cast<char*>(&p));
         break;
     default: {
         player_attack_packet p;
-        p.id = client_id;
+        p.key = client_key;
         p.size = sizeof(p);
-        p.type = PacketType::Type_player_attack;
+        p.type = PacketType::CS_player_attack;
         p.attack_type = type;
         SendPacket(reinterpret_cast<char*>(&p));
         break;
@@ -150,58 +150,64 @@ void CPacket::Send_attack_packet(int type)
 void CPacket::Send_animation_stop_packet()
 {
     player_stop_packet sp;
-    sp.id = client_id;
+    sp.key = client_key;
     sp.size = sizeof(sp);
-    sp.type = PacketType::Type_player_stop;
+    sp.type = PacketType::CS_player_stop;
     SendPacket(reinterpret_cast<char*>(&sp));
+}
+
+void CPacket::Send_login_packet(char* id)
+{
+    player_login_packet p;
+    p.key = client_key;
+    p.size = sizeof(p);
+    p.type = PacketType::CS_player_login;
+    p.roomid = roomID;
+    strcpy_s(p.id, id);
+    SendPacket(reinterpret_cast<char*>(&p));
 }
 
 void CPacket::ProcessPacket(char* buf)
 {
     switch (buf[1])
     {
-    case PacketType::Type_player_ID: {
-        player_ID_packet* p = reinterpret_cast<player_ID_packet*>(buf);
-        if (p->id != -1 && client_id == 0) {
-            client_id = p->id;
-            printf("recv id from server: %d\n", p->id);
-        }
-
-        /*player_info_packet pp;
-        pp.id = Get_clientid();
-        pp.Position = m_pPlayer->GetPosition();
-        pp.size = sizeof(pp);
-        pp.state = 0;
-        pp.type = Type_player_info;
-        SendPacket(reinterpret_cast<char*>(&pp));*/
-
-        //Send_ready_packet();
-        break;
-    }
-    case PacketType::Type_player_loginOK: {
-        player_loginOK_packet* p = reinterpret_cast<player_loginOK_packet*>(buf);
-        if (p->id != -1) {
-            client_id = p->id;
+    case PacketType::SC_player_key: {
+        player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
+        if (p->key != -1) {
+            client_key = p->key;
             roomID = p->roomid;
-            m_pScene->m_pPlayer->SetPosition(p->Position);
-            m_pScene->m_pPlayer->Rotate(p->dx, p->dy, 0);
-            printf("recv id from server: %d\n", p->id);
+            printf("recv key from server: %d\n", p->key);
+            Send_login_packet(userID);
         }
         break;
     }
-    case PacketType::Type_player_add: {
+    case PacketType::SC_player_loginFail: {
+        break;
+    }
+    case PacketType::SC_player_loginOK: {
+        player_loginOK_packet* p = reinterpret_cast<player_loginOK_packet*>(buf);
+        if (p->key != -1) {
+            client_key = p->key;
+            roomID = p->roomid;
+           /* m_pScene->m_pPlayer->SetPosition(p->Position);
+            m_pScene->m_pPlayer->Rotate(p->dx, p->dy, 0);*/
+            printf("Login game\n");
+        }
+        break;
+    }
+    case PacketType::SC_player_add: {
         player_add_packet* p = reinterpret_cast<player_add_packet*>(buf);
-        printf("login id: %d\n", p->id);
-        if (p->id != client_id) {
+        printf("login key: %d\n", p->key);
+        if (p->key != client_key) {
             for (int i = 0; i < MAX_PLAYER; ++i) {
                 if (m_pScene->PlayerIDs[i] == -1) {
-                    m_pScene->PlayerIDs[i] = p->id;
+                    m_pScene->PlayerIDs[i] = p->key;
                     m_pScene->MovePlayer(i, p->Position);
                     m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, 0);
                     m_pScene->AnimatePlayer(i, 0);
                     break;
                 }
-                //printf("id: %d x: %f, z: %f\n", p->id, p->Position.x, p->Position.z);
+                //printf("key: %d x: %f, z: %f\n", p->key, p->Position.x, p->Position.z);
             }
         }
         else {
@@ -210,28 +216,28 @@ void CPacket::ProcessPacket(char* buf)
         }
         break;
     }
-    case PacketType::Type_player_remove: {
+    case PacketType::SC_player_remove: {
 
         break;
     }
-    case PacketType::Type_start_ok: {
+    case PacketType::SC_start_ok: {
         //GameConnect();
         break;
     }
-    case PacketType::Type_game_end: {
+    case PacketType::SC_game_end: {
         printf("gameover\n");
         //LobbyConnect();
         break;
     }
-    case PacketType::Type_player_info: {
+    case PacketType::SC_player_info: {
 
         break;
     }
 
-    case PacketType::Type_player_move: {
+    case PacketType::SC_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
 
-        if (p->id == client_id) {
+        if (p->key == client_key) {
             switch (p->MoveType) {
             case PlayerMove::JUMP: {
                 m_pPlayer->SetJump(TRUE);
@@ -243,10 +249,10 @@ void CPacket::ProcessPacket(char* buf)
             switch (p->MoveType) {
             case PlayerMove::JUMP: {
                 for (int i = 0; i < MAX_PLAYER; ++i) {
-                    if (m_pScene->PlayerIDs[i] == p->id) {
+                    if (m_pScene->PlayerIDs[i] == p->key) {
                         //m_pScene->m_mPlayer[i]->SetJump(true);
                         m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
-                        printf("id %d jump\n", p->id);
+                        printf("key %d jump\n", p->key);
                         break;
                     }
                 }
@@ -255,13 +261,13 @@ void CPacket::ProcessPacket(char* buf)
             }
         }
 
-        //if (client_id == 1)
-          //  printf("id: %d player move x = %f, y = %f, z = %f\n", p->id, p->x, p->y, p->z);
+        //if (client_key == 1)
+          //  printf("key: %d player move x = %f, y = %f, z = %f\n", p->key, p->x, p->y, p->z);
         break;
     }
-    case PacketType::Type_player_pos: {
+    case PacketType::SC_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
-        if (p->id == client_id) {
+        if (p->key == client_key) {
             m_pPlayer->SetPosition(p->Position);
             m_pPlayer->Rotate(p->dx, p->dy, 0);
             switch (p->MoveType) {
@@ -272,7 +278,7 @@ void CPacket::ProcessPacket(char* buf)
         }
         else {
             for (int i = 0; i < MAX_PLAYER; ++i) {
-                if (m_pScene->PlayerIDs[i] == p->id) {
+                if (m_pScene->PlayerIDs[i] == p->key) {
                     switch (p->MoveType) {
                     case PlayerMove::WAKING:
                         m_pScene->AnimatePlayer(i, 11); // 11
@@ -289,7 +295,7 @@ void CPacket::ProcessPacket(char* buf)
                     }
                     m_pScene->MovePlayer(i, p->Position);
                     m_pScene->m_mPlayer[i]->Rotate(p->dx, p->dy, 0);
-                    //printf("id %d move (%f, %f)\n", p->id, p->Position.x, p->Position.z);
+                    //printf("key %d move (%f, %f)\n", p->key, p->Position.x, p->Position.z);
                     break;
                 }
             }
@@ -299,14 +305,14 @@ void CPacket::ProcessPacket(char* buf)
          m_pScene->Update(fTimeElapsed);*/
         break;
     }
-    case PacketType::Type_start_pos: {
+    case PacketType::SC_start_pos: {
         player_start_pos* p = reinterpret_cast<player_start_pos*>(buf);
-        if (p->id == client_id) {
+        if (p->key == client_key) {
             m_pPlayer->SetPosition(p->Position);
         }
         else {
             for (int i = 0; i < MAX_PLAYER; ++i) {
-                if (m_pScene->PlayerIDs[i] == p->id) {
+                if (m_pScene->PlayerIDs[i] == p->key) {
                     m_pScene->m_mPlayer[i]->SetPosition(p->Position);
                     break;
                 }
@@ -314,11 +320,11 @@ void CPacket::ProcessPacket(char* buf)
         }
         break;
     }
-    case PacketType::Type_weapon_swap: {
+    case PacketType::SC_weapon_swap: {
         Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
         if (p->weapon == PT_BOW) {
             for (int i = 0; i < MAX_PLAYER; ++i) {
-                if (m_pScene->PlayerIDs[i] == p->id) {
+                if (m_pScene->PlayerIDs[i] == p->key) {
                     //m_pScene->m_mPlayer[i] =
                 }
             }
@@ -326,9 +332,9 @@ void CPacket::ProcessPacket(char* buf)
 
         break;
     }
-    case PacketType::Type_player_attack: {
+    case PacketType::SC_player_attack: {
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
-        if (p->id == client_id) {
+        if (p->key == client_key) {
             switch (p->attack_type) {
             case SWORD1HL: {
                 m_pPlayer->LButtonDown();
@@ -350,25 +356,25 @@ void CPacket::ProcessPacket(char* buf)
         }
         else {
             for (int i = 0; i < MAX_PLAYER; ++i) {
-                if (m_pScene->PlayerIDs[i] == p->id) {
+                if (m_pScene->PlayerIDs[i] == p->key) {
                     switch (p->attack_type) {
                     case SWORD1HL: {
                         m_pScene->AnimatePlayer(i, 6);
-                        printf("id: %d SWORD1HL attack\n", p->id);
+                        printf("key: %d SWORD1HL attack\n", p->key);
                         break;
                     }
                     case SWORD1HR: {
                         m_pScene->AnimatePlayer(i, 9);
-                        printf("id: %d SWORD1HR attack\n", p->id);
+                        printf("key: %d SWORD1HR attack\n", p->key);
                         break;
                     }
                     case BOWL: {
                         m_pScene->m_mPlayer[i]->LButtonDown();
-                        printf("id: %d BOWL attack\n", p->id);
+                        printf("key: %d BOWL attack\n", p->key);
                     }
                     case BOWR: {
                         m_pScene->m_mPlayer[i]->RButtonDown();
-                        printf("id: %d BOWR attack\n", p->id);
+                        printf("key: %d BOWR attack\n", p->key);
                     }
                     }
                     break;
@@ -378,16 +384,16 @@ void CPacket::ProcessPacket(char* buf)
 
         break;
     }
-    case PacketType::Type_allow_shot: {
+    case PacketType::SC_allow_shot: {
         player_shot_packet* p = reinterpret_cast<player_shot_packet*>(buf);
-        if (p->id == client_id) {
+        if (p->key == client_key) {
             m_pPlayer->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
             m_pPlayer->SetAttack(false);
             m_pPlayer->SetCharging(false);
         }
         else {
             for (int i = 0; i < MAX_PLAYER; ++i) {
-                if (m_pScene->PlayerIDs[i] == p->id) {
+                if (m_pScene->PlayerIDs[i] == p->key) {
                     m_pScene->m_mPlayer[i]->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
                     m_pScene->m_mPlayer[i]->SetAttack(false);
 
@@ -396,11 +402,11 @@ void CPacket::ProcessPacket(char* buf)
         }
         break;
     }
-    case PacketType::Type_player_stop: {
+    case PacketType::SC_player_stop: {
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
-        if (p->id != client_id) {
+        if (p->key != client_key) {
             for (int i = 0; i < MAX_PLAYER; ++i) {
-                if (m_pScene->PlayerIDs[i] == p->id) {
+                if (m_pScene->PlayerIDs[i] == p->key) {
                     m_pScene->AnimatePlayer(i, 0);
                     m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(6, 0);
                     m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(9, 0);
@@ -410,15 +416,15 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
 
-    case PacketType::Type_map_collapse: {
+    case PacketType::SC_map_collapse: {
         map_collapse_packet* p = reinterpret_cast<map_collapse_packet*>(buf);
         //printf("break map: %d\n", p->block_num);
         break;
     }
 
-    case PacketType::Type_cloud_move: {
+    case PacketType::SC_cloud_move: {
         cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(buf);
-        printf("id: %d cloud move x = %f, z = %f\n",p->roomid, p->x, p->z);
+        //printf("key: %d cloud move x = %f, z = %f\n",p->roomid, p->x, p->z);
         break;
     }
     default:
@@ -426,14 +432,14 @@ void CPacket::ProcessPacket(char* buf)
     }
 }
 
-void CPacket::Set_clientid(int n)
+void CPacket::Set_clientkey(int n)
 {
-    client_id = n;
+    client_key = n;
 }
 
-int CPacket::Get_clientid()
+int CPacket::Get_clientkey()
 {
-    return client_id;
+    return client_key;
 }
 
 void CPacket::Set_currentfps(unsigned long FrameRate)
@@ -442,6 +448,35 @@ void CPacket::Set_currentfps(unsigned long FrameRate)
         currentfps = FrameRate;
     else
         currentfps = 1;
+}
+
+void CPacket::Login()
+{
+    int retval = 0;
+    char ipaddr[50];
+
+    /*cout << "IP를 입력하시오: ";
+    cin >> ipaddr;
+
+    char ID[50];
+
+    cout << "ID를 입력하시오: ";
+    cin >> ID;*/
+
+    strcpy_s(userID, "1221312");
+
+    // connect()
+    SOCKADDR_IN serveraddr;
+    ZeroMemory(&serveraddr, sizeof(serveraddr));
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serveraddr.sin_port = htons(GAMESERVERPORT);
+    retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
+    if (retval == SOCKET_ERROR) err_quit("connect()");
+
+    memset(&overlapped, 0, sizeof(overlapped));
+
+    Recv_thread = std::thread(&CPacket::RecvPacket, this);
 }
 
 void CPacket::LobbyConnect()
@@ -471,7 +506,7 @@ void CPacket::LobbyConnect()
 
     memset(&overlapped, 0, sizeof(overlapped));
 
-    //gCPacket[num]->Set_clientid(num);
+    //gCPacket[num]->Set_clientkey(num);
 
     Recv_thread = std::thread(&CPacket::RecvPacket, this);
     //std::thread test_Send_thread = std::thread(&CPacket::testSendPacket, gCPacket[num]);
@@ -487,7 +522,7 @@ void CPacket::GameConnect()
     //closesocket(sock);
     ////cout << "lobby diconnect" << endl;
 
-    int retval;
+    int retval = 0;
 
     WSADATA wsa;
     WSAStartup(MAKEWORD(2, 2), &wsa);
@@ -496,24 +531,11 @@ void CPacket::GameConnect()
     sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
     if (sock == INVALID_SOCKET)err_quit("socket()");
 
-    // connect()
-    SOCKADDR_IN serveraddr;
-    ZeroMemory(&serveraddr, sizeof(serveraddr));
-    serveraddr.sin_family = AF_INET;
-    serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
-    serveraddr.sin_port = htons(GAMESERVERPORT);
-    retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
-    if (retval == SOCKET_ERROR) err_quit("connect()");
-
-    memset(&overlapped, 0, sizeof(overlapped));
-
     //cout << "game connect" << endl;
-
-
-
-    std::thread Recv_thread = std::thread(&CPacket::RecvPacket, this);
     //std::thread test_Send_thread = std::thread(&CPacket::testSendPacket, this);
     //test_Send_thread.join();
-    Recv_thread.join();
+   
+    //InsertID();
 
+    Login();
 }
