@@ -1,4 +1,6 @@
 #pragma once
+#include <WinSock2.h>
+#include <DirectXMath.h>
 
 constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;

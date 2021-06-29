@@ -145,6 +145,7 @@ void Server::Accept()
     printf("ready\n");
 
     while (1) {
+        accept_lock.lock();
         client_sock = accept(listen_sock, (struct sockaddr*)&clientaddr, &addrlen);
         if (client_sock == INVALID_SOCKET) {
             printf("accept error: %d", WSAGetLastError());
@@ -159,6 +160,7 @@ void Server::Accept()
         memset(&sessions[roomID][client_key], 0x00, sizeof(SESSION));
         sessions[roomID][client_key].connected = TRUE;
         sessions[roomID][client_key].key = client_key;
+        sessions[roomID][client_key].roomID = roomID;
         sessions[roomID][client_key].sock = client_sock;
         sessions[roomID][client_key].clientaddr = clientaddr;
         getpeername(client_sock, (SOCKADDR*)&sessions[roomID][client_key].clientaddr
@@ -170,9 +172,12 @@ void Server::Accept()
             sessions[roomID][client_key].over.messageBuffer;
         sessions[roomID][client_key].over.is_recv = true;
         sessions[roomID][client_key].over.roomID = roomID;
+        accept_lock.unlock();
         // ���ϰ� ����� �Ϸ� ��Ʈ ����
+
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_key, 0);
 
+        printf("client_key: %d\n", client_key);
         send_player_key_packet(client_key, roomID);
 
         do_recv(client_key, roomID);
@@ -403,11 +408,13 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         strcpy_s(sessions[roomID][client_key].id, p->id);
 
+        send_player_loginOK_packet(sessions[roomID][client_key].key, sessions[roomID][client_key].roomID);
+
         printf("client_connected: IP =%s, port=%d key = %d Room = %d\n",
             inet_ntoa(sessions[roomID][client_key].clientaddr.sin_addr)
             , ntohs(sessions[roomID][client_key].clientaddr.sin_port), client_key, roomID);
 
-        send_player_loginOK_packet(p->key, roomID);
+
 
         for (int i = 0; i < MAX_PLAYER; ++i) {
             if (TRUE == sessions[roomID][i].connected)

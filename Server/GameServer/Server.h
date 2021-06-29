@@ -46,6 +46,7 @@ public:
     bool                     playing = false;
     int                      prev_size;
     std::atomic<int>         key = -1;
+    std::atomic<int>         roomID = -1;
     char                     id[50];
 
     std::unordered_set<int> near_monster;
@@ -104,6 +105,9 @@ public:
     void send_packet_to_allplayers(int roomnum, char* buf);
     void send_map_collapse_packet(int num, int roomID);
     void send_cloud_move_packet(float x, float z, int roomID);
+
+    void send_monster_add(int key, int roomID);
+    void send_monster_remove(int key, int roomID);
     
     void game_end(int roomnum);
 
