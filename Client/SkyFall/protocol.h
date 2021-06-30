@@ -1,4 +1,6 @@
 #pragma once
+#include <WinSock2.h>
+#include <DirectXMath.h>
 
 constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
@@ -58,12 +60,13 @@ enum PacketType {
 	SC_map_set,
 	SC_map_collapse,
 	SC_cloud_move,
-	SC_bot_ID,
+	SC_bot_add,
 	SC_bot_remove,
 	SC_bot_info,
 	SC_bot_move,
 	SC_bot_pos,
 	SC_bot_attack,
+	SC_bot_damaged,
 
 
 	CS_player_login,
@@ -110,6 +113,11 @@ enum PlayerType {
 	PT_BOW
 };
 
+enum MonsterType {
+	LOW,
+	MIDDLE,
+	BOSS
+};
 
 #define DIR_FORWARD					0x01
 #define DIR_BACKWARD				0x02

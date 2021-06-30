@@ -2,21 +2,25 @@
 #include "stdafx.h"
 #include "Server.h"
 #include "Map.h"
+#include "Bot.h"
 #include "Timer.h"
 
-Server*		server = new Server;
-DB*			db = new DB;
+Server*		g_pServer = new Server;
+DB*			g_pDB = new DB;
+Bot*		g_pBot = new Bot;
 
 int main(int argc, char* argv[])
 {
 	//std::wcout.imbue(std::locale("korean"));
-   //db->Connection();
+   //g_pDB->Connection();
 
-	server->Init();
-	server->Thread_join();
+	g_pServer->Init();
+	g_pServer->Set_pBot(g_pBot);
+	g_pServer->Thread_join();
 
-   //mysql_close(db->connection);
+   //mysql_close(g_pDB->connection);
 
-	delete server;
-	delete db;
+	delete g_pServer;
+	delete g_pDB;
+	delete g_pBot;
 }

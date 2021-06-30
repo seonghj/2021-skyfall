@@ -25,7 +25,7 @@ void Server::display_error(const char* msg, int err_no)
     std::cout << std::endl;
 }
 
-int Server::SetClientId()
+int Server::SetClientKey()
 {
     int count = GAMESERVER_ID + 1;
     while (true) {
@@ -49,7 +49,7 @@ bool Server::MatchMaking(int id)
         if (cnt == 20) {
             for (auto& s : sessions) {
                 if (s.second.connected && s.second.isready) {
-                    send_game_start_packet(s.second.id);
+                    send_game_start_packet(s.second.key);
                 }
             }
             break;
@@ -60,6 +60,37 @@ bool Server::MatchMaking(int id)
 
 
     return 1;
+}
+
+void Server::Connect_Game_Server(SOCKET listen_sock)
+{
+    SOCKET gameserver_sock;
+    SOCKADDR_IN gameserveraddr;
+    int addrlen = sizeof(SOCKADDR_IN);
+    DWORD flags;
+    gameserver_sock = accept(listen_sock, (struct sockaddr*)&gameserveraddr, &addrlen);
+    if (gameserver_sock == INVALID_SOCKET) {
+        display_error("accept error: ", WSAGetLastError());
+    }
+
+    sessions.emplace(GAMESERVER_ID, SESSION());
+    memset(&sessions[GAMESERVER_ID], 0x00, sizeof(SESSION));
+    sessions[GAMESERVER_ID].key = GAMESERVER_ID;
+    sessions[GAMESERVER_ID].sock = gameserver_sock;
+    sessions[GAMESERVER_ID].clientaddr = gameserveraddr;
+
+    printf("gameserver connect\n");
+
+    sessions[GAMESERVER_ID].over.dataBuffer.len = BUFSIZE;
+    sessions[GAMESERVER_ID].over.dataBuffer.buf =
+        sessions[GAMESERVER_ID].over.messageBuffer;
+    sessions[GAMESERVER_ID].over.is_recv = true;
+    flags = 0;
+
+    // 소켓과 입출력 완료 포트 연결
+    CreateIoCompletionPort((HANDLE)gameserver_sock, hcp, GAMESERVER_ID, 0);
+    sessions[GAMESERVER_ID].connected = true;
+    sessions[GAMESERVER_ID].isready = false;
 }
 
 void Server::Accept()
@@ -83,37 +114,11 @@ void Server::Accept()
     // listen()
     retval = listen(listen_sock, MAX_CLIENT);
 
-    SOCKET gameserver_sock;
-    SOCKADDR_IN gameserveraddr;
-    int addrlen = sizeof(SOCKADDR_IN);
-    DWORD flags;
-    gameserver_sock = accept(listen_sock, (struct sockaddr*)&gameserveraddr, &addrlen);
-    if (gameserver_sock == INVALID_SOCKET) {
-        display_error("accept error: ", WSAGetLastError());
-    }
-
-    sessions.emplace(GAMESERVER_ID, SESSION());
-    memset(&sessions[GAMESERVER_ID], 0x00, sizeof(SESSION));
-    sessions[GAMESERVER_ID].id = GAMESERVER_ID;
-    sessions[GAMESERVER_ID].sock = gameserver_sock;
-    sessions[GAMESERVER_ID].clientaddr = gameserveraddr;
-
-    printf("gameserver connect\n");
-
-    sessions[GAMESERVER_ID].over.dataBuffer.len = BUFSIZE;
-    sessions[GAMESERVER_ID].over.dataBuffer.buf =
-        sessions[GAMESERVER_ID].over.messageBuffer;
-    sessions[GAMESERVER_ID].over.is_recv = true;
-    flags = 0;
-
-    // 소켓과 입출력 완료 포트 연결
-    CreateIoCompletionPort((HANDLE)gameserver_sock, hcp, GAMESERVER_ID, 0);
-    sessions[GAMESERVER_ID].connected = true;
-    sessions[GAMESERVER_ID].isready = false;
-
     // 데이터 통신에 사용할 변수
     SOCKET client_sock;
     SOCKADDR_IN clientaddr;
+    int addrlen = sizeof(SOCKADDR_IN);
+    DWORD flags = 0;
 
     printf("ready\n");
 
@@ -124,34 +129,34 @@ void Server::Accept()
             break;
         }
 
-        int client_id = SetClientId();
-        sessions.emplace(client_id, SESSION());
-        memset(&sessions[client_id], 0x00, sizeof(SESSION));
-        sessions[client_id].id = client_id;
-        sessions[client_id].sock = client_sock;
-        sessions[client_id].clientaddr = clientaddr;
+        int client_key = SetClientKey();
+        sessions.emplace(client_key, SESSION());
+        memset(&sessions[client_key], 0x00, sizeof(SESSION));
+        sessions[client_key].key = client_key;
+        sessions[client_key].sock = client_sock;
+        sessions[client_key].clientaddr = clientaddr;
 
-        getpeername(client_sock, (SOCKADDR*)&sessions[client_id].clientaddr
-            , &sessions[client_id].addrlen);
+        getpeername(client_sock, (SOCKADDR*)&sessions[client_key].clientaddr
+            , &sessions[client_key].addrlen);
 
         printf("client_connected: IP =%s, port=%d key = %d\n",
-            inet_ntoa(sessions[client_id].clientaddr.sin_addr)
-            , ntohs(sessions[client_id].clientaddr.sin_port), client_id);
+            inet_ntoa(sessions[client_key].clientaddr.sin_addr)
+            , ntohs(sessions[client_key].clientaddr.sin_port), client_key);
 
-        sessions[client_id].over.dataBuffer.len = BUFSIZE;
-        sessions[client_id].over.dataBuffer.buf =
+        sessions[client_key].over.dataBuffer.len = BUFSIZE;
+        sessions[client_key].over.dataBuffer.buf =
             sessions[client_sock].over.messageBuffer;
-        sessions[client_id].over.is_recv = true;
+        sessions[client_key].over.is_recv = true;
         flags = 0;
 
         // 소켓과 입출력 완료 포트 연결
-        CreateIoCompletionPort((HANDLE)client_sock, hcp, client_id, 0);
-        sessions[client_id].connected = true;
+        CreateIoCompletionPort((HANDLE)client_sock, hcp, client_key, 0);
+        sessions[client_key].connected = true;
 
-        // id전송
-        send_ID_player_packet(client_id);
+        // key전송
+        send_key_player_packet(client_key);
 
-        do_recv(client_id);
+        do_recv(client_key);
     }
 
     // closesocket()
@@ -218,52 +223,62 @@ void Server::send_packet(int to, char* packet)
     }
 }
 
-void Server::send_ID_player_packet(char id)
+void Server::send_key_player_packet(char key)
 {
-    player_ID_packet p;
+    player_key_packet p;
 
-    p.id = id;
-    p.size = sizeof(player_login_packet);
-    p.type = PacketType::Type_player_ID;
-    send_packet(id, reinterpret_cast<char*>(&p));
+    p.key = key;
+    p.size = sizeof(player_key_packet);
+    p.type = PacketType::SC_player_key;
+    send_packet(key, reinterpret_cast<char*>(&p));
 }
 
-void Server::send_login_player_packet(char id, int to)
+void Server::send_player_loginOK_packet(char key)
 {
-    player_login_packet p;
+    player_loginOK_packet p;
 
-    p.id = id;
+    p.key = key;
     p.size = sizeof(player_login_packet);
-    p.type = PacketType::Type_player_login;
+    p.type = PacketType::SC_player_loginOK;
 
     //printf("%d: login\n",id);
 
-    send_packet(to, reinterpret_cast<char*>(&p));
+    send_packet(key, reinterpret_cast<char*>(&p));
 }
 
-void Server::send_disconnect_player_packet(char id)
+void Server::send_player_loginFail_packet(char key)
+{
+    player_loginFail_packet p;
+
+    p.key = key;
+    p.size = sizeof(player_loginFail_packet);
+    p.type = PacketType::SC_player_loginFail;
+
+    //printf("%d: login\n",id);
+
+    send_packet(key, reinterpret_cast<char*>(&p));
+}
+
+void Server::send_disconnect_player_packet(char key)
 {
     player_remove_packet p;
-    p.id = id;
+    p.key = key;
     p.size = sizeof(player_remove_packet);
-    p.type = PacketType::Type_player_remove;
+    p.type = PacketType::SC_player_remove;
 
-    for (auto &iter: sessions){
-        if (iter.second.connected && iter.second.id != GAMESERVER_ID)
-            send_packet(iter.first, reinterpret_cast<char*>(&p));
-    }
-    closesocket(sessions[id].sock);
+    send_packet(key, reinterpret_cast<char*>(&p));
+    closesocket(sessions[key].sock);
 }
 
-void Server::send_game_start_packet(char id)
+void Server::send_game_start_packet(char key)
 {
     game_start_packet p;
-    p.id = id;
+    p.key = key;
     p.size = sizeof(player_remove_packet);
-    p.type = PacketType::Type_start_ok;
+    p.type = PacketType::SC_start_ok;
 
-    send_packet(id, reinterpret_cast<char*>(&p));
-    printf("send to %d start packet\n", id);
+    send_packet(key, reinterpret_cast<char*>(&p));
+    printf("send to %d start packet\n", key);
     //Disconnected(id);
 }
 
@@ -271,15 +286,30 @@ void Server::process_packet(char id, char* buf)
 {
     // 클라이언트에서 받은 패킷 처리
     switch (buf[1]) {
-    case PacketType::Type_game_ready: {
+    case PacketType::CS_player_login: {
+        player_login_packet* p = reinterpret_cast<player_login_packet*>(buf);
+
+        int client_key = p->key;
+
+        strcpy_s(sessions[client_key].id, p->id);
+
+        send_player_loginOK_packet(sessions[client_key].key);
+
+        printf("client_connected: IP =%s, port=%d key = %d\n",
+            inet_ntoa(sessions[client_key].clientaddr.sin_addr)
+            , ntohs(sessions[client_key].clientaddr.sin_port), client_key);
+
+        break;
+    }
+    case PacketType::CS_game_ready: {
         sessions[buf[2]].isready = true;
         MatchMaking(buf[2]);
         break;
     }
-    case PacketType::Type_game_start: {
+    case PacketType::CS_game_start: {
         start_ok_packet* sop = new start_ok_packet;
         sop->size = sizeof(sop);
-        sop->type = Type_start_ok;
+        sop->type = SC_start_ok;
         for (auto i = sessions.begin(); i != sessions.end(); ++i) {
             if (!i->second.isready) {
                 sop->value = false;

@@ -8,7 +8,7 @@ class SESSION
 public:
 
     SESSION() {}
-    SESSION(const int& i) { id = i; }
+    SESSION(const int& i) { key = i; }
     ~SESSION() {}
 
     OVER_EX     over;
@@ -25,27 +25,28 @@ public:
     bool        playing = false;
 
     int         prev_size;
-    int         id;
-    int         game_num;
+    int         key;
+    int         roomID;
+    char        id[50];
 
-    // 0 Á×À½ / 1 »ýÁ¸
-    std::atomic<bool>       state = 0;
+    //// 0 Á×À½ / 1 »ýÁ¸
+    //std::atomic<bool>       state = 0;
 
-    std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-    std::atomic<float>      dx = 0;
-    std::atomic<float>      dy = 0;
-    std::atomic<float>      dz = 0;
-    /*std::atomic<float>      x = 0;
-    std::atomic<float>      y = 0;
-    std::atomic<float>      z = 0;*/
+    //std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+    //std::atomic<float>      dx = 0;
+    //std::atomic<float>      dy = 0;
+    //std::atomic<float>      dz = 0;
+    ///*std::atomic<float>      x = 0;
+    //std::atomic<float>      y = 0;
+    //std::atomic<float>      z = 0;*/
 
-    std::atomic<short>        weapon = 0;
-    std::atomic<short>        helmet = 0;
-    std::atomic<short>        shoes = 0;
+    //std::atomic<short>        weapon = 0;
+    //std::atomic<short>        helmet = 0;
+    //std::atomic<short>        shoes = 0;
 
-    std::atomic<float>      hp = 0;
-    std::atomic<float>      lv = 0;
-    std::atomic<float>      speed = 10;
+    //std::atomic<float>      hp = 0;
+    //std::atomic<float>      lv = 0;
+    //std::atomic<float>      speed = 10;
 };
 
 //namespace std {
@@ -66,13 +67,14 @@ public:
 
     void display_error(const char* msg, int err_no);
 
-    int SetClientId();
+    int SetClientKey();
     bool MatchMaking(int cnt);
 
     bool Init();
     void Thread_join();
     void Disconnected(int id);
 
+    void Connect_Game_Server(SOCKET listen_sock);
     void Accept();
     void WorkerFunc();
 
@@ -80,8 +82,9 @@ public:
     void send_packet(int to, char* packet);
     void process_packet(char id, char* buf);
 
-    void send_ID_player_packet(char id);
-    void send_login_player_packet(char id, int to);
+    void send_key_player_packet(char key);
+    void send_player_loginOK_packet(char key);
+    void send_player_loginFail_packet(char key);
     void send_disconnect_player_packet(char id);
 
     void send_game_start_packet(char id);

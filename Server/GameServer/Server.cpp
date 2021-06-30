@@ -154,8 +154,10 @@ void Server::Accept()
 
         int roomID = SetroomID();
         int client_key = SetClientKey(roomID);
-        if (client_key == -1)
+        if (client_key == -1) {
+            closesocket(client_sock);
             break;
+        }
 
         memset(&sessions[roomID][client_key], 0x00, sizeof(SESSION));
         sessions[roomID][client_key].connected = TRUE;
@@ -177,7 +179,7 @@ void Server::Accept()
 
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_key, 0);
 
-        printf("client_key: %d\n", client_key);
+        //printf("client_key: %d\n", client_key);
         send_player_key_packet(client_key, roomID);
 
         do_recv(client_key, roomID);
@@ -294,7 +296,7 @@ void Server::send_add_player_packet(int key, int to, int roomID)
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
-void Server::send_disconnect_player_packet(int key, int roomID)
+void Server::send_remove_player_packet(int key, int roomID)
 {
     player_remove_packet p;
     p.key = key;
@@ -304,34 +306,48 @@ void Server::send_disconnect_player_packet(int key, int roomID)
 
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == TRUE)
-            if (sessions[roomID][i].connected)
-                send_packet(i, reinterpret_cast<char*>(&p), roomID);
+            send_packet(i, reinterpret_cast<char*>(&p), roomID);
+    }
+    Disconnected(key, roomID);
+}
+
+void Server::send_disconnect_player_packet(int key, int roomID)
+{
+    player_disconnect_packet p;
+    p.key = key;
+    p.size = sizeof(player_disconnect_packet);
+    p.type = PacketType::SC_player_disconnect;
+    p.roomid = roomID;
+
+    for (int i = 0; i < MAX_PLAYER; ++i) {
+        if (sessions[roomID][i].connected == TRUE)
+            send_packet(i, reinterpret_cast<char*>(&p), roomID);
     }
     Disconnected(key, roomID);
 }
 
 void Server::send_packet_to_players(int key, char* buf, int roomID)
 {
-   sm_lock.lock();
+   //sm_lock.lock();
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == TRUE)
             if (sessions[roomID][i].connected)
-                if (in_VisualField(key, sessions[roomID][i].key, roomID)) {
+                if (in_VisualField(sessions[roomID][key], sessions[roomID][i], roomID)) {
                     send_packet(i, buf, roomID);
                 }
     }
-    sm_lock.unlock();
+    //sm_lock.unlock();
 }
 
 void Server::send_packet_to_allplayers(int roomID, char* buf)
 {
-   sm_lock.lock();
+   //sm_lock.lock();
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == TRUE)
             if (sessions[roomID][i].connected.load(std::memory_order_seq_cst))
                 send_packet(i, buf, roomID);
     }
-   sm_lock.unlock();
+   //sm_lock.unlock();
 }
 
 void Server::send_map_collapse_packet(int num, int map_num)
@@ -376,10 +392,24 @@ void Server::game_end(int roomnum)
     sm_lock.unlock();
 }
 
-bool Server::in_VisualField(int a, int b, int roomID)
+bool Server::in_VisualField(SESSION a, SESSION b, int roomID)
 {
-    float value = pow(((short)sessions[roomID][a].f3Position.load().x - (short)sessions[roomID][b].f3Position.load().x), 2)
-        + pow(((short)sessions[roomID][a].f3Position.load().z - (short)sessions[roomID][b].f3Position.load().z), 2);
+    float value = pow(((short)a.f3Position.load().x - (short)b.f3Position.load().x), 2)
+        + pow(((short)a.f3Position.load().z - (short)b.f3Position.load().z), 2);
+
+    if (value < 0) {
+        if (sqrt(-value) <= VIEWING_DISTANCE) return true;
+    }
+    else {
+        if (sqrt(value) <= VIEWING_DISTANCE) return true;
+    }
+    return false;
+}
+
+bool Server::in_VisualField(Monster a, SESSION b, int roomID)
+{
+    float value = pow(((short)a.f3Position.load().x - (short)b.f3Position.load().x), 2)
+        + pow(((short)a.f3Position.load().z - (short)b.f3Position.load().z), 2);
 
     if (value < 0) {
         if (sqrt(-value) <= VIEWING_DISTANCE) return true;
@@ -392,6 +422,7 @@ bool Server::in_VisualField(int a, int b, int roomID)
 
 unsigned short Server::calc_attack(int key, char attacktype)
 {
+
     return 0;
 }
 
@@ -408,23 +439,31 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         strcpy_s(sessions[roomID][client_key].id, p->id);
 
-        send_player_loginOK_packet(sessions[roomID][client_key].key, sessions[roomID][client_key].roomID);
+        send_player_loginOK_packet(client_key, sessions[roomID][client_key].roomID);
 
         printf("client_connected: IP =%s, port=%d key = %d Room = %d\n",
             inet_ntoa(sessions[roomID][client_key].clientaddr.sin_addr)
             , ntohs(sessions[roomID][client_key].clientaddr.sin_port), client_key, roomID);
 
-
-
-        for (int i = 0; i < MAX_PLAYER; ++i) {
+        /*for (int i = 0; i < MAX_PLAYER; ++i) {
             if (TRUE == sessions[roomID][i].connected)
-                if (true == sessions[roomID][sessions[roomID][i].key].connected && (sessions[roomID][i].key != client_key))
-                    send_add_player_packet(sessions[roomID][i].key, client_key, roomID);
+                if ((i != client_key))
+                    send_add_player_packet(i, client_key, roomID);
         }
         for (int i = 0; i < MAX_PLAYER; ++i) {
             if (TRUE == sessions[roomID][i].connected)
-                if ((true == sessions[roomID][sessions[roomID][i].key].connected) && (sessions[roomID][i].key != client_key))
-                    send_add_player_packet(client_key, sessions[roomID][i].key, roomID);
+                if ((i != client_key))
+                    send_add_player_packet(client_key, i, roomID);
+        }*/
+
+        for (auto& s : sessions[roomID]) {
+            if ((TRUE == s.connected) && (s.key.load() != client_key)){
+                send_add_player_packet(s.key.load(), client_key, roomID);
+            }
+        }
+        for (auto& s : sessions[roomID]) {
+            if ((TRUE == s.connected) && (s.key.load() != client_key))
+                send_add_player_packet(client_key, s.key.load(), roomID);
         }
 
         break;
@@ -453,6 +492,16 @@ void Server::process_packet(int key, char* buf, int roomID)
         sessions[roomID][p->key].dx.store(fmodf(sessions[roomID][p->key].dx.load() + p->dx, 360.f));
         sessions[roomID][p->key].dy.store(fmodf(sessions[roomID][p->key].dy.load() + p->dy, 360.f));
         //printf("move %f %f\n", sessions[roomID][p->key].f3Position.load(std::memory_order_seq_cst).x, sessions[roomID][p->key].f3Position.load(std::memory_order_seq_cst).z);
+        
+        std::unordered_set<int> old_nm = sessions[roomID][p->key].near_monster;
+        std::unordered_set<int> new_nm;
+
+        for (auto& m : m_pBot->monsters[roomID]) {
+            if (in_VisualField(m, sessions[roomID][p->key], roomID)) {
+                new_nm.insert(m.key);
+            }
+        }
+        
         send_packet_to_players(key, reinterpret_cast<char*>(p), roomID);
         break;
     }
