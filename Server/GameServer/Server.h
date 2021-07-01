@@ -109,8 +109,8 @@ public:
     void send_map_collapse_packet(int num, int roomID);
     void send_cloud_move_packet(float x, float z, int roomID);
 
-    void send_monster_add(int key, int roomID);
-    void send_monster_remove(int key, int roomID);
+    void send_add_monster(int key, int roomID);
+    void send_remove_monster(int key, int roomID);
     
     void game_end(int roomnum);
 

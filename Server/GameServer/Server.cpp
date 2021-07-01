@@ -501,6 +501,20 @@ void Server::process_packet(int key, char* buf, int roomID)
                 new_nm.insert(m.key);
             }
         }
+
+        for (auto& m : new_nm) {
+            if (old_nm.count(m) == 0) {
+                sessions[roomID][p->key].near_monster.insert(m);
+                send_add_monster(p->key, roomID);
+            }
+        }
+        for (auto& m : old_nm) {
+            if (new_nm.count(m) == 0) {
+                sessions[roomID][p->key].near_monster.erase(m);
+                send_remove_monster(p->key, roomID);
+            }
+        }
+
         
         send_packet_to_players(key, reinterpret_cast<char*>(p), roomID);
         break;
