@@ -511,6 +511,21 @@ void CScene::CheckCollision()
 	m_pMap->CheckCollision(m_pPlayer);
 }
 
+void CScene::CheckTarget()
+{
+	XMFLOAT3 subtract;
+	for (int i = 0; i < m_nGameObjects; ++i) {
+		subtract = Vector3::Subtract(m_pPlayer->GetPosition(), m_ppGameObjects[i]->GetPosition());
+		if (Vector3::Length(subtract) <= 300)
+		{
+			subtract = Vector3::Normalize(subtract);
+			subtract.y = 0;
+			m_ppGameObjects[i]->Move(subtract, 0.5f);
+		}
+			//printf("%d 번째 크기 : %f\n", i, Vector3::Length(Vector3::Subtract(m_ppGameObjects[i]->GetPosition(), m_pPlayer->GetPosition())));
+	}
+}
+
 void CScene::CreateCbvSrvDescriptorHeaps(ID3D12Device *pd3dDevice, int nConstantBufferViews, int nShaderResourceViews)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
