@@ -68,6 +68,13 @@ enum PacketType {
 	SC_bot_pos,
 	SC_bot_attack,
 	SC_bot_damaged,
+	SC_monster_add,
+	SC_monster_remove,
+	SC_monster_info,
+	SC_monster_move,
+	SC_monster_pos,
+	SC_monster_attack,
+	SC_monster_damaged,
 
 
 	CS_player_login,
@@ -265,4 +272,12 @@ struct cloud_move_packet : public Packet {
 	float x, z;
 };
 
+struct mon_add_packet : public Packet {
+	DirectX::XMFLOAT3 Position;
+	float dx, dy;
+	short MonsterType;
+};
+
+struct mon_remove_packet : public Packet {
+};
 #pragma pack(pop)

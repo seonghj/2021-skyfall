@@ -31,8 +31,6 @@ public:
     SESSION(BOOL b) : connected(b) {}
     ~SESSION() {}
 
-    std::mutex               s_lock;
-
     OVER_EX                  over;
     SOCKET                   sock;
     SOCKADDR_IN              clientaddr;
@@ -50,11 +48,9 @@ public:
     std::atomic<int>         roomID = -1;
     char                     id[50];
 
-    std::unordered_set<int> near_monster;
-
     // 0 Á×À½ / 1 »ýÁ¸
     std::atomic<bool>       state = 0;
-    std::atomic<DirectX::XMFLOAT3>       f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+    std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<float>      dx = 0;
     std::atomic<float>      dy = 0;
     
@@ -67,6 +63,12 @@ public:
     std::atomic<float>      speed = 20;
 
     void init();
+
+public:
+    std::unordered_set<int> near_monster;
+
+    std::mutex               s_lock;
+    std::mutex               nm_lock;
 };
 
 class Map;
@@ -109,8 +111,8 @@ public:
     void send_map_collapse_packet(int num, int roomID);
     void send_cloud_move_packet(float x, float z, int roomID);
 
-    void send_add_monster(int key, int roomID);
-    void send_remove_monster(int key, int roomID);
+    void send_add_monster(int key, int roomID, int to);
+    void send_remove_monster(int key, int roomID, int to);
     
     void game_end(int roomnum);
 
@@ -118,6 +120,7 @@ public:
     bool in_VisualField(Monster a, SESSION b, int roomID);
     unsigned short calc_attack(int key, char attacktype);
 
+    void player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy);
 
 private:
     HANDLE                         hcp;
@@ -133,6 +136,6 @@ private:
     std::vector <std::thread>      map_threads;
 
     std::mutex                     accept_lock;
-    std::mutex                     sm_lock;
-    std::mutex                     mm_lock;
+    std::mutex                     sessions_lock;
+    std::mutex                     maps_lock;
 };

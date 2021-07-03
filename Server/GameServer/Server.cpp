@@ -4,7 +4,13 @@
 
 void SESSION::init() 
 {
-    memset(this, 0x00, sizeof(SESSION));
+   //memset(this, 0x00, sizeof(SESSION));
+    addrlen = 0;
+    memset(packet_buf, 0, sizeof(packet_buf));
+    prev_size = 0;
+    packet_start = nullptr;
+    recv_start = nullptr;
+
     connected = false;
     isready = false;
     playing = false;
@@ -64,16 +70,24 @@ int Server::SetroomID()
     int cnt = 1;
     while (1) {
         if (sessions.find(cnt) == sessions.end()) {
-            sm_lock.lock();
+            sessions_lock.lock();
             //std::array<SESSION, 20> s{};
             sessions.emplace(cnt, std::array<SESSION, 20>{});
-            sm_lock.unlock();
+            sessions_lock.unlock();
             
-            /*mm_lock.lock();
+            int i = 0;
+            for (auto& m : m_pBot->monsters[cnt]) {
+                m.f3Position.store(DirectX::XMFLOAT3(0, 0, 0));
+                m.key = i;
+                m.roomID = cnt;
+                ++i;
+            }
+
+            /*maps_lock.lock();
             maps.emplace(cnt, Map(cnt));
             maps[cnt].SetNum(cnt);
             maps[cnt].init_Map(this, m_pTimer);
-            mm_lock.unlock();*/
+            maps_lock.unlock();*/
 
             printf("create game room - %d\n", cnt);
 
@@ -159,7 +173,9 @@ void Server::Accept()
             break;
         }
 
-        memset(&sessions[roomID][client_key], 0x00, sizeof(SESSION));
+
+
+        sessions[roomID][client_key].init();
         sessions[roomID][client_key].connected = TRUE;
         sessions[roomID][client_key].key = client_key;
         sessions[roomID][client_key].roomID = roomID;
@@ -174,6 +190,12 @@ void Server::Accept()
             sessions[roomID][client_key].over.messageBuffer;
         sessions[roomID][client_key].over.is_recv = true;
         sessions[roomID][client_key].over.roomID = roomID;
+
+        sessions[roomID][client_key].near_monster;
+
+        for (int i = 0; i < 20; i++)
+            sessions[roomID][client_key].near_monster.insert(i);
+
         accept_lock.unlock();
         // ���ϰ� ����� �Ϸ� ��Ʈ ����
 
@@ -194,7 +216,7 @@ void Server::Accept()
 
 void Server::Disconnected(int key, int roomID)
 {
-    std::lock_guard<std::mutex> lock_guard(sm_lock);
+    std::lock_guard<std::mutex> lock_guard(sessions_lock);
     for (int i = 0; i < MAX_PLAYER; ++i) {
         //printf("%d\n", i->second);
         if (sessions[roomID][i].key == key) {
@@ -328,7 +350,7 @@ void Server::send_disconnect_player_packet(int key, int roomID)
 
 void Server::send_packet_to_players(int key, char* buf, int roomID)
 {
-   //sm_lock.lock();
+   //sessions_lock.lock();
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == TRUE)
             if (sessions[roomID][i].connected)
@@ -336,18 +358,18 @@ void Server::send_packet_to_players(int key, char* buf, int roomID)
                     send_packet(i, buf, roomID);
                 }
     }
-    //sm_lock.unlock();
+    //sessions_lock.unlock();
 }
 
 void Server::send_packet_to_allplayers(int roomID, char* buf)
 {
-   //sm_lock.lock();
+   //sessions_lock.lock();
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == TRUE)
             if (sessions[roomID][i].connected.load(std::memory_order_seq_cst))
                 send_packet(i, buf, roomID);
     }
-   //sm_lock.unlock();
+   //sessions_lock.unlock();
 }
 
 void Server::send_map_collapse_packet(int num, int map_num)
@@ -375,6 +397,32 @@ void Server::send_cloud_move_packet(float x, float z, int map_num)
     send_packet_to_allplayers(map_num, reinterpret_cast<char*>(&p));
 }
 
+void Server::send_add_monster(int key, int roomID, int to)
+{
+    mon_add_packet p;
+    p.size = sizeof(mon_add_packet);
+    p.type = PacketType::SC_monster_add;
+    p.key = key;
+    p.roomid = roomID;
+    p.Position = m_pBot->monsters[roomID][key].f3Position;
+    p.dx = m_pBot->monsters[roomID][key].dx;
+    p.dy = m_pBot->monsters[roomID][key].dy;
+    p.MonsterType = m_pBot->monsters[roomID][key].type;
+
+    send_packet(to, reinterpret_cast<char*>(&p), roomID);
+}
+
+void Server::send_remove_monster(int key, int roomID, int to)
+{
+    mon_remove_packet p;
+    p.size = sizeof(mon_remove_packet);
+    p.type = PacketType::SC_monster_remove;
+    p.key = key;
+    p.roomid = roomID;
+
+    send_packet(to, reinterpret_cast<char*>(&p), roomID);
+}
+
 void Server::game_end(int roomnum)
 {
     game_end_packet p;
@@ -384,12 +432,12 @@ void Server::game_end(int roomnum)
     p.roomid = roomnum;
 
     send_packet_to_allplayers(roomnum, reinterpret_cast<char*>(&p));
-    mm_lock.lock();
+    maps_lock.lock();
     maps.erase(roomnum);
-    mm_lock.unlock();
-    sm_lock.lock();
+    maps_lock.unlock();
+    sessions_lock.lock();
     sessions.erase(roomnum);
-    sm_lock.unlock();
+    sessions_lock.unlock();
 }
 
 bool Server::in_VisualField(SESSION a, SESSION b, int roomID)
@@ -424,6 +472,49 @@ unsigned short Server::calc_attack(int key, char attacktype)
 {
 
     return 0;
+}
+
+void Server::player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy)
+{
+    int client_key = key;
+
+    sessions[roomID][client_key].f3Position = pos;
+    sessions[roomID][client_key].dx.store(fmodf(sessions[roomID][client_key].dx.load() + dx, 360.f));
+    sessions[roomID][client_key].dy.store(fmodf(sessions[roomID][client_key].dy.load() + dy, 360.f));
+
+
+    std::lock_guard <std::mutex> lg(sessions[roomID][client_key].nm_lock);
+    std::unordered_set<int> old_nm;
+    std::unordered_set<int> new_nm;
+
+    if (!sessions[roomID][client_key].near_monster.empty())
+        old_nm = sessions[roomID][client_key].near_monster;
+
+    if (!m_pBot->monsters[roomID].empty()) {
+        for (auto& m : m_pBot->monsters[roomID]) {
+            if (in_VisualField(m, sessions[roomID][client_key], roomID)) {
+                new_nm.insert(m.key.load());
+            }
+        }
+    }
+
+    if (!new_nm.empty()) {
+        for (auto m : new_nm) {
+            if (old_nm.find(m) == old_nm.end()) {
+                sessions[roomID][client_key].near_monster.insert(m);
+                send_add_monster(m, roomID, key);
+            }
+        }
+    }
+
+    if (!old_nm.empty()) {
+        for (auto m : old_nm) {
+            if (new_nm.find(m) == new_nm.end()) {
+                sessions[roomID][client_key].near_monster.erase(m);
+                send_remove_monster(m, roomID, client_key);
+            }
+        }
+    }
 }
 
 void Server::process_packet(int key, char* buf, int roomID)
@@ -486,37 +577,20 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
-        p->type = SC_player_pos;
-        sessions[roomID][p->key].f3Position = p->Position;
-        float tx = fmodf(sessions[roomID][p->key].dx.load() + p->dx, 360.f);
-        sessions[roomID][p->key].dx.store(fmodf(sessions[roomID][p->key].dx.load() + p->dx, 360.f));
-        sessions[roomID][p->key].dy.store(fmodf(sessions[roomID][p->key].dy.load() + p->dy, 360.f));
-        //printf("move %f %f\n", sessions[roomID][p->key].f3Position.load(std::memory_order_seq_cst).x, sessions[roomID][p->key].f3Position.load(std::memory_order_seq_cst).z);
-        
-        std::unordered_set<int> old_nm = sessions[roomID][p->key].near_monster;
-        std::unordered_set<int> new_nm;
 
-        for (auto& m : m_pBot->monsters[roomID]) {
-            if (in_VisualField(m, sessions[roomID][p->key], roomID)) {
-                new_nm.insert(m.key);
-            }
-        }
+        player_move(p->key, roomID, p->Position, p->dx, p->dy);
 
-        for (auto& m : new_nm) {
-            if (old_nm.count(m) == 0) {
-                sessions[roomID][p->key].near_monster.insert(m);
-                send_add_monster(p->key, roomID);
-            }
-        }
-        for (auto& m : old_nm) {
-            if (new_nm.count(m) == 0) {
-                sessions[roomID][p->key].near_monster.erase(m);
-                send_remove_monster(p->key, roomID);
-            }
-        }
+        player_pos_packet packet;
+        packet.type = SC_player_pos;
+        packet.key = p->key;
+        packet.roomid = p->roomid;
+        packet.state = p->state;
+        packet.size = sizeof(player_pos_packet);
+        packet.Position = sessions[roomID][p->key].f3Position;
+        packet.dx = p->dx;
+        packet.dy = p->dy;
 
-        
-        send_packet_to_players(key, reinterpret_cast<char*>(p), roomID);
+        send_packet_to_players(key, reinterpret_cast<char*>(&packet), roomID);
         break;
     }
     case PacketType::CS_start_pos: {

@@ -14,6 +14,7 @@
 
 #include <thread>
 #include <unordered_map>
+#include <list>
 #include <vector>
 #include <array>
 #include <mysql.h>
