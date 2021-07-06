@@ -469,7 +469,7 @@ void CPacket::Login()
     SOCKADDR_IN serveraddr;
     ZeroMemory(&serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
-    serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
     serveraddr.sin_port = htons(GAMESERVERPORT);
     retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
     if (retval == SOCKET_ERROR) err_quit("connect()");

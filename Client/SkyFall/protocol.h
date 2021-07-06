@@ -23,6 +23,7 @@ constexpr float VIEWING_DISTANCE = 16666.f;
 
 #define SERVERIP   "127.0.0.1"
 //#define SERVERIP   "39.120.192.92"
+//#define SERVERIP   "192.168.0.118"
 
 struct OVER_EX
 {
