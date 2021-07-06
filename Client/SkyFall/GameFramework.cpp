@@ -746,7 +746,7 @@ void CGameFramework::FrameAdvance()
 	ProcessInput();
 	CheckCollision();
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
-    AnimateObjects();
+	AnimateObjects();
 
 
 	HRESULT hResult = m_pd3dCommandAllocator->Reset();
@@ -814,17 +814,17 @@ void CGameFramework::FrameAdvance()
 
 	XMFLOAT3 NowPosition = m_pPlayer->GetPosition();
 	if (m_BeforePosition.x != NowPosition.x || m_BeforePosition.y != NowPosition.y || m_BeforePosition.z != NowPosition.z
-		|| m_DegreeX != 0.0f || m_DegreeY != 0.0f )
+		|| m_DegreeX != 0.0f || m_DegreeY != 0.0f)
 	{
-		if (m_pPacket->Get_clientkey() < 0) return;
 		/*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
 			m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
 		if (false == m_pPlayer->GetAttack()) {
 			player_pos_packet p;
 			p.key = m_pPacket->Get_clientkey();
+			p.Position = NowPosition;
 			p.dx = m_DegreeX;
 			p.dy = m_DegreeY;
-			p.Position = NowPosition;
+
 			//p.MoveType = dwDirection;
 			p.size = sizeof(p);
 			p.state = 1;
@@ -840,14 +840,16 @@ void CGameFramework::FrameAdvance()
 				m_pPlayer->SetStanding(false);
 			}
 			p.type = CS_player_pos;
-			m_BeforePosition = NowPosition;
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+
+			m_BeforePosition = NowPosition;
+
 			m_DegreeX = 0.0f;
 			m_DegreeY = 0.0f;
 
 		}
 	}
-	else{
+	else {
 		if (false == m_pPlayer->GetStanding()) {
 			m_pPlayer->SetStanding(true);
 			player_stop_packet sp;
