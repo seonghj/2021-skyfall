@@ -287,10 +287,10 @@ void CPacket::ProcessPacket(char* buf)
                         m_pScene->AnimatePlayer(i, 2); // 2
                         break;
                     case PlayerMove::JUMP:
+                        printf("%d jump\n", p->key);
                         m_pScene->AnimatePlayer(i, 1);
                         break;
                     default:
-                        m_pScene->AnimatePlayer(i, 0);
                         break;
                     }
                     m_pScene->MovePlayer(i, p->Position);
@@ -408,6 +408,7 @@ void CPacket::ProcessPacket(char* buf)
             for (int i = 0; i < MAX_PLAYER; ++i) {
                 if (m_pScene->PlayerIDs[i] == p->key) {
                     m_pScene->AnimatePlayer(i, 0);
+                    m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
                     m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(6, 0);
                     m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(9, 0);
                 }

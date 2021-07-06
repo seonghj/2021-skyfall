@@ -157,7 +157,6 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		break;
 	case 1:	// LbuttonUp
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-		//m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(1, true);
 		//cout << "1" << endl;
 		break;

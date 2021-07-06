@@ -588,6 +588,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         packet.Position = sessions[roomID][p->key].f3Position;
         packet.dx = p->dx;
         packet.dy = p->dy;
+        packet.MoveType = p->MoveType;
 
         send_packet_to_players(key, reinterpret_cast<char*>(&packet), roomID);
         break;

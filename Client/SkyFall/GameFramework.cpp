@@ -703,12 +703,6 @@ void CGameFramework::AnimateObjects()
 		m_p1HswordPlayer->Animate(fTimeElapsed);
 	if (m_pBowPlayer)
 		m_pBowPlayer->Animate(fTimeElapsed);
-	
-
-	/*for (int i = 0; i < OTHER_PLAYER_NUM; i++)
-	{
-		m_ppOtherPlayer[i]->Animate(fTimeElapsed);
-	}*/
 }
 
 void CGameFramework::WaitForGpuComplete()
@@ -761,7 +755,6 @@ void CGameFramework::FrameAdvance()
 	d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	d3dResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 	m_pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);
-
 	D3D12_CPU_DESCRIPTOR_HANDLE d3dRtvCPUDescriptorHandle = m_pd3dRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	d3dRtvCPUDescriptorHandle.ptr += (m_nSwapChainBufferIndex * m_nRtvDescriptorIncrementSize);
 
