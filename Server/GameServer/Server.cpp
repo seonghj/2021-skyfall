@@ -478,41 +478,40 @@ void Server::player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, f
 {
     int client_key = key;
 
-    sessions[roomID][client_key].f3Position = pos;
     sessions[roomID][client_key].dx.store(fmodf(sessions[roomID][client_key].dx.load() + dx, 360.f));
     sessions[roomID][client_key].dy.store(fmodf(sessions[roomID][client_key].dy.load() + dy, 360.f));
-
+    
+    if (sessions[roomID][client_key].f3Position.load().x == pos.x
+        && sessions[roomID][client_key].f3Position.load().z == pos.z) {
+        sessions[roomID][client_key].f3Position = pos;
+        return;
+    }
+    else
+        sessions[roomID][client_key].f3Position = pos;
 
     std::lock_guard <std::mutex> lg(sessions[roomID][client_key].nm_lock);
     std::unordered_set<int> old_nm;
     std::unordered_set<int> new_nm;
 
-    if (!sessions[roomID][client_key].near_monster.empty())
-        old_nm = sessions[roomID][client_key].near_monster;
+    old_nm = sessions[roomID][client_key].near_monster;
 
-    if (!m_pBot->monsters[roomID].empty()) {
-        for (auto& m : m_pBot->monsters[roomID]) {
-            if (in_VisualField(m, sessions[roomID][client_key], roomID)) {
-                new_nm.insert(m.key.load());
-            }
+    for (auto& m : m_pBot->monsters[roomID]) {
+        if (in_VisualField(m, sessions[roomID][client_key], roomID)) {
+            new_nm.insert(m.key.load());
         }
     }
 
-    if (!new_nm.empty()) {
-        for (auto m : new_nm) {
-            if (old_nm.find(m) == old_nm.end()) {
-                sessions[roomID][client_key].near_monster.insert(m);
-                send_add_monster(m, roomID, key);
-            }
+    for (auto m : new_nm) {
+        if (old_nm.find(m) == old_nm.end()) {
+            sessions[roomID][client_key].near_monster.insert(m);
+            send_add_monster(m, roomID, key);
         }
     }
 
-    if (!old_nm.empty()) {
-        for (auto m : old_nm) {
-            if (new_nm.find(m) == new_nm.end()) {
-                sessions[roomID][client_key].near_monster.erase(m);
-                send_remove_monster(m, roomID, client_key);
-            }
+    for (auto m : old_nm) {
+        if (new_nm.find(m) == new_nm.end()) {
+            sessions[roomID][client_key].near_monster.erase(m);
+            send_remove_monster(m, roomID, client_key);
         }
     }
 }

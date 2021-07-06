@@ -31,9 +31,9 @@ bool DB::Connection()
     }
 }
 
-bool DB::Send_Query(char* buf)
+bool DB::Send_Query(char* query)
 {
-    int state = mysql_query(connection, buf);
+    int state = mysql_query(connection, query);
     if (state != 0)
     {
         printf("MySQL query error : %s\n", mysql_error(&conn));
@@ -41,4 +41,9 @@ bool DB::Send_Query(char* buf)
     }
     else
         return 1;
+}
+
+bool DB::Recv_Data(char* query)
+{
+
 }

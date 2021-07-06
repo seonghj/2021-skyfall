@@ -11,6 +11,7 @@ public:
 	char query[255];
 
 	bool Connection();
-	bool Send_Query(char* buf);
+	bool Send_Query(char* query);
+	bool Recv_Data(char* query);
 };
 
