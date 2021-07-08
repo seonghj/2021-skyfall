@@ -87,6 +87,7 @@ public:
     int SetroomID();
     void Set_pTimer(Timer* t) { m_pTimer = t; }
     void Set_pBot(Bot* b) { m_pBot = b; }
+    void Set_pDB(DB* d) { m_pDB = d; }
 
     void ConnectLobby();
 
@@ -126,6 +127,7 @@ private:
     HANDLE                         hcp;
     Timer*                         m_pTimer = NULL;
     Bot*                           m_pBot = NULL;
+    DB*                            m_pDB = NULL;
 
     std::unordered_map <int, std::array<SESSION, 20>> sessions; // ¹æID, Player¹è¿­
     std::unordered_map <int, Map>                     maps;

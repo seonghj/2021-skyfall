@@ -1,10 +1,5 @@
 #include "DB.h"
 
-#define DB_HOST "database-1.cjfrzsztpm1z.ap-northeast-2.rds.amazonaws.com"
-#define DB_USER "admin"
-#define DB_PW "tjdwo104"
-#define DB_NAME "sys"
-
 bool DB::Connection()
 {
     printf("MySQL Ver. %s\n", mysql_get_client_info());
@@ -43,7 +38,88 @@ bool DB::Send_Query(char* query)
         return 1;
 }
 
-bool DB::Recv_Data(char* query)
-{
 
+bool DB::Connection_ODBC()
+{
+    // 환경 구성
+    if (SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &hEnv)
+        != SQL_SUCCESS)
+        return false;
+    // 버전 정보 설정
+    if (SQLSetEnvAttr(hEnv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER*)SQL_OV_ODBC3, SQL_IS_INTEGER)
+        != SQL_SUCCESS)
+        return false;
+    if (SQLAllocHandle(SQL_HANDLE_DBC, hEnv, &hDbc)
+        != SQL_SUCCESS)
+        return false;
+    // 접속
+    SQLSetConnectAttr(hDbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0);
+    if (SQLConnect(hDbc, (SQLWCHAR*)L"skyfall", SQL_NTS
+        , (SQLWCHAR*)L"admin", SQL_NTS
+        , (SQLWCHAR*)L"tjdwo1034", SQL_NTS)
+        != SQL_SUCCESS)
+        return false;
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
+
+    return true;
+}
+
+void DB::Disconnection_ODBC()
+{
+    if(hStmt)
+        SQLFreeHandle(SQL_HANDLE_STMT, hStmt);
+    if(hDbc)
+        SQLDisconnect(hDbc);
+    if(hDbc)
+        SQLFreeHandle(SQL_HANDLE_DBC, hDbc);
+    if(hEnv)
+        SQLFreeHandle(SQL_HANDLE_STMT, hStmt);
+}
+
+bool DB::Search_ID(char* id)
+{
+    wchar_t query[100] = L"SELECT * FROM skyfall.UserInfo WHERE ID = '";
+    wchar_t wcID[20];
+
+    MultiByteToWideChar(CP_ACP, 0, id, -1, wcID, sizeof(id));
+
+    wcscat_s(query, wcID);
+    wcscat_s(query, L"'");
+
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
+        != SQL_SUCCESS) {
+        printf("Query invaild\n");
+        return false;
+    }
+
+    if (SQLFetch(hStmt) == SQL_NO_DATA) {
+        return false;
+    }
+
+    if (hStmt) SQLCloseCursor(hStmt);
+
+    return true;
+}
+
+bool DB::Insert_ID(char* id)
+{
+    wchar_t query[100] = L"insert into skyfall.UserInfo(ID) VALUES ('";
+    wchar_t wcID[20];
+
+    MultiByteToWideChar(CP_ACP, 0, id, -1, wcID, sizeof(id));
+
+    wcscat_s(query, wcID);
+    wcscat_s(query, L"')");
+
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
+        != SQL_SUCCESS) {
+        printf("Query invaild\n");
+        return false;
+    }
+
+    if (hStmt) SQLCloseCursor(hStmt);
+
+    return true;
 }

@@ -70,7 +70,10 @@ void Map::Set_map()
 	ismove = true;
 	Set_wind();
 	Set_cloudpos();
-	print_Map();
+	//print_Map();
+
+
+
 	cloud_move();
 }
 

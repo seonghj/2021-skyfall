@@ -83,11 +83,11 @@ int Server::SetroomID()
                 ++i;
             }
 
-            /*maps_lock.lock();
+            maps_lock.lock();
             maps.emplace(cnt, Map(cnt));
             maps[cnt].SetNum(cnt);
             maps[cnt].init_Map(this, m_pTimer);
-            maps_lock.unlock();*/
+            maps_lock.unlock();
 
             printf("create game room - %d\n", cnt);
 
@@ -172,8 +172,6 @@ void Server::Accept()
             closesocket(client_sock);
             break;
         }
-
-
 
         sessions[roomID][client_key].init();
         sessions[roomID][client_key].connected = TRUE;
@@ -534,17 +532,6 @@ void Server::process_packet(int key, char* buf, int roomID)
         printf("client_connected: IP =%s, port=%d key = %d Room = %d\n",
             inet_ntoa(sessions[roomID][client_key].clientaddr.sin_addr)
             , ntohs(sessions[roomID][client_key].clientaddr.sin_port), client_key, roomID);
-
-        /*for (int i = 0; i < MAX_PLAYER; ++i) {
-            if (TRUE == sessions[roomID][i].connected)
-                if ((i != client_key))
-                    send_add_player_packet(i, client_key, roomID);
-        }
-        for (int i = 0; i < MAX_PLAYER; ++i) {
-            if (TRUE == sessions[roomID][i].connected)
-                if ((i != client_key))
-                    send_add_player_packet(client_key, i, roomID);
-        }*/
 
         for (auto& s : sessions[roomID]) {
             if ((TRUE == s.connected) && (s.key.load() != client_key)){
