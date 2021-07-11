@@ -54,9 +54,11 @@ public:
     std::atomic<float>      dx = 0;
     std::atomic<float>      dy = 0;
     
-    std::atomic<short>      weapon = PlayerType::PT_BASIC;
+    std::atomic<short>      weapon1 = PlayerType::PT_BASIC;
+    std::atomic<short>      weapon2 = PlayerType::PT_BASIC;
     std::atomic<short>      helmet = 0;
     std::atomic<short>      shoes = 0;
+    std::atomic<short>      armor = 0;
 
     std::atomic<float>      hp = 0;
     std::atomic<float>      lv = 0;
@@ -72,6 +74,7 @@ public:
 };
 
 class Map;
+class DB;
 
 class Server {
 public:
@@ -104,6 +107,7 @@ public:
 
     void send_player_key_packet(int key, int roomID);
     void send_player_loginOK_packet(int key, int roomID);
+    void send_player_loginFail_packet(int key, int roomID);
     void send_add_player_packet(int key, int to, int roomID);
     void send_remove_player_packet(int key, int roomID);
     void send_disconnect_player_packet(int key,int roomID);

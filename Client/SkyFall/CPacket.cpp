@@ -1,6 +1,7 @@
 #pragma once
 #include "CPacket.h"
 #include <iostream>
+#include <random>
 #pragma warning(disable : 4996)
 
 CPacket::CPacket()
@@ -182,6 +183,7 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::SC_player_loginFail: {
+        printf("Login fail\n");
         break;
     }
     case PacketType::SC_player_loginOK: {
@@ -463,8 +465,10 @@ void CPacket::Login()
 
     cout << "ID를 입력하시오: ";
     cin >> ID;*/
-
-    strcpy_s(userID, "1221312");
+    std::random_device rd;
+    std::mt19937_64 gen(rd());
+    std::uniform_int_distribution<int> dis(0, 5000);
+    sprintf_s(userID, "TEST%d", dis(gen));
 
     // connect()
     SOCKADDR_IN serveraddr;

@@ -78,23 +78,54 @@ void DB::Disconnection_ODBC()
         SQLFreeHandle(SQL_HANDLE_STMT, hStmt);
 }
 
-bool DB::Search_ID(char* id)
+bool DB::Search_ID(char* id, bool* isLogin)
 {
-    wchar_t query[100] = L"SELECT * FROM skyfall.UserInfo WHERE ID = '";
+    wchar_t query[512] = L"SELECT isLogin FROM skyfall.UserInfo WHERE ID = '";
     wchar_t wcID[20];
+    SQLLEN len = 0;
 
     MultiByteToWideChar(CP_ACP, 0, id, -1, wcID, sizeof(id));
 
     wcscat_s(query, wcID);
     wcscat_s(query, L"'");
 
+    //wprintf(L"%s\n", query);
+
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
+
     if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
         != SQL_SUCCESS) {
         printf("Query invaild\n");
         return false;
     }
+    SQLBindCol(hStmt, 1, SQL_C_TINYINT, isLogin, sizeof(bool), &len);
+    if (SQLFetch(hStmt) == SQL_NO_DATA) return false;
+    if (hStmt) SQLCloseCursor(hStmt);
 
-    if (SQLFetch(hStmt) == SQL_NO_DATA) {
+    return true;
+}
+
+bool DB::Insert_ID(char* id)
+{
+    wchar_t query[512] = L"insert into skyfall.UserInfo VALUES ('";
+    wchar_t wcID[20];
+
+    MultiByteToWideChar(CP_ACP, 0, id, -1, wcID, sizeof(id));
+
+    wcscat_s(query, wcID);
+    wcscat_s(query, L"', 1)");
+
+    //wprintf(L"%s\n", query);
+
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
+
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
+        != SQL_SUCCESS) {
+        printf("Query invaild\n");
         return false;
     }
 
@@ -103,15 +134,75 @@ bool DB::Search_ID(char* id)
     return true;
 }
 
-bool DB::Insert_ID(char* id)
+bool DB::Logout_player(char* id)
 {
-    wchar_t query[100] = L"insert into skyfall.UserInfo(ID) VALUES ('";
+    wchar_t query[512] = L"UPDATE skyfall.UserInfo SET isLogin = 0 WHERE ID = '";
     wchar_t wcID[20];
 
     MultiByteToWideChar(CP_ACP, 0, id, -1, wcID, sizeof(id));
-
     wcscat_s(query, wcID);
-    wcscat_s(query, L"')");
+    wcscat_s(query, L"'");
+
+    //wprintf(L"%s\n", query);
+
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
+
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
+        != SQL_SUCCESS) {
+        printf("Query invaild\n");
+        return false;
+    }
+
+    if (hStmt) SQLCloseCursor(hStmt);
+
+    return true;
+}
+
+bool DB::Send_player_record(const SESSION& player, int survival_time, int rank)
+{
+    wchar_t query[512] = L"insert into skyfall.UserRecord VALUES (";
+
+    char player_info[512];
+    wchar_t wc_player_info[512];
+    sprintf_s(player_info, sizeof(player_info)
+        , "'%s', %d, %d, %d, %d, %d, %d, %d)"
+        , player.id, survival_time, rank, player.weapon1.load(), player.weapon2.load()
+        , player.helmet.load(), player.shoes.load(), player.armor.load());
+    MultiByteToWideChar(CP_ACP, 0, player_info, -1, wc_player_info, sizeof(player_info));
+    wcscat_s(query, wc_player_info);
+
+    //wprintf(L"%s\n", query);
+
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
+
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
+        != SQL_SUCCESS) {
+        printf("Query invaild\n");
+        return false;
+    }
+
+    if (hStmt) SQLCloseCursor(hStmt);
+
+    return true;
+}
+
+bool DB::Get_player_record(SESSION& info, char* ID, int survival_time, int rank)
+{
+    wchar_t query[512] = L"SELECT * skyfall.UserRecord WHERE User_ID = '";
+    wchar_t wcID[20];
+    MultiByteToWideChar(CP_ACP, 0, ID, -1, wcID, sizeof(ID));
+    wcscat_s(query, wcID);
+    wcscat_s(query, L"'");
+
+    //wprintf(L"%s\n", query);
+
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
 
     if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
         != SQL_SUCCESS) {

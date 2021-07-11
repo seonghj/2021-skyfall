@@ -22,18 +22,6 @@ int main(int argc, char* argv[])
 		std::cout << "DB disconnected\n";
 	}
 
-	bool b;
-
-	char id[10] = "test";
-
-	b = g_pDB->Search_ID(id);
-
-	printf("%d\n", b);
-
-	b = g_pDB->Insert_ID(id);
-
-	printf("%d\n", b);
-
 	g_pServer->Init();
 	g_pServer->Set_pBot(g_pBot);
 	g_pServer->Set_pDB(g_pDB);

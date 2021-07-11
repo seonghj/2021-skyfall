@@ -21,9 +21,11 @@ void SESSION::init()
     dx = 0;
     dy = 0;
 
-    weapon = PlayerType::PT_BASIC;
+    weapon1 = PlayerType::PT_BASIC;
+    weapon2 = PlayerType::PT_BASIC;
     helmet = 0;
     shoes = 0;
+    armor = 0;
 
     hp = 0;
     lv = 0;
@@ -229,6 +231,7 @@ void Server::Disconnected(int key, int roomID)
             break;
         }
     }
+    m_pDB->Logout_player(sessions[roomID][key].id);
     //sessions[roomID].clear();
 }
 
@@ -296,6 +299,16 @@ void Server::send_player_loginOK_packet(int key, int roomID)
     p.Position = sessions[roomID][key].f3Position.load();
     p.dx = sessions[roomID][key].dx.load();
     p.dy = sessions[roomID][key].dy.load();
+    send_packet(key, reinterpret_cast<char*>(&p), roomID);
+}
+
+void Server::send_player_loginFail_packet(int key, int roomID)
+{
+    player_loginFail_packet p;
+    p.key = key;
+    p.size = sizeof(player_loginFail_packet);
+    p.type = PacketType::SC_player_loginFail;
+    p.roomid = roomID;
     send_packet(key, reinterpret_cast<char*>(&p), roomID);
 }
 
@@ -522,6 +535,19 @@ void Server::process_packet(int key, char* buf, int roomID)
         player_login_packet* p = reinterpret_cast<player_login_packet*>(buf);
 
         int client_key = p->key;
+        bool is_Login = false;
+
+        bool b;
+        b = m_pDB->Search_ID(p->id, &is_Login);
+
+        if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
+
+        printf("%d\n", is_Login);
+        if (is_Login) {
+            send_player_loginFail_packet(client_key, sessions[roomID][client_key].roomID);
+            Disconnected(client_key, sessions[roomID][client_key].roomID);
+            break;
+        }
 
         sessions[roomID][client_key].f3Position = XMFLOAT3(50.f, 150.0f, 50.f);
 
