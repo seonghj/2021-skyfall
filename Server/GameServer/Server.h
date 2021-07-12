@@ -64,6 +64,8 @@ public:
     std::atomic<float>      lv = 0;
     std::atomic<float>      speed = 20;
 
+    std::atomic<short>      inventory[20]{};
+
     void init();
 
 public:
@@ -118,6 +120,8 @@ public:
 
     void send_add_monster(int key, int roomID, int to);
     void send_remove_monster(int key, int roomID, int to);
+
+    void send_player_record(int key, int roomID, const SESSION& s, int time, int rank);
     
     void game_end(int roomnum);
 

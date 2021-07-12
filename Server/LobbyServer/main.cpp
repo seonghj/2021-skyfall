@@ -3,18 +3,26 @@
 #include "Server.h"
 #include "protocol.h"
 
-Server* s = new Server;
-DB* db = new DB;
+Server* g_pServer = new Server;
+DB* g_pDB = new DB;
 
 
 int main(int argc, char* argv[])
 {
 	std::wcout.imbue(std::locale("korean"));
-   //db->Connection();
+	bool DB_Connected;
 
-	s->Init();
+	DB_Connected = g_pDB->Connection_ODBC();
+	if (DB_Connected) std::cout << "DB connected\n";
+	else {
+		g_pDB->Disconnection_ODBC();
+		std::cout << "DB disconnected\n";
+	}
 
-	s->Thread_join();
+	g_pServer->Set_m_pDB(g_pDB);
+	g_pServer->Init();
+
+	g_pServer->Thread_join();
 
    //mysql_close(db->connection);
 

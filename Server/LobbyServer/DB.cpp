@@ -1,10 +1,5 @@
 #include "DB.h"
 
-#define DB_HOST "database-1.cjfrzsztpm1z.ap-northeast-2.rds.amazonaws.com"
-#define DB_USER "admin"
-#define DB_PW "tjdwo104"
-#define DB_NAME "sys"
-
 bool DB::Connection()
 {
     printf("MySQL Ver. %s\n", mysql_get_client_info());
@@ -31,9 +26,9 @@ bool DB::Connection()
     }
 }
 
-bool DB::Send_Query(char* buf)
+bool DB::Send_Query(char* query)
 {
-    int state = mysql_query(connection, buf);
+    int state = mysql_query(connection, query);
     if (state != 0)
     {
         printf("MySQL query error : %s\n", mysql_error(&conn));
@@ -41,4 +36,194 @@ bool DB::Send_Query(char* buf)
     }
     else
         return 1;
+}
+
+
+bool DB::Connection_ODBC()
+{
+    // 환경 구성
+    if (SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &hEnv)
+        != SQL_SUCCESS)
+        return false;
+    // 버전 정보 설정
+    if (SQLSetEnvAttr(hEnv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER*)SQL_OV_ODBC3, SQL_IS_INTEGER)
+        != SQL_SUCCESS)
+        return false;
+    if (SQLAllocHandle(SQL_HANDLE_DBC, hEnv, &hDbc)
+        != SQL_SUCCESS)
+        return false;
+    // 접속
+    SQLSetConnectAttr(hDbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0);
+    if (SQLConnect(hDbc, (SQLWCHAR*)L"skyfall", SQL_NTS
+        , (SQLWCHAR*)L"admin", SQL_NTS
+        , (SQLWCHAR*)L"tjdwo1034", SQL_NTS)
+        != SQL_SUCCESS)
+        return false;
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
+
+    return true;
+}
+
+void DB::Disconnection_ODBC()
+{
+    if (hStmt)
+        SQLFreeHandle(SQL_HANDLE_STMT, hStmt);
+    if (hDbc)
+        SQLDisconnect(hDbc);
+    if (hDbc)
+        SQLFreeHandle(SQL_HANDLE_DBC, hDbc);
+    if (hEnv)
+        SQLFreeHandle(SQL_HANDLE_STMT, hStmt);
+}
+
+bool DB::Search_ID(char* id, bool* isLogin)
+{
+    wchar_t query[512] = L"SELECT isLogin FROM skyfall.UserInfo WHERE ID = '";
+    wchar_t wcID[20];
+    SQLLEN len = 0;
+
+    MultiByteToWideChar(CP_ACP, 0, id, -1, wcID, sizeof(id));
+
+    wcscat_s(query, wcID);
+    wcscat_s(query, L"'");
+
+    //wprintf(L"%s\n", query);
+
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
+
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
+        != SQL_SUCCESS) {
+        printf("Query invaild\n");
+        return false;
+    }
+    SQLBindCol(hStmt, 1, SQL_C_TINYINT, isLogin, sizeof(bool), &len);
+    if (SQLFetch(hStmt) == SQL_NO_DATA) return false;
+    if (hStmt) SQLCloseCursor(hStmt);
+
+    return true;
+}
+
+bool DB::Insert_ID(char* id)
+{
+    wchar_t query[512] = L"insert into skyfall.UserInfo VALUES ('";
+    wchar_t wcID[20];
+
+    MultiByteToWideChar(CP_ACP, 0, id, -1, wcID, sizeof(id));
+
+    wcscat_s(query, wcID);
+    wcscat_s(query, L"', 1)");
+
+    //wprintf(L"%s\n", query);
+
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
+
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
+        != SQL_SUCCESS) {
+        printf("Query invaild\n");
+        return false;
+    }
+
+    if (hStmt) SQLCloseCursor(hStmt);
+
+    return true;
+}
+
+bool DB::Logout_player(char* id)
+{
+    wchar_t query[512] = L"UPDATE skyfall.UserInfo SET isLogin = 0 WHERE ID = '";
+    wchar_t wcID[20];
+
+    MultiByteToWideChar(CP_ACP, 0, id, -1, wcID, sizeof(id));
+    wcscat_s(query, wcID);
+    wcscat_s(query, L"'");
+
+    //wprintf(L"%s\n", query);
+
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
+
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
+        != SQL_SUCCESS) {
+        printf("Query invaild\n");
+        return false;
+    }
+
+    if (hStmt) SQLCloseCursor(hStmt);
+
+    return true;
+}
+
+bool DB::Send_player_record(const SESSION& player, int survival_time, int rank)
+{
+    wchar_t query[512] = L"insert into skyfall.UserRecord VALUES (";
+
+    char player_info[512];
+    wchar_t wc_player_info[512];
+    sprintf_s(player_info, sizeof(player_info)
+        , "'%s', %d, %d, %d, %d, %d, %d, %d)"
+        , player.id, survival_time, rank, player.weapon1.load(), player.weapon2.load()
+        , player.helmet.load(), player.shoes.load(), player.armor.load());
+    MultiByteToWideChar(CP_ACP, 0, player_info, -1, wc_player_info, sizeof(player_info));
+    wcscat_s(query, wc_player_info);
+
+    //wprintf(L"%s\n", query);
+
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
+
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
+        != SQL_SUCCESS) {
+        printf("Query invaild\n");
+        return false;
+    }
+    if (hStmt) SQLCloseCursor(hStmt);
+
+    return true;
+}
+
+bool DB::Get_player_record(char* ID, SESSION& session, int* survival_time, int* rank)
+{
+    wchar_t query[512] = L"SELECT * FROM skyfall.UserRecord WHERE User_ID = '";
+    wchar_t wcID[20];
+    SQLLEN len = 0;
+
+    MultiByteToWideChar(CP_ACP, 0, ID, -1, wcID, sizeof(ID));
+    wcscat_s(query, wcID);
+    wcscat_s(query, L"'");
+
+    //wprintf(L"%s\n", query);
+
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
+
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
+        != SQL_SUCCESS) {
+        printf("Query invaild\n");
+        return false;
+    }
+    SQLBindCol(hStmt, 1, SQL_C_CHAR, session.id, sizeof(session.id), &len);
+    SQLBindCol(hStmt, 2, SQL_INTEGER, survival_time, sizeof(int), &len);
+    SQLBindCol(hStmt, 3, SQL_INTEGER, rank, sizeof(int), &len);
+    SQLBindCol(hStmt, 4, SQL_INTEGER, &session.weapon1, sizeof(int), &len);
+    SQLBindCol(hStmt, 5, SQL_INTEGER, &session.weapon2, sizeof(int), &len);
+    SQLBindCol(hStmt, 6, SQL_INTEGER, &session.helmet, sizeof(int), &len);
+    SQLBindCol(hStmt, 7, SQL_INTEGER, &session.shoes, sizeof(int), &len);
+    SQLBindCol(hStmt, 8, SQL_INTEGER, &session.armor, sizeof(int), &len);
+    if (SQLFetch(hStmt) == SQL_NO_DATA) return false;
+    if (hStmt) SQLCloseCursor(hStmt);
+
+    /* printf("%s, %d, %d, %d, %d, %d, %d, %d\n", session.id, *survival_time, *rank
+         , session.weapon1.load(), session.weapon2.load(), session.helmet.load()
+         , session.shoes.load(), session.armor.load());*/
+
+    return true;
 }

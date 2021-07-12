@@ -469,6 +469,7 @@ void CPacket::Login()
     std::mt19937_64 gen(rd());
     std::uniform_int_distribution<int> dis(0, 5000);
     sprintf_s(userID, "TEST%d", dis(gen));
+    //strcpy(userID, "TEST");
 
     // connect()
     SOCKADDR_IN serveraddr;

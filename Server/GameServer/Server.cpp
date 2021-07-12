@@ -30,6 +30,9 @@ void SESSION::init()
     hp = 0;
     lv = 0;
     speed = 20;
+
+    for (int i = 0; i < INVENTORY_MAX; i++)
+        inventory[i] = 0;
 }
 
 Server::Server()
@@ -434,6 +437,26 @@ void Server::send_remove_monster(int key, int roomID, int to)
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
+void Server::send_player_record(int key, int roomID
+    , const SESSION& s, int time, int rank)
+{
+    player_record_packet p;
+    p.size = sizeof(player_record_packet);
+    p.type = PacketType::SC_player_record;
+    p.key = key;
+    p.roomid = roomID;
+    strcpy(p.id, s.id);
+    p.survivalTime = time;
+    p.rank = rank;
+    p.weapon1 = s.weapon1;
+    p.weapon2 = s.weapon2;
+    p.helmet = s.helmet;
+    p.shoes = s.shoes;
+    p.armor = s.armor;
+
+    send_packet(key, reinterpret_cast<char*>(&p), roomID);
+}
+
 void Server::game_end(int roomnum)
 {
     game_end_packet p;
@@ -542,12 +565,19 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
 
-        printf("%d\n", is_Login);
         if (is_Login) {
             send_player_loginFail_packet(client_key, sessions[roomID][client_key].roomID);
             Disconnected(client_key, sessions[roomID][client_key].roomID);
             break;
         }
+
+        SESSION temp;
+        int t = 0;
+        int r = 0;
+        m_pDB->Get_player_record(p->id, temp, &t, &r);
+        printf("%s, %d, %d, %d, %d, %d, %d, %d\n", temp.id, t, r
+            , temp.weapon1.load(), temp.weapon2.load(), temp.helmet.load()
+            , temp.shoes.load(), temp.armor.load());
 
         sessions[roomID][client_key].f3Position = XMFLOAT3(50.f, 150.0f, 50.f);
 

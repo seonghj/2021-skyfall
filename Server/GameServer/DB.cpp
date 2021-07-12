@@ -184,16 +184,17 @@ bool DB::Send_player_record(const SESSION& player, int survival_time, int rank)
         printf("Query invaild\n");
         return false;
     }
-
     if (hStmt) SQLCloseCursor(hStmt);
 
     return true;
 }
 
-bool DB::Get_player_record(SESSION& info, char* ID, int survival_time, int rank)
+bool DB::Get_player_record(char* ID, SESSION& session, int* survival_time, int* rank)
 {
-    wchar_t query[512] = L"SELECT * skyfall.UserRecord WHERE User_ID = '";
+    wchar_t query[512] = L"SELECT * FROM skyfall.UserRecord WHERE User_ID = '";
     wchar_t wcID[20];
+    SQLLEN len = 0;
+
     MultiByteToWideChar(CP_ACP, 0, ID, -1, wcID, sizeof(ID));
     wcscat_s(query, wcID);
     wcscat_s(query, L"'");
@@ -209,8 +210,20 @@ bool DB::Get_player_record(SESSION& info, char* ID, int survival_time, int rank)
         printf("Query invaild\n");
         return false;
     }
-
+    SQLBindCol(hStmt, 1, SQL_C_CHAR, session.id, sizeof(session.id), &len);
+    SQLBindCol(hStmt, 2, SQL_INTEGER, survival_time, sizeof(int), &len);
+    SQLBindCol(hStmt, 3, SQL_INTEGER, rank, sizeof(int), &len);
+    SQLBindCol(hStmt, 4, SQL_INTEGER, &session.weapon1, sizeof(int), &len);
+    SQLBindCol(hStmt, 5, SQL_INTEGER, &session.weapon2, sizeof(int), &len);
+    SQLBindCol(hStmt, 6, SQL_INTEGER, &session.helmet, sizeof(int), &len);
+    SQLBindCol(hStmt, 7, SQL_INTEGER, &session.shoes, sizeof(int), &len);
+    SQLBindCol(hStmt, 8, SQL_INTEGER, &session.armor, sizeof(int), &len);
+    if (SQLFetch(hStmt) == SQL_NO_DATA) return false;
     if (hStmt) SQLCloseCursor(hStmt);
+
+   /* printf("%s, %d, %d, %d, %d, %d, %d, %d\n", session.id, *survival_time, *rank
+        , session.weapon1.load(), session.weapon2.load(), session.helmet.load()
+        , session.shoes.load(), session.armor.load());*/
 
     return true;
 }

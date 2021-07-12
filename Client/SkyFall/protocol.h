@@ -19,11 +19,12 @@ constexpr int MAP_BREAK_TIME = 30;
 
 constexpr float VIEWING_DISTANCE = 16666.f;
 
+constexpr int INVENTORY_MAX = 20;
+
 // 1 = 3cm
 
 #define SERVERIP   "127.0.0.1"
 //#define SERVERIP   "39.120.192.92"
-//#define SERVERIP   "192.168.0.118"
 
 struct OVER_EX
 {
@@ -76,6 +77,7 @@ enum PacketType {
 	SC_monster_pos,
 	SC_monster_attack,
 	SC_monster_damaged,
+	SC_player_record,
 
 
 	CS_player_login,
@@ -280,5 +282,16 @@ struct mon_add_packet : public Packet {
 };
 
 struct mon_remove_packet : public Packet {
+};
+
+struct player_record_packet : public Packet {
+	char id[50];
+	short survivalTime;
+	short rank;
+	short weapon1;
+	short weapon2;
+	short helmet;
+	short shoes;
+	short armor;
 };
 #pragma pack(pop)

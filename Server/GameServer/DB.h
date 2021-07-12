@@ -38,6 +38,6 @@ public:
 	bool Insert_ID(char* id);
 	bool Logout_player(char* id);
 	bool Send_player_record(const SESSION& player, int survival_time, int rank);
-	bool Get_player_record(SESSION& info, char* ID, int survival_time, int rank);
+	bool Get_player_record(char* ID, SESSION& session, int* survival_time, int* rank);
 };
 
