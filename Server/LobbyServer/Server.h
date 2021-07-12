@@ -8,45 +8,52 @@ class SESSION
 public:
 
     SESSION() {}
-    SESSION(const int& i) { key = i; }
+    SESSION(const SESSION& session) {}
+    SESSION(BOOL b) : connected(b) {}
     ~SESSION() {}
 
-    OVER_EX     over;
-    SOCKET      sock;
-    SOCKADDR_IN clientaddr;
-    int         addrlen;
-    char        packet_buf[BUFSIZE];
+    OVER_EX                  over;
+    SOCKET                   sock;
+    SOCKADDR_IN              clientaddr;
+    int                      addrlen;
+    char                     packet_buf[BUFSIZE];
 
     char* packet_start;
     char* recv_start;
 
-    bool        connected = false;
-    bool        isready = false;
-    bool        playing = false;
+    std::atomic<bool>        connected = false;
+    bool                     isready = false;
+    bool                     playing = false;
+    int                      prev_size;
+    std::atomic<int>         key = -1;
+    std::atomic<int>         roomID = -1;
+    char                     id[50];
 
-    int         prev_size;
-    int         key;
-    int         roomID;
-    char        id[50];
+    // 0 Á×À½ / 1 »ýÁ¸
+    std::atomic<bool>       state = 0;
+    std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+    std::atomic<float>      dx = 0;
+    std::atomic<float>      dy = 0;
 
-    //// 0 Á×À½ / 1 »ýÁ¸
-    //std::atomic<bool>       state = 0;
+    std::atomic<short>      weapon1 = PlayerType::PT_BASIC;
+    std::atomic<short>      weapon2 = PlayerType::PT_BASIC;
+    std::atomic<short>      helmet = 0;
+    std::atomic<short>      shoes = 0;
+    std::atomic<short>      armor = 0;
 
-    //std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-    //std::atomic<float>      dx = 0;
-    //std::atomic<float>      dy = 0;
-    //std::atomic<float>      dz = 0;
-    ///*std::atomic<float>      x = 0;
-    //std::atomic<float>      y = 0;
-    //std::atomic<float>      z = 0;*/
+    std::atomic<float>      hp = 0;
+    std::atomic<float>      lv = 0;
+    std::atomic<float>      speed = 20;
 
-    //std::atomic<short>        weapon = 0;
-    //std::atomic<short>        helmet = 0;
-    //std::atomic<short>        shoes = 0;
+    std::atomic<short>      inventory[INVENTORY_MAX]{};
 
-    //std::atomic<float>      hp = 0;
-    //std::atomic<float>      lv = 0;
-    //std::atomic<float>      speed = 10;
+    void init();
+
+public:
+    std::unordered_set<int> near_monster;
+
+    std::mutex               s_lock;
+    std::mutex               nm_lock;
 };
 
 //namespace std {
@@ -89,8 +96,12 @@ public:
 
     void send_game_start_packet(char id);
 
+    void Set_m_pDB(DB* d) { m_pDB = d; }
+
 private:
     HANDLE hcp;
+
+    DB* m_pDB = NULL;
 
     bool Connected_Game_Server = false;
 
