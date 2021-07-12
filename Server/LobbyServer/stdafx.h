@@ -10,6 +10,8 @@
 #include <windows.h>
 #include <random>
 #include <cmath>
+#include <unordered_set>
+#include <unordered_map>
 
 #include <thread>
 #include <unordered_map>

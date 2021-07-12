@@ -19,6 +19,8 @@ constexpr int MAP_BREAK_TIME = 30;
 
 constexpr float VIEWING_DISTANCE = 16666.f;
 
+constexpr int INVENTORY_MAX = 20;
+
 // 1 = 3cm
 
 #define SERVERIP   "127.0.0.1"
@@ -46,6 +48,7 @@ enum PacketType {
 	SC_player_loginFail,
 	SC_player_add,
 	SC_player_remove,
+	SC_player_disconnect,
 	SC_start_ok,
 	SC_game_end,
 	SC_player_info,
@@ -60,12 +63,21 @@ enum PacketType {
 	SC_map_set,
 	SC_map_collapse,
 	SC_cloud_move,
-	SC_bot_ID,
+	SC_bot_add,
 	SC_bot_remove,
 	SC_bot_info,
 	SC_bot_move,
 	SC_bot_pos,
 	SC_bot_attack,
+	SC_bot_damaged,
+	SC_monster_add,
+	SC_monster_remove,
+	SC_monster_info,
+	SC_monster_move,
+	SC_monster_pos,
+	SC_monster_attack,
+	SC_monster_damaged,
+	SC_player_record,
 
 
 	CS_player_login,
@@ -112,6 +124,11 @@ enum PlayerType {
 	PT_BOW
 };
 
+enum MonsterType {
+	LOW,
+	MIDDLE,
+	BOSS
+};
 
 #define DIR_FORWARD					0x01
 #define DIR_BACKWARD				0x02
@@ -170,6 +187,9 @@ struct game_end_packet :public Packet {
 };
 
 struct player_remove_packet : public Packet {
+};
+
+struct player_disconnect_packet : public Packet {
 };
 
 struct player_info_packet : public Packet {
@@ -255,4 +275,23 @@ struct cloud_move_packet : public Packet {
 	float x, z;
 };
 
+struct mon_add_packet : public Packet {
+	DirectX::XMFLOAT3 Position;
+	float dx, dy;
+	short MonsterType;
+};
+
+struct mon_remove_packet : public Packet {
+};
+
+struct player_record_packet : public Packet {
+	char id[50];
+	short survivalTime;
+	short rank;
+	short weapon1;
+	short weapon2;
+	short helmet;
+	short shoes;
+	short armor;
+};
 #pragma pack(pop)

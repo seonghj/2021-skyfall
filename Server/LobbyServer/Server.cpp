@@ -12,6 +12,39 @@ Server::~Server()
 
 }
 
+void SESSION::init()
+{
+    //memset(this, 0x00, sizeof(SESSION));
+    addrlen = 0;
+    memset(packet_buf, 0, sizeof(packet_buf));
+    prev_size = 0;
+    packet_start = nullptr;
+    recv_start = nullptr;
+
+    connected = false;
+    isready = false;
+    playing = false;
+    key = -1;
+
+    state = 0;
+    f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+    dx = 0;
+    dy = 0;
+
+    weapon1 = PlayerType::PT_BASIC;
+    weapon2 = PlayerType::PT_BASIC;
+    helmet = 0;
+    shoes = 0;
+    armor = 0;
+
+    hp = 0;
+    lv = 0;
+    speed = 20;
+
+    for (int i = 0; i < INVENTORY_MAX; i++)
+        inventory[i] = 0;
+}
+
 void Server::display_error(const char* msg, int err_no)
 {
     WCHAR* lpMsgBuf;
@@ -290,10 +323,30 @@ void Server::process_packet(char id, char* buf)
         player_login_packet* p = reinterpret_cast<player_login_packet*>(buf);
 
         int client_key = p->key;
+        bool is_Login = false;
+
+        bool b;
+        b = m_pDB->Search_ID(p->id, &is_Login);
+
+        if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
+
+        if (is_Login) {
+            send_player_loginFail_packet(client_key);
+            Disconnected(client_key);
+            break;
+        }
+
+        SESSION temp;
+        int t = 0;
+        int r = 0;
+        m_pDB->Get_player_record(p->id, temp, &t, &r);
+        printf("%s, %d, %d, %d, %d, %d, %d, %d\n", temp.id, t, r
+            , temp.weapon1.load(), temp.weapon2.load(), temp.helmet.load()
+            , temp.shoes.load(), temp.armor.load());
 
         strcpy_s(sessions[client_key].id, p->id);
 
-        send_player_loginOK_packet(sessions[client_key].key);
+        send_player_loginOK_packet(client_key);
 
         printf("client_connected: IP =%s, port=%d key = %d\n",
             inet_ntoa(sessions[client_key].clientaddr.sin_addr)
