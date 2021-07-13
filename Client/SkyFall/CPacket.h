@@ -32,7 +32,7 @@ public:
 	void SendPacket(char* buf);
 	void Send_ready_packet();
 	void Send_attack_packet(int type);
-	void Send_animation_stop_packet();
+	void Send_stop_packet();
 	void Send_login_packet(char* id);
 	void ProcessPacket(char* buf);
 

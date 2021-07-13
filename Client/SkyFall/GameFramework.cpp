@@ -321,7 +321,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	}
 	case WM_LBUTTONUP: {
 		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-			m_pPacket->Send_animation_stop_packet();
+			m_pPacket->Send_stop_packet();
 		::ReleaseCapture();
 		m_ChargeTimer.Stop();
 		m_pPlayer->LButtonUp();
@@ -329,7 +329,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	}
 	case WM_RBUTTONUP: {
 		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-			m_pPacket->Send_animation_stop_packet();
+			m_pPacket->Send_stop_packet();
 		m_pPlayer->RButtonUp();
 		CCamera* pCamera = m_pPlayer->GetCamera();
 		m_pCamera = pCamera;
