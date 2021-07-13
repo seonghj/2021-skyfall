@@ -64,7 +64,7 @@ public:
     std::atomic<float>      lv = 0;
     std::atomic<float>      speed = 20;
 
-    std::atomic<short>      inventory[20]{};
+    std::atomic<short>      inventory[INVENTORY_MAX]{};
 
     void init();
 

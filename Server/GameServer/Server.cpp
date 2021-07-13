@@ -134,6 +134,8 @@ void Server::ConnectLobby()
     sessions[LOBBY_ID][0].over.dataBuffer.buf =
         sessions[LOBBY_ID][0].over.messageBuffer;
 
+    std::cout << "Lobby connected\n";
+
     CreateIoCompletionPort((HANDLE)sessions[LOBBY_ID][0].sock, hcp, LOBBY_ID, 0);
 
     do_recv(LOBBY_ID, 0);
@@ -561,7 +563,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         bool is_Login = false;
 
         bool b;
-        b = m_pDB->Search_ID(p->id, &is_Login);
+        /*b = m_pDB->Search_ID(p->id, &is_Login);
 
         if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
 
@@ -569,15 +571,7 @@ void Server::process_packet(int key, char* buf, int roomID)
             send_player_loginFail_packet(client_key, sessions[roomID][client_key].roomID);
             Disconnected(client_key, sessions[roomID][client_key].roomID);
             break;
-        }
-
-        SESSION temp;
-        int t = 0;
-        int r = 0;
-        m_pDB->Get_player_record(p->id, temp, &t, &r);
-        printf("%s, %d, %d, %d, %d, %d, %d, %d\n", temp.id, t, r
-            , temp.weapon1.load(), temp.weapon2.load(), temp.helmet.load()
-            , temp.shoes.load(), temp.armor.load());
+        }*/
 
         sessions[roomID][client_key].f3Position = XMFLOAT3(50.f, 150.0f, 50.f);
 
@@ -796,6 +790,8 @@ void Server::WorkerFunc()
 bool Server::Init()
 {
     sessions.clear();
+
+    //ConnectLobby();
 
     // ���� �ʱ�ȭ
     WSADATA wsa;

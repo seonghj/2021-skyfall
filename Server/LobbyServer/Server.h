@@ -56,16 +56,7 @@ public:
     std::mutex               nm_lock;
 };
 
-//namespace std {
-//    template<>
-//    class hash<SESSION> {
-//    public:
-//        size_t operator() (const SESSION& s) const { 
-//            return std::hash<int>()(s.id);
-//        }
-//    };
-//}
-
+class DB;
 
 class Server {
 public:
@@ -81,7 +72,7 @@ public:
     void Thread_join();
     void Disconnected(int id);
 
-    void Connect_Game_Server(SOCKET listen_sock);
+    void Connect_Game_Server();
     void Accept();
     void WorkerFunc();
 
@@ -96,10 +87,11 @@ public:
 
     void send_game_start_packet(char id);
 
-    void Set_m_pDB(DB* d) { m_pDB = d; }
+    void Set_pDB(DB* d) { m_pDB = d; }
 
 private:
     HANDLE hcp;
+    SOCKET listen_sock;
 
     DB* m_pDB = NULL;
 
@@ -109,4 +101,6 @@ private:
 
     std::vector <std::thread> working_threads;
     std::thread accept_thread;
+
+    std::mutex                     sessions_lock;
 };

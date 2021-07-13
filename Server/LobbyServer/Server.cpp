@@ -95,7 +95,7 @@ bool Server::MatchMaking(int id)
     return 1;
 }
 
-void Server::Connect_Game_Server(SOCKET listen_sock)
+void Server::Connect_Game_Server()
 {
     SOCKET gameserver_sock;
     SOCKADDR_IN gameserveraddr;
@@ -107,7 +107,7 @@ void Server::Connect_Game_Server(SOCKET listen_sock)
     }
 
     sessions.emplace(GAMESERVER_ID, SESSION());
-    memset(&sessions[GAMESERVER_ID], 0x00, sizeof(SESSION));
+    sessions[GAMESERVER_ID].init();
     sessions[GAMESERVER_ID].key = GAMESERVER_ID;
     sessions[GAMESERVER_ID].sock = gameserver_sock;
     sessions[GAMESERVER_ID].clientaddr = gameserveraddr;
@@ -128,25 +128,6 @@ void Server::Connect_Game_Server(SOCKET listen_sock)
 
 void Server::Accept()
 {
-    // 윈속 초기화
-    WSADATA wsa;
-    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-        return;
-
-    // socket()
-    SOCKET listen_sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-
-    // bind()
-    SOCKADDR_IN serveraddr;
-    ZeroMemory(&serveraddr, sizeof(serveraddr));
-    serveraddr.sin_family = AF_INET;
-    serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serveraddr.sin_port = htons(LOBBYPORT);
-    int retval = bind(listen_sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
-  
-    // listen()
-    retval = listen(listen_sock, MAX_CLIENT);
-
     // 데이터 통신에 사용할 변수
     SOCKET client_sock;
     SOCKADDR_IN clientaddr;
@@ -163,8 +144,9 @@ void Server::Accept()
         }
 
         int client_key = SetClientKey();
+        std::lock_guard <std::mutex> lg{ sessions_lock };
         sessions.emplace(client_key, SESSION());
-        memset(&sessions[client_key], 0x00, sizeof(SESSION));
+        sessions[client_key].init();
         sessions[client_key].key = client_key;
         sessions[client_key].sock = client_sock;
         sessions[client_key].clientaddr = clientaddr;
@@ -326,7 +308,7 @@ void Server::process_packet(char id, char* buf)
         bool is_Login = false;
 
         bool b;
-        b = m_pDB->Search_ID(p->id, &is_Login);
+       /* b = m_pDB->Search_ID(p->id, &is_Login);
 
         if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
 
@@ -334,15 +316,7 @@ void Server::process_packet(char id, char* buf)
             send_player_loginFail_packet(client_key);
             Disconnected(client_key);
             break;
-        }
-
-        SESSION temp;
-        int t = 0;
-        int r = 0;
-        m_pDB->Get_player_record(p->id, temp, &t, &r);
-        printf("%s, %d, %d, %d, %d, %d, %d, %d\n", temp.id, t, r
-            , temp.weapon1.load(), temp.weapon2.load(), temp.helmet.load()
-            , temp.shoes.load(), temp.armor.load());
+        }*/
 
         strcpy_s(sessions[client_key].id, p->id);
 
@@ -444,9 +418,6 @@ void Server::WorkerFunc()
 
 bool Server::Init()
 {
-    for (int i = 0; i < MAX_CLIENT; ++i)
-        sessions[i].connected = false;
-
     // 입출력 완료 포트 생성
     hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
     if (hcp == NULL) return 0;
@@ -458,6 +429,27 @@ bool Server::Init()
     // (CPU 개수 * 2)개의 작업자 스레드 생성
     for (int i = 0; i < (int)si.dwNumberOfProcessors; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
+
+    // 윈속 초기화
+    WSADATA wsa;
+    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+        return 0;
+
+    // socket()
+    listen_sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+
+    // bind()
+    SOCKADDR_IN serveraddr;
+    ZeroMemory(&serveraddr, sizeof(serveraddr));
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    serveraddr.sin_port = htons(LOBBYPORT);
+    int retval = bind(listen_sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
+
+    // listen()
+    retval = listen(listen_sock, MAX_CLIENT);
+
+    Connect_Game_Server();
 
     accept_thread = std::thread(&Server::Accept, this);
 

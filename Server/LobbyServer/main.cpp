@@ -19,9 +19,8 @@ int main(int argc, char* argv[])
 		std::cout << "DB disconnected\n";
 	}
 
-	g_pServer->Set_m_pDB(g_pDB);
 	g_pServer->Init();
-
+	g_pServer->Set_pDB(g_pDB);
 	g_pServer->Thread_join();
 
    //mysql_close(db->connection);
