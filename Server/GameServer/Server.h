@@ -68,6 +68,8 @@ public:
 
     void init();
 
+    DirectX::XMFLOAT3 GetPosition() { return f3Position.load(); }
+
 public:
     std::unordered_set<int> near_monster;
 

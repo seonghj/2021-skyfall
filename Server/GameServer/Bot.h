@@ -1,6 +1,9 @@
 #pragma once
 #include "stdafx.h"
 #include "protocol.h"
+#include "Server.h"
+
+class SESSION;
 
 class Monster{
 public:
@@ -27,10 +30,14 @@ public:
     std::atomic<float>      speed = 20;
 
     void init();
+
+    DirectX::XMFLOAT3 GetPosition() { return f3Position.load(); }
 };
 
 class Bot {
 public:
+    void CheckTarget(const SESSION& player, int roomID);
+
     std::unordered_map <int, std::array<Monster, 100>> monsters;
 };
 

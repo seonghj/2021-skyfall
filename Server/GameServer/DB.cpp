@@ -1,5 +1,7 @@
 #include "DB.h"
 
+//#define Test_DB
+
 bool DB::Connection()
 {
     printf("MySQL Ver. %s\n", mysql_get_client_info());
@@ -89,7 +91,9 @@ bool DB::Search_ID(char* id, bool* isLogin)
     wcscat_s(query, wcID);
     wcscat_s(query, L"'");
 
-    //wprintf(L"%s\n", query);
+#ifdef Test_DB 
+    wprintf(L"%s\n", query);
+#endif
 
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
         != SQL_SUCCESS)
@@ -117,7 +121,9 @@ bool DB::Insert_ID(char* id)
     wcscat_s(query, wcID);
     wcscat_s(query, L"', 1)");
 
-    //wprintf(L"%s\n", query);
+#ifdef Test_DB 
+    wprintf(L"%s\n", query);
+#endif
 
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
         != SQL_SUCCESS)
@@ -143,7 +149,9 @@ bool DB::Logout_player(char* id)
     wcscat_s(query, wcID);
     wcscat_s(query, L"'");
 
-    //wprintf(L"%s\n", query);
+#ifdef Test_DB 
+    wprintf(L"%s\n", query);
+#endif
 
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
         != SQL_SUCCESS)
@@ -173,7 +181,9 @@ bool DB::Send_player_record(const SESSION& player, int survival_time, int rank)
     MultiByteToWideChar(CP_ACP, 0, player_info, -1, wc_player_info, sizeof(player_info));
     wcscat_s(query, wc_player_info);
 
-    //wprintf(L"%s\n", query);
+#ifdef Test_DB 
+    wprintf(L"%s\n", query);
+#endif
 
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
         != SQL_SUCCESS)
@@ -199,7 +209,9 @@ bool DB::Get_player_record(char* ID, SESSION& session, int* survival_time, int* 
     wcscat_s(query, wcID);
     wcscat_s(query, L"'");
 
-    //wprintf(L"%s\n", query);
+#ifdef Test_DB 
+    wprintf(L"%s\n", query);
+#endif
 
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
         != SQL_SUCCESS)
@@ -221,9 +233,11 @@ bool DB::Get_player_record(char* ID, SESSION& session, int* survival_time, int* 
     if (SQLFetch(hStmt) == SQL_NO_DATA) return false;
     if (hStmt) SQLCloseCursor(hStmt);
 
-   /* printf("%s, %d, %d, %d, %d, %d, %d, %d\n", session.id, *survival_time, *rank
+#ifdef Test_DB 
+    printf("%s, %d, %d, %d, %d, %d, %d, %d\n", session.id, *survival_time, *rank
         , session.weapon1.load(), session.weapon2.load(), session.helmet.load()
-        , session.shoes.load(), session.armor.load());*/
+        , session.shoes.load(), session.armor.load());
+#endif
 
     return true;
 }

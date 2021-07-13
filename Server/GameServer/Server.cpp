@@ -2,6 +2,9 @@
 #pragma warning(disable : 4996)
 #include "Server.h"
 
+//#define Run_DB
+//#define Run_Lobby
+
 void SESSION::init() 
 {
    //memset(this, 0x00, sizeof(SESSION));
@@ -563,7 +566,9 @@ void Server::process_packet(int key, char* buf, int roomID)
         bool is_Login = false;
 
         bool b;
-        /*b = m_pDB->Search_ID(p->id, &is_Login);
+
+#ifdef Run_DB
+        b = m_pDB->Search_ID(p->id, &is_Login);
 
         if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
 
@@ -571,8 +576,8 @@ void Server::process_packet(int key, char* buf, int roomID)
             send_player_loginFail_packet(client_key, sessions[roomID][client_key].roomID);
             Disconnected(client_key, sessions[roomID][client_key].roomID);
             break;
-        }*/
-
+        }
+#endif
         sessions[roomID][client_key].f3Position = XMFLOAT3(50.f, 150.0f, 50.f);
 
         strcpy_s(sessions[roomID][client_key].id, p->id);
@@ -791,7 +796,9 @@ bool Server::Init()
 {
     sessions.clear();
 
-    //ConnectLobby();
+#ifdef Run_Lobby
+    ConnectLobby();
+#endif
 
     // ���� �ʱ�ȭ
     WSADATA wsa;
@@ -807,8 +814,6 @@ bool Server::Init()
 
     for (int i = 0; i <(int)si.dwNumberOfProcessors * 2; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
-
-    //ConnectLobby();
 
     m_pTimer = new Timer;
 
