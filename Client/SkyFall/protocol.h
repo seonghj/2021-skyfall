@@ -23,9 +23,8 @@ constexpr int INVENTORY_MAX = 20;
 
 // 1 = 3cm
 
-//#define SERVERIP   "127.0.0.1"
+#define SERVERIP   "127.0.0.1"
 //#define SERVERIP   "39.120.192.92"
-#define SERVERIP "192.168.0.14"
 
 struct OVER_EX
 {
@@ -262,6 +261,7 @@ struct player_damage_packet : public Packet {
 };
 
 struct player_stop_packet : public Packet {
+	DirectX::XMFLOAT3 Position;
 };
 
 struct map_block_set : public Packet {

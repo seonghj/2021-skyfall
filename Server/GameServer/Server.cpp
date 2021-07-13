@@ -626,7 +626,6 @@ void Server::process_packet(int key, char* buf, int roomID)
         packet.dx = p->dx;
         packet.dy = p->dy;
         packet.MoveType = p->MoveType;
-
         send_packet_to_players(key, reinterpret_cast<char*>(&packet), roomID);
         break;
     }
@@ -684,6 +683,7 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_player_stop: {
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
         p->type = SC_player_stop;
+        p->Position = sessions[roomID][p->key].f3Position;
         send_packet_to_players(p->key, reinterpret_cast<char*>(p), roomID);
         break;
     }

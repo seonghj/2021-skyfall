@@ -148,13 +148,14 @@ void CPacket::Send_attack_packet(int type)
     }
 }
 
-void CPacket::Send_animation_stop_packet()
+void CPacket::Send_stop_packet()
 {
-    player_stop_packet sp;
-    sp.key = client_key;
-    sp.size = sizeof(sp);
-    sp.type = PacketType::CS_player_stop;
-    SendPacket(reinterpret_cast<char*>(&sp));
+    player_stop_packet p;
+    p.key = client_key;
+    p.size = sizeof(p);
+    p.type = PacketType::CS_player_stop;
+    p.Position = m_pScene->m_pPlayer->GetPosition();
+    SendPacket(reinterpret_cast<char*>(&p));
 }
 
 void CPacket::Send_login_packet(char* id)
@@ -270,7 +271,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
         if (p->key == client_key) {
-            m_pPlayer->SetPosition(p->Position);
+            //m_pPlayer->SetPosition(p->Position);
             m_pPlayer->Rotate(p->dx, p->dy, 0);
             switch (p->MoveType) {
             case PlayerMove::RUNNING:
@@ -413,9 +414,13 @@ void CPacket::ProcessPacket(char* buf)
                     m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
                     m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(6, 0);
                     m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(9, 0);
+                    m_pScene->m_mPlayer[i]->SetPosition(p->Position);
                 }
             }
         }
+        else
+            m_pScene->m_pPlayer->SetPosition(p->Position);
+
         break;
     }
 

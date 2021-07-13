@@ -261,6 +261,7 @@ struct player_damage_packet : public Packet {
 };
 
 struct player_stop_packet : public Packet {
+	DirectX::XMFLOAT3 Position;
 };
 
 struct map_block_set : public Packet {
