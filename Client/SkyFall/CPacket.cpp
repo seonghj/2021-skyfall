@@ -56,6 +56,7 @@ void CPacket::RecvPacket()
     int rest_size = retval;
     DWORD packet_size = 0;
 
+
     WSABUF r_wsabuf;
     r_wsabuf.buf = recvbuf;
     r_wsabuf.len = BUFSIZE;
