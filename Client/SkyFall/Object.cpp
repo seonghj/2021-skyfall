@@ -1819,6 +1819,11 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 		XMFLOAT3(0, bb.Extents.y-350, -50),					// Center
 		XMFLOAT3(80, bb.Extents.y - 250, bb.Extents.z-50));	// Extents
 
+	//BoundingBox detect = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, Vector3::ScalarProduct(pObject->m_pMesh->m_xmf3AABBExtents,1.5f,false));
+	//SetBBObject(pd3dDevice, pd3dCommandList,
+	//	XMFLOAT3(0, 0, 0),					// Center
+	//	detect.Extents);	// Extents
+	//
 
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 
