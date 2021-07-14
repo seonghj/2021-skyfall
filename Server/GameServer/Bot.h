@@ -2,8 +2,11 @@
 #include "stdafx.h"
 #include "protocol.h"
 #include "Server.h"
+#include "Timer.h"
 
 class SESSION;
+class Server;
+class Timer;
 
 class Monster{
 public:
@@ -11,6 +14,9 @@ public:
     Monster() {}
     Monster(const Monster& m) {}
     ~Monster() {}
+
+    XMFLOAT4X4				 m_xmf4x4ToParent = Matrix4x4::Identity();
+    XMFLOAT4X4				 m_xmf4x4World = Matrix4x4::Identity();
 
     std::mutex               Mon_lock;
 
@@ -30,14 +36,23 @@ public:
     std::atomic<float>      speed = 20;
 
     void init();
+    void SetPosition(float x, float y, float z);
+    void Move(const XMFLOAT3& vDirection, float fSpeed);
 
     DirectX::XMFLOAT3 GetPosition() { return f3Position.load(); }
 };
 
 class Bot {
 public:
-    void CheckTarget(const SESSION& player, int roomID);
+    void Set_pServer(Server* s) { m_pServer = s; };
+    void Set_pTimer(Timer* t) { m_pTimer = t; };
+
+    void CheckTarget(SESSION& player, int roomID);
 
     std::unordered_map <int, std::array<Monster, 100>> monsters;
+
+private:
+    Server* m_pServer = NULL;
+    Timer* m_pTimer = NULL;
 };
 

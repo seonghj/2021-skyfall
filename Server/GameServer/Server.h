@@ -122,6 +122,7 @@ public:
 
     void send_add_monster(int key, int roomID, int to);
     void send_remove_monster(int key, int roomID, int to);
+    void send_monster_pos(const Monster& mon);
 
     void send_player_record(int key, int roomID, const SESSION& s, int time, int rank);
     

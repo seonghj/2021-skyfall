@@ -285,6 +285,13 @@ struct mon_add_packet : public Packet {
 struct mon_remove_packet : public Packet {
 };
 
+struct mon_pos_packet : public Packet {
+	char state;
+	DirectX::XMFLOAT3 Position;
+	float dx, dy;
+	DWORD MoveType;
+};
+
 struct player_record_packet : public Packet {
 	char id[50];
 	short survivalTime;

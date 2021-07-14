@@ -6,10 +6,12 @@
 #include "Timer.h"
 
 //#define Run_DB
+#define Run_Bot
 
 Server*		g_pServer = new Server;
 DB*			g_pDB = new DB;
 Bot*		g_pBot = new Bot;
+Timer*		g_pTimer = new Timer;
 
 int main(int argc, char* argv[])
 {
@@ -25,8 +27,16 @@ int main(int argc, char* argv[])
 		std::cout << "DB disconnected\n";
 	}
 #endif
-	g_pServer->Init();
+	g_pServer->Set_pTimer(g_pTimer);
+
+#ifdef Run_Bot
 	g_pServer->Set_pBot(g_pBot);
+	g_pBot->Set_pServer(g_pServer);
+	g_pBot->Set_pTimer(g_pTimer);
+#endif
+
+	g_pServer->Init();
+
 #ifdef Run_DB
 	g_pServer->Set_pDB(g_pDB);
 #endif
@@ -37,4 +47,5 @@ int main(int argc, char* argv[])
 	delete g_pServer;
 	delete g_pDB;
 	delete g_pBot;
+	delete g_pTimer;
 }

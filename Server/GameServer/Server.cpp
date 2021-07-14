@@ -442,6 +442,27 @@ void Server::send_remove_monster(int key, int roomID, int to)
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
+void Server::send_monster_pos(const Monster& mon)
+{
+    int roomID = mon.roomID;
+
+    mon_pos_packet p;
+    p.size = sizeof(mon_pos_packet);
+    p.type = PacketType::SC_monster_pos;
+    p.key = mon.key;
+    p.roomid = mon.roomID;
+    p.Position = mon.f3Position;
+    p.dx = mon.dx;
+    p.dy = mon.dy;
+    p.MoveType = 0;
+    p.state = 0;
+    
+    for (auto& player : sessions[roomID]) {
+        if (true == in_VisualField(mon, player, roomID))
+            send_packet(player.key, reinterpret_cast<char*>(&p), roomID);
+    }
+}
+
 void Server::send_player_record(int key, int roomID
     , const SESSION& s, int time, int rank)
 {
@@ -815,7 +836,6 @@ bool Server::Init()
     for (int i = 0; i <(int)si.dwNumberOfProcessors * 2; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
-    m_pTimer = new Timer;
 
     timer_thread = std::thread(&Timer::init, m_pTimer, Gethcp());
     accept_thread = std::thread(&Server::Accept, this);
