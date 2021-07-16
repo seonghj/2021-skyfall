@@ -39,7 +39,7 @@ public:
     void SetPosition(float x, float y, float z);
     void Move(const XMFLOAT3& vDirection, float fSpeed);
 
-    DirectX::XMFLOAT3 GetPosition() { return f3Position.load(); }
+    DirectX::XMFLOAT3 GetPosition() { return f3Position; }
 };
 
 class Bot {

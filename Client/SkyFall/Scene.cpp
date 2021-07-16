@@ -123,7 +123,8 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	CLoadedModelInfo* pSwordModel;
 	for (int i = 0; i < 20; ++i) {
 		pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
-		m_mPlayer.emplace(i, new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature,pSwordModel, m_pTerrain));
+		m_mPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pSwordModel, m_pTerrain);
+		//m_mPlayer.emplace(i, new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature,pSwordModel, m_pTerrain));
 		m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f));
 	}
 	//if (pSwordModel) delete pSwordModel;
@@ -259,9 +260,6 @@ void CScene::ReleaseObjects()
 		m_pMap->Release();
 		delete m_pMap;
 	}
-
-	m_mPlayer.clear();
-
 
 	ReleaseShaderVariables();
 
@@ -494,8 +492,8 @@ void CScene::ReleaseUploadBuffers()
 	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_nGameObjects; i++) m_ppGameObjects[i]->ReleaseUploadBuffers();
 
-	for (auto p : m_mPlayer) {
-		p.second->ReleaseUploadBuffers();
+	for (auto& p : m_mPlayer) {
+		p->ReleaseUploadBuffers();
 	}
 }
 

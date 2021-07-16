@@ -68,10 +68,8 @@ public:
 
 	void CheckCollision();
 	void CheckTarget();
-	void InitPlayerIDs() { for (int i = 0; i < 20; ++i) PlayerIDs[i] = -1; }
 
 	CPlayer								*m_pPlayer = NULL;
-	int									PlayerIDs[20];
 
 protected:
 	ID3D12RootSignature					*m_pd3dGraphicsRootSignature = NULL;
@@ -106,7 +104,7 @@ public:
 
 	int									m_nGameObjects = 0;
 	CMonster							**m_ppGameObjects = NULL;
-	unordered_map<int, CPlayer*>		m_mPlayer;
+	array<CPlayer*, 20>					m_mPlayer;
 
 	float								m_fElapsedTime = 0.0f;
 

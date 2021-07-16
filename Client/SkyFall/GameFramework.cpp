@@ -390,13 +390,6 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				case VK_F9:
 					ChangeSwapChainState();
 					break;
-				/*case 0x41 || 0x44 || 0x53 || 0x57:
-					player_stop_packet sp;
-					sp.id = m_pPacket->Get_clientid();
-					sp.size = sizeof(sp);
-					sp.type = PacketType::Type_player_stop;
-					m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
-					break;*/
 				case VK_UP:
 					XMFLOAT3 pos = m_pPlayer->GetPosition();
 					m_pPlayer->SetPosition(XMFLOAT3(pos.x, 1000.0f, pos.z));
@@ -456,7 +449,7 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 void CGameFramework::CheckCollision()
 {
 	m_pScene->CheckCollision();
-	m_pScene->CheckTarget();
+	//m_pScene->CheckTarget();
 }
 
 void CGameFramework::OnDestroy()
@@ -498,7 +491,6 @@ void CGameFramework::BuildObjects()
 
 	m_pScene = new CScene();
 	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
-	m_pScene->InitPlayerIDs();
 
 	CLoadedModelInfo* pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_1Hsword.bin", NULL);
 	C1HswordPlayer* p1HswordPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pSwordModel, m_pScene->m_pTerrain);

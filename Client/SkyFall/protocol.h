@@ -25,7 +25,6 @@ constexpr int INVENTORY_MAX = 20;
 
 #define SERVERIP   "127.0.0.1"
 //#define SERVERIP   "39.120.192.92"
-//#define SERVERIP   "192.168.0.14"
 
 struct OVER_EX
 {
@@ -79,6 +78,7 @@ enum PacketType {
 	SC_monster_attack,
 	SC_monster_damaged,
 	SC_player_record,
+	SC_player_getitem,
 
 
 	CS_player_login,
@@ -92,6 +92,7 @@ enum PacketType {
 	CS_player_attack,
 	CS_player_stop,
 	CS_allow_shot,
+	CS_player_getitem,
 };
 
 enum EventType {
@@ -286,6 +287,13 @@ struct mon_add_packet : public Packet {
 struct mon_remove_packet : public Packet {
 };
 
+struct mon_pos_packet : public Packet {
+	char state;
+	DirectX::XMFLOAT3 Position;
+	float dx, dy;
+	DWORD MoveType;
+};
+
 struct player_record_packet : public Packet {
 	char id[50];
 	short survivalTime;
@@ -295,5 +303,9 @@ struct player_record_packet : public Packet {
 	short helmet;
 	short shoes;
 	short armor;
+};
+
+struct player_getitem_packet :public Packet {
+	short item;
 };
 #pragma pack(pop)

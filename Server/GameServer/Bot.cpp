@@ -21,7 +21,7 @@ void Bot::CheckTarget(SESSION& player, int roomID)
 {
 	XMFLOAT3 subtract;
 	for (auto& mon : monsters[roomID]) {
-		subtract = Vector3::Subtract(player.GetPosition(), mon.GetPosition());
+		subtract = Vector3::Subtract((XMFLOAT3&)player.GetPosition(), (XMFLOAT3&)mon.GetPosition());
 		if (Vector3::Length(subtract) <= 300)
 		{
 			subtract = Vector3::Normalize(subtract);

@@ -27,6 +27,15 @@
 
 #pragma comment(lib, "libmySQL.lib")
 
+#include <d3d12.h>
+#include <dxgi1_4.h>
+#include <D3Dcompiler.h>
+#include <DirectXMath.h>
+#include <DirectXPackedVector.h>
+#include <DirectXColors.h>
+#include <DirectXCollision.h>
+
+#include <Mmsystem.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -50,6 +59,7 @@ enum terrain {
 };
 
 using namespace DirectX;
+using namespace DirectX::PackedVector;
 
 namespace Vector3
 {
@@ -130,7 +140,7 @@ namespace Vector3
 
 	inline float Angle(XMFLOAT3& xmf3Vector1, XMFLOAT3& xmf3Vector2)
 	{
-		return(Angle(XMLoadFloat3(&xmf3Vector1), XMLoadFloat3(&xmf3Vector2)));
+		return(Angle((XMVECTOR&)XMLoadFloat3(&xmf3Vector1), (XMVECTOR&)XMLoadFloat3(&xmf3Vector2)));
 	}
 
 	inline XMFLOAT3 TransformNormal(XMFLOAT3& xmf3Vector, XMMATRIX& xmmtxTransform)
@@ -149,7 +159,7 @@ namespace Vector3
 
 	inline XMFLOAT3 TransformCoord(XMFLOAT3& xmf3Vector, XMFLOAT4X4& xmmtx4x4Matrix)
 	{
-		return(TransformCoord(xmf3Vector, XMLoadFloat4x4(&xmmtx4x4Matrix)));
+		return(TransformCoord((XMFLOAT3&)xmf3Vector, (XMMATRIX&)XMLoadFloat4x4(&xmmtx4x4Matrix)));
 	}
 }
 

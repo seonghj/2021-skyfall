@@ -239,7 +239,10 @@ void Server::Disconnected(int key, int roomID)
             break;
         }
     }
+
+#ifdef Run_DB
     m_pDB->Logout_player(sessions[roomID][key].id);
+#endif
     //sessions[roomID].clear();
 }
 
@@ -710,6 +713,20 @@ void Server::process_packet(int key, char* buf, int roomID)
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
         p->type = SC_player_stop;
         p->Position = sessions[roomID][p->key].f3Position;
+        send_packet_to_players(p->key, reinterpret_cast<char*>(p), roomID);
+        break;
+    }
+    case PacketType::CS_player_getitem: {
+        player_getitem_packet* p = reinterpret_cast<player_getitem_packet*>(buf);
+        int key = p->key;
+        int room = p->roomid;
+        for (auto& i : sessions[room][key].inventory) {
+            if (i == 0) {
+                i = p->item;
+                break;
+            }
+        }
+        p->type = SC_player_getitem;
         send_packet_to_players(p->key, reinterpret_cast<char*>(p), roomID);
         break;
     }

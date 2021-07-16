@@ -68,7 +68,7 @@ public:
 
     void init();
 
-    DirectX::XMFLOAT3 GetPosition() { return f3Position.load(); }
+    DirectX::XMFLOAT3 GetPosition() { return f3Position; }
 
 public:
     std::unordered_set<int> near_monster;
@@ -79,6 +79,8 @@ public:
 
 class Map;
 class DB;
+class Bot;
+class Monster;
 
 class Server {
 public:

@@ -78,6 +78,7 @@ enum PacketType {
 	SC_monster_attack,
 	SC_monster_damaged,
 	SC_player_record,
+	SC_player_getitem,
 
 
 	CS_player_login,
@@ -91,6 +92,7 @@ enum PacketType {
 	CS_player_attack,
 	CS_player_stop,
 	CS_allow_shot,
+	CS_player_getitem,
 };
 
 enum EventType {
@@ -301,5 +303,9 @@ struct player_record_packet : public Packet {
 	short helmet;
 	short shoes;
 	short armor;
+};
+
+struct player_getitem_packet :public Packet {
+	short item;
 };
 #pragma pack(pop)
