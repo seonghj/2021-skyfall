@@ -144,6 +144,7 @@ private:
 
     std::unordered_map <int, std::array<SESSION, 20>> sessions; // ¹æID, Player¹è¿­
     std::unordered_map <int, Map>                     maps;
+    std::unordered_map <int, Bot>                     Bots;
 
     std::vector <std::thread>      working_threads;
     std::thread                    accept_thread;

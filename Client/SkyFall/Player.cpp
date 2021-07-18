@@ -575,7 +575,7 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(10, 10, 30));
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 12, pPlayerModel);
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 13, pPlayerModel);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Idle, nBow_Idle);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Walk, nBow_Walk);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Run, nBow_Run);
@@ -591,7 +591,6 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Jump, nBow_Jump);
 	m_pSkinnedAnimationController->SetTrackType(nBow_Jump, ANIMATION_TYPE_ONCE);
-
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Death, nBow_Death);
 	m_pSkinnedAnimationController->SetTrackType(nBow_Death, ANIMATION_TYPE_ONCE);
 

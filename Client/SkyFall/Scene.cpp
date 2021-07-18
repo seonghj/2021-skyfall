@@ -121,13 +121,17 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	CLoadedModelInfo* pSwordModel;
+	CLoadedModelInfo* pBowModel;
 	for (int i = 0; i < 20; ++i) {
 		pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
-		m_mPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pSwordModel, m_pTerrain);
-		//m_mPlayer.emplace(i, new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature,pSwordModel, m_pTerrain));
+		pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pSwordModel, m_pTerrain);
+		m_mBowPlayer[i] = new CBowPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBowModel, m_pTerrain);
+		m_mPlayer[i] = m_m1HswordPlayer[i];
 		m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f));
 	}
-	//if (pSwordModel) delete pSwordModel;
+	if (pSwordModel) delete pSwordModel;
+	if (pBowModel) delete pBowModel;
 }
 
 void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
@@ -179,6 +183,10 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(9, true);
 		//cout << "6" << endl;
+		break;
+	case 10:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(12, true);
 		break;
 	case 11:
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();

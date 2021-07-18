@@ -155,7 +155,7 @@ void CPacket::Send_stop_packet()
     p.key = client_key;
     p.size = sizeof(p);
     p.type = PacketType::CS_player_stop;
-    p.Position = m_pScene->m_pPlayer->GetPosition();
+    p.Position = m_pPlayer->GetPosition();
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
@@ -170,6 +170,110 @@ void CPacket::Send_login_packet(char* id)
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
+void CPacket::Send_swap_weapon_packet(PlayerType weapon)
+{
+    Weapon_swap_packet p;
+    p.key = client_key;
+    p.size = sizeof(p);
+    p.type = CS_weapon_swap;
+    p.weapon = weapon;
+    p.roomid = roomID;
+
+    SendPacket(reinterpret_cast<char*>(&p));
+}
+
+void CPacket::Swap_weapon(int key, PlayerType weapon)
+{
+    if (key != client_key) {
+        switch (weapon) {
+        case PT_BOW: {
+            float beforepitch = m_pScene->m_mPlayer[key]->GetPitch();
+            float beforeyaw = m_pScene->m_mPlayer[key]->GetYaw();
+            float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
+            XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
+
+            m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
+            m_pScene->m_mPlayer[key] = m_pScene->m_mBowPlayer[key];
+
+            m_pScene->m_mPlayer[key]->SetPosition(beforepos);
+
+            float tpitch = m_pScene->m_mPlayer[key]->GetPitch();
+            float tyaw = m_pScene->m_mPlayer[key]->GetYaw();
+            float troll = m_pScene->m_mPlayer[key]->GetRoll();
+
+            m_pScene->m_mPlayer[key]->Rotate(-tpitch + beforepitch, -tyaw + beforeyaw, 0);
+            break;
+        }
+        case PT_SWORD1H: {
+            float beforepitch = m_pScene->m_mPlayer[key]->GetPitch();
+            float beforeyaw = m_pScene->m_mPlayer[key]->GetYaw();
+            float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
+            XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
+
+            m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
+            m_pScene->m_mPlayer[key] = m_pScene->m_m1HswordPlayer[key];
+
+            m_pScene->m_mPlayer[key]->SetPosition(beforepos);
+
+            float tpitch = m_pScene->m_mPlayer[key]->GetPitch();
+            float tyaw = m_pScene->m_mPlayer[key]->GetYaw();
+            float troll = m_pScene->m_mPlayer[key]->GetRoll();
+
+            m_pScene->m_mPlayer[key]->Rotate(-tpitch + beforepitch, -tyaw + beforeyaw, 0);
+            break;
+        }
+        }
+    }
+    else {
+        switch (weapon) {
+        case PT_BOW: {
+            float beforepitch = m_pPlayer->GetPitch();
+            float beforeyaw = m_pPlayer->GetYaw();
+            float beforeroll = m_pPlayer->GetRoll();
+            XMFLOAT3 beforepos = m_pPlayer->GetPosition();
+
+            m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
+            m_pScene->m_mPlayer[client_key] = m_pScene->m_mBowPlayer[client_key];
+            m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
+            m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
+            m_pPlayer = m_pFramework->m_pPlayer;
+
+            m_pPlayer->SetPosition(beforepos);
+
+            float tpitch = m_pPlayer->GetPitch();
+            float tyaw = m_pPlayer->GetYaw();
+            float troll = m_pPlayer->GetRoll();
+
+            m_pPlayer->Rotate(-tpitch + beforepitch, -tyaw + beforeyaw, 0);
+            m_pFramework->m_pCamera = m_pPlayer->GetCamera();
+            break;
+        }
+        case PT_SWORD1H: {
+            XMFLOAT3 beforepos = m_pPlayer->GetPosition();
+            float beforepitch = m_pPlayer->GetPitch();
+            float beforeyaw = m_pPlayer->GetYaw();
+            float beforeroll = m_pPlayer->GetRoll();
+
+            m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
+            m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
+            m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
+            m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
+            m_pPlayer = m_pFramework->m_pPlayer;
+
+            m_pPlayer->SetPosition(beforepos);
+
+            float tpitch = m_pPlayer->GetPitch();
+            float tyaw = m_pPlayer->GetYaw();
+            float troll = m_pPlayer->GetRoll();
+
+            m_pPlayer->Rotate(-tpitch + beforepitch, -tyaw + beforeyaw, 0);
+            m_pFramework->m_pCamera = m_pPlayer->GetCamera();
+            break;
+        }
+        }
+    }
+}
+
 void CPacket::ProcessPacket(char* buf)
 {
     switch (buf[1])
@@ -181,6 +285,14 @@ void CPacket::ProcessPacket(char* buf)
             client_key = key;
             roomID = p->roomid;
             printf("recv key from server: %d\n", key);
+
+            m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
+            m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
+            m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
+            m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
+            m_pPlayer = m_pFramework->m_pPlayer;
+            m_pFramework->m_pCamera = m_pPlayer->GetCamera();
+
             Send_login_packet(userID);
         }
         break;
@@ -195,8 +307,8 @@ void CPacket::ProcessPacket(char* buf)
         if (key != -1) {
             client_key = key;
             roomID = p->roomid;
-           /* m_pScene->m_pPlayer->SetPosition(p->Position);
-            m_pScene->m_pPlayer->Rotate(p->dx, p->dy, 0);*/
+           /* m_pPlayer->SetPosition(p->Position);
+            m_pPlayer->Rotate(p->dx, p->dy, 0);*/
             printf("Login game\n");
         }
         break;
@@ -211,8 +323,8 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->AnimatePlayer(key, 0);
         }
         else {
-            m_pScene->m_pPlayer->SetPosition(p->Position);
-            m_pScene->m_pPlayer->Rotate(p->dx, p->dy, 0);
+            m_pPlayer->SetPosition(p->Position);
+            m_pPlayer->Rotate(p->dx, p->dy, 0);
         }
         break;
     }
@@ -274,13 +386,15 @@ void CPacket::ProcessPacket(char* buf)
         else {
             switch (p->MoveType) {
             case PlayerMove::WAKING:
-                m_pScene->AnimatePlayer(key, 11); // 11
+                if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+                    m_pScene->AnimatePlayer(key, 10);
+                else
+                    m_pScene->AnimatePlayer(key, 11); // 11
                 break;
             case PlayerMove::RUNNING:
                 m_pScene->AnimatePlayer(key, 2); // 2
                 break;
             case PlayerMove::JUMP:
-                printf("%d jump\n", key);
                 m_pScene->AnimatePlayer(key, 1);
                 break;
             default:
@@ -289,9 +403,6 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->MovePlayer(key, p->Position);
             m_pScene->m_mPlayer[key]->Rotate(p->dx, p->dy, 0);
         }
-        //m_pCamera->Rotate(p->dx, p->dy, p->dz);
-        /* m_pPlayer->Update(fTimeElapsed);
-         m_pScene->Update(fTimeElapsed);*/
         break;
     }
     case PacketType::SC_start_pos: {
@@ -308,9 +419,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_weapon_swap: {
         Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
         int key = p->key;
-        if (p->weapon == PT_BOW) {
-        }
-
+        Swap_weapon(key, (PlayerType)p->weapon);
         break;
     }
     case PacketType::SC_player_attack: {
@@ -386,7 +495,7 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_mPlayer[key]->SetPosition(p->Position);
         }
         else
-            m_pScene->m_pPlayer->SetPosition(p->Position);
+            m_pPlayer->SetPosition(p->Position);
 
         break;
     }

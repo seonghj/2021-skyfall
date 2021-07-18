@@ -69,7 +69,7 @@ public:
 	void CheckCollision();
 	void CheckTarget();
 
-	CPlayer								*m_pPlayer = NULL;
+	CTerrainPlayer						*m_pPlayer = NULL;
 
 protected:
 	ID3D12RootSignature					*m_pd3dGraphicsRootSignature = NULL;
@@ -104,7 +104,9 @@ public:
 
 	int									m_nGameObjects = 0;
 	CMonster							**m_ppGameObjects = NULL;
-	array<CPlayer*, 20>					m_mPlayer;
+	array<CTerrainPlayer*, 20>			m_mPlayer;
+	array<C1HswordPlayer*, 20>			m_m1HswordPlayer;
+	array<CBowPlayer*, 20>				m_mBowPlayer;
 
 	float								m_fElapsedTime = 0.0f;
 

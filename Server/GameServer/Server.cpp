@@ -602,8 +602,6 @@ void Server::process_packet(int key, char* buf, int roomID)
             break;
         }
 #endif
-        sessions[roomID][client_key].f3Position = XMFLOAT3(50.f, 150.0f, 50.f);
-
         strcpy_s(sessions[roomID][client_key].id, p->id);
 
         send_player_loginOK_packet(client_key, sessions[roomID][client_key].roomID);

@@ -1,8 +1,11 @@
 #pragma once
-#include"stdafx.h"
+#include "stdafx.h"
 #include "player.h"
 #include "Scene.h"
 #include "protocol.h"
+#include "GameFramework.h"
+
+class CGameFramework;
 
 class CPacket {
 public:
@@ -19,7 +22,8 @@ public:
 	WSABUF wsabuf;
 	HANDLE SendEvent;
 
-	CPlayer* m_pPlayer = NULL;
+	CTerrainPlayer* m_pPlayer = NULL;
+	CGameFramework* m_pFramework = NULL;
 	CScene* m_pScene = NULL;
 
 	float fTimeElapsed;
@@ -34,6 +38,9 @@ public:
 	void Send_attack_packet(int type);
 	void Send_stop_packet();
 	void Send_login_packet(char* id);
+	void Send_swap_weapon_packet(PlayerType weapon);
+	void Swap_weapon(int key, PlayerType weapon);
+
 	void ProcessPacket(char* buf);
 
 	void Login();

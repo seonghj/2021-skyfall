@@ -52,6 +52,9 @@ public:
 	float						m_DegreeY;
 	float						m_DegreeZ;
 
+	CTerrainPlayer*				m_pPlayer = NULL;
+	CCamera*					m_pCamera = NULL;
+
 private:
 	HINSTANCE					m_hInstance;
 	HWND						m_hWnd; 
@@ -93,11 +96,9 @@ private:
 	CGameTimer					m_ChargeTimer;
 
 	CScene						*m_pScene = NULL;
-	CTerrainPlayer				*m_pPlayer = NULL;
 	CTerrainPlayer				*m_ppOtherPlayer[OTHER_PLAYER_NUM];
-	CCamera						*m_pCamera = NULL;
 
-	CPacket* m_pPacket = NULL;
+	CPacket						*m_pPacket = NULL;
 
 	POINT						m_ptOldCursorPos;
 
