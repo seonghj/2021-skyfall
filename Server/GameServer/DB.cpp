@@ -34,7 +34,7 @@ bool DB::Connection()
 bool DB::Send_Query(char* buf)
 {
     int state = mysql_query(connection, buf);
-    if (state != 0)
+    if (state != 0)  
     {
         printf("MySQL query error : %s\n", mysql_error(&conn));
         return 0;

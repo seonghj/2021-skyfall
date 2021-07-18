@@ -456,7 +456,6 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 void CGameFramework::CheckCollision()
 {
 	m_pScene->CheckCollision();
-	m_pScene->CheckTarget();
 }
 
 void CGameFramework::OnDestroy()

@@ -294,6 +294,7 @@ void CPlayer::CheckCollision(CGameObject* pObject)
 		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
 		Move(Vector3::ScalarProduct(d, 50.25f, true), true);
 
+		pObject->SetBehaviorActivate(true);
 		cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
 	}
 }

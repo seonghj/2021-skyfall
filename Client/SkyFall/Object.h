@@ -357,6 +357,7 @@ public:
 
 public:
 	bool							m_bActive = true;
+	bool							m_bBehaviorActivate = false;
 
 	char							m_pstrFrameName[64];
 
@@ -387,10 +388,12 @@ public:
 	void SetHp(int hp) { m_iHp = hp; }
 	void SetAtkStat(float atk) { m_iAtkStat = atk; }
 	void SetDefStat(float def) { m_iDefStat = def; }
+	void SetBehaviorActivate(bool activate) { m_bBehaviorActivate = activate; }
 
 	int GetHp() const { return(m_iHp); }
 	int GetAtkStat() const { return(m_iAtkStat); }
 	int GetDefStat() const { return(m_iDefStat); }
+	bool GetBehaviorActivate() const { return(m_bBehaviorActivate); }
 
 	void SetMesh(CMesh *pMesh);
 	void SetShader(CShader *pShader);
@@ -399,7 +402,7 @@ public:
 	void SetSkinnedAnimationWireFrameShader();
 	void SetBoundingBoxShader();
 	void SetMaterial(int nMaterial, CMaterial *pMaterial);
-
+	 
 	void SetChild(CGameObject *pChild, bool bReferenceUpdate=false);
 
 	virtual void BuildMaterials(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList) { }
@@ -421,6 +424,7 @@ public:
 
 	XMFLOAT3 GetPosition();
 	XMFLOAT3 GetLook();
+	XMFLOAT3 GetParentLook();
 	XMFLOAT3 GetUp();
 	XMFLOAT3 GetRight();
 
@@ -517,7 +521,7 @@ public:
 class CMap : public CGameObject
 {
 public:
-	CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext=0);
+	CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, vector<int>arrange, void* pContext=0);
 	virtual ~CMap();
 
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
