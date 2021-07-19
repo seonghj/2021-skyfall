@@ -74,7 +74,7 @@ void CScene::BuildDefaultLightsAndMaterials()
 	m_pLights[3].m_fTheta = (float)cos(XMConvertToRadians(30.0f));
 }
 
-void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
+void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, vector<int> arrange)
 {
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
 
@@ -112,13 +112,11 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	m_ppGameObjects[3] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, m_pTerrain);
 	if (pMetalonModel)delete pMetalonModel;
 
-	vector<int>test_arrange{ 0, 0, -1, 0, 1, 0 };
-	
-	m_pTerrain->SetPosition(2048.0f * test_arrange[0], 0.0f, 2048.0f * test_arrange[1]);
-	m_pForestTerrain->SetPosition(2048.0f * test_arrange[2], 0.0f, 2048.0f * test_arrange[3]);
-	m_pSnowTerrain->SetPosition(2048.0f * test_arrange[4], 125.0f, 2048.0f * test_arrange[5]);
+	m_pTerrain->SetPosition(2048.0f * arrange[0], 0.0f, 2048.0f * arrange[1]);
+	m_pForestTerrain->SetPosition(2048.0f * arrange[2], 0.0f, 2048.0f * arrange[3]);
+	m_pSnowTerrain->SetPosition(2048.0f * arrange[4], 125.0f, 2048.0f * arrange[5]);
 
-	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, test_arrange);
+	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
