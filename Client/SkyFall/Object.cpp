@@ -803,8 +803,11 @@ void CGameObject::Animate(float fTimeElapsed)
 
 void CGameObject::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
 {
-	if (!strcmp(m_pstrFrameName, "BoundingBox") && !gbShowBoundingBox)
+	if (!strcmp(m_pstrFrameName, "BoundingBox") && !gbShowBoundingBox) {
+		if (m_pSibling) m_pSibling->Render(pd3dCommandList, pCamera);
+		if (m_pChild) m_pChild->Render(pd3dCommandList, pCamera);
 		return;
+	}
 
 	if (m_bActive)
 	{
