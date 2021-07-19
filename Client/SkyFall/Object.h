@@ -584,7 +584,7 @@ public:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 enum MonsterState {
-	Idle,Die,TakeDamage,
+	Idle, Die, TakeDamage, Move = 0
 };
 class CMonster : public CGameObject
 {
@@ -603,7 +603,11 @@ public:
 	virtual void TakeDamage(int iDamage);
 	virtual void Update(float fTimeElapsed);
 	void SetIdle();
-	void InitAnimation();
+	void ChangeState(int nState);
+	virtual void Attack();
+	virtual void InitAnimation();
+
+	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 };
 
 
@@ -613,11 +617,18 @@ public:
 class CDragon : public CMonster
 {
 private:
+	const int nDragon_BiteAttack = 3;
+	const int nDragon_ProjectileAttack = 4;
+	const int nDragon_BreathAttack = 5;
 
 public:
 	CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext = 0, int nAnimationCount=0);
 	virtual ~CDragon();
 	virtual void Update(float fTimeElapsed);
+	virtual void Attack();
+	virtual void InitAnimation();
+
+	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 };
 
 
@@ -627,10 +638,18 @@ public:
 
 class CWolf : public CMonster
 {
+private:
+	const int nWolf_BiteAttack = 3;
+	const int nWolf_PoundAttack = 4;
+	const int nWolf_Howl = 8;
 public:
 	CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext = 0, int nAnimationCount=0);
 	virtual ~CWolf();
 	virtual void Update(float fTimeElapsed);
+	virtual void Attack();
+	virtual void InitAnimation();
+
+	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -638,8 +657,16 @@ public:
 
 class CMetalon : public CMonster
 {
+private:
+	const int nMetalon_CastSpell = 3;
+	const int nMetalon_Defend = 4;
+	const int nMetalon_Jump = 5;
 public:
 	CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext = 0, int nAnimationCount = 0);
 	virtual ~CMetalon();
 	virtual void Update(float fTimeElapsed);
+	virtual void Attack();
+	virtual void InitAnimation();
+
+	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 };

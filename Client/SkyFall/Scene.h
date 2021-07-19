@@ -67,7 +67,7 @@ public:
 	void ReleaseUploadBuffers();
 
 	void CheckCollision();
-	void CheckBehavior(CGameObject* pObject);
+	void CheckBehavior(CMonster* pObject);
 	void InitPlayerIDs() { for (int i = 0; i < 20; ++i) PlayerIDs[i] = -1; }
 
 	CPlayer								*m_pPlayer = NULL;

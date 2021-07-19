@@ -1818,6 +1818,8 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
 
 	SetChild(pDragonModel->m_pModelRootObject, true);
+
+	m_nAnimations = nAnimationTracks;
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pDragonModel);
 
 	strcpy_s(m_pstrFrameName, "Dragon");
@@ -1867,11 +1869,53 @@ void CDragon::Update(float fTimeElapsed)
 	}
 }
 
+void CDragon::Attack()
+{
+	if (m_iState == Idle || m_iState == MonsterState::Move) {
+		ChangeState(nDragon_BiteAttack);
+	}
+	else if (m_pSkinnedAnimationController->IsTrackFinish(nDragon_BiteAttack)) {
+		m_pSkinnedAnimationController->SetTrackPosition(nDragon_BiteAttack, 0);
+	}
+}
+
+void CDragon::InitAnimation()
+{
+	CMonster::InitAnimation();
+	m_pSkinnedAnimationController->SetTrackType(nDragon_BiteAttack, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackType(nDragon_ProjectileAttack, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackType(nDragon_BreathAttack, ANIMATION_TYPE_ONCE);
+
+#ifdef _WITH_SOUND_CALLBACK
+	m_pSkinnedAnimationController->SetCallbackKeys(nMonster_Die, 1);
+	m_pSkinnedAnimationController->SetCallbackKey(nMonster_Die, 0, 0.001f, _T("Sound/Footstep01.wav"));
+
+	CAnimationCallbackHandler* pAnimationCallbackHandler = new CSoundCallbackHandler();
+	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nMonster_Die, pAnimationCallbackHandler);
+#endif
+
+	m_iState = Idle;
+	m_pSkinnedAnimationController->SetAllTrackDisable();
+	m_pSkinnedAnimationController->SetTrackPosition(m_iState, 0);
+	m_pSkinnedAnimationController->SetTrackEnable(m_iState, true);
+}
+
+void CDragon::Move(const XMFLOAT3& vDirection, float fSpeed)
+{
+	CMonster::Move(vDirection, fSpeed);
+
+	if (m_pSkinnedAnimationController->IsTrackFinish(nDragon_BiteAttack)) {
+		ChangeState(MonsterState::Move);
+	}
+}
+
 CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext, int nAnimationCount) :CMonster()
 {
 	CLoadedModelInfo* pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
 	
 	SetChild(pWolfModel->m_pModelRootObject, true);
+
+	m_nAnimations = nAnimationTracks;
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pWolfModel);
 	strcpy_s(m_pstrFrameName, "Wolf");
 
@@ -1914,11 +1958,51 @@ void CWolf::Update(float fTimeElapsed)
 	}
 }
 
+void CWolf::Attack()
+{
+	if (m_iState == Idle || m_iState == MonsterState::Move) {
+		ChangeState(nWolf_BiteAttack);
+	}
+	else if (m_pSkinnedAnimationController->IsTrackFinish(nWolf_BiteAttack)) {
+		m_pSkinnedAnimationController->SetTrackPosition(nWolf_BiteAttack, 0);
+	}
+}
+
+void CWolf::InitAnimation()
+{
+	CMonster::InitAnimation();
+
+	m_pSkinnedAnimationController->SetTrackType(nWolf_BiteAttack, ANIMATION_TYPE_ONCE);
+#ifdef _WITH_SOUND_CALLBACK
+	m_pSkinnedAnimationController->SetCallbackKeys(nMonster_Die, 1);
+	m_pSkinnedAnimationController->SetCallbackKey(nMonster_Die, 0, 0.001f, _T("Sound/Footstep01.wav"));
+
+	CAnimationCallbackHandler* pAnimationCallbackHandler = new CSoundCallbackHandler();
+	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nMonster_Die, pAnimationCallbackHandler);
+#endif
+
+	m_iState = Idle;
+	m_pSkinnedAnimationController->SetAllTrackDisable();
+	m_pSkinnedAnimationController->SetTrackPosition(m_iState, 0);
+	m_pSkinnedAnimationController->SetTrackEnable(m_iState, true);
+}
+
+void CWolf::Move(const XMFLOAT3& vDirection, float fSpeed)
+{
+	CMonster::Move(vDirection, fSpeed);
+
+	if (m_pSkinnedAnimationController->IsTrackFinish(nWolf_BiteAttack)) {
+		ChangeState(MonsterState::Move);
+	}
+}
+
 CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext, int nAnimationCount) :CMonster()
 {
 	CLoadedModelInfo* pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
 
 	SetChild(pMetalonModel->m_pModelRootObject, true);
+
+	m_nAnimations = nAnimationTracks;
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMetalonModel);
 
 	strcpy_s(m_pstrFrameName, "Metalon");
@@ -1962,6 +2046,43 @@ void CMetalon::Update(float fTimeElapsed)
 	}
 }
 
+void CMetalon::Attack()
+{
+	if (m_iState == Idle || m_iState == MonsterState::Move) {
+		ChangeState(nMetalon_CastSpell);
+	}
+	else if (m_pSkinnedAnimationController->IsTrackFinish(nMetalon_CastSpell)) {
+		m_pSkinnedAnimationController->SetTrackPosition(nMetalon_CastSpell, 0);
+	}
+}
+
+void CMetalon::InitAnimation()
+{
+	CMonster::InitAnimation();
+
+	m_pSkinnedAnimationController->SetTrackType(nMetalon_CastSpell, ANIMATION_TYPE_ONCE);
+#ifdef _WITH_SOUND_CALLBACK
+	m_pSkinnedAnimationController->SetCallbackKeys(nMonster_Die, 1);
+	m_pSkinnedAnimationController->SetCallbackKey(nMonster_Die, 0, 0.001f, _T("Sound/Footstep01.wav"));
+
+	CAnimationCallbackHandler* pAnimationCallbackHandler = new CSoundCallbackHandler();
+	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nMonster_Die, pAnimationCallbackHandler);
+#endif
+	m_iState = Idle;
+	m_pSkinnedAnimationController->SetAllTrackDisable();
+	m_pSkinnedAnimationController->SetTrackPosition(m_iState, 0);
+	m_pSkinnedAnimationController->SetTrackEnable(m_iState, true);
+}
+
+void CMetalon::Move(const XMFLOAT3& vDirection, float fSpeed)
+{
+	CMonster::Move(vDirection, fSpeed);
+
+	if (m_pSkinnedAnimationController->IsTrackFinish(nMetalon_CastSpell)) {
+		ChangeState(MonsterState::Move);
+	}
+}
+
 CMonster::CMonster()
 {
 	m_nAnimations = 3;
@@ -1997,24 +2118,35 @@ void CMonster::Update(float fTimeElapsed)
 
 void CMonster::SetIdle()
 {
-	m_pSkinnedAnimationController->SetTrackEnable(m_iState , false);
-	m_pSkinnedAnimationController->SetTrackPosition(m_iState , 0);
-	m_iState = MonsterState::Idle;
-	m_pSkinnedAnimationController->SetTrackPosition(m_iState , 0);
-	m_pSkinnedAnimationController->SetTrackEnable(m_iState , true);
+	ChangeState(Idle);
+}
+
+void CMonster::ChangeState(int nState)
+{
+	m_pSkinnedAnimationController->SetTrackEnable(m_iState, false);
+	m_pSkinnedAnimationController->SetTrackPosition(m_iState, 0);
+	m_iState = nState;
+	m_pSkinnedAnimationController->SetTrackPosition(m_iState, 0);
+	m_pSkinnedAnimationController->SetTrackEnable(m_iState, true);
+}
+
+void CMonster::Attack()
+{
 }
 
 void CMonster::InitAnimation()
 {
-	m_nTrackOffSet *= m_nAnimations;
+	//m_nTrackOffSet *= m_nAnimations;
 
 	for (int i = 0; i < m_nAnimations; ++i)
 		m_pSkinnedAnimationController->SetTrackAnimationSet(i , i);
 
 	m_pSkinnedAnimationController->SetTrackType(nMonster_Die, ANIMATION_TYPE_ONCE);
 	m_pSkinnedAnimationController->SetTrackType(nMonster_TakeDamage, ANIMATION_TYPE_ONCE);
+}
 
-	m_pSkinnedAnimationController->SetAllTrackDisable();
-	m_pSkinnedAnimationController->SetTrackEnable(nMonster_Idle , true);
-	m_iState = Idle;
+void CMonster::Move(const XMFLOAT3& vDirection, float fSpeed)
+{
+	if(m_iState == MonsterState::Move)
+		CGameObject::Move(vDirection, fSpeed);
 }
