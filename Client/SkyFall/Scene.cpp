@@ -112,8 +112,13 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	m_ppGameObjects[3] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, m_pTerrain);
 	if (pMetalonModel)delete pMetalonModel;
 
+	vector<int>test_arrange{ 0, 0, -1, 0, 1, 0 };
 	
-	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_pTerrain->SetPosition(2048.0f * test_arrange[0], 0.0f, 2048.0f * test_arrange[1]);
+	m_pForestTerrain->SetPosition(2048.0f * test_arrange[2], 0.0f, 2048.0f * test_arrange[3]);
+	m_pSnowTerrain->SetPosition(2048.0f * test_arrange[4], 125.0f, 2048.0f * test_arrange[5]);
+
+	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, test_arrange);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
@@ -502,13 +507,42 @@ void CScene::ReleaseUploadBuffers()
 
 void CScene::CheckCollision()
 {
-
 	for (int i = 0; i < m_nGameObjects; ++i) {
 		if (m_ppGameObjects[i]->GetHp() > 0) {
 			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
+			if(m_ppGameObjects[i]->GetBehaviorActivate() == true)
+				CheckBehavior(m_ppGameObjects[i]);
 		}
 	}
 	m_pMap->CheckCollision(m_pPlayer);
+}
+
+void CScene::CheckBehavior(CGameObject *pObject)
+{
+	XMFLOAT3 subtract;
+	float rotation;
+	float range;
+	subtract = Vector3::Subtract(m_pPlayer->GetPosition(), pObject->GetPosition());
+	range = Vector3::Length(subtract);
+	if (range < 200.0f)
+	{
+		// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
+		if (range <= 100.0f) {
+			return;
+		}
+		subtract = Vector3::Normalize(subtract);
+		printf("range : %f\n", range);
+		//printf(" x : %f / y : %f / z : %f\n", m_ppGameObjects[i]->GetLook().x, m_ppGameObjects[i]->GetLook().y, m_ppGameObjects[i]->GetLook().z);
+		//rotation = acosf(Vector3::DotProduct(subtract, Vector3::Normalize(m_ppGameObjects[i]->GetLook())) / (Vector3::Length(subtract) * Vector3::Length(Vector3::Normalize(m_ppGameObjects[i]->GetLook()))));
+		//rotation = Vector3::Angle(subtract, Vector3::Normalize(m_ppGameObjects[i]->GetLook()));
+		//printf("rotation : %f\n", rotation / PI * 180.0f);
+		/*if(EPSILON <= rotation)
+			m_ppGameObjects[i]->Rotate(0.0f, 0.0f, rotation / PI * 180.0f);*/
+		subtract.y = 0;
+		pObject->Move(subtract, 0.5f);
+	}
+	//printf("%d 번째 크기 : %f\n", i, Vector3::Length(Vector3::Subtract(m_ppGameObjects[i]->GetPosition(), m_pPlayer->GetPosition())));
+
 }
 
 void CScene::CreateCbvSrvDescriptorHeaps(ID3D12Device *pd3dDevice, int nConstantBufferViews, int nShaderResourceViews)
