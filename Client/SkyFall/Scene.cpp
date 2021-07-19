@@ -523,6 +523,7 @@ void CScene::CheckBehavior(CGameObject *pObject)
 	float rotation;
 	float range;
 	subtract = Vector3::Subtract(m_pPlayer->GetPosition(), pObject->GetPosition());
+	subtract.y = 0;
 	range = Vector3::Length(subtract);
 	if (range < 200.0f)
 	{
@@ -532,13 +533,21 @@ void CScene::CheckBehavior(CGameObject *pObject)
 		}
 		subtract = Vector3::Normalize(subtract);
 		printf("range : %f\n", range);
-		//printf(" x : %f / y : %f / z : %f\n", m_ppGameObjects[i]->GetLook().x, m_ppGameObjects[i]->GetLook().y, m_ppGameObjects[i]->GetLook().z);
-		//rotation = acosf(Vector3::DotProduct(subtract, Vector3::Normalize(m_ppGameObjects[i]->GetLook())) / (Vector3::Length(subtract) * Vector3::Length(Vector3::Normalize(m_ppGameObjects[i]->GetLook()))));
-		//rotation = Vector3::Angle(subtract, Vector3::Normalize(m_ppGameObjects[i]->GetLook()));
-		//printf("rotation : %f\n", rotation / PI * 180.0f);
-		/*if(EPSILON <= rotation)
-			m_ppGameObjects[i]->Rotate(0.0f, 0.0f, rotation / PI * 180.0f);*/
-		subtract.y = 0;
+		
+		// 실제 몬스터의 look 벡터
+		XMFLOAT3 look = Vector3::ScalarProduct(pObject->GetUp(),-1);
+		printf(" x : %f / y : %f / z : %f\n", pObject->GetUp().x, pObject->GetUp().y, pObject->GetUp().z);
+
+		rotation = acosf(Vector3::DotProduct(subtract, look)) * 180 / PI;
+		printf("rotation : %f\n", rotation);
+
+		// 외적에 따라 가까운 방향으로 회전하도록
+		XMFLOAT3 cross = Vector3::CrossProduct(subtract, look);
+
+		/*rotation = Vector3::Angle(subtract, look);
+		printf("rotation2 : %f\n", rotation);*/
+		if(EPSILON <= rotation)
+			pObject->Rotate(0.0f, 0.0f, -cross.y * rotation / 10);
 		pObject->Move(subtract, 0.5f);
 	}
 	//printf("%d 번째 크기 : %f\n", i, Vector3::Length(Vector3::Subtract(m_ppGameObjects[i]->GetPosition(), m_pPlayer->GetPosition())));

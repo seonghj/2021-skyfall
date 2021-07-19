@@ -603,7 +603,7 @@ void CGameFramework::ProcessInput()
 		}
 
 		float cxDelta = 0.0f, cyDelta = 0.0f;
-		if ((GetCapture() == m_hWnd )/*|| m_pCamera->GetMode() == FIRST_PERSON_CAMERA) || m_pCamera->GetMode() == THIRD_PERSON_CAMERA*/)
+		if ((GetCapture() == m_hWnd || m_pCamera->GetMode() == FIRST_PERSON_CAMERA) || m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
 		{
 			if(!m_bMouseHold)
 				SetCursor(NULL);

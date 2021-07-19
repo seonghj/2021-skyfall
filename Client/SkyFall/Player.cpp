@@ -294,8 +294,9 @@ void CPlayer::CheckCollision(CGameObject* pObject)
 		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
 		Move(Vector3::ScalarProduct(d, 50.25f, true), true);
 
-		pObject->SetBehaviorActivate(true);
-		cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
+		// 여기는 플레이어가 몬스터한테 맞는 부분
+		//pObject->SetBehaviorActivate(true);
+		//cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
 	}
 }
 
@@ -984,6 +985,9 @@ void C1HswordPlayer::CheckCollision(CGameObject* pObject)
 			pObject->TakeDamage(m_iAtkStat * (1.f + m_nAttack / 4.f));
 			cout << "Sword Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
 			m_bHit = false;
+
+			pObject->SetBehaviorActivate(true);
+			cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
 		}
 	}
 }
