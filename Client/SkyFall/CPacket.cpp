@@ -229,7 +229,6 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
         case PT_BOW: {
             float beforepitch = m_pPlayer->GetPitch();
             float beforeyaw = m_pPlayer->GetYaw();
-            float beforeroll = m_pPlayer->GetRoll();
             XMFLOAT3 beforepos = m_pPlayer->GetPosition();
 
             m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
@@ -242,7 +241,6 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
 
             float tpitch = m_pPlayer->GetPitch();
             float tyaw = m_pPlayer->GetYaw();
-            float troll = m_pPlayer->GetRoll();
 
             m_pPlayer->Rotate(-tpitch + beforepitch, -tyaw + beforeyaw, 0);
             m_pFramework->m_pCamera = m_pPlayer->GetCamera();
@@ -252,7 +250,6 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             XMFLOAT3 beforepos = m_pPlayer->GetPosition();
             float beforepitch = m_pPlayer->GetPitch();
             float beforeyaw = m_pPlayer->GetYaw();
-            float beforeroll = m_pPlayer->GetRoll();
 
             m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
             m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
@@ -264,7 +261,6 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
 
             float tpitch = m_pPlayer->GetPitch();
             float tyaw = m_pPlayer->GetYaw();
-            float troll = m_pPlayer->GetRoll();
 
             m_pPlayer->Rotate(-tpitch + beforepitch, -tyaw + beforeyaw, 0);
             m_pFramework->m_pCamera = m_pPlayer->GetCamera();
@@ -386,10 +382,11 @@ void CPacket::ProcessPacket(char* buf)
         else {
             switch (p->MoveType) {
             case PlayerMove::WAKING:
-                if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
-                    m_pScene->AnimatePlayer(key, 10);
-                else
-                    m_pScene->AnimatePlayer(key, 11); // 11
+                if (!strcmp(m_pScene->m_mPlayer[key]->m_pstrFrameName, "Player_Bow")) {
+                    m_pScene->AnimatePlayer(key, animation_Bow::B_Walk);
+                }
+                else if (!strcmp(m_pScene->m_mPlayer[key]->m_pstrFrameName, "Player_1Hsword"))
+                    m_pScene->AnimatePlayer(key, animation_1HSword::SH1_Walk); // 11
                 break;
             case PlayerMove::RUNNING:
                 m_pScene->AnimatePlayer(key, 2); // 2
@@ -448,21 +445,21 @@ void CPacket::ProcessPacket(char* buf)
         else {
             switch (p->attack_type) {
             case SWORD1HL: {
-                m_pScene->AnimatePlayer(key, 6);
+                m_pScene->AnimatePlayer(key, animation_1HSword::SH1_Attack1);
                 printf("key: %d SWORD1HL attack\n", p->key);
                 break;
             }
             case SWORD1HR: {
-                m_pScene->AnimatePlayer(key, 9);
+                m_pScene->AnimatePlayer(key, animation_1HSword::SH1_Attack4);
                 printf("key: %d SWORD1HR attack\n", p->key);
                 break;
             }
             case BOWL: {
-                m_pScene->m_mPlayer[key]->LButtonDown();
+                m_pScene->AnimatePlayer(key, animation_Bow::B_ShotReady);
                 printf("key: %d BOWL attack\n", p->key);
             }
             case BOWR: {
-                m_pScene->m_mPlayer[key]->RButtonDown();
+                m_pScene->AnimatePlayer(key, animation_Bow::B_ShotReady);
                 printf("key: %d BOWR attack\n", p->key);
             }
             }
@@ -477,10 +474,12 @@ void CPacket::ProcessPacket(char* buf)
             m_pPlayer->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
             m_pPlayer->SetAttack(false);
             m_pPlayer->SetCharging(false);
+            m_pScene->AnimatePlayer(key, animation_Bow::B_ShotRelease);
         }
         else {
             m_pScene->m_mPlayer[key]->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
             m_pScene->m_mPlayer[key]->SetAttack(false);
+            m_pScene->AnimatePlayer(key, animation_Bow::B_ShotRelease);
         }
         break;
     }

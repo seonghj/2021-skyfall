@@ -61,3 +61,34 @@ private:
 	unsigned long currentfps = 1;
 	//static DWORD WINAPI ServerConnect(LPVOID arg);
 };
+
+enum animation_1HSword{
+	SH1_Idle = 0,
+	SH1_Jump = 1,
+	SH1_Run = 2,
+	SH1_RunBack = 3,
+	SH1_RunLeft = 4,
+	SH1_RunRight = 5,
+	SH1_Attack1 = 6,
+	SH1_Attack2 = 7,
+	SH1_Attack3 = 8,
+	SH1_Attack4 = 9,
+	SH1_TakeDamage = 10,
+	SH1_Walk = 11,
+	SH1_Death = 12
+};
+
+enum animation_Bow {
+	B_Idle = 0,
+	B_Jump = 1,
+	B_Run = 2,
+	B_RunBack = 3,
+	B_RunLeft = 4,
+	B_RunRight = 5,
+	B_ShotHold = 6,
+	B_ShotReady = 7,
+	B_ShotRelease = 8,
+	B_TakeDamage = 9,
+	B_Walk = 10,
+	B_Death = 11
+};

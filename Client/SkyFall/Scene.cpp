@@ -179,6 +179,18 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(6, true);
 		//cout << "6" << endl;
 		break;
+	case 7:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(7, true);
+		//cout << "6" << endl;
+		break;
+	case 8:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(8, true);
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+		//cout << "6" << endl;
+		break;
 	case 9:
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(9, true);
@@ -186,54 +198,13 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		break;
 	case 10:
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(12, true);
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(10, true);
 		break;
 	case 11:
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(11, true);
 		break;
-	//case 0:	// LbuttonDown
-	//	m_mPlayer[id]->LButtonDown();
-	//	m_mPlayer[id]->Update(0.016);
-	//	cout << "0" << endl;
-	//	break;
-	//case 1:	// LbuttonUp
-	//	m_mPlayer[id]->LButtonUp();
-	//	m_mPlayer[id]->Update(0.016);
-	//	cout << "1" << endl;
-	//	break;
-	//case 2: // RbuttonDown
-	//	m_mPlayer[id]->RButtonDown();
-	//	m_mPlayer[id]->Update(0.016);
-	//	cout << "2" << endl;
-	//	break;
-	//case 3:
-	//	m_mPlayer[id]->RButtonUp();
-	//	m_mPlayer[id]->Update(0.016);
-	//	cout << "3" << endl;
-	//	break;
 	}
-	//m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(animation_num, 3);
-	//if (m_mPlayer[id]->m_pSkinnedAnimationController)
-	//{
-	//	XMFLOAT3 vel = m_mPlayer[id]->GetVelocity();
-	//	float fLength = sqrtf(vel.x * vel.x + vel.z * vel.z);
-
-	//	if (m_mPlayer[id]->GetJump()) {
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(m_mPlayer[id]->n1Hsword_Jump, 0);
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->n1Hsword_Jump, true);
-	//	}
-	//	else if (m_mPlayer[id]->GetAttack()) {
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->n1Hsword_Attack1 + m_mPlayer[id]->m_nAttack, true);
-	//	}
-	//	else if (::IsZero(fLength) && m_mPlayer[id]->GetGround())
-	//	{
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->n1Hsword_Idle, true);
-	//	}
-	//}
 }
 
 void CScene::ReleaseObjects()
