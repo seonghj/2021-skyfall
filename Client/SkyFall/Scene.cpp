@@ -470,10 +470,6 @@ void CScene::ReleaseUploadBuffers()
 
 	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_nGameObjects; i++) m_ppGameObjects[i]->ReleaseUploadBuffers();
-
-	for (auto& p : m_mPlayer) {
-		p->ReleaseUploadBuffers();
-	}
 }
 
 void CScene::CheckCollision()

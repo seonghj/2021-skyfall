@@ -369,17 +369,9 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 					m_pCamera = m_pPlayer->ChangeCamera((DWORD)(wParam - VK_F1 + 1), m_GameTimer.GetTimeElapsed());
 					break;
 				case VK_F4: 
-					/*if (m_pScene)
-						m_pScene->m_pPlayer = m_pScene->m_mBowPlayer[m_pPacket->Get_clientkey()];
-					XMFLOAT3 beforepos = m_pPlayer->GetPosition();
-					m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
-					m_pScene->m_mPlayer[m_pPacket->Get_clientkey()] = m_pScene->m_mBowPlayer[m_pPacket->Get_clientkey()];
-					m_pPlayer = m_pScene->m_mBowPlayer[m_pPacket->Get_clientkey()];*/
 					m_pPacket->Send_swap_weapon_packet(PT_BOW);
-					/*m_pPlayer->SetPosition(beforepos);*/
 					break;
 				case VK_F5: 
-					
 					m_pPacket->Send_swap_weapon_packet(PT_SWORD1H);
 					break;
 				case VK_F6:
