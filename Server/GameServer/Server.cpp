@@ -212,6 +212,9 @@ void Server::Accept()
         //printf("client_key: %d\n", client_key);
         send_player_key_packet(client_key, roomID);
 
+        m_pBot->monsterRun = TRUE;
+        m_pBot->RunBot(sessions[roomID], roomID);
+
         do_recv(client_key, roomID);
     }
 
@@ -268,6 +271,8 @@ void Server::do_recv(int key, int roomID)
 
 void Server::send_packet(int to, char* packet, int roomID)
 {
+    if (SC_NONE >= packet[1] || packet[1] >= CS_NONE) return;
+
     SOCKET client_s = sessions[roomID][to].sock;
     OVER_EX* over = new OVER_EX;
     ZeroMemory(over, sizeof(OVER_EX));
@@ -286,6 +291,7 @@ void Server::send_packet(int to, char* packet, int roomID)
             //Disconnected(to, sessions[roomID][to].over.roomID);
         }
     }
+    printf("to: %d packet: %d send\n", to, packet[1]);
 }
 
 void Server::send_player_key_packet(int key, int roomID)
@@ -374,11 +380,10 @@ void Server::send_packet_to_players(int key, char* buf, int roomID)
 {
    //sessions_lock.lock();
     for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (sessions[roomID][i].connected == TRUE)
-            if (sessions[roomID][i].connected)
-                if (in_VisualField(sessions[roomID][key], sessions[roomID][i], roomID)) {
-                    send_packet(i, buf, roomID);
-                }
+        if (sessions[roomID][i].connected == FALSE) continue;
+        if (in_VisualField(sessions[roomID][key], sessions[roomID][i], roomID)) {
+            send_packet(i, buf, roomID);
+        }
     }
     //sessions_lock.unlock();
 }
@@ -387,9 +392,9 @@ void Server::send_packet_to_allplayers(int roomID, char* buf)
 {
    //sessions_lock.lock();
     for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (sessions[roomID][i].connected == TRUE)
-            if (sessions[roomID][i].connected.load(std::memory_order_seq_cst))
-                send_packet(i, buf, roomID);
+        if (sessions[roomID][i].connected == FALSE) continue;
+        if (sessions[roomID][i].connected.load(std::memory_order_seq_cst))
+            send_packet(i, buf, roomID);
     }
    //sessions_lock.unlock();
 }
@@ -452,17 +457,18 @@ void Server::send_monster_pos(const Monster& mon)
     mon_pos_packet p;
     p.size = sizeof(mon_pos_packet);
     p.type = PacketType::SC_monster_pos;
-    p.key = mon.key;
-    p.roomid = mon.roomID;
-    p.Position = mon.f3Position;
-    p.dx = mon.dx;
-    p.dy = mon.dy;
+    p.key = mon.key.load();
+    p.roomid = mon.roomID.load();
+    p.Position = mon.f3Position.load();
+    p.dx = mon.dx.load();
+    p.dy = mon.dy.load();
     p.MoveType = 0;
     p.state = 0;
     
-    for (auto& player : sessions[roomID]) {
-        if (true == in_VisualField(mon, player, roomID))
-            send_packet(player.key, reinterpret_cast<char*>(&p), roomID);
+    for (int i = 0; i < MAX_PLAYER; ++i) {
+        if (sessions[roomID][i].connected == FALSE) continue;
+        if (true == in_VisualField(mon, sessions[roomID][i], roomID))
+            send_packet(sessions[roomID][i].key, reinterpret_cast<char*>(&p), roomID);
     }
 }
 
@@ -559,12 +565,14 @@ void Server::player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, f
     old_nm = sessions[roomID][client_key].near_monster;
 
     for (auto& m : m_pBot->monsters[roomID]) {
+        if (m.state == 0) continue;
         if (in_VisualField(m, sessions[roomID][client_key], roomID)) {
             new_nm.insert(m.key.load());
         }
     }
 
     for (auto m : new_nm) {
+        if (m_pBot->monsters[roomID][m].state == 0) continue;
         if (old_nm.find(m) == old_nm.end()) {
             sessions[roomID][client_key].near_monster.insert(m);
             send_add_monster(m, roomID, key);
@@ -572,6 +580,7 @@ void Server::player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, f
     }
 
     for (auto m : old_nm) {
+        if (m_pBot->monsters[roomID][m].state == 0) continue;
         if (new_nm.find(m) == new_nm.end()) {
             sessions[roomID][client_key].near_monster.erase(m);
             send_remove_monster(m, roomID, client_key);
@@ -819,7 +828,13 @@ void Server::WorkerFunc()
                 delete over_ex;
                 break;
             }
-
+            case EventType::Mon_move_to_player: {
+                mon_move_to_player_event* e = reinterpret_cast<mon_move_to_player_event*>(over_ex->messageBuffer);
+                m_pBot->CheckTarget(sessions[e->roomid], e->roomid);
+                m_pBot->RunBot(sessions[e->roomid], e->roomid);
+                delete over_ex;
+                break;
+            }
             }
         }
         break;

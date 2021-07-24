@@ -43,6 +43,7 @@ enum OVER_EX_Type {
 };
 
 enum PacketType {
+	SC_NONE,
 	SC_player_key,
 	SC_player_loginOK,
 	SC_player_loginFail,
@@ -93,12 +94,14 @@ enum PacketType {
 	CS_player_stop,
 	CS_allow_shot,
 	CS_player_getitem,
+	CS_NONE,
 };
 
 enum EventType {
 	Mapset,
 	Cloud_move,
-	game_end
+	game_end,
+	Mon_move_to_player
 };
 
 enum PlayerState {
@@ -267,7 +270,8 @@ struct player_stop_packet : public Packet {
 };
 
 struct map_block_set : public Packet {
-	char block_num[9];
+	char block_type[9];
+
 };
 
 struct map_collapse_packet : public Packet {
@@ -307,5 +311,9 @@ struct player_record_packet : public Packet {
 
 struct player_getitem_packet :public Packet {
 	short item;
+};
+
+struct mon_move_to_player_event : public Packet {
+
 };
 #pragma pack(pop)

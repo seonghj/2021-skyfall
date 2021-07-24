@@ -47,9 +47,13 @@ public:
     void Set_pServer(Server* s) { m_pServer = s; };
     void Set_pTimer(Timer* t) { m_pTimer = t; };
 
-    void CheckTarget(SESSION& player, int roomID);
+    void CheckTarget(std::array<SESSION, 20> sessions, int roomID);
+
+    void RunBot(std::array<SESSION, 20> sessions, int roomID);
 
     std::unordered_map <int, std::array<Monster, 100>> monsters;
+
+    bool monsterRun = false;
 
 private:
     Server* m_pServer = NULL;

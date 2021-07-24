@@ -40,6 +40,11 @@ void Map::Set_map()
 	p.size = sizeof(p);
 	p.key = roomnum;
 
+	std::random_device rd;
+	std::mt19937_64 gen(rd());
+	std::uniform_int_distribution<int> dis1(0, 2);
+	std::uniform_int_distribution<int> dis2(1000, 1100);
+
 	for (int i = 0; i < MAX_MAP_BLOCK; i++)
 	{
 		while (1)
@@ -48,18 +53,18 @@ void Map::Set_map()
 			if (num_count[n] < 3)
 			{
 				num_count[n]++;
-				Map_num[i] = n;
-				p.block_num[i] = n;
+				Map_type[i] = dis1(gen);
+				p.block_type[i] = Map_type[i];
 				break;
 			}
 		}
 	}
 	for (int i = 0; i < 9; i++)
 	{
-		atm[i] = 1000 + rand() % 100;
-		if (Map_num[i] == terrain::Desert)
+		atm[i] = dis2(gen);
+		if (Map_type[i] == terrain::Desert)
 			atm[i] -= 100;
-		else if (Map_num[i] == terrain::Snowy_field)
+		else if (Map_type[i] == terrain::Snowy_field)
 			atm[i] += 100;
 		isMap_block[i] = TRUE;
 	}
@@ -71,8 +76,6 @@ void Map::Set_map()
 	Set_wind();
 	Set_cloudpos();
 	//print_Map();
-
-
 
 	cloud_move();
 }
@@ -113,7 +116,7 @@ void Map::print_Map()
 	{
 		for (int j = 0; j < 3; j++)
 		{
-			printf("%d: %f | ", Map_num[(3*i)+j], atm[(3 * i) + j]);
+			printf("%d: %f | ", Map_type[(3*i)+j], atm[(3 * i) + j]);
 		}
 		printf("\n");
 	}

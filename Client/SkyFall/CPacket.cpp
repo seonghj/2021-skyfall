@@ -128,8 +128,7 @@ void CPacket::Send_ready_packet()
 void CPacket::Send_attack_packet(int type)
 {
     switch (type) {
-    case PlayerAttackType::BOWL:
-    case PlayerAttackType::BOWR:
+    case PlayerAttackType::BOWL: {
         player_attack_packet p;
         p.key = client_key;
         p.size = sizeof(p);
@@ -137,6 +136,16 @@ void CPacket::Send_attack_packet(int type)
         p.attack_type = type;
         SendPacket(reinterpret_cast<char*>(&p));
         break;
+    }
+    case PlayerAttackType::BOWR: {
+        player_attack_packet p;
+        p.key = client_key;
+        p.size = sizeof(p);
+        p.type = PacketType::CS_player_attack;
+        p.attack_type = type;
+        SendPacket(reinterpret_cast<char*>(&p));
+        break;
+    }
     default: {
         player_attack_packet p;
         p.key = client_key;
@@ -277,20 +286,21 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_key: {
         player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
         int key = p->key;
-        if (key != -1) {
-            client_key = key;
-            roomID = p->roomid;
-            printf("recv key from server: %d\n", key);
 
-            m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
-            m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
-            m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
-            m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
-            m_pPlayer = m_pFramework->m_pPlayer;
-            m_pFramework->m_pCamera = m_pPlayer->GetCamera();
+        if (key < 0 || key > 20) break;
 
-            Send_login_packet(userID);
-        }
+        client_key = key;
+        roomID = p->roomid;
+        printf("recv key from server: %d\n", key);
+
+        m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
+        m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
+        m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
+        m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
+        m_pPlayer = m_pFramework->m_pPlayer;
+        m_pFramework->m_pCamera = m_pPlayer->GetCamera();
+
+        Send_login_packet(userID);
         break;
     }
     case PacketType::SC_player_loginFail: {
@@ -457,10 +467,12 @@ void CPacket::ProcessPacket(char* buf)
             case BOWL: {
                 m_pScene->AnimatePlayer(key, animation_Bow::B_ShotReady);
                 printf("key: %d BOWL attack\n", p->key);
+                break;
             }
             case BOWR: {
                 m_pScene->AnimatePlayer(key, animation_Bow::B_ShotReady);
                 printf("key: %d BOWR attack\n", p->key);
+                break;
             }
             }
         }
@@ -510,8 +522,10 @@ void CPacket::ProcessPacket(char* buf)
         //printf("key: %d cloud move x = %f, z = %f\n",p->roomid, p->x, p->z);
         break;
     }
-    default:
+    /*default: {
+        std::cout << "시발 머임 " << buf[0] << ", " << buf[1] << "\n";
         break;
+    }*/
     }
 }
 
