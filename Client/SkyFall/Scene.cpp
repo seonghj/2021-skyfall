@@ -523,11 +523,12 @@ void CScene::CheckBehavior(CMonster *pMonster)
 	subtract = Vector3::Subtract(m_pPlayer->GetPosition(), pMonster->GetPosition());
 	subtract.y = 0;
 	range = Vector3::Length(subtract);
+	float distance = (pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z - pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z) / 2.0f;
 	if (range < 200.0f)
 	{
+		printf("center : %f\nextents : %f\n\n", pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z, pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z);
 		subtract = Vector3::Normalize(subtract);
 		//printf("range : %f\n", range);
-		
 		// 실제 몬스터의 look 벡터
 		XMFLOAT3 look = Vector3::ScalarProduct(pMonster->GetUp(),-1);
 		//printf(" x : %f / y : %f / z : %f\n", pMonster->GetUp().x, pMonster->GetUp().y, pMonster->GetUp().z);
@@ -536,11 +537,11 @@ void CScene::CheckBehavior(CMonster *pMonster)
 		//printf("rotation : %f\n", rotation);
 
 		// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
-		if (range <= 100.0f&& rotation <=5) {
+		if (range <= distance && rotation <=5) {
 			pMonster->Attack();
 			return;
 		}
-		else if (range > 100.f) {
+		else if (range > distance) {
 			pMonster->Move(subtract, 0.5f);
 		}
 		// 외적에 따라 가까운 방향으로 회전하도록
