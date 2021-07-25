@@ -74,7 +74,7 @@ void CScene::BuildDefaultLightsAndMaterials()
 	m_pLights[3].m_fTheta = (float)cos(XMConvertToRadians(30.0f));
 }
 
-void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
+void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, vector<int> arrange)
 {
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
 
@@ -112,8 +112,11 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	m_ppGameObjects[3] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, m_pTerrain);
 	if (pMetalonModel)delete pMetalonModel;
 
-	
-	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature);
+	m_pTerrain->SetPosition(2048.0f * arrange[0], 0.0f, 2048.0f * arrange[1]);
+	m_pForestTerrain->SetPosition(2048.0f * arrange[2], 0.0f, 2048.0f * arrange[3]);
+	m_pSnowTerrain->SetPosition(2048.0f * arrange[4], 125.0f, 2048.0f * arrange[5]);
+
+	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
@@ -474,28 +477,55 @@ void CScene::ReleaseUploadBuffers()
 
 void CScene::CheckCollision()
 {
-
 	for (int i = 0; i < m_nGameObjects; ++i) {
 		if (m_ppGameObjects[i]->GetHp() > 0) {
 			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
+			if(m_ppGameObjects[i]->GetBehaviorActivate() == true)
+				CheckBehavior(m_ppGameObjects[i]);
 		}
 	}
 	m_pMap->CheckCollision(m_pPlayer);
 }
 
-void CScene::CheckTarget()
+void CScene::CheckBehavior(CMonster *pMonster)
 {
 	XMFLOAT3 subtract;
-	for (int i = 0; i < m_nGameObjects; ++i) {
-		subtract = Vector3::Subtract(m_pPlayer->GetPosition(), m_ppGameObjects[i]->GetPosition());
-		if (Vector3::Length(subtract) <= 300)
-		{
-			subtract = Vector3::Normalize(subtract);
-			subtract.y = 0;
-			m_ppGameObjects[i]->Move(subtract, 0.5f);
+	float rotation;
+	float range;
+	subtract = Vector3::Subtract(m_pPlayer->GetPosition(), pMonster->GetPosition());
+	subtract.y = 0;
+	range = Vector3::Length(subtract);
+	float distance = (pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z - pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z) / 2.0f;
+	if (range < 200.0f)
+	{
+		printf("center : %f\nextents : %f\n\n", pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z, pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z);
+		subtract = Vector3::Normalize(subtract);
+		//printf("range : %f\n", range);
+		// 실제 몬스터의 look 벡터
+		XMFLOAT3 look = Vector3::ScalarProduct(pMonster->GetUp(),-1);
+		//printf(" x : %f / y : %f / z : %f\n", pMonster->GetUp().x, pMonster->GetUp().y, pMonster->GetUp().z);
+
+		rotation = acosf(Vector3::DotProduct(subtract, look)) * 180 / PI;
+		//printf("rotation : %f\n", rotation);
+
+		// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
+		if (range <= distance && rotation <=5) {
+			pMonster->Attack();
+			return;
 		}
-			//printf("%d 번째 크기 : %f\n", i, Vector3::Length(Vector3::Subtract(m_ppGameObjects[i]->GetPosition(), m_pPlayer->GetPosition())));
+		else if (range > distance) {
+			pMonster->Move(subtract, 0.5f);
+		}
+		// 외적에 따라 가까운 방향으로 회전하도록
+		XMFLOAT3 cross = Vector3::CrossProduct(subtract, look);
+
+		/*rotation = Vector3::Angle(subtract, look);
+		printf("rotation2 : %f\n", rotation);*/
+		if(EPSILON <= rotation)
+			pMonster->Rotate(0.0f, 0.0f, -cross.y * rotation / 10);
 	}
+	//printf("%d 번째 크기 : %f\n", i, Vector3::Length(Vector3::Subtract(m_ppGameObjects[i]->GetPosition(), m_pPlayer->GetPosition())));
+
 }
 
 void CScene::CreateCbvSrvDescriptorHeaps(ID3D12Device *pd3dDevice, int nConstantBufferViews, int nShaderResourceViews)

@@ -357,6 +357,7 @@ public:
 
 public:
 	bool							m_bActive = true;
+	bool							m_bBehaviorActivate = false;
 
 	char							m_pstrFrameName[64];
 
@@ -387,10 +388,12 @@ public:
 	void SetHp(int hp) { m_iHp = hp; }
 	void SetAtkStat(float atk) { m_iAtkStat = atk; }
 	void SetDefStat(float def) { m_iDefStat = def; }
+	void SetBehaviorActivate(bool activate) { m_bBehaviorActivate = activate; }
 
 	int GetHp() const { return(m_iHp); }
 	int GetAtkStat() const { return(m_iAtkStat); }
 	int GetDefStat() const { return(m_iDefStat); }
+	bool GetBehaviorActivate() const { return(m_bBehaviorActivate); }
 
 	void SetMesh(CMesh *pMesh);
 	void SetShader(CShader *pShader);
@@ -399,7 +402,7 @@ public:
 	void SetSkinnedAnimationWireFrameShader();
 	void SetBoundingBoxShader();
 	void SetMaterial(int nMaterial, CMaterial *pMaterial);
-
+	 
 	void SetChild(CGameObject *pChild, bool bReferenceUpdate=false);
 
 	virtual void BuildMaterials(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList) { }
@@ -421,6 +424,7 @@ public:
 
 	XMFLOAT3 GetPosition();
 	XMFLOAT3 GetLook();
+	XMFLOAT3 GetParentLook();
 	XMFLOAT3 GetUp();
 	XMFLOAT3 GetRight();
 
@@ -517,7 +521,7 @@ public:
 class CMap : public CGameObject
 {
 public:
-	CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext=0);
+	CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, vector<int>arrange, void* pContext=0);
 	virtual ~CMap();
 
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
@@ -580,7 +584,7 @@ public:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 enum MonsterState {
-	Idle,Die,TakeDamage,
+	Idle, Die, TakeDamage, Move = 0
 };
 class CMonster : public CGameObject
 {
@@ -599,7 +603,11 @@ public:
 	virtual void TakeDamage(int iDamage);
 	virtual void Update(float fTimeElapsed);
 	void SetIdle();
-	void InitAnimation();
+	void ChangeState(int nState);
+	virtual void Attack();
+	virtual void InitAnimation();
+
+	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 };
 
 
@@ -609,11 +617,18 @@ public:
 class CDragon : public CMonster
 {
 private:
+	const int nDragon_BiteAttack = 3;
+	const int nDragon_ProjectileAttack = 4;
+	const int nDragon_BreathAttack = 5;
 
 public:
 	CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext = 0, int nAnimationCount=0);
 	virtual ~CDragon();
 	virtual void Update(float fTimeElapsed);
+	virtual void Attack();
+	virtual void InitAnimation();
+
+	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 };
 
 
@@ -623,10 +638,18 @@ public:
 
 class CWolf : public CMonster
 {
+private:
+	const int nWolf_BiteAttack = 3;
+	const int nWolf_PoundAttack = 4;
+	const int nWolf_Howl = 8;
 public:
 	CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext = 0, int nAnimationCount=0);
 	virtual ~CWolf();
 	virtual void Update(float fTimeElapsed);
+	virtual void Attack();
+	virtual void InitAnimation();
+
+	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -634,8 +657,16 @@ public:
 
 class CMetalon : public CMonster
 {
+private:
+	const int nMetalon_CastSpell = 3;
+	const int nMetalon_Defend = 4;
+	const int nMetalon_Jump = 5;
 public:
 	CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext = 0, int nAnimationCount = 0);
 	virtual ~CMetalon();
 	virtual void Update(float fTimeElapsed);
+	virtual void Attack();
+	virtual void InitAnimation();
+
+	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 };

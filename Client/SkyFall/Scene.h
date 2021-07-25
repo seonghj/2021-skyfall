@@ -51,7 +51,7 @@ public:
 	virtual void ReleaseShaderVariables();
 
 	void BuildDefaultLightsAndMaterials();
-	void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
+	void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, vector<int> arrange);
 	void AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	void MovePlayer(int player_num, XMFLOAT3 pos);
 	void AnimatePlayer(int id, int animation_num);
@@ -67,7 +67,7 @@ public:
 	void ReleaseUploadBuffers();
 
 	void CheckCollision();
-	void CheckTarget();
+	void CheckBehavior(CMonster * pObject);
 
 	CTerrainPlayer						*m_pPlayer = NULL;
 
