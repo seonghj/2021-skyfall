@@ -821,7 +821,8 @@ void CGameFramework::FrameAdvance()
 				m_pPlayer->SetStanding(false);
 			}
 			p.type = CS_player_pos;
-			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+			if (m_pPacket->canmove == TRUE)
+				m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 
 			m_BeforePosition = NowPosition;
 

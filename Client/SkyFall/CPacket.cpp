@@ -68,14 +68,13 @@ void CPacket::RecvPacket()
         recvbytes = 0;
         //ioctlsocket(sock, FIONBIO, &nonBlockingMode);
         retval = WSARecv(sock, &r_wsabuf, 1, &recvbytes, &flags, NULL, NULL);
-        //retval = recvn(sock, recvbuf, BUFSIZE, 0);
-
         //printf("%d, %d", recvbytes, r_wsabuf.buf[1]);
         if (retval == SOCKET_ERROR) {
             int err_no = WSAGetLastError();
             if (err_no != WSA_IO_PENDING) {
                 printf("recv error %d packet: %d error\n", err_no, r_wsabuf.buf[1]);
                 printf("server disconnect\n");
+                closesocket(sock);
                 break;
             }
         }
@@ -483,6 +482,7 @@ void CPacket::ProcessPacket(char* buf)
             /* m_pPlayer->SetPosition(p->Position);
              m_pPlayer->Rotate(p->dx, p->dy, 0);*/
             printf("Login game\n");
+            canmove = TRUE;
         }
         break;
     }
@@ -707,8 +707,7 @@ void CPacket::ProcessPacket(char* buf)
         printf("%f, %f, %f\n", m_pScene->m_ppGameObjects[key]->GetPosition().x
             , m_pScene->m_ppGameObjects[key]->GetPosition().y
             , m_pScene->m_ppGameObjects[key]->GetPosition().z);
-        m_pScene->m_ppGameObjects[key]->Move(Vector3::Subtract(p->Position
-            , m_pScene->m_ppGameObjects[key]->GetPosition()),1);
+        m_pScene->m_ppGameObjects[key]->SetPosition(p->Position.x, p->Position.y, p->Position.z);
     }
     }
 }

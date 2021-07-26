@@ -55,6 +55,8 @@ public:
 
 	std::thread Recv_thread;
 
+	bool canmove = false;
+
 private:
 	int client_key = INVALIDID;
 	int roomID = INVALIDID;

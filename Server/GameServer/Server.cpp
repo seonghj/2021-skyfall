@@ -98,7 +98,6 @@ int Server::SetroomID()
             maps_lock.unlock();
 
             printf("create game room - %d\n", cnt);
-
             return cnt;
         }
         if (FALSE == sessions[cnt][MAX_PLAYER - 1].connected)
@@ -656,6 +655,7 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
+        if (0 > p->key || p->key >= 20) break;
         player_move(p->key, roomID, p->Position, p->dx, p->dy);
 
         player_pos_packet packet;
