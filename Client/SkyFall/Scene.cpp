@@ -94,6 +94,12 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	m_pForestTerrain->SetPosition(-2048.0f, 0.0f, 0.0f);
 	m_pSnowTerrain->SetPosition(2048.0f, 125.0f, 0.0f);
 
+	for (int i = 0; i < 3; i++)
+	{
+		m_pTestTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Desert.raw"), 257, 257, xmf3Scale, xmf4Color, 0);
+		m_pTestTerrain[i]->SetPosition(0.0f, 0.0f, 2048.0f * (i+1));
+	}
+
 	m_nGameObjects = 4;
 	m_ppGameObjects = new CMonster*[m_nGameObjects];
 
@@ -251,6 +257,7 @@ void CScene::ReleaseObjects()
 	if (m_pForestTerrain) delete m_pForestTerrain;
 	if (m_pSnowTerrain) delete m_pSnowTerrain;
 	if (m_pSkyBox) delete m_pSkyBox;
+	if (m_pTestTerrain) delete m_pTestTerrain;
 
 	if (m_ppGameObjects)
 	{
@@ -494,6 +501,8 @@ void CScene::ReleaseUploadBuffers()
 	if (m_pForestTerrain) m_pForestTerrain->ReleaseUploadBuffers();
 	if (m_pSnowTerrain) m_pSnowTerrain->ReleaseUploadBuffers();
 	if (m_pMap) m_pMap->ReleaseUploadBuffers();
+	for (int i = 0; i < 3; i++)
+		if (m_pTestTerrain[i]) m_pTestTerrain[i]->ReleaseUploadBuffers();
 
 	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_nGameObjects; i++) m_ppGameObjects[i]->ReleaseUploadBuffers();
@@ -526,7 +535,7 @@ void CScene::CheckBehavior(CMonster *pMonster)
 	float distance = (pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z - pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z) / 2.0f;
 	if (range < 200.0f)
 	{
-		printf("center : %f\nextents : %f\n\n", pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z, pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z);
+		//printf("center : %f\nextents : %f\n\n", pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z, pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z);
 		subtract = Vector3::Normalize(subtract);
 		//printf("range : %f\n", range);
 		// 실제 몬스터의 look 벡터
@@ -747,6 +756,8 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
 	if (m_pForestTerrain) m_pForestTerrain->Render(pd3dCommandList, pCamera);
 	if (m_pSnowTerrain) m_pSnowTerrain->Render(pd3dCommandList, pCamera);
+	for (int i = 0; i < 3; i++)
+		if (m_pTestTerrain[i]) m_pTestTerrain[i]->Render(pd3dCommandList, pCamera);
 
 	if(m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
 
