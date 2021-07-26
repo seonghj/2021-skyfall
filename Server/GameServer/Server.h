@@ -136,13 +136,14 @@ public:
 
     void player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy);
 
+    std::unordered_map <int, std::array<SESSION, 20>> sessions; // 방ID, Player배열
+
 private:
     HANDLE                         hcp;
     Timer*                         m_pTimer = NULL;
     Bot*                           m_pBot = NULL;
     DB*                            m_pDB = NULL;
 
-    std::unordered_map <int, std::array<SESSION, 20>> sessions; // 방ID, Player배열
     std::unordered_map <int, Map>                     maps;
     std::unordered_map <int, Bot>                     Bots;
 

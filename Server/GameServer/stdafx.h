@@ -52,12 +52,6 @@ enum GameState {
 	
 };
 
-enum terrain {
-	Forest,
-	Desert,
-	Snowy_field
-};
-
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 

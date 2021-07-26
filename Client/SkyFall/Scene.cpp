@@ -480,8 +480,8 @@ void CScene::CheckCollision()
 	for (int i = 0; i < m_nGameObjects; ++i) {
 		if (m_ppGameObjects[i]->GetHp() > 0) {
 			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
-			if(m_ppGameObjects[i]->GetBehaviorActivate() == true)
-				CheckBehavior(m_ppGameObjects[i]);
+			/*if(m_ppGameObjects[i]->GetBehaviorActivate() == true)
+				CheckBehavior(m_ppGameObjects[i]);*/
 		}
 	}
 	m_pMap->CheckCollision(m_pPlayer);

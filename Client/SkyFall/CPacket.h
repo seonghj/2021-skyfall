@@ -40,6 +40,7 @@ public:
 	void Send_login_packet(char* id);
 	void Send_swap_weapon_packet(PlayerType weapon);
 	void Swap_weapon(int key, PlayerType weapon);
+	void Map_set(int type, int pos);
 
 	void ProcessPacket(char* buf);
 
@@ -59,6 +60,8 @@ private:
 	int roomID = INVALIDID;
 	char userID[50];
 	unsigned long currentfps = 1;
+
+	bool isLogin = false;
 	//static DWORD WINAPI ServerConnect(LPVOID arg);
 };
 

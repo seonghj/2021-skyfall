@@ -61,16 +61,23 @@ void CPacket::RecvPacket()
     r_wsabuf.buf = recvbuf;
     r_wsabuf.len = BUFSIZE;
 
+    u_long nonBlockingMode = 1;
+
     // 데이터 받기
     while (isRun) {
+        recvbytes = 0;
+        //ioctlsocket(sock, FIONBIO, &nonBlockingMode);
         retval = WSARecv(sock, &r_wsabuf, 1, &recvbytes, &flags, NULL, NULL);
         //retval = recvn(sock, recvbuf, BUFSIZE, 0);
 
         //printf("%d, %d", recvbytes, r_wsabuf.buf[1]);
         if (retval == SOCKET_ERROR) {
-            err_display("recv()");
-            printf("server disconnect\n");
-            break;
+            int err_no = WSAGetLastError();
+            if (err_no != WSA_IO_PENDING) {
+                printf("recv error %d packet: %d error\n", err_no, r_wsabuf.buf[1]);
+                printf("server disconnect\n");
+                break;
+            }
         }
 
         int rest_size = recvbytes;
@@ -84,11 +91,11 @@ void CPacket::RecvPacket()
                 std::memcpy(buffer + saved_packet_size, buf_ptr, packet_size - saved_packet_size);
                 //std::printf("[TCP 클라이언트] %d바이트를 받았습니다. %d\r\n", recvbytes, recvbuf[1]);
 
-                if (buffer[1] == PacketType::SC_start_ok) {
+               /* if (buffer[1] == PacketType::SC_start_ok) {
                     printf("start\n");
                     isRun = false;
 
-                }
+                }*/
                 ProcessPacket(buffer);
                 buf_ptr += packet_size - saved_packet_size;
                 rest_size -= packet_size - saved_packet_size;
@@ -279,6 +286,165 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
     }
 }
 
+void CPacket::Map_set(int type, int pos)
+{
+    switch (pos) {
+    case 0: {
+        switch (type) {
+        case terrain::Forest: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Desert: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Snowy_field: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        }
+        break;
+    }
+    case 1: {
+        switch (type) {
+        case terrain::Forest: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Desert: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Snowy_field: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        }
+        break;
+    }
+    case 2: {
+        switch (type) {
+        case terrain::Forest: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Desert: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Snowy_field: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        }
+        break;
+    }
+    case 3: {
+        switch (type) {
+        case terrain::Forest: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Desert: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Snowy_field: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        }
+        break;
+    }
+    case 4: {
+        switch (type) {
+        case terrain::Forest: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Desert: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Snowy_field: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        }
+        break;
+    }
+    case 5: {
+        switch (type) {
+        case terrain::Forest: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Desert: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Snowy_field: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        }
+        break;
+    }
+    case 6: {
+        switch (type) {
+        case terrain::Forest: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Desert: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Snowy_field: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        }
+        break;
+    }
+    case 7: {
+        switch (type) {
+        case terrain::Forest: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Desert: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Snowy_field: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        }
+        break;
+    }
+    case 8: {
+        switch (type) {
+        case terrain::Forest: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Desert: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        case terrain::Snowy_field: {
+            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
+            break;
+        }
+        }
+        break;
+    }
+    }
+}
+
 void CPacket::ProcessPacket(char* buf)
 {
     switch (buf[1])
@@ -310,11 +476,12 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_loginOK: {
         player_loginOK_packet* p = reinterpret_cast<player_loginOK_packet*>(buf);
         int key = p->key;
+        if (isLogin == TRUE) break;
         if (key != -1) {
             client_key = key;
             roomID = p->roomid;
-           /* m_pPlayer->SetPosition(p->Position);
-            m_pPlayer->Rotate(p->dx, p->dy, 0);*/
+            /* m_pPlayer->SetPosition(p->Position);
+             m_pPlayer->Rotate(p->dx, p->dy, 0);*/
             printf("Login game\n");
         }
         break;
@@ -522,10 +689,27 @@ void CPacket::ProcessPacket(char* buf)
         //printf("key: %d cloud move x = %f, z = %f\n",p->roomid, p->x, p->z);
         break;
     }
-    /*default: {
-        std::cout << "시발 머임 " << buf[0] << ", " << buf[1] << "\n";
+    case PacketType::SC_map_set: {
+        map_block_set* p = reinterpret_cast<map_block_set*>(buf);
+        /*for (int i = 0; i < MAX_MAP_BLOCK; i++)
+            Map_set(p->block_type[i], i);*/
         break;
-    }*/
+    }
+    case PacketType::SC_bot_add: {
+        mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
+        int key = p->key;
+        //m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
+        break;
+    }
+    case PacketType::SC_monster_pos: {
+        mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
+        int key = p->key;
+        printf("%f, %f, %f\n", m_pScene->m_ppGameObjects[key]->GetPosition().x
+            , m_pScene->m_ppGameObjects[key]->GetPosition().y
+            , m_pScene->m_ppGameObjects[key]->GetPosition().z);
+        m_pScene->m_ppGameObjects[key]->Move(Vector3::Subtract(p->Position
+            , m_pScene->m_ppGameObjects[key]->GetPosition()),1);
+    }
     }
 }
 

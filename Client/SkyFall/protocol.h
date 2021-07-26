@@ -42,6 +42,12 @@ enum OVER_EX_Type {
 	OE_gEvent
 };
 
+enum terrain {
+	Forest,
+	Desert,
+	Snowy_field
+};
+
 enum PacketType {
 	SC_NONE,
 	SC_player_key,

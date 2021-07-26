@@ -201,8 +201,8 @@ void Server::Accept()
 
         sessions[roomID][client_key].near_monster;
 
-        for (int i = 0; i < 20; i++)
-            sessions[roomID][client_key].near_monster.insert(i);
+        /*for (int i = 0; i < 20; i++)
+            sessions[roomID][client_key].near_monster.insert(i);*/
 
         accept_lock.unlock();
         // ���ϰ� ����� �Ϸ� ��Ʈ ����
@@ -212,8 +212,11 @@ void Server::Accept()
         //printf("client_key: %d\n", client_key);
         send_player_key_packet(client_key, roomID);
 
+        m_pBot->monsters.emplace(roomID, std::array<Monster, 50>{});
         m_pBot->monsterRun = TRUE;
-        m_pBot->RunBot(sessions[roomID], roomID);
+        m_pBot->monsters[roomID][0].SetPosition(300, 200, 300);
+        m_pBot->monsters[roomID][0].state = 1;
+        m_pBot->RunBot(roomID);
 
         do_recv(client_key, roomID);
     }
@@ -291,7 +294,7 @@ void Server::send_packet(int to, char* packet, int roomID)
             //Disconnected(to, sessions[roomID][to].over.roomID);
         }
     }
-    printf("to: %d packet: %d send\n", to, packet[1]);
+    //printf("to: %d packet: %d send\n", to, packet[1]);
 }
 
 void Server::send_player_key_packet(int key, int roomID)
@@ -467,8 +470,10 @@ void Server::send_monster_pos(const Monster& mon)
     
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == FALSE) continue;
-        if (true == in_VisualField(mon, sessions[roomID][i], roomID))
-            send_packet(sessions[roomID][i].key, reinterpret_cast<char*>(&p), roomID);
+        if (true == in_VisualField(mon, sessions[roomID][i], roomID)) {
+            send_packet(sessions[roomID][i].key.load(), reinterpret_cast<char*>(&p), roomID);
+            //printf("send to %d \n", sessions[roomID][i].key.load());
+        }
     }
 }
 
@@ -597,7 +602,6 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         int client_key = p->key;
         bool is_Login = false;
-
         bool b;
 
 #ifdef Run_DB
@@ -612,7 +616,6 @@ void Server::process_packet(int key, char* buf, int roomID)
         }
 #endif
         strcpy_s(sessions[roomID][client_key].id, p->id);
-
         send_player_loginOK_packet(client_key, sessions[roomID][client_key].roomID);
 
         printf("client_connected: IP =%s, port=%d key = %d Room = %d\n",
@@ -628,6 +631,10 @@ void Server::process_packet(int key, char* buf, int roomID)
             if ((TRUE == s.connected) && (s.key.load() != client_key))
                 send_add_player_packet(client_key, s.key.load(), roomID);
         }
+
+        sessions[roomID][client_key].state = 1;
+
+        //m_pBot->monsters[roomID][0].SetPosition()
 
         break;
     }
@@ -649,7 +656,6 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
-
         player_move(p->key, roomID, p->Position, p->dx, p->dy);
 
         player_pos_packet packet;
@@ -668,7 +674,6 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_start_pos: {
         player_start_pos* p = reinterpret_cast<player_start_pos*>(buf);
         sessions[roomID][p->key].f3Position = p->Position;
-
         send_packet(key, reinterpret_cast<char*>(p), roomID);
         break;
     }
@@ -830,8 +835,8 @@ void Server::WorkerFunc()
             }
             case EventType::Mon_move_to_player: {
                 mon_move_to_player_event* e = reinterpret_cast<mon_move_to_player_event*>(over_ex->messageBuffer);
-                m_pBot->CheckTarget(sessions[e->roomid], e->roomid);
-                m_pBot->RunBot(sessions[e->roomid], e->roomid);
+                m_pBot->CheckTarget(e->roomid);
+                m_pBot->RunBot(e->roomid);
                 delete over_ex;
                 break;
             }
