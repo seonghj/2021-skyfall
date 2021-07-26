@@ -704,10 +704,12 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_pos: {
         mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
         int key = p->key;
+        XMFLOAT3 subtract = Vector3::Subtract((XMFLOAT3&)p->Position, (XMFLOAT3&)m_pScene->m_ppGameObjects[key]->GetPosition());
+        m_pScene->m_ppGameObjects[key]->Move(subtract,1.f);
         printf("%f, %f, %f\n", m_pScene->m_ppGameObjects[key]->GetPosition().x
             , m_pScene->m_ppGameObjects[key]->GetPosition().y
             , m_pScene->m_ppGameObjects[key]->GetPosition().z);
-        m_pScene->m_ppGameObjects[key]->SetPosition(p->Position.x, p->Position.y, p->Position.z);
+        break;
     }
     }
 }

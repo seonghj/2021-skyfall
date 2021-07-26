@@ -36,12 +36,12 @@ void Bot::CheckTarget(int roomID)
 		for (Monster& mon : monsters[roomID]) {
 			if (mon.state.load() == 0) continue;
 			subtract = Vector3::Subtract((XMFLOAT3&)player.GetPosition(), (XMFLOAT3&)mon.GetPosition());
-			if (Vector3::Length(subtract) <= 300)
+			if (Vector3::Length(subtract) <= 900)
 			{
 				subtract = Vector3::Normalize(subtract);
 				subtract.y = 0.f;
 				//printf("%f\n", subtract.y);
-				mon.Move(subtract, 0.5f);
+				mon.Move(subtract, 5.f);
 				//printf("%f, %f, %f\n", mon.GetPosition().x, mon.GetPosition().y, player.GetPosition().z);
 				
 				/*for (SESSION& p : m_pServer->sessions[roomID]) {
@@ -83,7 +83,7 @@ void Bot::RunBot(int roomID)
 		e.type = EventType::Mon_move_to_player;
 		e.key = 0;
 		e.roomid = roomID;
-		m_pTimer->push_event(roomID, OE_gEvent, 16, reinterpret_cast<char*>(&e));
+		m_pTimer->push_event(roomID, OE_gEvent, 10, reinterpret_cast<char*>(&e));
 	}
 }
 
