@@ -1610,48 +1610,104 @@ void CSkyBox::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, vector<int> arrange, void* pContext)
 {
-	CLoadedModelInfo* pDesert_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Collision.bin", NULL);
-	CLoadedModelInfo* pDesert_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
-	CLoadedModelInfo* pDesert_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
+	//CLoadedModelInfo* pDesert_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Collision.bin", NULL);
+	//CLoadedModelInfo* pDesert_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
+	//CLoadedModelInfo* pDesert_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
 
-	CLoadedModelInfo* pForest_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Collision.bin", NULL);
-	CLoadedModelInfo* pForest_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Passable.bin", NULL);
-	CLoadedModelInfo* pForest_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Passable.bin", NULL);
+	//CLoadedModelInfo* pForest_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Collision.bin", NULL);
+	//CLoadedModelInfo* pForest_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Passable.bin", NULL);
+	//CLoadedModelInfo* pForest_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Passable.bin", NULL);
 
-	CLoadedModelInfo* pSnow_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Collision.bin", NULL);
-	CLoadedModelInfo* pSnow_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
-	CLoadedModelInfo* pSnow_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
-	//SetChild(pDesert_Test->m_pModelRootObject, true);
+	//CLoadedModelInfo* pSnow_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Collision.bin", NULL);
+	//CLoadedModelInfo* pSnow_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
+	//CLoadedModelInfo* pSnow_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
+	////SetChild(pDesert_Test->m_pModelRootObject, true);
 
-	//CLoadedModelInfo* pDesert_Test[3] = { NULL };
-	//for(int i =0; i < 3; i++)
-	//	pDesert_Test[i] = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
+	////CLoadedModelInfo* pDesert_Test[3] = { NULL };
+	////for(int i =0; i < 3; i++)
+	////	pDesert_Test[i] = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
 
-	//for (int i = 0; i < 3; i++)
-	//{
-	//	m_ppMaps[i] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Test[i]);
-	//	m_ppMaps[i]->SetPosition(0.0f, 0.0f, 2048.0f * (i+1));
-	//	printf("%d번째 위치 : x - %f  y - %f  z - %f", i, m_ppMaps[i]->GetPosition().x, m_ppMaps[i]->GetPosition().y, m_ppMaps[i]->GetPosition().z);
-	//}
-	m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
-	m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
-	m_ppMaps[2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
+	////for (int i = 0; i < 3; i++)
+	////{
+	////	m_ppMaps[i] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Test[i]);
+	////	m_ppMaps[i]->SetPosition(0.0f, 0.0f, 2048.0f * (i+1));
+	////	printf("%d번째 위치 : x - %f  y - %f  z - %f", i, m_ppMaps[i]->GetPosition().x, m_ppMaps[i]->GetPosition().y, m_ppMaps[i]->GetPosition().z);
+	////}
+	//m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
+	//m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
+	//m_ppMaps[2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
 
-	m_ppMaps[3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Collision, true);
-	m_ppMaps[4] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Steppable);
-	m_ppMaps[5] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable);
+	//m_ppMaps[3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Collision, true);
+	//m_ppMaps[4] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Steppable);
+	//m_ppMaps[5] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable);
 
-	m_ppMaps[3]->SetPosition(-2048.0f, 0.0f, 0.0f);
-	m_ppMaps[4]->SetPosition(-2048.0f, 0.0f, 0.0f);
-	m_ppMaps[5]->SetPosition(-2048.0f, 0.0f, 0.0f);
+	//m_ppMaps[3]->SetPosition(-2048.0f, 0.0f, 0.0f);
+	//m_ppMaps[4]->SetPosition(-2048.0f, 0.0f, 0.0f);
+	//m_ppMaps[5]->SetPosition(-2048.0f, 0.0f, 0.0f);
 
-	m_ppMaps[6] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Collision, true);
-	m_ppMaps[7] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Steppable);
-	m_ppMaps[8] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable);
+	//m_ppMaps[6] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Collision, true);
+	//m_ppMaps[7] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Steppable);
+	//m_ppMaps[8] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable);
 
-	m_ppMaps[6]->SetPosition(2048.0f, 60.0f, 0.0f);
-	m_ppMaps[7]->SetPosition(2048.0f, 60.0f, 0.0f);
-	m_ppMaps[8]->SetPosition(2048.0f, 60.0f, 0.0f);
+	//m_ppMaps[6]->SetPosition(2048.0f, 60.0f, 0.0f);
+	//m_ppMaps[7]->SetPosition(2048.0f, 60.0f, 0.0f);
+	//m_ppMaps[8]->SetPosition(2048.0f, 60.0f, 0.0f);
+
+	//m_ppMaps[9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
+	//m_ppMaps[10] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
+	//m_ppMaps[11] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
+
+	//m_ppMaps[9]->SetPosition(0.0f, 60.0f, 2048.0f);
+	//m_ppMaps[10]->SetPosition(0.0f, 60.0f, 4096.0f);
+	//m_ppMaps[11]->SetPosition(0.0f, 60.0f, 6144.0f);
+
+	for (int i = 0; i < 3; i++)
+	{
+		CLoadedModelInfo* pDesert_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Collision.bin", NULL);
+		CLoadedModelInfo* pDesert_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
+		CLoadedModelInfo* pDesert_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
+
+		CLoadedModelInfo* pForest_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Collision.bin", NULL);
+		CLoadedModelInfo* pForest_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Passable.bin", NULL);
+		CLoadedModelInfo* pForest_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Passable.bin", NULL);
+
+		CLoadedModelInfo* pSnow_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Collision.bin", NULL);
+		CLoadedModelInfo* pSnow_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
+		CLoadedModelInfo* pSnow_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
+
+		m_ppMaps[0 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
+		m_ppMaps[1 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
+		m_ppMaps[2 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
+
+		m_ppMaps[3 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Collision, true);
+		m_ppMaps[4 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Steppable);
+		m_ppMaps[5 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable);
+
+		m_ppMaps[3 + i * 9]->SetPosition(-2048.0f, 0.0f, i * 2048.0f);
+		m_ppMaps[4 + i * 9]->SetPosition(-2048.0f, 0.0f, i * 2048.0f);
+		m_ppMaps[5 + i * 9]->SetPosition(-2048.0f, 0.0f, i * 2048.0f);
+
+		m_ppMaps[6 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Collision, true);
+		m_ppMaps[7 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Steppable);
+		m_ppMaps[8 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable);
+
+		m_ppMaps[6 + i * 9]->SetPosition(2048.0f, 0.0f, i * 2048.0f);  
+		m_ppMaps[7 + i * 9]->SetPosition(2048.0f, 0.0f, i * 2048.0f);
+		m_ppMaps[8 + i * 9]->SetPosition(2048.0f, 0.0f, i * 2048.0f);
+
+		m_ppMaps[9 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
+		m_ppMaps[10 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
+		m_ppMaps[11 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
+
+		m_ppMaps[9 + i * 9]->SetPosition(0.0f, 60.0f, i * 2048.0f);
+		m_ppMaps[10 + i * 9]->SetPosition(0.0f, 60.0f, i * 2048.0f);
+		m_ppMaps[11 + i * 9]->SetPosition(0.0f, 60.0f, i * 2048.0f);
+
+		if (pDesert_Collision)delete pDesert_Collision;
+		if (pDesert_Steppable)delete pDesert_Steppable;
+		if (pDesert_Passable)delete pDesert_Passable;
+	}
+
 
 	//for (int i = 0; i < (arrange.size() / 2); i++)
 	//{
@@ -1679,9 +1735,7 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	//	}
 	//}
 
-	if (pDesert_Collision)delete pDesert_Collision;
-	if (pDesert_Steppable)delete pDesert_Steppable;
-	if (pDesert_Passable)delete pDesert_Passable;
+
 }
 
 CMap::~CMap()
@@ -1692,7 +1746,7 @@ void CMap::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	CGameObject::Render(pd3dCommandList, pCamera);
 
-	for (int i = 0; i < 9; ++i)
+	for (int i = 0; i < 27; ++i)
 		m_ppMaps[i]->Render(pd3dCommandList, pCamera);
 }
 
@@ -1719,13 +1773,13 @@ void CMap::CheckCollision(CPlayer* pPlayer)
 
 void CMap::ReleaseUploadBuffers()
 {
-	for (int i = 0; i < 9; ++i)
+	for (int i = 0; i < 27; ++i)
 		m_ppMaps[i]->ReleaseUploadBuffers();
 }
 
 void CMap::Release()
 {
-	for (int i = 0; i < 9; ++i)
+	for (int i = 0; i < 27; ++i)
 		if(m_ppMaps[i])
 			m_ppMaps[i]->Release();
 }

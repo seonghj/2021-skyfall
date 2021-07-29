@@ -533,7 +533,7 @@ public:
 
 		
 private:
-	CGameObject** m_ppMaps = new CGameObject * [9];
+	CGameObject** m_ppMaps = new CGameObject * [18];
 };
 
 
