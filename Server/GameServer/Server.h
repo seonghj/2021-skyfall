@@ -51,8 +51,8 @@ public:
     // 0 Á×À½ / 1 »ýÁ¸
     std::atomic<bool>       state = 0;
     std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-    std::atomic<float>      dx = 0;
-    std::atomic<float>      dy = 0;
+    std::atomic<float>      m_fPitch = 0;
+    std::atomic<float>      m_fYaw = 0;
     
     std::atomic<short>      weapon1 = PlayerType::PT_BASIC;
     std::atomic<short>      weapon2 = PlayerType::PT_BASIC;
@@ -124,7 +124,7 @@ public:
 
     void send_add_monster(int key, int roomID, int to);
     void send_remove_monster(int key, int roomID, int to);
-    void send_monster_pos(const Monster& mon);
+    void send_monster_pos(const Monster& mon, XMFLOAT3 direction, float degree);
 
     void send_player_record(int key, int roomID, const SESSION& s, int time, int rank);
     

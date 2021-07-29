@@ -706,9 +706,10 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
         XMFLOAT3 subtract = Vector3::Subtract((XMFLOAT3&)p->Position, (XMFLOAT3&)m_pScene->m_ppGameObjects[key]->GetPosition());
         m_pScene->m_ppGameObjects[key]->Move(subtract,1.f);
-        printf("%f, %f, %f\n", m_pScene->m_ppGameObjects[key]->GetPosition().x
+        m_pScene->m_ppGameObjects[key]->Rotate(&p->direction, p->degree);
+        /*printf("%f, %f, %f\n", m_pScene->m_ppGameObjects[key]->GetPosition().x
             , m_pScene->m_ppGameObjects[key]->GetPosition().y
-            , m_pScene->m_ppGameObjects[key]->GetPosition().z);
+            , m_pScene->m_ppGameObjects[key]->GetPosition().z);*/
         break;
     }
     }

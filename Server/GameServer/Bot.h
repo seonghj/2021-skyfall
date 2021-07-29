@@ -28,8 +28,9 @@ public:
     std::atomic<bool>       state = 0;
     std::atomic<int>        type = 0;
     std::atomic<DirectX::XMFLOAT3>       f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-    std::atomic<float>      dx = 0;
-    std::atomic<float>      dy = 0;
+    std::atomic<float>      m_fPitch = 0;
+    std::atomic<float>      m_fYaw = 0;
+    std::atomic<float>      m_fRoll = 0;
 
     std::atomic<float>      hp = 0;
     std::atomic<float>      lv = 0;
@@ -38,6 +39,10 @@ public:
     void init();
     void SetPosition(float x, float y, float z);
     void Move(const XMFLOAT3& vDirection, float fSpeed);
+    void Rotate(float fPitch, float fYaw, float fRoll);
+    void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent);
+
+    DirectX::XMFLOAT3 GetUp();
 
     DirectX::XMFLOAT3 GetPosition() { return f3Position; }
 };
@@ -50,12 +55,16 @@ public:
     void Init(int roomID);
 
     void CheckTarget(int roomID);
+    void CheckBehavior(int roomID);
 
     void RunBot(int roomID);
 
     std::unordered_map <int, std::array<Monster, 50>> monsters;
 
     bool monsterRun = false;
+
+    std::chrono::system_clock::time_point start;
+    std::chrono::system_clock::time_point end;
 
 private:
     Server* m_pServer = NULL;

@@ -37,8 +37,11 @@
 
 #include <Mmsystem.h>
 
-#define TRUE 1
-#define FALSE 0
+#define TRUE					1
+#define FALSE					0
+
+#define EPSILON					1.0e-10f
+#define PI						3.141592f
 
 using _packet = unsigned char;
 

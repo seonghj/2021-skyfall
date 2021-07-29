@@ -290,7 +290,7 @@ struct cloud_move_packet : public Packet {
 
 struct mon_add_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
-	float dx, dy;
+	float dx, dy, dz;
 	short MonsterType;
 };
 
@@ -300,7 +300,8 @@ struct mon_remove_packet : public Packet {
 struct mon_pos_packet : public Packet {
 	char state;
 	DirectX::XMFLOAT3 Position;
-	float dx, dy;
+	DirectX::XMFLOAT3 direction;
+	float degree;
 	DWORD MoveType;
 };
 

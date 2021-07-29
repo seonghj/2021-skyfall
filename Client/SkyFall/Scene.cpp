@@ -101,6 +101,7 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
 	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL,9, m_pTerrain);
 	if (pDragonModel)delete pDragonModel;
+	//printf(" x : %f / y : %f / z : %f\n", m_ppGameObjects[0]->GetUp().x, m_ppGameObjects[0]->GetUp().y, m_ppGameObjects[0]->GetUp().z);
 
 	CLoadedModelInfo* pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
 	m_ppGameObjects[1] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, m_pTerrain,0);
@@ -480,8 +481,11 @@ void CScene::CheckCollision()
 	for (int i = 0; i < m_nGameObjects; ++i) {
 		if (m_ppGameObjects[i]->GetHp() > 0) {
 			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
-			/*if(m_ppGameObjects[i]->GetBehaviorActivate() == true)
-				CheckBehavior(m_ppGameObjects[i]);*/
+			//if (i == 0) {
+			//	/*if (m_ppGameObjects[i]->GetBehaviorActivate() == true)
+			//		CheckBehavior(m_ppGameObjects[i]);*/
+			//	CheckBehavior(m_ppGameObjects[i]);
+			//}
 		}
 	}
 	m_pMap->CheckCollision(m_pPlayer);
@@ -498,7 +502,7 @@ void CScene::CheckBehavior(CMonster *pMonster)
 	float distance = (pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z - pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z) / 2.0f;
 	if (range < 200.0f)
 	{
-		printf("center : %f\nextents : %f\n\n", pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z, pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z);
+		//printf("center : %f\nextents : %f\n\n", pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z, pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z);
 		subtract = Vector3::Normalize(subtract);
 		//printf("range : %f\n", range);
 		// 실제 몬스터의 look 벡터
@@ -523,6 +527,7 @@ void CScene::CheckBehavior(CMonster *pMonster)
 		printf("rotation2 : %f\n", rotation);*/
 		if(EPSILON <= rotation)
 			pMonster->Rotate(0.0f, 0.0f, -cross.y * rotation / 10);
+		//printf("%f, %f, %f\n", cross.y, rotation, -cross.y * rotation / 10);
 	}
 	//printf("%d 번째 크기 : %f\n", i, Vector3::Length(Vector3::Subtract(m_ppGameObjects[i]->GetPosition(), m_pPlayer->GetPosition())));
 

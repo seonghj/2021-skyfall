@@ -21,8 +21,8 @@ void SESSION::init()
 
     state = 0;
     f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-    dx = 0;
-    dy = 0;
+    m_fPitch = 0;
+    m_fYaw = 0;
 
     weapon1 = PlayerType::PT_BASIC;
     weapon2 = PlayerType::PT_BASIC;
@@ -213,8 +213,12 @@ void Server::Accept()
 
         m_pBot->monsters.emplace(roomID, std::array<Monster, 50>{});
         m_pBot->monsterRun = TRUE;
-        m_pBot->monsters[roomID][0].SetPosition(300, 200, 300);
+        m_pBot->monsters[roomID][0].SetPosition(300, 197.757935, 300);
         m_pBot->monsters[roomID][0].state = 1;
+        m_pBot->monsters[roomID][0].Rotate(-90.0f, 20.0f, 0.0f);
+        printf(" x : %f / y : %f / z : %f\n", m_pBot->monsters[roomID][0].GetUp().x\
+            , m_pBot->monsters[roomID][0].GetUp().y
+            , m_pBot->monsters[roomID][0].GetUp().z);
         m_pBot->RunBot(roomID);
 
         do_recv(client_key, roomID);
@@ -316,8 +320,8 @@ void Server::send_player_loginOK_packet(int key, int roomID)
     p.type = PacketType::SC_player_loginOK;
     p.roomid = roomID;
     p.Position = sessions[roomID][key].f3Position.load();
-    p.dx = sessions[roomID][key].dx.load();
-    p.dy = sessions[roomID][key].dy.load();
+    p.dx = sessions[roomID][key].m_fPitch.load();
+    p.dy = sessions[roomID][key].m_fYaw.load();
     send_packet(key, reinterpret_cast<char*>(&p), roomID);
 }
 
@@ -340,8 +344,8 @@ void Server::send_add_player_packet(int key, int to, int roomID)
     p.type = PacketType::SC_player_add;
     p.roomid = roomID;
     p.Position = sessions[roomID][key].f3Position.load();
-    p.dx = sessions[roomID][key].dx.load();
-    p.dy = sessions[roomID][key].dy.load();
+    p.dx = sessions[roomID][key].m_fPitch.load();
+    p.dy = sessions[roomID][key].m_fYaw.load();
 
     //printf("%d send login to %d\n",key, to);
 
@@ -434,8 +438,9 @@ void Server::send_add_monster(int key, int roomID, int to)
     p.key = key;
     p.roomid = roomID;
     p.Position = m_pBot->monsters[roomID][key].f3Position;
-    p.dx = m_pBot->monsters[roomID][key].dx;
-    p.dy = m_pBot->monsters[roomID][key].dy;
+    p.dx = m_pBot->monsters[roomID][key].m_fPitch;
+    p.dy = m_pBot->monsters[roomID][key].m_fYaw;
+    p.dz = m_pBot->monsters[roomID][key].m_fRoll;
     p.MonsterType = m_pBot->monsters[roomID][key].type;
 
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
@@ -452,7 +457,7 @@ void Server::send_remove_monster(int key, int roomID, int to)
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
-void Server::send_monster_pos(const Monster& mon)
+void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction, float degree)
 {
     int roomID = mon.roomID;
 
@@ -462,8 +467,8 @@ void Server::send_monster_pos(const Monster& mon)
     p.key = mon.key.load();
     p.roomid = mon.roomID.load();
     p.Position = mon.f3Position.load();
-    p.dx = mon.dx.load();
-    p.dy = mon.dy.load();
+    p.direction = direction;
+    p.degree = degree;
     p.MoveType = 0;
     p.state = 0;
     
@@ -551,8 +556,8 @@ void Server::player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, f
 {
     int client_key = key;
 
-    sessions[roomID][client_key].dx.store(fmodf(sessions[roomID][client_key].dx.load() + dx, 360.f));
-    sessions[roomID][client_key].dy.store(fmodf(sessions[roomID][client_key].dy.load() + dy, 360.f));
+    sessions[roomID][client_key].m_fPitch.store(fmodf(sessions[roomID][client_key].m_fPitch.load() + dx, 360.f));
+    sessions[roomID][client_key].m_fYaw.store(fmodf(sessions[roomID][client_key].m_fYaw.load() + dy, 360.f));
     
     if (sessions[roomID][client_key].f3Position.load().x == pos.x
         && sessions[roomID][client_key].f3Position.load().z == pos.z) {
@@ -835,7 +840,8 @@ void Server::WorkerFunc()
             }
             case EventType::Mon_move_to_player: {
                 mon_move_to_player_event* e = reinterpret_cast<mon_move_to_player_event*>(over_ex->messageBuffer);
-                m_pBot->CheckTarget(e->roomid);
+                //m_pBot->CheckTarget(e->roomid);
+                m_pBot->CheckBehavior(e->roomid);
                 m_pBot->RunBot(e->roomid);
                 delete over_ex;
                 break;

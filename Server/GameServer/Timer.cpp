@@ -32,13 +32,13 @@ void Timer::push_event(int key, int event_type, int delaytime_ms, char* message)
 void Timer::Timer_main()
 {
 	while (m_isRun) {
-		std::lock_guard <std::mutex> lg{ m_timer_lock };
-		//m_timer_lock.lock();
+		//std::lock_guard <std::mutex> lg{ m_timer_lock };
+		m_timer_lock.lock();
 		if ((m_Timer_queue.empty() == FALSE)
 			&& (m_Timer_queue.top().start_time <= system_clock::now())) {
 			Timer_event te = m_Timer_queue.top();
 			m_Timer_queue.pop();
-			//m_timer_lock.unlock();
+			m_timer_lock.unlock();
 
 			OVER_EX* over_ex = new OVER_EX;
 			over_ex->roomID = te.key;
@@ -48,8 +48,8 @@ void Timer::Timer_main()
 			PostQueuedCompletionStatus(m_hiocp, 1, te.key, (LPOVERLAPPED)&over_ex->overlapped);
 		}
 		else {
-			//m_timer_lock.unlock();
-			std::this_thread::sleep_for(100ms);
+			m_timer_lock.unlock();
+			std::this_thread::sleep_for(10ms);
 		}
 	}
 }
