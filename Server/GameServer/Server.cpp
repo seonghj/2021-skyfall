@@ -216,9 +216,9 @@ void Server::Accept()
         m_pBot->monsters[roomID][0].SetPosition(300, 197.757935, 300);
         m_pBot->monsters[roomID][0].state = 1;
         m_pBot->monsters[roomID][0].Rotate(-90.0f, 20.0f, 0.0f);
-        printf(" x : %f / y : %f / z : %f\n", m_pBot->monsters[roomID][0].GetUp().x\
+        /*printf(" x : %f / y : %f / z : %f\n", m_pBot->monsters[roomID][0].GetUp().x\
             , m_pBot->monsters[roomID][0].GetUp().y
-            , m_pBot->monsters[roomID][0].GetUp().z);
+            , m_pBot->monsters[roomID][0].GetUp().z);*/
         m_pBot->RunBot(roomID);
 
         do_recv(client_key, roomID);

@@ -35,6 +35,9 @@
 #include <DirectXColors.h>
 #include <DirectXCollision.h>
 
+#include "DDSTextureLoader12.h"
+#include "WICTextureLoader12.h"
+
 #include <Mmsystem.h>
 
 #define TRUE					1

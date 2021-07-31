@@ -13,6 +13,7 @@ DB*			g_pDB = new DB;
 Bot*		g_pBot = new Bot;
 Timer*		g_pTimer = new Timer;
 
+
 int main(int argc, char* argv[])
 {
 	std::wcout.imbue(std::locale("korean"));

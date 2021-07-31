@@ -3,6 +3,9 @@
 #include "protocol.h"
 #include "Server.h"
 #include "Timer.h"
+#include "Mesh.h"
+#include "Object.h"
+
 
 class SESSION;
 class Server;
