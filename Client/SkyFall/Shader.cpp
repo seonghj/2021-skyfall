@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include "Shader.h"
+#include "Scene.h"
 
 CShader::CShader()
 {
@@ -545,4 +546,222 @@ D3D12_SHADER_BYTECODE CBoundingBoxShader::CreateVertexShader()
 D3D12_SHADER_BYTECODE CBoundingBoxShader::CreatePixelShader()
 {
 	return(CShader::CompileShaderFromFile(L"Shaders.hlsl", "PSBoundingBox", "ps_5_1", &m_pd3dPixelShaderBlob));
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+CShadowMap::CShadowMap()
+{
+}
+
+CShadowMap::CShadowMap(UINT width, UINT height,CCamera* pCamera)
+{
+	m_nWidth = width;
+	m_nHeight = height;
+	m_pCamera = pCamera;
+}
+
+CShadowMap::~CShadowMap()
+{
+}
+
+void CShadowMap::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
+{
+
+}
+
+void CShadowMap::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	UINT ncbElementBytes = ((sizeof(XMFLOAT4X4) + 255) & ~255); //256ÀÇ ¹è¼ö
+	m_pd3dcbShadow = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+
+	m_pd3dcbShadow->Map(0, NULL, (void**)&m_cbMappedShadowTransform);
+}
+
+void CShadowMap::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+
+	XMFLOAT4X4 xmf4x4View = m_pCamera->GetViewMatrix();
+	XMFLOAT4X4 xmf4x4Projection = m_pCamera->GetProjectionMatrix();
+	
+	XMFLOAT4X4 xmf4x4ShadowTransform=Matrix4x4::Multiply(XMLoadFloat4x4(&xmf4x4View), xmf4x4Projection);
+	XMStoreFloat4x4(&xmf4x4ShadowTransform, XMMatrixTranspose(XMLoadFloat4x4(&xmf4x4ShadowTransform)));
+	::memcpy(&m_cbMappedShadowTransform, &xmf4x4ShadowTransform, sizeof(XMFLOAT4X4));
+
+	D3D12_GPU_VIRTUAL_ADDRESS d3dGpuVirtualAddress = m_pd3dcbShadow->GetGPUVirtualAddress();
+	pd3dCommandList->SetGraphicsRootConstantBufferView(15, d3dGpuVirtualAddress);
+
+	m_pShadowMap->UpdateShaderVariable(pd3dCommandList, 0);
+
+}
+
+void CShadowMap::UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	m_pShadowMap->UpdateShaderVariable(pd3dCommandList, 0);
+}
+
+void CShadowMap::ReleaseShaderVariables()
+{
+	if (m_pd3dcbShadow)
+	{
+		m_pd3dcbShadow->Unmap(0, NULL);
+		m_pd3dcbShadow->Release();
+	}
+
+	if (m_pCamera)m_pCamera->ReleaseShaderVariables();
+}
+
+void CShadowMap::ReleaseObjects()
+{
+	ReleaseShaderVariables();
+	m_pShadowMap->Release();
+
+	m_pd3dDsvDescriptorHeap->Release();
+	m_pd3dcbShadow->Release();
+}
+void CShadowMap::ReleaseUploadBuffers()
+{
+}
+
+D3D12_INPUT_LAYOUT_DESC CShadowMap::CreateInputLayout()
+{
+	UINT nInputElementDescs = 1;
+	D3D12_INPUT_ELEMENT_DESC* pd3dInputElementDescs = new D3D12_INPUT_ELEMENT_DESC[nInputElementDescs];
+
+	pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+
+	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc;
+	d3dInputLayoutDesc.pInputElementDescs = pd3dInputElementDescs;
+	d3dInputLayoutDesc.NumElements = nInputElementDescs;
+
+	return(d3dInputLayoutDesc);
+}
+
+D3D12_RASTERIZER_DESC CShadowMap::CreateRasterizerState()
+{
+	D3D12_RASTERIZER_DESC d3dRasterizerDesc;
+	::ZeroMemory(&d3dRasterizerDesc, sizeof(D3D12_RASTERIZER_DESC));
+	d3dRasterizerDesc.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	//d3dRasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
+	d3dRasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+#ifdef _WITH_LEFT_HAND_COORDINATES
+	d3dRasterizerDesc.FrontCounterClockwise = FALSE;
+#else
+	d3dRasterizerDesc.FrontCounterClockwise = TRUE;
+#endif
+	d3dRasterizerDesc.DepthBias = 10000;
+	d3dRasterizerDesc.DepthBiasClamp = 0.0f;
+	d3dRasterizerDesc.SlopeScaledDepthBias = 1.0f;
+	d3dRasterizerDesc.DepthClipEnable = TRUE;
+	d3dRasterizerDesc.MultisampleEnable = FALSE;
+	d3dRasterizerDesc.AntialiasedLineEnable = FALSE;
+	d3dRasterizerDesc.ForcedSampleCount = 0;
+	d3dRasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+
+	return(d3dRasterizerDesc);
+}
+
+
+D3D12_SHADER_BYTECODE CShadowMap::CreateVertexShader()
+{
+	return(CShader::CompileShaderFromFile(L"Shaders.hlsl", "VSShadow", "vs_5_1", &m_pd3dVertexShaderBlob));
+}
+
+
+void CShadowMap::CreateShadowMap(ID3D12Device *pd3dDevice)
+{
+	CreateSrvDescriptorHeaps(pd3dDevice, 1);
+
+	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
+	::ZeroMemory(&d3dDescriptorHeapDesc, sizeof(D3D12_DESCRIPTOR_HEAP_DESC));
+	d3dDescriptorHeapDesc.NumDescriptors = 1;
+	d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	HRESULT hResult = pd3dDevice->CreateDescriptorHeap(&d3dDescriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&m_pd3dDsvDescriptorHeap);
+	//m_nDsvDescriptorIncrementSize = m_pd3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+	m_pShadowMap = new CTexture(1, RESOURCE_TEXTURE2D, 0);
+
+	D3D12_CLEAR_VALUE d3dClearValue;
+	d3dClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dClearValue.DepthStencil.Depth = 1.0f;
+	d3dClearValue.DepthStencil.Stencil = 0;
+
+	m_pShadowMap->CreateTexture(pd3dDevice, m_nWidth, m_nHeight, DXGI_FORMAT_R24G8_TYPELESS, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, D3D12_RESOURCE_STATE_GENERIC_READ, &d3dClearValue, 0);
+	//m_pShadowMap->CreateTexture(pd3dDevice, m_nWidth, m_nHeight, DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COMMON, NULL, 1);
+
+	//CreateShaderResourceView(pd3dDevice, m_pShadowMap, 1);
+	m_pShadowMap->SetSrvGpuDescriptorHandle(0, m_d3dSrvGPUDescriptorHandle);
+	m_pShadowMap->SetGraphicsSrvRootArgument(0, 16, 0);
+
+	D3D12_DEPTH_STENCIL_VIEW_DESC d3dDepthStencilViewDesc;
+	::ZeroMemory(&d3dDepthStencilViewDesc, sizeof(D3D12_DEPTH_STENCIL_VIEW_DESC));
+	d3dDepthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dDepthStencilViewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	d3dDepthStencilViewDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dDsvCPUDescriptorHandle = m_pd3dDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	pd3dDevice->CreateDepthStencilView(m_pShadowMap->GetTexture(0), &d3dDepthStencilViewDesc, d3dDsvCPUDescriptorHandle);
+
+}
+
+void CShadowMap::Set(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	::SynchronizeResourceTransition(pd3dCommandList, m_pShadowMap->GetTexture(0), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	/*D3D12_RESOURCE_BARRIER d3dResourceBarrier;
+	::ZeroMemory(&d3dResourceBarrier, sizeof(D3D12_RESOURCE_BARRIER));
+	d3dResourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	d3dResourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	d3dResourceBarrier.Transition.pResource = m_pShadowMap;
+	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	d3dResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);*/
+
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dDsvCPUDescriptorHandle = m_pd3dDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
+
+	pd3dCommandList->OMSetRenderTargets(0, NULL, false, &d3dDsvCPUDescriptorHandle);
+	pd3dCommandList->SetDescriptorHeaps(1, &m_pd3dSrvDescriptorHeap);
+}
+
+void CShadowMap::Reset(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	::SynchronizeResourceTransition(pd3dCommandList, m_pShadowMap->GetTexture(0), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_GENERIC_READ);
+}
+
+void CShadowMap::CreateSrvDescriptorHeaps(ID3D12Device* pd3dDevice, int nShaderResourceViews)
+{
+	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
+	d3dDescriptorHeapDesc.NumDescriptors =  nShaderResourceViews ; // SRVs
+	d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	d3dDescriptorHeapDesc.NodeMask = 0;
+	HRESULT hResult = pd3dDevice->CreateDescriptorHeap(&d3dDescriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&m_pd3dSrvDescriptorHeap);
+
+	m_d3dSrvCPUDescriptorHandle = m_pd3dSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	m_d3dSrvGPUDescriptorHandle = m_pd3dSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE CShadowMap::CreateShaderResourceView(ID3D12Device* pd3dDevice, CTexture* pTexture, int nIndex)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGPUDescriptorHandle = m_d3dSrvGPUDescriptorHandle;
+	if (pTexture)
+	{
+		int nTextures = pTexture->GetTextures();
+		int nTextureType = pTexture->GetTextureType();
+		ID3D12Resource* pShaderResource = pTexture->GetTexture(nIndex);
+		if (pShaderResource) {
+			D3D12_RESOURCE_DESC d3dResourceDesc = pShaderResource->GetDesc();
+			D3D12_SHADER_RESOURCE_VIEW_DESC d3dShaderResourceViewDesc = GetShaderResourceViewDesc(d3dResourceDesc, nTextureType);
+			pd3dDevice->CreateShaderResourceView(pShaderResource, &d3dShaderResourceViewDesc, m_d3dSrvCPUDescriptorHandle);
+			m_d3dSrvCPUDescriptorHandle.ptr += ::gnCbvSrvUavDescriptorIncrementSize;
+
+			//pTexture->SetGraphicsSrvRootArgument(i, (bAutoIncrement) ? (nRootParameter + i) : nRootParameter, m_d3dSrvGPUDescriptorNextHandle);
+			pTexture->SetSrvGpuDescriptorHandle(nIndex, m_d3dSrvGPUDescriptorHandle);
+			m_d3dSrvGPUDescriptorHandle.ptr += ::gnCbvSrvUavDescriptorIncrementSize;
+		}
+	}
+	return(d3dSrvGPUDescriptorHandle);
 }

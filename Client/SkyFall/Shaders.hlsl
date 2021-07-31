@@ -25,9 +25,41 @@ cbuffer cbGameObjectInfo : register(b2)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+static matrix gmtxProjectToTexture = {
+	0.5f,0.0f,0.0f,0.0f,
+	0.0f,-0.5f,0.0f,0.0f,
+	0.0f,0.0f,1.0f,0.0f,
+	0.5f,0.5f,0.0f,1.0f };
+
+Texture2D gtxtShadowMap : register(t0);
+SamplerState gssShadowMap : register(s2);
+cbuffer cbShadow :register(b0)
+{
+	matrix gmtxShadowTransform : packoffset(c0);
+};
+
+struct VS_SHADOW_INPUT
+{
+	float3 position :POSITION;
+};
+
+struct VS_SHADOW_OUTPUT
+{
+	float4 position :SV_POSITION;
+};
+
+VS_SHADOW_OUTPUT VSShadow(VS_SHADOW_INPUT input)
+{
+	VS_SHADOW_OUTPUT output;
+	float4 positionW = mul(float4(input.position, 1.0f), gmtxGameObject);
+	output.position = mul(mul(positionW, gmtxView), gmtxProjection);
+
+	return output;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 SamplerState gssWrap : register(s0);
 SamplerState gssClamp : register(s1);
-
 Texture2D gtxtTexture : register(t6);
 
 struct VS_STANDARD_INPUT
@@ -89,6 +121,7 @@ struct VS_WIREFRAME_OUTPUT
 	float3 tangentW : TANGENT;
 	float3 bitangentW : BITANGENT;
 	float2 uv : TEXCOORD;
+	float4 shadowPosition: TEXCOORD1;
 };
 
 VS_WIREFRAME_OUTPUT VSWireFrame(VS_WIREFRAME_INPUT input)
@@ -102,11 +135,20 @@ VS_WIREFRAME_OUTPUT VSWireFrame(VS_WIREFRAME_INPUT input)
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
 	output.uv = input.uv;
 
+	matrix shadowProject = mul(mul(gmtxGameObject, gmtxShadowTransform), gmtxProjectToTexture);
+	output.shadowPosition = mul(float4(input.position, 1.0f), shadowProject);
+
 	return(output);
 }
 
 float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 {
+	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
+	float fShadowFactor = 0.3f, fBias = 0.0006f;
+
+	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
+	if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //그림자가 아님
+
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
 	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -119,7 +161,7 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 		float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
 		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] → [-1, 1]
 		normalW = normalize(mul(vNormal, TBN));
-		cIllumination = Lighting(input.positionW, normalW);
+		cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
 		cColor = lerp(cColor, cIllumination, 0.5f);
 	}
 	//cColor =float4(0,0,1,1);
@@ -161,6 +203,7 @@ struct VS_SKINNED_WIREFRAME_OUTPUT
 	float3 tangentW : TANGENT;
 	float3 bitangentW : BITANGENT;
 	float2 uv : TEXCOORD;
+	float4 shadowPosition: TEXCOORD1;
 };
 
 VS_SKINNED_WIREFRAME_OUTPUT VSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_INPUT input)
@@ -184,11 +227,19 @@ VS_SKINNED_WIREFRAME_OUTPUT VSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_INP
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
 	output.uv = input.uv;
 
+	matrix shadowProject = mul(mul(gmtxGameObject, gmtxShadowTransform), gmtxProjectToTexture);
+	output.shadowPosition = mul(float4(input.position, 1.0f), shadowProject);
+
 	return(output);
 }
 
 float4 PSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_OUTPUT input) : SV_TARGET
 {
+	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
+	float fShadowFactor = 0.3f, fBias = 0.0006f;
+
+	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
+	if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //그림자가 아님
 	
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
 
@@ -202,7 +253,7 @@ float4 PSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_OUTPUT input) : SV_TARGE
 		float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
 		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] → [-1, 1]
 		normalW = normalize(mul(vNormal, TBN));
-		cIllumination = Lighting(input.positionW, normalW);
+		cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
 		cColor = lerp(cColor, cIllumination, 0.5f);
 	}
 	return(cColor);
@@ -225,30 +276,56 @@ struct VS_TERRAIN_INPUT
 struct VS_TERRAIN_OUTPUT
 {
 	float4 position : SV_POSITION;
+	float3 positionW: POSITION;
 	float4 color : COLOR;
 	float2 uv0 : TEXCOORD0;
 	float2 uv1 : TEXCOORD1;
+	float4 shadowPosition: TEXCOORD2;
 };
 
 VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 {
 	VS_TERRAIN_OUTPUT output;
 
-	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
+	output.positionW = (float3)mul(float4(input.position, 1.0f), gmtxGameObject);
+	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
 	output.color = input.color;
 	output.uv0 = input.uv0;
 	output.uv1 = input.uv1;
+
+	matrix shadowProject = mul(mul(gmtxGameObject, gmtxShadowTransform), gmtxProjectToTexture);
+	output.shadowPosition = mul(float4(input.position, 1.0f), shadowProject);
 
 	return(output);
 }
 
 float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 {
+	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
+	float fShadowFactor = 0.3f, fBias = 0.0006f;
+
+	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
+	if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //그림자가 아님
+
 	float4 cBaseTexColor = gtxtTerrainBaseTexture.Sample(gssWrap, input.uv0);
 	float4 cDetailTexColor = gtxtTerrainDetailTexture.Sample(gssWrap, input.uv1);
 	float4 cColor = saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
 	//float4 cColor = input.color * saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
 
+	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	if (/*gnTexturesMask & MATERIAL_NORMAL_MAP*/true)
+	{
+		float3 normalW = normalize(float3(0,1,0));
+		//float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
+		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] → [-1, 1]
+		//normalW = normalize(mul(vNormal, TBN));
+		cIllumination = Lighting(input.positionW, normalW,fShadowFactor);
+		//cIllumination = float4(fShadowFactor, fShadowFactor, fShadowFactor, fShadowFactor);
+		cColor = lerp(cColor, cIllumination, 0.5f);
+		cColor = fShadowFactor;
+	}
 	return(cColor);
 }
 
