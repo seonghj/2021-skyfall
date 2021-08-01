@@ -377,6 +377,8 @@ public:
 	CGameObject 					*m_pChild = NULL;
 	CGameObject 					*m_pSibling = NULL;
 
+	float							m_AABBExtentsY = 0;
+
 	float						m_fHitCool;
 
 

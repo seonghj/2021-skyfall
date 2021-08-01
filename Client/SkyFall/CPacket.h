@@ -22,9 +22,10 @@ public:
 	WSABUF wsabuf;
 	HANDLE SendEvent;
 
-	CTerrainPlayer* m_pPlayer = NULL;
-	CGameFramework* m_pFramework = NULL;
-	CScene* m_pScene = NULL;
+	CTerrainPlayer*		m_pPlayer = NULL;
+	CGameFramework*		m_pFramework = NULL;
+	CScene*				m_pScene = NULL;
+	CMap*				m_pMap = NULL;
 
 	float fTimeElapsed;
 	float ChargeTimer;
@@ -41,6 +42,7 @@ public:
 	void Send_swap_weapon_packet(PlayerType weapon);
 	void Swap_weapon(int key, PlayerType weapon);
 	void Map_set(int type, int pos);
+	void CheckCollision(CMonster* mon);
 
 	void ProcessPacket(char* buf);
 

@@ -216,9 +216,6 @@ void Server::Accept()
         m_pBot->monsters[roomID][0].SetPosition(300, 197.757935, 300);
         m_pBot->monsters[roomID][0].state = 1;
         m_pBot->monsters[roomID][0].Rotate(-90.0f, 20.0f, 0.0f);
-        printf(" x : %f / y : %f / z : %f\n", m_pBot->monsters[roomID][0].GetUp().x\
-            , m_pBot->monsters[roomID][0].GetUp().y
-            , m_pBot->monsters[roomID][0].GetUp().z);
         m_pBot->RunBot(roomID);
 
         do_recv(client_key, roomID);
@@ -457,7 +454,7 @@ void Server::send_remove_monster(int key, int roomID, int to)
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
-void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction, float degree)
+void Server::send_monster_pos(const Monster& mon, XMFLOAT3 pos, XMFLOAT3 direction, float degree)
 {
     int roomID = mon.roomID;
 
@@ -466,7 +463,7 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction, float degr
     p.type = PacketType::SC_monster_pos;
     p.key = mon.key.load();
     p.roomid = mon.roomID.load();
-    p.Position = mon.f3Position.load();
+    p.Position = pos;
     p.direction = direction;
     p.degree = degree;
     p.MoveType = 0;
@@ -745,6 +742,16 @@ void Server::process_packet(int key, char* buf, int roomID)
         }
         p->type = SC_player_getitem;
         send_packet_to_players(p->key, reinterpret_cast<char*>(p), roomID);
+        break;
+    }
+    case PacketType::CS_monster_pos: {
+        mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
+        if (m_pBot->monsters[roomID][p->key].recv_pos == TRUE) break;
+        m_pBot->monsters[roomID][p->key].recv_pos = TRUE;
+        m_pBot->monsters[roomID][p->key].SetPosition(p->Position.x, p->Position.y, p->Position.z);
+        printf("%f, %f, %f\n", m_pBot->monsters[roomID][p->key].f3Position.load().x
+            , m_pBot->monsters[roomID][p->key].f3Position.load().y
+            , m_pBot->monsters[roomID][p->key].f3Position.load().z);
         break;
     }
     }

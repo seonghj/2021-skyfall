@@ -90,7 +90,7 @@ void Bot::CheckTarget(int roomID)
 					}
 				}*/
 
-				m_pServer->send_monster_pos(mon, XMFLOAT3(0, 0, 0), 0);
+				m_pServer->send_monster_pos(mon, XMFLOAT3(0, 0, 0), XMFLOAT3(0, 0, 0), 0);
 			}
 		}
 	}
@@ -105,13 +105,21 @@ void Bot::CheckBehavior(int roomID)
 			XMFLOAT3 subtract;
 			float rotation;
 			float range;
-			subtract = Vector3::Subtract((XMFLOAT3&)player.f3Position.load(), (XMFLOAT3&)mon.GetPosition());
+
+			XMFLOAT3 player_pos = (XMFLOAT3&)player.f3Position.load();
+			XMFLOAT3 mon_pos = (XMFLOAT3&)mon.GetPosition();
+
+			player_pos.y = 0;
+			mon_pos.y = 0;
+
+			subtract = Vector3::Subtract(player_pos, mon_pos);
 			range = Vector3::Length(subtract);
 
 			//float distance = (pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z - pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z) / 2.0f;
-			if (range < 300.0f)
+			if (30 < range &&range < 300.0f)
 			{
 				subtract = Vector3::Normalize(subtract);
+				subtract.y = 0;
 				// 실제 몬스터의 look 벡터
 				XMFLOAT3 look = Vector3::ScalarProduct((XMFLOAT3&)mon.GetUp(), -1);
 
@@ -127,15 +135,17 @@ void Bot::CheckBehavior(int roomID)
 					mon.Move(subtract, 0.5f);
 				}*/
 
-				mon.Move(subtract, 0.5f);
+				//mon.Move(subtract, 0.5f);
 				// 외적에 따라 가까운 방향으로 회전하도록
 				XMFLOAT3 cross = Vector3::CrossProduct(subtract, look);
 
+				float rotate_degree = -cross.y * rotation / 10;
+				//float rotate_degree = 0;
 				if (EPSILON <= rotation)
-					mon.Rotate(0.0f, 0.0f, -cross.y * rotation / 10);
+					mon.Rotate(0.0f, 0.0f, rotate_degree);
 				//printf("%f, %f, %f\n", cross.y, rotation, -cross.y * rotation / 10);
-
-				m_pServer->send_monster_pos(mon, cross, -cross.y * rotation / 10);
+				mon.recv_pos = false;
+				m_pServer->send_monster_pos(mon, subtract, cross, rotate_degree);
 
 
 			}

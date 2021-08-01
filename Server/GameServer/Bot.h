@@ -42,6 +42,8 @@ public:
     void Rotate(float fPitch, float fYaw, float fRoll);
     void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent);
 
+    bool recv_pos = TRUE;
+
     DirectX::XMFLOAT3 GetUp();
 
     DirectX::XMFLOAT3 GetPosition() { return f3Position; }

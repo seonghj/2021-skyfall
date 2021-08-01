@@ -498,6 +498,7 @@ void CGameFramework::BuildObjects()
 	m_pPacket->m_pScene = m_pScene;
 	m_pPacket->m_pFramework = this;
 	m_pPacket->m_pPlayer = m_pPlayer;
+	m_pPacket->m_pMap = m_pScene->m_pMap;
 
 	m_pd3dCommandList->Close();
 	ID3D12CommandList* ppd3dCommandLists[] = { m_pd3dCommandList };

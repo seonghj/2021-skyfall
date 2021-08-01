@@ -1828,6 +1828,7 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	CGameObject* pObject = pDragonModel->m_pModelRootObject->FindFrame("Polygonal_Dragon");
 
 	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
+
 	/*CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
 
 	SetBBObject(pBoundingBox);*/
@@ -1845,11 +1846,11 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 
 	SetPosition(300.f, pTerrain->GetHeight(300.f, 300.f), 300.f);
-	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.2f);
+	m_AABBExtentsY = pObject->m_pMesh->m_xmf3AABBExtents.y * 0.2f;
+	MoveUp(m_AABBExtentsY);
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, 20.0f, 0.0f);
-	//printf("%f, %f, %f\n", GetPosition().x, GetPosition().y, GetPosition().z);
-	printf(" x : %f / y : %f / z : %f\n", GetUp().x, GetUp().y, GetUp().z);
+	printf(" x : %f / y : %f / z : %f\n", GetPosition().x, GetPosition().y, GetPosition().z);
 
 	m_nTrackOffSet = nAnimationCount;
 	InitAnimation();
@@ -1936,7 +1937,8 @@ CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 
 	SetPosition(400.f, pTerrain->GetHeight(400.f, 400.f), 400.f);
-	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.5f);
+	m_AABBExtentsY = pObject->m_pMesh->m_xmf3AABBExtents.y * 0.5f;
+	MoveUp(m_AABBExtentsY);
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, -40.0f, 0.0f);
 
@@ -2024,7 +2026,8 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 
 	SetPosition(500.f, pTerrain->GetHeight(500.f, 500.f), 500.f);
-	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y*0.1f);
+	m_AABBExtentsY = pObject->m_pMesh->m_xmf3AABBExtents.y * 0.1f;
+	MoveUp(m_AABBExtentsY);
 	SetScale(0.1f, 0.1f, 0.1f);
 	Rotate(-90.0f, 0.0f, 0.0f);
 

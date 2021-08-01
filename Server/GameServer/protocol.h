@@ -100,6 +100,8 @@ enum PacketType {
 	CS_player_stop,
 	CS_allow_shot,
 	CS_player_getitem,
+	CS_monster_pos,
+	CS_monster_attack,
 	CS_NONE,
 };
 
