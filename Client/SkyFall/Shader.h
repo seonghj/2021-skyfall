@@ -143,9 +143,8 @@ protected:
 //
 struct VS_CB_SHADOW_INFO
 {
-	XMFLOAT4X4						m_xmf4x4View;
-	XMFLOAT4X4						m_xmf4x4Proj;
 	XMFLOAT4X4						m_xmf4x4Shadow;
+	float m_fBias;
 };
 
 class CShadowMap : public CShader
@@ -191,6 +190,10 @@ public:
 	void Reset(ID3D12GraphicsCommandList* pd3dCommandList);
 	CCamera* GetCamera() { return m_pCamera; }
 	void Rotate(float fPitch, float fYaw, float fRoll);
+
+	void Plus() { m_pcbMappedShadowTransform->m_fBias += 0.0001f; Show(); }
+	void Minus() { m_pcbMappedShadowTransform->m_fBias -= 0.0001f; Show(); }
+	void Show()const { printf("%f\n",m_pcbMappedShadowTransform->m_fBias); }
 };
 
 

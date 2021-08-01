@@ -82,6 +82,13 @@ void CCamera::GenerateProjectionMatrix(float fNearPlaneDistance, float fFarPlane
 //	XMStoreFloat4x4(&m_xmf4x4Projection, xmmtxProjection);
 }
 
+void CCamera::GenerateProjectionMatrixOrtho(float fNearPlaneDistance, float fFarPlaneDistance, float w, float h)
+{
+	XMFLOAT4X4 xmf4x4Result;
+	XMStoreFloat4x4(&xmf4x4Result, XMMatrixOrthographicLH(w, h, fNearPlaneDistance, fFarPlaneDistance));
+	m_xmf4x4Projection = xmf4x4Result;	
+}
+
 void CCamera::GenerateViewMatrix(XMFLOAT3 xmf3Position, XMFLOAT3 xmf3LookAt, XMFLOAT3 xmf3Up)
 {
 	m_xmf3Position = xmf3Position;

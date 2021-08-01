@@ -420,6 +420,12 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				m_pPlayer->SetPosition(XMFLOAT3(pos.x, 1000.0f, pos.z));
 				m_pPlayer->SetGravity(XMFLOAT3(0.0f, 0.0f, 0.0f));
 				break;
+			case VK_HOME:
+				m_pShadowMap->Plus();
+				break;
+			case VK_END:
+				m_pShadowMap->Minus();
+				break;
 			}
 			break;
 		default:
@@ -507,7 +513,7 @@ void CGameFramework::BuildObjects()
 	pCamera->SetPosition(m_pScene->m_pLights[0].m_xmf3Position);
 	pCamera->SetLookVector(m_pScene->m_pLights[0].m_xmf3Direction);
 	pCamera->RegenerateViewMatrix();
-	pCamera->GenerateProjectionMatrix(1.01f, 1000.0f, ASPECT_RATIO, 60.0f);
+	pCamera->GenerateProjectionMatrixOrtho(1.01f, 2000.0f, m_nWndClientWidth*2, m_nWndClientHeight*2);
 	pCamera->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
 
 	m_pShadowMap = new CShadowMap(m_nWndClientWidth, m_nWndClientHeight, pCamera);
@@ -771,7 +777,7 @@ void CGameFramework::FrameAdvance()
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
 	CCamera* pCamera = m_pShadowMap->GetCamera();
 	pCamera->SetPosition(m_pPlayer->GetPosition());
-	pCamera->Move(XMFLOAT3(200, 100, 200));
+	pCamera->Move(XMFLOAT3(-500, 100, -500));
 	pCamera->RegenerateViewMatrix();
     AnimateObjects();
 

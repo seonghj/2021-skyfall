@@ -37,9 +37,8 @@ Texture2D gtxtShadowMap : register(t0);
 SamplerState gssShadowMap : register(s2);
 cbuffer cbShadow :register(b0)
 {
-	matrix gmtxLightView : packoffset(c0);
-	matrix gmtxLightProjection : packoffset(c4);
-	matrix gmtxShadowTransform : packoffset(c8);
+	matrix gmtxShadowTransform : packoffset(c0);
+	float gfBias : packoffset(c4);
 };
 
 struct VS_SHADOW_INPUT
@@ -150,8 +149,12 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
 	float fShadowFactor = 0.3f, fBias = 0.00006f;
 
+	//float fDepth = shadowPosition.z;
+	//float fPercentLit = gtxtShadowMap.SampleCmpLevelZero(gssShadowMap, shadowPosition.xy, fDepth).r;
+	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //그림자가 아님
+
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
-	if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //그림자가 아님
+	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //그림자가 아님
 
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
 	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -242,8 +245,12 @@ float4 PSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_OUTPUT input) : SV_TARGE
 	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
 	float fShadowFactor = 0.3f, fBias = 0.00006f;
 
+	//float fDepth = shadowPosition.z;
+	//float fPercentLit = gtxtShadowMap.SampleCmpLevelZero(gssShadowMap, shadowPosition.xy, fDepth).r;
+	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //그림자가 아님
+
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
-	if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //그림자가 아님
+	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //그림자가 아님
 	
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
 
@@ -310,10 +317,14 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 {
 	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
-	float fShadowFactor = 0.1f, fBias = 0.00006f;
+	float fShadowFactor = 0.0f, fBias = 0.00006f;
+
+	//float fDepth = shadowPosition.z;
+	//float fPercentLit = gtxtShadowMap.SampleCmpLevelZero(gssShadowMap, shadowPosition.xy, fDepth).r;
+	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //그림자가 아님
 
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
-	if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //그림자가 아님
+	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //그림자가 아님
 
 	float4 cBaseTexColor = gtxtTerrainBaseTexture.Sample(gssWrap, input.uv0);
 	float4 cDetailTexColor = gtxtTerrainDetailTexture.Sample(gssWrap, input.uv1);
@@ -321,7 +332,7 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 	//float4 cColor = input.color * saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
 
 	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
-	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	float4 cIllumination = float4(fShadowFactor, fShadowFactor, fShadowFactor, fShadowFactor);
 
 	if (/*gnTexturesMask & MATERIAL_NORMAL_MAP*/true)
 	{
@@ -329,9 +340,9 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 		//float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
 		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] → [-1, 1]
 		//normalW = normalize(mul(vNormal, TBN));
-		cIllumination = Lighting(input.positionW, normalW,fShadowFactor);
-		cColor = lerp(cColor, cIllumination, 0.5f);
-		cColor = float4(fShadowFactor, fShadowFactor, fShadowFactor, fShadowFactor);
+		//cIllumination = Lighting(input.positionW, normalW,fShadowFactor);
+		if(fShadowFactor==0.f)
+			cColor = lerp(cColor, cIllumination, 0.4f);
 	}
 	return(cColor);
 }

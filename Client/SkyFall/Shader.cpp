@@ -578,6 +578,8 @@ void CShadowMap::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsC
 	m_pd3dcbShadow = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
 
 	m_pd3dcbShadow->Map(0, NULL, (void**)&m_pcbMappedShadowTransform);
+
+	m_pcbMappedShadowTransform->m_fBias = 0.0012f;
 }
 
 void CShadowMap::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
@@ -592,10 +594,6 @@ void CShadowMap::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandLis
 	XMFLOAT4X4 xmf4x4Projection = m_pCamera->GetProjectionMatrix();
 	XMFLOAT4X4 xmf4x4ShadowTransform = Matrix4x4::Multiply(XMLoadFloat4x4(&xmf4x4View), xmf4x4Projection);
 
-	XMStoreFloat4x4(&xmf4x4View, XMMatrixTranspose(XMLoadFloat4x4(&xmf4x4View)));
-	::memcpy(&m_pcbMappedShadowTransform->m_xmf4x4View, &xmf4x4View, sizeof(XMFLOAT4X4));
-	XMStoreFloat4x4(&xmf4x4Projection, XMMatrixTranspose(XMLoadFloat4x4(&xmf4x4Projection)));
-	::memcpy(&m_pcbMappedShadowTransform->m_xmf4x4Proj, &xmf4x4Projection, sizeof(XMFLOAT4X4));
 	XMStoreFloat4x4(&xmf4x4ShadowTransform, XMMatrixTranspose(XMLoadFloat4x4(&xmf4x4ShadowTransform)*T));
 	::memcpy(&m_pcbMappedShadowTransform->m_xmf4x4Shadow, &xmf4x4ShadowTransform, sizeof(XMFLOAT4X4));
 
