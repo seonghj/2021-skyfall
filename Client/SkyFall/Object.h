@@ -427,6 +427,7 @@ public:
 
 	virtual void OnPrepareRender() { }
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera=NULL);
+	virtual void RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 
 	virtual void CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList);
@@ -533,6 +534,8 @@ public:
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera = NULL);
 };
 
+
+
 class CMap : public CGameObject
 {
 public:
@@ -540,6 +543,7 @@ public:
 	virtual ~CMap();
 
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
+	virtual void RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 		
 	void CheckCollision(CPlayer* pPlayer);
 	virtual void ReleaseUploadBuffers();

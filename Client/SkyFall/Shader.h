@@ -141,6 +141,12 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+struct VS_CB_SHADOW_INFO
+{
+	XMFLOAT4X4						m_xmf4x4View;
+	XMFLOAT4X4						m_xmf4x4Proj;
+	XMFLOAT4X4						m_xmf4x4Shadow;
+};
 
 class CShadowMap : public CShader
 {
@@ -152,10 +158,10 @@ private:
 	ID3D12DescriptorHeap *m_pd3dDsvDescriptorHeap;
 
 	ID3D12Resource* m_pd3dcbShadow = NULL;
-	XMFLOAT4X4 m_cbMappedShadowTransform;
+	VS_CB_SHADOW_INFO* m_pcbMappedShadowTransform;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE			m_d3dSrvCPUDescriptorHandle;
-	D3D12_GPU_DESCRIPTOR_HANDLE			m_d3dSrvGPUDescriptorHandle;
+	//D3D12_CPU_DESCRIPTOR_HANDLE			m_d3dSrvCPUDescriptorHandle;
+	//D3D12_GPU_DESCRIPTOR_HANDLE			m_d3dSrvGPUDescriptorHandle;
 
 	ID3D12DescriptorHeap				*m_pd3dSrvDescriptorHeap = NULL;
 
@@ -164,6 +170,7 @@ public:
 	CShadowMap(UINT width, UINT height,CCamera* pCamera);
 	virtual ~CShadowMap();
 
+	virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
 	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL);
 
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
@@ -183,10 +190,7 @@ public:
 	void Set(ID3D12GraphicsCommandList* pd3dCommandList);
 	void Reset(ID3D12GraphicsCommandList* pd3dCommandList);
 	CCamera* GetCamera() { return m_pCamera; }
-
-	void CreateSrvDescriptorHeaps(ID3D12Device* pd3dDevice, int nShaderResourceViews);
-	D3D12_GPU_DESCRIPTOR_HANDLE CreateShaderResourceView(ID3D12Device* pd3dDevice, CTexture* pTexture, int nIndex);
-
+	void Rotate(float fPitch, float fYaw, float fRoll);
 };
 
 

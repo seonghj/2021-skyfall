@@ -43,7 +43,7 @@ void CScene::BuildDefaultLightsAndMaterials()
 	m_pLights[0].m_xmf4Ambient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
 	m_pLights[0].m_xmf4Diffuse = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
 	m_pLights[0].m_xmf4Specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.0f);
-	m_pLights[0].m_xmf3Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_pLights[0].m_xmf3Position = XMFLOAT3(1000.0f, 1000.0f, 1000.0f);
 	m_pLights[0].m_xmf3Direction = XMFLOAT3(-1.0f, -1.0f, -1.0f);
 	m_pLights[0].m_xmf3Attenuation = XMFLOAT3(1.0f, 0.001f, 0.0001f);
 	m_pLights[1].m_bEnable = true;
@@ -551,7 +551,8 @@ void CScene::CheckCollision()
 				CheckBehavior(m_ppGameObjects[i]);
 		}
 	}
-	m_pMap->CheckCollision(m_pPlayer);
+	if(m_pMap)
+		m_pMap->CheckCollision(m_pPlayer);
 }
 
 void CScene::CheckBehavior(CMonster *pMonster)
@@ -627,6 +628,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE CScene::CreateConstantBufferViews(ID3D12Device *pd3d
 	return(d3dCbvGPUDescriptorHandle);
 }
 
+
 D3D12_SHADER_RESOURCE_VIEW_DESC GetShaderResourceViewDesc(D3D12_RESOURCE_DESC d3dResourceDesc, UINT nTextureType)
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC d3dShaderResourceViewDesc;
@@ -670,6 +672,32 @@ D3D12_SHADER_RESOURCE_VIEW_DESC GetShaderResourceViewDesc(D3D12_RESOURCE_DESC d3
 	return(d3dShaderResourceViewDesc);
 }
 
+
+D3D12_GPU_DESCRIPTOR_HANDLE CScene::CreateShaderResourceView(ID3D12Device* pd3dDevice, CTexture* pTexture, DXGI_FORMAT format)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGPUDescriptorHandle = m_d3dSrvGPUDescriptorNextHandle;
+	if (pTexture)
+	{
+		int nTextures = pTexture->GetTextures();
+		int nTextureType = pTexture->GetTextureType();
+		for (int i = 0; i < nTextures; i++)
+		{
+			ID3D12Resource* pShaderResource = pTexture->GetTexture(i);
+			if (pShaderResource) {
+				D3D12_RESOURCE_DESC d3dResourceDesc = pShaderResource->GetDesc();
+				d3dResourceDesc.Format = format;
+				D3D12_SHADER_RESOURCE_VIEW_DESC d3dShaderResourceViewDesc = GetShaderResourceViewDesc(d3dResourceDesc, nTextureType);
+				pd3dDevice->CreateShaderResourceView(pShaderResource, &d3dShaderResourceViewDesc, m_d3dSrvCPUDescriptorNextHandle);
+				m_d3dSrvCPUDescriptorNextHandle.ptr += ::gnCbvSrvUavDescriptorIncrementSize;
+
+				//pTexture->SetGraphicsSrvRootArgument(i, (bAutoIncrement) ? (nRootParameter + i) : nRootParameter, m_d3dSrvGPUDescriptorNextHandle);
+				pTexture->SetSrvGpuDescriptorHandle(i, m_d3dSrvGPUDescriptorNextHandle);
+				m_d3dSrvGPUDescriptorNextHandle.ptr += ::gnCbvSrvUavDescriptorIncrementSize;
+			}
+		}
+	}
+	return(d3dSrvGPUDescriptorHandle);
+}
 
 D3D12_GPU_DESCRIPTOR_HANDLE CScene::CreateShaderResourceViews(ID3D12Device *pd3dDevice, CTexture *pTexture, bool bAutoIncrement)
 {
@@ -875,6 +903,40 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	//}
 
 	for (int i = 0; i < m_nShaders; i++) if (m_ppShaders[i]) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
+}
+
+void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+{
+	if (m_pd3dGraphicsRootSignature) pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);
+	if (m_pd3dCbvSrvDescriptorHeap) pd3dCommandList->SetDescriptorHeaps(1, &m_pd3dCbvSrvDescriptorHeap);
+
+	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
+	pCamera->UpdateShaderVariables(pd3dCommandList);
+
+	UpdateShaderVariables(pd3dCommandList);
+
+	D3D12_GPU_VIRTUAL_ADDRESS d3dcbLightsGpuVirtualAddress = m_pd3dcbLights->GetGPUVirtualAddress();
+	pd3dCommandList->SetGraphicsRootConstantBufferView(2, d3dcbLightsGpuVirtualAddress); //Lights
+
+	//if (m_pSkyBox) m_pSkyBox->RenderShadow(pd3dCommandList, pCamera);
+	if (m_pTerrain) m_pTerrain->RenderShadow(pd3dCommandList, pCamera);
+	if (m_pForestTerrain) m_pForestTerrain->RenderShadow(pd3dCommandList, pCamera);
+	if (m_pSnowTerrain) m_pSnowTerrain->RenderShadow(pd3dCommandList, pCamera);
+
+	if (m_pMap) m_pMap->RenderShadow(pd3dCommandList, pCamera);
+
+	for (int i = 0; i < m_nGameObjects; i++)
+	{
+		if (m_ppGameObjects[i])
+		{
+			m_ppGameObjects[i]->Animate(m_fElapsedTime);
+			m_ppGameObjects[i]->UpdateTransform(NULL);
+			m_ppGameObjects[i]->RenderShadow(pd3dCommandList, pCamera);
+		}
+	}
+
+	for (int i = 0; i < m_nPlayer; ++i)
+		if (m_mPlayer[i]) m_mPlayer[i]->RenderShadow(pd3dCommandList, pCamera);
 }
 
 void CScene::Set(ID3D12GraphicsCommandList* pd3dCommandList)

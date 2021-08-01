@@ -1,3 +1,5 @@
+#pragma enable_d3d12_debug_symbols
+
 struct MATERIAL
 {
 	float4					m_cAmbient;
@@ -35,7 +37,9 @@ Texture2D gtxtShadowMap : register(t0);
 SamplerState gssShadowMap : register(s2);
 cbuffer cbShadow :register(b0)
 {
-	matrix gmtxShadowTransform : packoffset(c0);
+	matrix gmtxLightView : packoffset(c0);
+	matrix gmtxLightProjection : packoffset(c4);
+	matrix gmtxShadowTransform : packoffset(c8);
 };
 
 struct VS_SHADOW_INPUT
@@ -135,7 +139,7 @@ VS_WIREFRAME_OUTPUT VSWireFrame(VS_WIREFRAME_INPUT input)
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
 	output.uv = input.uv;
 
-	matrix shadowProject = mul(mul(gmtxGameObject, gmtxShadowTransform), gmtxProjectToTexture);
+	matrix shadowProject = mul(gmtxGameObject, gmtxShadowTransform);
 	output.shadowPosition = mul(float4(input.position, 1.0f), shadowProject);
 
 	return(output);
@@ -144,7 +148,7 @@ VS_WIREFRAME_OUTPUT VSWireFrame(VS_WIREFRAME_INPUT input)
 float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 {
 	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
-	float fShadowFactor = 0.3f, fBias = 0.0006f;
+	float fShadowFactor = 0.3f, fBias = 0.00006f;
 
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
 	if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //그림자가 아님
@@ -226,8 +230,8 @@ VS_SKINNED_WIREFRAME_OUTPUT VSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_INP
 	output.bitangentW = (float3)mul(float4(input.bitangent, 1.0f), gmtxGameObject);
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
 	output.uv = input.uv;
-
-	matrix shadowProject = mul(mul(gmtxGameObject, gmtxShadowTransform), gmtxProjectToTexture);
+	
+	matrix shadowProject = mul(gmtxGameObject, gmtxShadowTransform);
 	output.shadowPosition = mul(float4(input.position, 1.0f), shadowProject);
 
 	return(output);
@@ -236,7 +240,7 @@ VS_SKINNED_WIREFRAME_OUTPUT VSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_INP
 float4 PSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_OUTPUT input) : SV_TARGET
 {
 	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
-	float fShadowFactor = 0.3f, fBias = 0.0006f;
+	float fShadowFactor = 0.3f, fBias = 0.00006f;
 
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
 	if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //그림자가 아님
@@ -292,9 +296,13 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 	output.color = input.color;
 	output.uv0 = input.uv0;
 	output.uv1 = input.uv1;
-
-	matrix shadowProject = mul(mul(gmtxGameObject, gmtxShadowTransform), gmtxProjectToTexture);
+	
+	//matrix shadowProject = mul(mul(mul(gmtxGameObject, gmtxLightView), gmtxLightProjection), gmtxProjectToTexture);
+	//matrix shadowProject = mul(mul(gmtxGameObject, gmtxShadowTransform), gmtxProjectToTexture);
+	matrix shadowProject = mul(gmtxGameObject, gmtxShadowTransform);
 	output.shadowPosition = mul(float4(input.position, 1.0f), shadowProject);
+
+	//output.shadowPosition = mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxShadowTransform);
 
 	return(output);
 }
@@ -302,7 +310,7 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 {
 	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
-	float fShadowFactor = 0.3f, fBias = 0.0006f;
+	float fShadowFactor = 0.1f, fBias = 0.00006f;
 
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
 	if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //그림자가 아님
@@ -322,9 +330,8 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] → [-1, 1]
 		//normalW = normalize(mul(vNormal, TBN));
 		cIllumination = Lighting(input.positionW, normalW,fShadowFactor);
-		//cIllumination = float4(fShadowFactor, fShadowFactor, fShadowFactor, fShadowFactor);
 		cColor = lerp(cColor, cIllumination, 0.5f);
-		cColor = fShadowFactor;
+		cColor = float4(fShadowFactor, fShadowFactor, fShadowFactor, fShadowFactor);
 	}
 	return(cColor);
 }

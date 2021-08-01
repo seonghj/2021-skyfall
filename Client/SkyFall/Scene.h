@@ -63,6 +63,7 @@ public:
 	bool ProcessInput(UCHAR *pKeysBuffer);
     void AnimateObjects(float fTimeElapsed);
     void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera=NULL);
+	void RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 	void Set(ID3D12GraphicsCommandList* pd3dCommandList);
 	void ReleaseUploadBuffers();
 
@@ -96,7 +97,7 @@ public:
 	static void CreateCbvSrvUavDescriptorHeaps(ID3D12Device *pd3dDevice, int nConstantBufferViews, int nShaderResourceViews, int nUnorderedAccessViews);
 
 	static D3D12_GPU_DESCRIPTOR_HANDLE CreateConstantBufferViews(ID3D12Device *pd3dDevice, int nConstantBufferViews, ID3D12Resource *pd3dConstantBuffers, UINT nStride);
-	static D3D12_GPU_DESCRIPTOR_HANDLE CreateShaderResourceView(ID3D12Device* pd3dDevice, CTexture* pTexture, int nIndex);
+	static D3D12_GPU_DESCRIPTOR_HANDLE CreateShaderResourceView(ID3D12Device* pd3dDevice, CTexture* pTexture, DXGI_FORMAT format);
 	static D3D12_GPU_DESCRIPTOR_HANDLE CreateShaderResourceViews(ID3D12Device *pd3dDevice, CTexture *pTexture, bool bAutoIncrement);
 	static D3D12_GPU_DESCRIPTOR_HANDLE CreateUnorderedAccessViews(ID3D12Device* pd3dDevice, CTexture* pTexture, bool bAutoIncrement);
 
