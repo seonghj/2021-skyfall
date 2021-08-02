@@ -2078,7 +2078,7 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	//m_ppMaps[10]->SetPosition(0.0f, 60.0f, 4096.0f);
 	//m_ppMaps[11]->SetPosition(0.0f, 60.0f, 6144.0f);
 
-	m_nMaps = 18;
+	m_nMaps = 27;
 	m_ppMaps = new CGameObject * [m_nMaps];
 
 
@@ -2103,6 +2103,10 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		m_ppMaps[1 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
 		m_ppMaps[2 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
 
+		m_ppMaps[0 + i * 9]->SetPosition(0.0f, 60.0f, i * 2048.0f);
+		m_ppMaps[1 + i * 9]->SetPosition(0.0f, 60.0f, i * 2048.0f);
+		m_ppMaps[2 + i * 9]->SetPosition(0.0f, 60.0f, i * 2048.0f);
+
 		m_ppMaps[3 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Collision, true);
 		m_ppMaps[4 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Steppable);
 		m_ppMaps[5 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable);
@@ -2119,13 +2123,13 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		m_ppMaps[7 + i * 9]->SetPosition(2048.0f, 0.0f, i * 2048.0f);
 		m_ppMaps[8 + i * 9]->SetPosition(2048.0f, 0.0f, i * 2048.0f);
 
-		m_ppMaps[9 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
-		m_ppMaps[10 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
-		m_ppMaps[11 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
+		//m_ppMaps[9 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
+		//m_ppMaps[10 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
+		//m_ppMaps[11 + i * 9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
 
-		m_ppMaps[9 + i * 9]->SetPosition(0.0f, 60.0f, i * 2048.0f);
-		m_ppMaps[10 + i * 9]->SetPosition(0.0f, 60.0f, i * 2048.0f);
-		m_ppMaps[11 + i * 9]->SetPosition(0.0f, 60.0f, i * 2048.0f);
+		//m_ppMaps[9 + i * 9]->SetPosition(0.0f, 60.0f, i * 2048.0f);
+		//m_ppMaps[10 + i * 9]->SetPosition(0.0f, 60.0f, i * 2048.0f);
+		//m_ppMaps[11 + i * 9]->SetPosition(0.0f, 60.0f, i * 2048.0f);
 
 		if (pDesert_Collision)delete pDesert_Collision;
 		if (pDesert_Steppable)delete pDesert_Steppable;
@@ -2171,7 +2175,7 @@ void CMap::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	CGameObject::Render(pd3dCommandList, pCamera);
 
-	for (int i = 0; i < 27; ++i)
+	for (int i = 0; i < m_nMaps; ++i)
 		m_ppMaps[i]->Render(pd3dCommandList, pCamera);
 }
 
@@ -2179,14 +2183,14 @@ void CMap::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCa
 {
 	CGameObject::RenderShadow(pd3dCommandList, pCamera);
 
-	for (int i = 0; i < 9; ++i)
+	for (int i = 0; i < m_nMaps; ++i)
 		m_ppMaps[i]->RenderShadow(pd3dCommandList, pCamera);
 }
 
 void CMap::CheckCollision(CPlayer* pPlayer)
 {
 	CGameObject* pObject;
-	for (int i = 0; i < 3; ++i) {
+	for (int i = 0; i < 9; ++i) {
 		pObject = m_ppMaps[3 * i]->FindFrame("RootNode")->m_pChild->m_pChild;
 		while (true) {
 			if (pPlayer->isCollide(pObject)) {
