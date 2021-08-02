@@ -54,6 +54,7 @@ bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 	CreateRtvAndDsvDescriptorHeaps();
 	CreateSwapChain();
 	CreateDepthStencilView();
+	CreateShaderVariables();
 	CoInitialize(NULL);
 
 	BuildObjects();
@@ -789,6 +790,7 @@ void CGameFramework::FrameAdvance()
 {
 	m_GameTimer.Tick(0.0f);
 
+
 	ProcessInput();
 	CheckCollision();
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
@@ -801,13 +803,16 @@ void CGameFramework::FrameAdvance()
 	HRESULT hResult = m_pd3dCommandAllocator->Reset();
 	hResult = m_pd3dCommandList->Reset(m_pd3dCommandAllocator, NULL);
 
-
 	m_pShadowMap->Set(m_pd3dCommandList);
 	m_pScene->Set(m_pd3dCommandList);
+
+	UpdateShaderVariables();
 	m_pShadowMap->UpdateShaderVariable(m_pd3dCommandList);
+
 	m_pShadowMap->Render(m_pd3dCommandList, NULL);
 	if (m_pScene) m_pScene->RenderShadow(m_pd3dCommandList, m_pShadowMap->GetCamera());
 	m_pPlayer->RenderShadow(m_pd3dCommandList, NULL);
+
 	//if (m_pBowPlayer) m_pBowPlayer->RenderShadow(m_pd3dCommandList, m_pCamera);
 	//if (m_p1HswordPlayer) m_p1HswordPlayer->RenderShadow(m_pd3dCommandList, m_pCamera);
 
@@ -931,7 +936,19 @@ void CGameFramework::FrameAdvance()
 	::SetWindowText(m_hWnd, m_pszFrameRate);
 }
 
-void CGameFramework::OtherPlayerMove(int player_num, XMFLOAT3 pos)
+void CGameFramework::CreateShaderVariables()
 {
+	UINT ncbElementBytes = ((sizeof(CB_FRAMEWORK_INFO) + 255) & ~255); //256의 배수
+	m_pd3dcbFrameworkInfo = ::CreateBufferResource(m_pd3dDevice, m_pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
 
+	m_pd3dcbFrameworkInfo->Map(0, NULL, (void**)&m_pcbMappedFrameworkInfo);
+}
+
+void CGameFramework::UpdateShaderVariables()
+{
+	m_pcbMappedFrameworkInfo->m_fCurrentTime = m_GameTimer.GetTotalTime();
+	m_pcbMappedFrameworkInfo->m_fElapsedTime = m_GameTimer.GetTimeElapsed();
+
+	D3D12_GPU_VIRTUAL_ADDRESS d3dGpuVirtualAddress = m_pd3dcbFrameworkInfo->GetGPUVirtualAddress();
+	m_pd3dCommandList->SetGraphicsRootConstantBufferView(17, d3dGpuVirtualAddress);
 }

@@ -8,6 +8,12 @@
 #include "Scene.h"
 #include "CPacket.h"
 
+struct CB_FRAMEWORK_INFO
+{
+	float					m_fCurrentTime;
+	float					m_fElapsedTime;
+};
+
 class CGameFramework
 {
 public:
@@ -37,7 +43,9 @@ public:
     void AnimateObjects();
     void FrameAdvance();
 
-	void OtherPlayerMove(int player_num, XMFLOAT3 pos);
+	void CreateShaderVariables();
+
+	void UpdateShaderVariables();
 
 	void WaitForGpuComplete();
 	void MoveToNextFrame();
@@ -49,6 +57,8 @@ public:
 
 	void Set_m_pPacket(CPacket* t) { m_pPacket = t; };
 	void CheckCollision();
+
+
 
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
@@ -116,5 +126,8 @@ private:
 	bool						m_bMouseHold = false;
 
 	CShadowMap* m_pShadowMap;
+
+	ID3D12Resource* m_pd3dcbFrameworkInfo = NULL;
+	CB_FRAMEWORK_INFO* m_pcbMappedFrameworkInfo = NULL;
 };
 

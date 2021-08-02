@@ -1944,6 +1944,18 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device *pd3dDevice, ID3D12GraphicsCom
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
+
+	CTexture* pWaterTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
+	pWaterTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Model/Textures/Water.dds", 0);
+	CTexture* pWaterNormalTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
+	pWaterNormalTexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, L"Model/Textures/Water_Normal.dds", 0);
+
+	CScene::CreateShaderResourceViews(pd3dDevice, pWaterTexture, false);
+	pWaterTexture->SetGraphicsSrvRootArgument(0, 5, 0);
+	CScene::CreateShaderResourceViews(pd3dDevice, pWaterNormalTexture, false);
+	pWaterNormalTexture->SetGraphicsSrvRootArgument(0, 6, 0);
+
+
 	CTexture *pTerrainBaseTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
 
 	switch (texture) {
@@ -1970,9 +1982,11 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device *pd3dDevice, ID3D12GraphicsCom
 	CScene::CreateShaderResourceViews(pd3dDevice, pTerrainDetailTexture, false);
 	pTerrainDetailTexture->SetGraphicsSrvRootArgument(0, 14, 0);
 
-	CMaterial *pTerrainMaterial = new CMaterial(2);
+	CMaterial *pTerrainMaterial = new CMaterial(4);
 	pTerrainMaterial->SetTexture(pTerrainBaseTexture, 0);
 	pTerrainMaterial->SetTexture(pTerrainDetailTexture, 1);
+	pTerrainMaterial->SetTexture(pWaterTexture, 2);
+	pTerrainMaterial->SetTexture(pWaterNormalTexture, 3);
 	pTerrainMaterial->SetShader(pTerrainShader);
 
 	SetMaterial(0, pTerrainMaterial);
