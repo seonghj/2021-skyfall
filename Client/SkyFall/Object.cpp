@@ -8,6 +8,8 @@
 #include "Scene.h"
 #include <iostream>
 
+CGameObject** CMap::m_ppObjectInstance;
+int CMap::m_nObjectInstance;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 CTexture::CTexture(int nTextures, UINT nTextureType, int nSamplers)
@@ -1102,6 +1104,8 @@ int ReadStringFromFile(FILE *pInFile, char *pstrToken)
 	int nStrLength = 0;
 	UINT nReads = 0;
 	nReads = (UINT)::fread(&nStrLength, sizeof(int), 1, pInFile);
+	if (nStrLength > 64 || nStrLength < 0)
+		return -1;
 	nReads = (UINT)::fread(pstrToken, sizeof(char), nStrLength, pInFile); 
 	pstrToken[nStrLength] = '\0';
 
@@ -1116,13 +1120,24 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 
 	int nFrame = ::ReadIntegerFromFile(pInFile);
 
-	CGameObject *pGameObject = new CGameObject();
-	::ReadStringFromFile(pInFile, pGameObject->m_pstrFrameName);
+	string str;
+	CGameObject* pGameObject = new CGameObject();
+	::ReadStringFromFile(pInFile, pstrToken);
 	{
+		str = pstrToken;
+		int i = str.find("__");
+		if (i != -1) {
+			str = i > 0 ? str.substr(0, i) : str;
+			//str = str.substr(0, i);
+			::ZeroMemory(pstrToken, 64);
+			memcpy(pstrToken, str.c_str(), str.length());
+		}
+		memcpy(pGameObject->m_pstrFrameName, pstrToken, strlen(pstrToken));
 		TCHAR pstrDebug[256] = { 0 };
 		_stprintf_s(pstrDebug, 256, _T("FrameName: %hs\n"), pGameObject->m_pstrFrameName);
 		OutputDebugString(pstrDebug);
 	}
+
 	for ( ; ; )
 	{
 		::ReadStringFromFile(pInFile, pstrToken);
@@ -1133,7 +1148,7 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 			nReads = (UINT)::fread(&pGameObject->m_xmf3Scale, sizeof(XMFLOAT3), 1, pInFile);
 			nReads = (UINT)::fread(&pGameObject->m_xmf3Rotation, sizeof(XMFLOAT3), 1, pInFile);
 			nReads = (UINT)::fread(&pGameObject->m_xmf3Translation, sizeof(XMFLOAT3), 1, pInFile);
-			 
+
 
 			//XMMATRIX S = XMMatrixScaling(pGameObject->m_xmf3Scale.x, pGameObject->m_xmf3Scale.y, pGameObject->m_xmf3Scale.z);
 			//XMMATRIX R = XMMatrixRotationRollPitchYaw(pGameObject->m_xmf3Rotation.x, pGameObject->m_xmf3Rotation.y, pGameObject->m_xmf3Rotation.z);
@@ -1144,23 +1159,32 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 			//XMStoreFloat4x4(&xmf4x4Transform, XMMatrixMultiply(XMMatrixMultiply(S, R), T));
 			//pGameObject->UpdateTransform(&xmf4x4Transform);
 
-	}
+		}
 		else if (!strcmp(pstrToken, "<Mesh>:"))
 		{
-			CStandardMesh *pMesh = new CStandardMesh(pd3dDevice, pd3dCommandList);
-			pMesh->CreateShaderVariables(pd3dDevice, pd3dCommandList);
-			pMesh->LoadMeshFromFile(pd3dDevice, pd3dCommandList, pInFile);
-			pGameObject->SetMesh(pMesh);
-			isSkinDeformation = false;
+			int i;
+			for (i = 0; i < CMap::m_nObjectInstance; ++i) {
+				if (!strcmp(pGameObject->m_pstrFrameName, CMap::m_ppObjectInstance[i]->m_pstrFrameName)) {
+					CGameObject* pInst = CMap::m_ppObjectInstance[i];
+					pGameObject->SetMesh(pInst->m_pMesh);
+					SkipMeshFromFile(pInFile);
+					break;
+				}
+			}
+			if (i == CMap::m_nObjectInstance) {
+				CStandardMesh* pMesh = new CStandardMesh(pd3dDevice, pd3dCommandList);
+				pMesh->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+				pMesh->LoadMeshFromFile(pd3dDevice, pd3dCommandList, pInFile);
 
-			/*BoundingBox bb = BoundingBox(pMesh->m_xmf3AABBCenter,pMesh->m_xmf3AABBExtents);
-			pGameObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,0), bb.Extents);*/
+				pGameObject->SetMesh(pMesh);
+			}
+			isSkinDeformation = false;
 		}
 		else if (!strcmp(pstrToken, "<SkinDeformations>:"))
 		{
 			if (pnSkinnedMeshes) (*pnSkinnedMeshes)++;
 
-			CSkinnedMesh *pSkinnedMesh = new CSkinnedMesh(pd3dDevice, pd3dCommandList);
+			CSkinnedMesh* pSkinnedMesh = new CSkinnedMesh(pd3dDevice, pd3dCommandList);
 			pSkinnedMesh->LoadSkinDeformationsFromFile(pd3dDevice, pd3dCommandList, pInFile);
 			pSkinnedMesh->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -1175,7 +1199,7 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 		{
 			TCHAR pstrDebug[256] = { 0 };
 			pGameObject->LoadMaterialsFromFile(pd3dDevice, pd3dCommandList, pParent, pInFile, pShader);
-			if (isSkinDeformation) {				
+			if (isSkinDeformation) {
 				//_stprintf_s(pstrDebug, 256, _T("[SkinnedAnim] (m_nMaterials: %d)\n"), (int)pGameObject->m_nMaterials);
 
 				/**/pGameObject->SetSkinnedAnimationWireFrameShader();
@@ -1198,11 +1222,11 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 					::ReadStringFromFile(pInFile, pstrToken);
 					if (!strcmp(pstrToken, "<Frame>:"))
 					{
-						CGameObject *pChild = CGameObject::LoadFrameHierarchyFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pGameObject, pInFile, pShader, pnSkinnedMeshes);
-						if(pChild) pGameObject->SetChild(pChild);
+						CGameObject* pChild = CGameObject::LoadFrameHierarchyFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pGameObject, pInFile, pShader, pnSkinnedMeshes);
+						if (pChild) pGameObject->SetChild(pChild);
 #ifdef _WITH_DEBUG_FRAME_HIERARCHY
 						TCHAR pstrDebug[256] = { 0 };
-						_stprintf_s(pstrDebug, 256, _T("[%d] (Frame: %p) (Parent: %p)\n"), i,pChild, pGameObject);
+						_stprintf_s(pstrDebug, 256, _T("[%d] (Frame: %p) (Parent: %p)\n"), i, pChild, pGameObject);
 						OutputDebugString(pstrDebug);
 #endif
 					}
@@ -1211,11 +1235,22 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 		}
 		else if (!strcmp(pstrToken, "</Frame>"))
 		{
+			if (gbInstancing) {
+				int i;
+				for (i = 0; i < CMap::m_nObjectInstance; ++i) {
+					if (!strcmp(CMap::m_ppObjectInstance[i]->m_pstrFrameName, str.c_str())) {
+						break;
+					}
+				}
+				if (i == CMap::m_nObjectInstance)
+					CMap::m_ppObjectInstance[CMap::m_nObjectInstance++] = pGameObject;
+			}
 			break;
 		}
 	}
 	return(pGameObject);
 }
+
 
 CGameObject* CGameObject::LoadGeometryFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, char* pstrFileName, CShader* pShader)
 {
@@ -1268,6 +1303,21 @@ void CGameObject::LoadMaterialsFromFile(ID3D12Device* pd3dDevice, ID3D12Graphics
 
 	int nMaterial = 0;
 	BYTE nStrLength = 0;
+	{
+		for (int i = 0; i < CMap::m_nObjectInstance; ++i) {
+			if (!strcmp(m_pstrFrameName, CMap::m_ppObjectInstance[i]->m_pstrFrameName)) {
+				CGameObject* pObject = CMap::m_ppObjectInstance[i];
+				m_nMaterials = pObject->m_nMaterials;
+				m_ppMaterials = new CMaterial * [m_nMaterials];
+				for (int j = 0; j < m_nMaterials; ++j) {
+					m_ppMaterials[j] = NULL;
+					SetMaterial(j, pObject->m_ppMaterials[j]);
+				}
+				SkipMaterialsFromFile(pInFile);
+				return;
+			}
+		}		
+	}
 
 	UINT nReads = (UINT)::fread(&m_nMaterials, sizeof(int), 1, pInFile);
 	
@@ -1310,12 +1360,14 @@ void CGameObject::LoadMaterialsFromFile(ID3D12Device* pd3dDevice, ID3D12Graphics
 									if (!strcmp(pstrToken, "<Texture>:"))
 									{
 										int nTexture = ::ReadIntegerFromFile(pInFile);
-										CTexture* pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
 
 										TCHAR pstrDebug[256] = { 0 };
 										::ReadStringFromFile(pInFile, pstrToken); // Texture Name
+
 										_stprintf_s(pstrDebug, 256, _T("Texture Name: %hs\n"), pstrToken);
 										OutputDebugString(pstrDebug);
+
+										CTexture* pTexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
 										if (::ReadIntegerFromFile(pInFile) == 0)
 										{
 											::ReadStringFromFile(pInFile, pstrToken); // File Name
@@ -1398,6 +1450,272 @@ void CGameObject::LoadMaterialsFromFile(ID3D12Device* pd3dDevice, ID3D12Graphics
 			m_ppMaterials[0]->m_fGlossyReflection = ::ReadFloatFromFile(pInFile);
 		}
 		else if (!strcmp(pstrToken, "</Materials>"))
+		{
+			break;
+		}
+	}
+}
+
+void CGameObject::SkipFrameHierarchyFromFile(FILE* pInFile)
+{
+	char pstrToken[64] = { '\0' };
+	UINT nReads = 0;
+
+	for (; ; )
+	{
+		::ReadStringFromFile(pInFile, pstrToken);
+		if (!strcmp(pstrToken, "<Transform>:"))
+		{
+			XMFLOAT4X4 a;
+			XMFLOAT3 b;
+			nReads = (UINT)::fread(&a, sizeof(XMFLOAT4X4), 1, pInFile);
+
+			nReads = (UINT)::fread(&b, sizeof(XMFLOAT3), 1, pInFile);
+			nReads = (UINT)::fread(&b, sizeof(XMFLOAT3), 1, pInFile);
+			nReads = (UINT)::fread(&b, sizeof(XMFLOAT3), 1, pInFile);
+		}
+		else if (!strcmp(pstrToken, "<Mesh>:"))
+		{
+			SkipMeshFromFile(pInFile);
+		}
+		else if (!strcmp(pstrToken, "<Materials>:"))
+		{
+			SkipMaterialsFromFile(pInFile);
+
+		}
+		else if (!strcmp(pstrToken, "<Children>:"))
+		{
+			int nChilds = ::ReadIntegerFromFile(pInFile);
+		}
+		else if (!strcmp(pstrToken, "</Frame>"))
+		{
+			break;
+		}
+	}
+}
+void CGameObject::SkipMaterialsFromFile(FILE* pInFile)
+{
+	char pstrToken[64] = { '\0' };
+
+	int nMaterial = 0;
+	BYTE nStrLength = 0;
+	void* buffer;
+
+	UINT nReads = (UINT)::fread(&buffer, sizeof(int), 1, pInFile);
+	for (; ; )
+	{
+		::ReadStringFromFile(pInFile, pstrToken);
+		if (!strcmp(pstrToken, "<Material>:"))
+		{
+			::ReadStringFromFile(pInFile, pstrToken);
+		}
+		else if (!strcmp(pstrToken, "<TextureProperties>:"))
+		{
+
+			for (int i = ::ReadIntegerFromFile(pInFile); i > 0; --i)
+			{
+				::ReadStringFromFile(pInFile, pstrToken);
+				if (!strcmp(pstrToken, "<Property>:"))
+				{
+					::ReadIntegerFromFile(pInFile);
+					::ReadStringFromFile(pInFile, pstrToken);
+					::ReadStringFromFile(pInFile, pstrToken);
+					if (strcmp(pstrToken, "Null")) {
+
+						::ReadStringFromFile(pInFile, pstrToken);
+						if (!strcmp(pstrToken, "<Textures>:"))
+						{
+							int nTextures = ::ReadIntegerFromFile(pInFile);
+
+							if (nTextures > 0) {
+								for (int j = 0; j < nTextures; ++j)
+								{
+									::ReadStringFromFile(pInFile, pstrToken);
+									if (!strcmp(pstrToken, "<Texture>:"))
+									{
+										::ReadIntegerFromFile(pInFile);
+										::ReadStringFromFile(pInFile, pstrToken);
+										if (::ReadIntegerFromFile(pInFile) == 0)
+										{
+											::ReadStringFromFile(pInFile, pstrToken);
+
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				else if (!strcmp(pstrToken, "</TextureProperties>:"))
+				{
+					break;
+				}
+			}
+		}
+		else if (!strcmp(pstrToken, "<Lambert>:"))
+		{
+			
+			::ReadFloatFromFile(pInFile);
+			::ReadFloatFromFile(pInFile);
+			::ReadFloatFromFile(pInFile);
+			
+			::ReadFloatFromFile(pInFile);
+			::ReadFloatFromFile(pInFile);
+			::ReadFloatFromFile(pInFile);
+			
+			 ::ReadFloatFromFile(pInFile);
+			 ::ReadFloatFromFile(pInFile);
+			 ::ReadFloatFromFile(pInFile);
+
+			//Transparency Factor
+			::ReadFloatFromFile(pInFile);
+
+		}
+		else if (!strcmp(pstrToken, "<Phong>:"))
+		{
+			
+			::ReadFloatFromFile(pInFile);
+			::ReadFloatFromFile(pInFile);
+			::ReadFloatFromFile(pInFile);
+			
+			::ReadFloatFromFile(pInFile);
+			::ReadFloatFromFile(pInFile);
+			::ReadFloatFromFile(pInFile);
+			
+			::ReadFloatFromFile(pInFile);
+			::ReadFloatFromFile(pInFile);
+			::ReadFloatFromFile(pInFile);
+			
+			::ReadFloatFromFile(pInFile);
+			::ReadFloatFromFile(pInFile);
+			::ReadFloatFromFile(pInFile);
+
+			//Transparency Factor
+			::ReadFloatFromFile(pInFile);
+			
+			::ReadFloatFromFile(pInFile);
+			
+			::ReadFloatFromFile(pInFile);
+		}
+		else if (!strcmp(pstrToken, "</Materials>"))
+		{
+			break;
+		}
+	}
+}
+
+void CGameObject::SkipMeshFromFile(FILE* pInFile)
+{
+
+	char pstrToken[64] = { '\0' };
+	BYTE nStrLength = 0;
+	UINT nReads = 0, m_nVertices;
+	void* buffer = NULL;
+	XMFLOAT3* bufCP = NULL , * bufN = NULL, * bufT = NULL, * bufBT = NULL;
+	XMFLOAT2* bufUV = NULL;
+	UINT* ibuf = NULL;
+	::ReadStringFromFile(pInFile, pstrToken);
+
+	for (; ; )
+	{
+		::ReadStringFromFile(pInFile, pstrToken);
+
+		if (!strcmp(pstrToken, "<Bounds>:"))
+		{
+			nReads = (UINT)::fread(&buffer, sizeof(XMFLOAT3), 1, pInFile);
+			nReads = (UINT)::fread(&buffer, sizeof(XMFLOAT3), 1, pInFile);
+		}
+		else if (!strcmp(pstrToken, "<ControlPoints>:"))
+		{
+			m_nVertices = ::ReadUnsignedIntegerFromFile(pInFile);
+			if (m_nVertices > 0)
+			{
+				bufCP = new XMFLOAT3[m_nVertices];
+				nReads = (UINT)::fread(bufCP, sizeof(XMFLOAT3), m_nVertices, pInFile);
+				delete bufCP;
+			}
+		}
+		else if (!strcmp(pstrToken, "<UVs>:"))
+		{
+			int nUVsPerVertex = ::ReadIntegerFromFile(pInFile);
+			if (nUVsPerVertex > 0) {
+				int nUVs = nUVsPerVertex * m_nVertices;
+
+				bufUV = new XMFLOAT2[nUVs];
+				nReads = (UINT)::fread(bufUV, sizeof(XMFLOAT2), nUVs, pInFile);
+				delete bufUV;
+			}
+		}
+		else if (!strcmp(pstrToken, "<Normals>:"))
+		{
+			int nNormalsPerVertex = ::ReadIntegerFromFile(pInFile);
+			if (nNormalsPerVertex > 0) {
+				int nNormals = nNormalsPerVertex * m_nVertices;
+
+				bufN = new XMFLOAT3[nNormals];
+				nReads = (UINT)::fread(bufN, sizeof(XMFLOAT3), nNormals, pInFile);
+				delete bufN;
+			}
+		}
+		else if (!strcmp(pstrToken, "<Tangents>:"))
+		{
+			int nTangentsPerVertex = ::ReadIntegerFromFile(pInFile);
+			if (nTangentsPerVertex > 0) {
+				int nTangents = nTangentsPerVertex * m_nVertices;
+
+				bufT = new XMFLOAT3[nTangents];
+				nReads = (UINT)::fread(bufT, sizeof(XMFLOAT3), nTangents, pInFile);
+				delete bufT;
+			}
+		}
+		else if (!strcmp(pstrToken, "<BiTangents>:"))
+		{
+			int nBiTangentsPerVertex = ::ReadIntegerFromFile(pInFile);
+			if (nBiTangentsPerVertex > 0) {
+				int nBiTangents = nBiTangentsPerVertex * m_nVertices;
+
+				bufBT = new XMFLOAT3[nBiTangents];
+				nReads = (UINT)::fread(bufBT, sizeof(XMFLOAT3), nBiTangents, pInFile);
+				delete bufBT;
+			}
+		}
+		else if (!strcmp(pstrToken, "<Polygons>:"))
+		{
+			int nPolygons = ::ReadIntegerFromFile(pInFile);
+			for (; ; )
+			{
+				::ReadStringFromFile(pInFile, pstrToken);
+
+				if (!strcmp(pstrToken, "<SubIndices>:"))
+				{
+					::ReadIntegerFromFile(pInFile);
+					int m_nSubMeshes = ::ReadIntegerFromFile(pInFile);
+					if (m_nSubMeshes == 0) m_nSubMeshes = 1;
+
+					for (int i = 0; i < m_nSubMeshes; i++)
+					{
+						::ReadStringFromFile(pInFile, pstrToken);
+
+						if (!strcmp(pstrToken, "<SubIndex>:"))
+						{
+							::ReadIntegerFromFile(pInFile);
+							int n = ::ReadIntegerFromFile(pInFile);
+							if (n > 0)
+							{
+								ibuf = new UINT[n];
+								nReads = (UINT)::fread(ibuf, sizeof(UINT),n, pInFile);
+								delete ibuf;
+							}
+						}
+					}
+				}
+				else if (!strcmp(pstrToken, "</Polygons>"))
+				{
+					break;
+				}
+			}
+		}
+		else if (!strcmp(pstrToken, "</Mesh>"))
 		{
 			break;
 		}
@@ -1760,6 +2078,13 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	//m_ppMaps[10]->SetPosition(0.0f, 60.0f, 4096.0f);
 	//m_ppMaps[11]->SetPosition(0.0f, 60.0f, 6144.0f);
 
+	m_nMaps = 18;
+	m_ppMaps = new CGameObject * [m_nMaps];
+
+
+	m_nObjectInstance = 0;
+	m_ppObjectInstance = new CGameObject * [108];
+	gbInstancing = true;
 	for (int i = 0; i < 3; i++)
 	{
 		CLoadedModelInfo* pDesert_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Collision.bin", NULL);
@@ -1806,6 +2131,7 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		if (pDesert_Steppable)delete pDesert_Steppable;
 		if (pDesert_Passable)delete pDesert_Passable;
 	}
+	gbInstancing = false;
 
 
 	//for (int i = 0; i < (arrange.size() / 2); i++)
@@ -1880,13 +2206,13 @@ void CMap::CheckCollision(CPlayer* pPlayer)
 
 void CMap::ReleaseUploadBuffers()
 {
-	for (int i = 0; i < 27; ++i)
+	for (int i = 0; i < m_nMaps; ++i)
 		m_ppMaps[i]->ReleaseUploadBuffers();
 }
 
 void CMap::Release()
 {
-	for (int i = 0; i < 27; ++i)
+	for (int i = 0; i < m_nMaps; ++i)
 		if(m_ppMaps[i])
 			m_ppMaps[i]->Release();
 }

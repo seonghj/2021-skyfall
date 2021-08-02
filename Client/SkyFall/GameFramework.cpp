@@ -778,8 +778,8 @@ void CGameFramework::FrameAdvance()
 	CheckCollision();
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
 	CCamera* pCamera = m_pShadowMap->GetCamera();
-	pCamera->SetPosition(m_pPlayer->GetPosition());
-	pCamera->Move(XMFLOAT3(-500, 100, -500));
+	pCamera->SetPosition(XMFLOAT3(m_pPlayer->GetPosition().x, 0, m_pPlayer->GetPosition().z));
+	pCamera->Move(XMFLOAT3(-500, 200, -500));
 	pCamera->RegenerateViewMatrix();
     AnimateObjects();
 

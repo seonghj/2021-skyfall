@@ -479,6 +479,10 @@ public:
 	static CGameObject* LoadGeometryFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, char* pstrFileName, CShader* pShader);
 
 	void LoadMaterialsFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pParent, FILE* pInFile, CShader* pShader);
+	
+	static void SkipFrameHierarchyFromFile(FILE* pInFile);
+	static void SkipMaterialsFromFile(FILE* pInFile);
+	static void SkipMeshFromFile(FILE* pInFile);
 
 	D3D12_GPU_DESCRIPTOR_HANDLE CreateShaderResourceViews(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameter, bool bAutoIncrement);
 
@@ -552,7 +556,11 @@ public:
 
 		
 private:
-	CGameObject** m_ppMaps = new CGameObject * [18];
+	CGameObject** m_ppMaps;
+	int m_nMaps;
+public:
+	static CGameObject** m_ppObjectInstance;
+	static int m_nObjectInstance;
 };
 
 
