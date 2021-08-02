@@ -26,6 +26,8 @@ public:
 	void CreateRenderTargetViews();
 	void CreateDepthStencilView();
 
+	void CreateShadowMap();
+
 	void ChangeSwapChainState();
 
     void BuildObjects();
@@ -111,5 +113,7 @@ private:
 	C1HswordPlayer				*m_p1HswordPlayer;
 
 	bool						m_bMouseHold = false;
+
+	CShadowMap* m_pShadowMap;
 };
 

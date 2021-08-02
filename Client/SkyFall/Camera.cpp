@@ -82,6 +82,13 @@ void CCamera::GenerateProjectionMatrix(float fNearPlaneDistance, float fFarPlane
 //	XMStoreFloat4x4(&m_xmf4x4Projection, xmmtxProjection);
 }
 
+void CCamera::GenerateProjectionMatrixOrtho(float fNearPlaneDistance, float fFarPlaneDistance, float w, float h)
+{
+	XMFLOAT4X4 xmf4x4Result;
+	XMStoreFloat4x4(&xmf4x4Result, XMMatrixOrthographicLH(w, h, fNearPlaneDistance, fFarPlaneDistance));
+	m_xmf4x4Projection = xmf4x4Result;	
+}
+
 void CCamera::GenerateViewMatrix(XMFLOAT3 xmf3Position, XMFLOAT3 xmf3LookAt, XMFLOAT3 xmf3Up)
 {
 	m_xmf3Position = xmf3Position;
@@ -124,8 +131,8 @@ void CCamera::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsComm
 
 void CCamera::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
 {
-	XMFLOAT4X4 xmf4x4View;
-	XMStoreFloat4x4(&xmf4x4View, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4View)));
+	XMFLOAT4X4 xmf4x4View = m_xmf4x4View;
+	XMStoreFloat4x4(&xmf4x4View, XMMatrixTranspose(XMLoadFloat4x4(&xmf4x4View)));
 	::memcpy(&m_pcbMappedCamera->m_xmf4x4View, &xmf4x4View, sizeof(XMFLOAT4X4));
 
 	XMFLOAT4X4 xmf4x4Projection;
@@ -151,6 +158,38 @@ void CCamera::SetViewportsAndScissorRects(ID3D12GraphicsCommandList *pd3dCommand
 {
 	pd3dCommandList->RSSetViewports(1, &m_d3dViewport);
 	pd3dCommandList->RSSetScissorRects(1, &m_d3dScissorRect);
+}
+
+void CCamera::Rotate(float fPitch, float fYaw, float fRoll)
+{
+	if ((fPitch != 0.0f))
+	{
+		XMFLOAT3 xmf3Right = m_xmf3Right;
+		XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&xmf3Right), XMConvertToRadians(fPitch));
+		m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, xmmtxRotate);
+		m_xmf3Up = Vector3::TransformNormal(m_xmf3Up, xmmtxRotate);
+		m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, xmmtxRotate);
+		//m_xmf3Position = Vector3::TransformCoord(m_xmf3Position, xmmtxRotate);
+	}
+	if ((fYaw != 0.0f))
+	{
+		XMFLOAT3 xmf3Up = XMFLOAT3(0, 1, 0);
+		XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&xmf3Up), XMConvertToRadians(fYaw));
+		m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, xmmtxRotate);
+		m_xmf3Up = Vector3::TransformNormal(m_xmf3Up, xmmtxRotate);
+		m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, xmmtxRotate);
+		//m_xmf3Position = Vector3::TransformCoord(m_xmf3Position, xmmtxRotate);
+	}
+	if (fRoll != 0.0f)
+	{
+		XMFLOAT3 xmf3Look = m_xmf3Look;
+		XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&xmf3Look), XMConvertToRadians(fRoll));
+		m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, xmmtxRotate);
+		m_xmf3Up = Vector3::TransformNormal(m_xmf3Up, xmmtxRotate);
+		m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, xmmtxRotate);
+		m_xmf3Position = Vector3::TransformCoord(m_xmf3Position, xmmtxRotate);
+	}
+	RegenerateViewMatrix();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

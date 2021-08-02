@@ -141,6 +141,60 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+struct VS_CB_SHADOW_INFO
+{
+	XMFLOAT4X4						m_xmf4x4Shadow;
+	float m_fBias;
+};
+
+class CShadowMap : public CShader
+{
+private:
+	CTexture* m_pShadowMap;
+	UINT m_nWidth;
+	UINT m_nHeight;
+	CCamera* m_pCamera;
+	ID3D12DescriptorHeap *m_pd3dDsvDescriptorHeap;
+
+	ID3D12Resource* m_pd3dcbShadow = NULL;
+	VS_CB_SHADOW_INFO* m_pcbMappedShadowTransform;
+
+	//D3D12_CPU_DESCRIPTOR_HANDLE			m_d3dSrvCPUDescriptorHandle;
+	//D3D12_GPU_DESCRIPTOR_HANDLE			m_d3dSrvGPUDescriptorHandle;
+
+	ID3D12DescriptorHeap				*m_pd3dSrvDescriptorHeap = NULL;
+
+public:
+	CShadowMap();
+	CShadowMap(UINT width, UINT height,CCamera* pCamera);
+	virtual ~CShadowMap();
+
+	virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature);
+	virtual void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext = NULL);
+
+	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void ReleaseShaderVariables();
+
+	virtual void ReleaseObjects();
+	virtual void ReleaseUploadBuffers();
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_RASTERIZER_DESC CreateRasterizerState();
+
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader();
+
+	void CreateShadowMap(ID3D12Device* pd3dDevice);
+	void Set(ID3D12GraphicsCommandList* pd3dCommandList);
+	void Reset(ID3D12GraphicsCommandList* pd3dCommandList);
+	CCamera* GetCamera() { return m_pCamera; }
+	void Rotate(float fPitch, float fYaw, float fRoll);
+
+	void Plus() { m_pcbMappedShadowTransform->m_fBias += 0.0001f; Show(); }
+	void Minus() { m_pcbMappedShadowTransform->m_fBias -= 0.0001f; Show(); }
+	void Show()const { printf("%f\n",m_pcbMappedShadowTransform->m_fBias); }
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
