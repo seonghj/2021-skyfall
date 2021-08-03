@@ -451,17 +451,11 @@ void CPacket::CheckCollision(CMonster * mon)
         pObject = m_pMap->GetMap(3 * i)->FindFrame("RootNode")->m_pChild->m_pChild;
         while (true) {
 
-            XMFLOAT3 temp = mon->GetPosition();
-
             if (mon->isCollide(pObject)) {
               
                 XMFLOAT3 d = Vector3::Subtract(mon->GetPosition(), pObject->GetPosition());
                 mon->Move(Vector3::ScalarProduct(d, 50.25f, true), true);
                 cout << "monster Map Collision - " << pObject->m_pstrFrameName << endl;
-                
-                if (_isnanf(mon->GetPosition().x) || _isnanf(mon->GetPosition().y) || _isnanf(mon->GetPosition().z)) {
-                    mon->SetPosition(temp);
-                }
                 
                 return;
             }
@@ -740,7 +734,6 @@ void CPacket::ProcessPacket(char* buf)
         CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_pTerrain;
         p->Position.y = pTerrain->GetHeight(300.f, 300.f) + m_pScene->m_ppGameObjects[key]->m_AABBExtentsY - m_pScene->m_ppGameObjects[key]->GetPosition().y;
         m_pScene->m_ppGameObjects[key]->Move(p->Position, 0.5f);
-        //m_pScene->m_ppGameObjects[key]->MoveUp(m_pScene->m_ppGameObjects[key]->m_AABBExtentsY);
         CheckCollision(m_pScene->m_ppGameObjects[key]);
 
         p->type = CS_monster_pos;

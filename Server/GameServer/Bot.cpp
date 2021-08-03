@@ -152,7 +152,7 @@ void Bot::CheckBehavior(int roomID)
 					m_pServer->send_monster_pos(mon, XMFLOAT3(0, 0, 0), cross, rotate_degree);
 				}
 				else if (range > distance) {
-					m_pServer->send_monster_pos(mon, subtract, cross, round(rotate_degree));
+					m_pServer->send_monster_pos(mon, subtract, cross, rotate_degree);
 				}
 			}
 		}
