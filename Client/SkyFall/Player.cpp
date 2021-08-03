@@ -40,7 +40,7 @@ CPlayer::CPlayer()
 	m_iDefStat = 0;
 	m_fHitCool = 1.f;
 
-	m_pPlayerUpdatedContext = NULL;
+	m_ppPlayerUpdatedContext = NULL;
 	m_pCameraUpdatedContext = NULL;
 }
 
@@ -199,7 +199,7 @@ void CPlayer::Update(float fTimeElapsed)
 	XMFLOAT3 xmf3Velocity = Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false);
 	Move(xmf3Velocity, false);
 
-	if (m_pPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
+	if (m_ppPlayerUpdatedContext) OnPlayerUpdateCallback(fTimeElapsed);
 
 	DWORD nCurrentCameraMode = m_pCamera->GetMode();
 	if (nCurrentCameraMode == THIRD_PERSON_CAMERA) {
@@ -333,7 +333,7 @@ void CSoundCallbackHandler::HandleCallback(void *pCallbackData, float fTrackPosi
 #endif
 }
 
-CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void *pContext)
+CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void **ppContext)
 {
 	strcpy_s(m_pstrFrameName, "Player_Basic");
 
@@ -368,7 +368,7 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nBasic_Walk, pAnimationCallbackHandler);
 #endif
 
-	SetPlayerUpdatedContext(pContext);
+	SetPlayerUpdatedContext(ppContext);
 	//SetCameraUpdatedContext(pContext);
 
 	m_pSkinnedAnimationController->SetAllTrackDisable();
@@ -472,7 +472,7 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 
 void CTerrainPlayer::OnPlayerUpdateCallback(float fTimeElapsed)
 {
-	CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)m_pPlayerUpdatedContext;
+	CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)m_ppPlayerUpdatedContext[m_nPlace];
 	XMFLOAT3 xmf3Scale = pTerrain->GetScale();
 	XMFLOAT3 xmf3PlayerPosition = GetPosition();
 	XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
@@ -569,7 +569,7 @@ void CTerrainPlayer::Update(float fTimeElapsed)
 }
 #endif
 
-CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void* pContext)
+CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext)
 {
 	strcpy_s(m_pstrFrameName, "Player_Bow");
 	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
@@ -607,7 +607,7 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nBow_Walk, pAnimationCallbackHandler);
 #endif
 
-	SetPlayerUpdatedContext(pContext);
+	SetPlayerUpdatedContext(ppContext);
 	//SetCameraUpdatedContext(pContext);
 	m_pSkinnedAnimationController->SetAllTrackDisable();
 	m_pSkinnedAnimationController->SetTrackEnable(nBow_Idle, true);
@@ -809,7 +809,7 @@ void CBowPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCa
 	}
 }
 
-C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void* pContext)
+C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext)
 {
 	strcpy_s(m_pstrFrameName, "Player_1Hsword");
 	CLoadedModelInfo* pPlayerModel = pModel;
@@ -848,7 +848,7 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetAnimationCallbackHandler(n1Hsword_Walk, pAnimationCallbackHandler);
 #endif
 
-	SetPlayerUpdatedContext(pContext);
+	SetPlayerUpdatedContext(ppContext);
 	//SetCameraUpdatedContext(pContext);
 
 

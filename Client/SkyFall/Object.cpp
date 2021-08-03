@@ -2039,59 +2039,8 @@ void CSkyBox::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
-CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, vector<int> arrange, void* pContext)
+CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, vector<vector<int>> arrange, void* pContext)
 {
-	//CLoadedModelInfo* pDesert_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Collision.bin", NULL);
-	//CLoadedModelInfo* pDesert_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
-	//CLoadedModelInfo* pDesert_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
-
-	//CLoadedModelInfo* pForest_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Collision.bin", NULL);
-	//CLoadedModelInfo* pForest_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Passable.bin", NULL);
-	//CLoadedModelInfo* pForest_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Passable.bin", NULL);
-
-	//CLoadedModelInfo* pSnow_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Collision.bin", NULL);
-	//CLoadedModelInfo* pSnow_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
-	//CLoadedModelInfo* pSnow_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
-	////SetChild(pDesert_Test->m_pModelRootObject, true);
-
-	////CLoadedModelInfo* pDesert_Test[3] = { NULL };
-	////for(int i =0; i < 3; i++)
-	////	pDesert_Test[i] = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
-
-	////for (int i = 0; i < 3; i++)
-	////{
-	////	m_ppMaps[i] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Test[i]);
-	////	m_ppMaps[i]->SetPosition(0.0f, 0.0f, 2048.0f * (i+1));
-	////	printf("%d번째 위치 : x - %f  y - %f  z - %f", i, m_ppMaps[i]->GetPosition().x, m_ppMaps[i]->GetPosition().y, m_ppMaps[i]->GetPosition().z);
-	////}
-	//m_ppMaps[0] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
-	//m_ppMaps[1] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
-	//m_ppMaps[2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
-
-	//m_ppMaps[3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Collision, true);
-	//m_ppMaps[4] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Steppable);
-	//m_ppMaps[5] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable);
-
-	//m_ppMaps[3]->SetPosition(-2048.0f, 0.0f, 0.0f);
-	//m_ppMaps[4]->SetPosition(-2048.0f, 0.0f, 0.0f);
-	//m_ppMaps[5]->SetPosition(-2048.0f, 0.0f, 0.0f);
-
-	//m_ppMaps[6] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Collision, true);
-	//m_ppMaps[7] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Steppable);
-	//m_ppMaps[8] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable);
-
-	//m_ppMaps[6]->SetPosition(2048.0f, 60.0f, 0.0f);
-	//m_ppMaps[7]->SetPosition(2048.0f, 60.0f, 0.0f);
-	//m_ppMaps[8]->SetPosition(2048.0f, 60.0f, 0.0f);
-
-	//m_ppMaps[9] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
-	//m_ppMaps[10] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
-	//m_ppMaps[11] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
-
-	//m_ppMaps[9]->SetPosition(0.0f, 60.0f, 2048.0f);
-	//m_ppMaps[10]->SetPosition(0.0f, 60.0f, 4096.0f);
-	//m_ppMaps[11]->SetPosition(0.0f, 60.0f, 6144.0f);
-
 	m_nMaps = 27;
 	m_ppMaps = new CGameObject * [m_nMaps];
 
@@ -2110,9 +2059,9 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		m_ppMaps[1 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
 		m_ppMaps[2 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
 
-		m_ppMaps[0 + i * 3]->SetPosition(2048.0f * arrange[2 * i], 0.0f, 2048.0f * arrange[2 * i + 1]);
-		m_ppMaps[1 + i * 3]->SetPosition(2048.0f * arrange[2 * i], 0.0f, 2048.0f * arrange[2 * i + 1]);
-		m_ppMaps[2 + i * 3]->SetPosition(2048.0f * arrange[2 * i], 0.0f, 2048.0f * arrange[2 * i + 1]);
+		m_ppMaps[0 + i * 3]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
+		m_ppMaps[1 + i * 3]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
+		m_ppMaps[2 + i * 3]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
 	}
 
 	for (int i = 3; i < 6; i++)
@@ -2125,9 +2074,9 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		m_ppMaps[1 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Steppable);
 		m_ppMaps[2 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable);
 
-		m_ppMaps[0 + i * 3]->SetPosition(2048.0f * arrange[2 * i], 0.0f, 2048.0f * arrange[2 * i + 1]);
-		m_ppMaps[1 + i * 3]->SetPosition(2048.0f * arrange[2 * i], 0.0f, 2048.0f * arrange[2 * i + 1]);
-		m_ppMaps[2 + i * 3]->SetPosition(2048.0f * arrange[2 * i], 0.0f, 2048.0f * arrange[2 * i + 1]);
+		m_ppMaps[0 + i * 3]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
+		m_ppMaps[1 + i * 3]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
+		m_ppMaps[2 + i * 3]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
 	}
 
 	for (int i = 6; i < 9; i++)
@@ -2140,9 +2089,9 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		m_ppMaps[1 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Steppable);
 		m_ppMaps[2 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable);
 
-		m_ppMaps[0 + i * 3]->SetPosition(2048.0f * arrange[2 * i], 60.0f, 2048.0f * arrange[2 * i + 1]);
-		m_ppMaps[1 + i * 3]->SetPosition(2048.0f * arrange[2 * i], 60.0f, 2048.0f * arrange[2 * i + 1]);
-		m_ppMaps[2 + i * 3]->SetPosition(2048.0f * arrange[2 * i], 60.0f, 2048.0f * arrange[2 * i + 1]);
+		m_ppMaps[0 + i * 3]->SetPosition(2048.0f * arrange[i][0], 60.0f, 2048.0f * arrange[i][1]);
+		m_ppMaps[1 + i * 3]->SetPosition(2048.0f * arrange[i][0], 60.0f, 2048.0f * arrange[i][1]);
+		m_ppMaps[2 + i * 3]->SetPosition(2048.0f * arrange[i][0], 60.0f, 2048.0f * arrange[i][1]);
 	}
 	gbInstancing = false;
 
@@ -2323,7 +2272,7 @@ void CBullet::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamer
 }
 
 
-CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks,void* pContext, int nAnimationCount) :CMonster()
+CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext, int nPlace) :CMonster()
 {
 	CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
 
@@ -2352,14 +2301,19 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	//	detect.Extents);	// Extents
 	//
 
-	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
+	SetUpdatedContext(ppContext);
 
-	SetPosition(300.f, pTerrain->GetHeight(300.f, 300.f), 300.f);
+	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)ppContext[m_nPlace];
+	XMFLOAT3 pos = pTerrain->GetPosition();
+	pos.x += 100 + rand() % 1900;
+	pos.z += 100 + rand() % 1900;
+	SetPosition(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z);
+
+	OnUpdateCallback();
 	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.2f);
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, 20.0f, 0.0f);
 
-	m_nTrackOffSet = nAnimationCount;
 	InitAnimation();
 
 	delete pDragonModel;
@@ -2419,7 +2373,7 @@ void CDragon::Move(const XMFLOAT3& vDirection, float fSpeed)
 	}
 }
 
-CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext, int nAnimationCount) :CMonster()
+CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext, int nPlace) :CMonster()
 {
 	CLoadedModelInfo* pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
 	
@@ -2441,14 +2395,20 @@ CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 		XMFLOAT3(0, 20, -bb.Extents.z),									// Center
 		XMFLOAT3(bb.Extents.x, bb.Extents.y - 20, bb.Extents.z));	// Extents
 
-	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 
-	SetPosition(400.f, pTerrain->GetHeight(400.f, 400.f), 400.f);
+	SetUpdatedContext(ppContext);
+
+	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)ppContext[m_nPlace];
+	XMFLOAT3 pos = pTerrain->GetPosition();
+	pos.x += 100 + rand() % 1900;
+	pos.z += 100 + rand() % 1900;
+	SetPosition(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z);
+
+	OnUpdateCallback();
 	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.5f);
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, -40.0f, 0.0f);
 
-	m_nTrackOffSet = nAnimationCount;
 	InitAnimation();
 
 	delete pWolfModel;
@@ -2506,7 +2466,7 @@ void CWolf::Move(const XMFLOAT3& vDirection, float fSpeed)
 	}
 }
 
-CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext, int nAnimationCount) :CMonster()
+CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext, int nPlace) :CMonster()
 {
 	CLoadedModelInfo* pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
 
@@ -2529,14 +2489,20 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 		XMFLOAT3(0, 20, -bb.Extents.z),													// Center
 		XMFLOAT3(bb.Extents.x, bb.Extents.y-20, bb.Extents.z));	// Extents
 
-	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
+	SetUpdatedContext(ppContext);
 
-	SetPosition(500.f, pTerrain->GetHeight(500.f, 500.f), 500.f);
+	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)ppContext[m_nPlace];
+	XMFLOAT3 pos = pTerrain->GetPosition();
+	pos.x += 100 + rand() % 1900;
+	pos.z += 100 + rand() % 1900;
+	SetPosition(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z);
+
+	OnUpdateCallback();
+
 	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y*0.1f);
 	SetScale(0.1f, 0.1f, 0.1f);
 	Rotate(-90.0f, 0.0f, 0.0f);
 
-	m_nTrackOffSet = nAnimationCount;
 	InitAnimation();
 
 	delete pMetalonModel;
@@ -2659,4 +2625,30 @@ void CMonster::Move(const XMFLOAT3& vDirection, float fSpeed)
 {
 	if(m_iState == MonsterState::Move)
 		CGameObject::Move(vDirection, fSpeed);
+}
+
+void CMonster::OnUpdateCallback()
+{
+	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_ppUpdatedContext[m_nPlace];
+	XMFLOAT3 xmf3Scale = pTerrain->GetScale();
+	XMFLOAT3 xmf3MonsterPosition = GetPosition();
+	XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
+	int z = (int)(xmf3MonsterPosition.z / xmf3Scale.z);
+	bool bReverseQuad = ((z % 2) != 0);
+	float fHeight = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
+
+	if (xmf3MonsterPosition.y <= fHeight)
+	{
+		xmf3MonsterPosition.y = fHeight;
+		SetPosition(xmf3MonsterPosition);
+		/*if (!GetGround())
+		{
+			SetFriction(1000.f);
+			SetGround(true);
+		}*/
+	}
+	/*else if (GetGround())
+	{
+		SetGround(false);
+	}*/
 }

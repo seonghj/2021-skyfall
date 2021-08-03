@@ -543,7 +543,7 @@ public:
 class CMap : public CGameObject
 {
 public:
-	CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, vector<int>arrange, void* pContext=0);
+	CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, vector<vector<int>>arrange, void* pContext=0);
 	virtual ~CMap();
 
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
@@ -623,6 +623,8 @@ protected:
 	const int nMonster_TakeDamage = 2;
 
 	int m_iState;
+	LPVOID* m_ppUpdatedContext = NULL;
+	int							m_nPlace;
 public:
 	CMonster();
 	virtual ~CMonster();
@@ -633,6 +635,8 @@ public:
 	void ChangeState(int nState);
 	virtual void Attack();
 	virtual void InitAnimation();
+	void OnUpdateCallback();
+	void SetUpdatedContext(LPVOID* ppContext) { m_ppUpdatedContext = ppContext; }
 
 	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 };
@@ -649,7 +653,7 @@ private:
 	const int nDragon_BreathAttack = 5;
 
 public:
-	CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext = 0, int nAnimationCount=0);
+	CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext = 0, int nPlace=0);
 	virtual ~CDragon();
 	virtual void Update(float fTimeElapsed);
 	virtual void Attack();
@@ -670,7 +674,7 @@ private:
 	const int nWolf_PoundAttack = 4;
 	const int nWolf_Howl = 8;
 public:
-	CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext = 0, int nAnimationCount=0);
+	CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext = 0, int nPlace = 0);
 	virtual ~CWolf();
 	virtual void Update(float fTimeElapsed);
 	virtual void Attack();
@@ -689,7 +693,7 @@ private:
 	const int nMetalon_Defend = 4;
 	const int nMetalon_Jump = 5;
 public:
-	CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext = 0, int nAnimationCount = 0);
+	CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext = 0, int nPlace = 0);
 	virtual ~CMetalon();
 	virtual void Update(float fTimeElapsed);
 	virtual void Attack();

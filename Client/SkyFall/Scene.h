@@ -51,7 +51,7 @@ public:
 	virtual void ReleaseShaderVariables();
 
 	void BuildDefaultLightsAndMaterials();
-	void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, vector<int> arrange);
+	void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, vector<vector<int>> arrange);
 	void AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	void MovePlayer(int player_num, XMFLOAT3 pos);
 	void AnimatePlayer(int id, int animation_num);
@@ -125,7 +125,7 @@ public:
 	CHeightMapTerrain					*m_pTerrain = NULL;
 	CHeightMapTerrain					* m_pForestTerrain = NULL;
 	CHeightMapTerrain					* m_pSnowTerrain = NULL;
-	CHeightMapTerrain*					m_pTestTerrain[9] = {NULL};
+	CHeightMapTerrain					** m_ppTerrain = new CHeightMapTerrain*[9];
 
 	LIGHT								*m_pLights = NULL;
 	int									m_nLights = 0;

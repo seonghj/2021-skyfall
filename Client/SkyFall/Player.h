@@ -43,9 +43,10 @@ protected:
 	bool						m_isStanding;
 	bool						m_isCharging;
 
+	int							m_nPlace;
 	// stat
 
-	LPVOID						m_pPlayerUpdatedContext = NULL;
+	LPVOID*						m_ppPlayerUpdatedContext = NULL;
 	LPVOID						m_pCameraUpdatedContext = NULL;
 
 	CCamera						*m_pCamera = NULL;
@@ -72,6 +73,7 @@ public:
 	void SetStanding(bool stand) { m_isStanding = stand; }
 	virtual void SetAttack(bool shoot) { m_isAttack = shoot; }
 	void SetCharging(bool charge) { m_isCharging = charge; }
+	void SetPlace(int nPlace) { m_nPlace = nPlace; }
 
 	virtual void RButtonDown() {};
 	virtual void RButtonUp() {};
@@ -88,6 +90,7 @@ public:
 	bool  GetAttack() const { return(m_isAttack); }
 	bool  GetStanding() const { return(m_isStanding); }
 	bool  GetCharging() const { return(m_isCharging); }
+	int GetPlace() const { return(m_nPlace); }
 
 	void SetScale(XMFLOAT3& xmf3Scale) { m_xmf3Scale = xmf3Scale; }
 
@@ -107,7 +110,7 @@ public:
 	virtual void Update(float fTimeElapsed);
 
 	virtual void OnPlayerUpdateCallback(float fTimeElapsed) { }
-	void SetPlayerUpdatedContext(LPVOID pContext) { m_pPlayerUpdatedContext = pContext; }
+	void SetPlayerUpdatedContext(LPVOID* ppContext) { m_ppPlayerUpdatedContext = ppContext; }
 
 	virtual void OnCameraUpdateCallback(float fTimeElapsed) { }
 	void SetCameraUpdatedContext(LPVOID pContext) { m_pCameraUpdatedContext = pContext; }
@@ -148,7 +151,7 @@ class CTerrainPlayer : public CPlayer
 {
 public:
 	CTerrainPlayer() :CPlayer() {};
-	CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void *pContext=NULL);
+	CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void ** ppContext=NULL);
 	virtual ~CTerrainPlayer();
 
 public:
@@ -181,7 +184,7 @@ public:
 	void DeleteBullet(const int& idx);
 	void Animate(float fTimeElapsed);
 
-	CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void* pContext = NULL);
+	CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
 	virtual ~CBowPlayer();
 
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
@@ -221,7 +224,7 @@ protected:
 class C1HswordPlayer : public CTerrainPlayer
 {
 public:
-	C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void* pContext = NULL);
+	C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
 	virtual ~C1HswordPlayer();
 
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);

@@ -78,7 +78,7 @@ void CScene::BuildDefaultLightsAndMaterials()
 	m_pLights[3].m_fTheta = (float)cos(XMConvertToRadians(30.0f));
 }
 
-void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, vector<int> arrange)
+void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, vector<vector<int>> arrange)
 {
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
 
@@ -92,29 +92,31 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	XMFLOAT3 xmf3Scale(8.0f, 4.0f, 8.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.3f, 0.0f, 0.0f);
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Desert.raw"), 257, 257, xmf3Scale, xmf4Color, 0);
-	m_pForestTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Forest.raw"), 257, 257, xmf3Scale, xmf4Color, 1);
-	m_pSnowTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Snow.raw"), 257, 257, xmf3Scale, xmf4Color, 2);
-	m_pForestTerrain->SetPosition(-2048.0f, 0.0f, 0.0f);
-	m_pSnowTerrain->SetPosition(2048.0f, 125.0f, 0.0f);
+	//m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Desert.raw"), 257, 257, xmf3Scale, xmf4Color, 0);
+	//m_pForestTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Forest.raw"), 257, 257, xmf3Scale, xmf4Color, 1);
+	//m_pSnowTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Snow.raw"), 257, 257, xmf3Scale, xmf4Color, 2);
+	//m_pTerrain->SetPosition(2048.0f * arrange[0], 0.0f, 2048.0f * arrange[1]);
+	//m_pForestTerrain->SetPosition(2048.0f * arrange[2], 0.0f, 2048.0f * arrange[3]);
+	//m_pSnowTerrain->SetPosition(2048.0f * arrange[4], 125.0f, 2048.0f * arrange[5]);
+	//m_pForestTerrain->SetPosition(-2048.0f, 0.0f, 0.0f);
+	//m_pSnowTerrain->SetPosition(2048.0f, 125.0f, 0.0f);
 
 	for (int i = 0; i < 9; i++)
 	{
 		if (i < 3)
 		{
-			m_pTestTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Desert.raw"), 257, 257, xmf3Scale, xmf4Color, 0);
-			m_pTestTerrain[i]->SetPosition(2048.0f * arrange[2 * i], 0.0f, 2048.0f * arrange[2 * i + 1]);
+			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Desert.raw"), 257, 257, xmf3Scale, xmf4Color, 0);
 		}
 		else if (i >= 3 && i < 6)
 		{
-			m_pTestTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Forest.raw"), 257, 257, xmf3Scale, xmf4Color, 1);
-			m_pTestTerrain[i]->SetPosition(2048.0f * arrange[2 * i], 0.0f, 2048.0f * arrange[2 * i + 1]);
+			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Forest.raw"), 257, 257, xmf3Scale, xmf4Color, 1);
 		}
 		else if (i >= 6)
 		{
-			m_pTestTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Snow.raw"), 257, 257, xmf3Scale, xmf4Color, 2);
-			m_pTestTerrain[i]->SetPosition(2048.0f * arrange[2 * i], 125.0f, 2048.0f * arrange[2 * i + 1]);
+			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Snow.raw"), 257, 257, xmf3Scale, xmf4Color, 2);
 		}
+		m_ppTerrain[i]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
+		if (i >= 6) m_ppTerrain[i]->MoveUp(125.f);
 	}
 
 	m_nGameObjects = 4;
@@ -122,22 +124,19 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 
 	CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
-	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 9, m_pTerrain);
+	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 9, (void**)m_ppTerrain,4);
 	if (pDragonModel)delete pDragonModel;
 
 	CLoadedModelInfo* pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
-	m_ppGameObjects[1] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, m_pTerrain, 0);
-	m_ppGameObjects[2] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, m_pTerrain, 1);
+	m_ppGameObjects[1] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, (void**)m_ppTerrain, 4);
+	m_ppGameObjects[2] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, (void**)m_ppTerrain, 4);
 	m_ppGameObjects[2]->Move(XMFLOAT3(200, 0, 0), 1);
 	if (pWolfModel)delete pWolfModel;
 
 	CLoadedModelInfo* pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
-	m_ppGameObjects[3] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, m_pTerrain);
+	m_ppGameObjects[3] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, (void**)m_ppTerrain,4);
 	if (pMetalonModel)delete pMetalonModel;
 
-	m_pTerrain->SetPosition(2048.0f * arrange[0], 0.0f, 2048.0f * arrange[1]);
-	m_pForestTerrain->SetPosition(2048.0f * arrange[2], 0.0f, 2048.0f * arrange[3]);
-	m_pSnowTerrain->SetPosition(2048.0f * arrange[4], 125.0f, 2048.0f * arrange[5]);
 
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
@@ -151,7 +150,7 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	m_nPlayer = 0;
 	for (int i = 0; i < m_nPlayer; ++i) {
 		pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
-		m_mPlayer.emplace(i, new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature,pSwordModel, m_pTerrain));
+		m_mPlayer.emplace(i, new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature,pSwordModel, (void**)m_ppTerrain));
 		m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f));
 		MovePlayer(i, XMFLOAT3(80.0f, 50.0f, 0.0f));
 	}
@@ -277,7 +276,7 @@ void CScene::ReleaseObjects()
 	if (m_pForestTerrain) delete m_pForestTerrain;
 	if (m_pSnowTerrain) delete m_pSnowTerrain;
 	if (m_pSkyBox) delete m_pSkyBox;
-	if (m_pTestTerrain) delete m_pTestTerrain;
+	if (m_ppTerrain) delete m_ppTerrain;
 
 	if (m_ppGameObjects)
 	{
@@ -556,7 +555,7 @@ void CScene::ReleaseUploadBuffers()
 	if (m_pSnowTerrain) m_pSnowTerrain->ReleaseUploadBuffers();
 	if (m_pMap) m_pMap->ReleaseUploadBuffers();
 	for (int i = 0; i < 9; i++)
-		if (m_pTestTerrain[i]) m_pTestTerrain[i]->ReleaseUploadBuffers();
+		if (m_ppTerrain[i]) m_ppTerrain[i]->ReleaseUploadBuffers();
 
 	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_nGameObjects; i++) m_ppGameObjects[i]->ReleaseUploadBuffers();
@@ -896,7 +895,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	if (m_pForestTerrain) m_pForestTerrain->Render(pd3dCommandList, pCamera);
 	if (m_pSnowTerrain) m_pSnowTerrain->Render(pd3dCommandList, pCamera);
 	for (int i = 0; i < 9; i++)
-		if (m_pTestTerrain[i]) m_pTestTerrain[i]->Render(pd3dCommandList, pCamera);
+		if (m_ppTerrain[i]) m_ppTerrain[i]->Render(pd3dCommandList, pCamera);
 
 	if(m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
 
@@ -942,6 +941,8 @@ void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* p
 	if (m_pTerrain) m_pTerrain->RenderShadow(pd3dCommandList, pCamera);
 	if (m_pForestTerrain) m_pForestTerrain->RenderShadow(pd3dCommandList, pCamera);
 	if (m_pSnowTerrain) m_pSnowTerrain->RenderShadow(pd3dCommandList, pCamera);
+	for (int i = 0; i < 9; i++)
+		if (m_ppTerrain[i]) m_ppTerrain[i]->Render(pd3dCommandList, pCamera);
 
 	if (m_pMap) m_pMap->RenderShadow(pd3dCommandList, pCamera);
 

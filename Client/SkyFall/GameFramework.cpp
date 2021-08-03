@@ -522,8 +522,8 @@ void CGameFramework::BuildObjects()
 
 	m_pScene = new CScene();
 
-	vector<int>test_arrange{ 0, 0, -1, 0, 1, 0, -1, 1, 0, 1, 1, 1, -1, -1, 0, -1, 1, -1 };
-	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList,test_arrange);
+	m_vMapArrange = { { -1, -1}, {0, -1}, {1, -1}, {-1, 0}, {0, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1} };
+	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList, m_vMapArrange);
 	m_pScene->InitPlayerIDs();
 
 	m_pd3dCommandList->SetGraphicsRootSignature(m_pScene->GetGraphicsRootSignature());
@@ -540,12 +540,13 @@ void CGameFramework::BuildObjects()
 	m_pShadowMap->CreateShadowMap(m_pd3dDevice);
 
 	CLoadedModelInfo* pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_1Hsword.bin", NULL);
-	C1HswordPlayer* p1HswordPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pSwordModel, m_pScene->m_pTerrain);
+	C1HswordPlayer* p1HswordPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pSwordModel, (void**)m_pScene->m_ppTerrain);
+	
 	m_p1HswordPlayer = p1HswordPlayer;
 	if (pSwordModel) delete pSwordModel;
 	
 	CLoadedModelInfo* pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Bow.bin", NULL);
-	CBowPlayer* pBowPlayer = new CBowPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pBowModel, m_pScene->m_pTerrain);
+	CBowPlayer* pBowPlayer = new CBowPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pBowModel, (void**)m_pScene->m_ppTerrain);
 	m_pBowPlayer = pBowPlayer;
 	if (pBowModel) delete pBowModel;
 
@@ -556,6 +557,7 @@ void CGameFramework::BuildObjects()
 	//m_pScene->MovePlayer(/*m_pScene->m_nGameObjects - 1*/3, XMFLOAT3(400.0f, 300.0f, 300.0f));
 
 	m_pScene->m_pPlayer = m_pPlayer = p1HswordPlayer;
+	m_pPlayer->SetPlace(4);
 	m_pCamera = m_pPlayer->GetCamera();
 	m_pPacket->m_pPlayer = m_pPlayer;
 	m_pPacket->m_pScene = m_pScene;
@@ -734,17 +736,31 @@ void CGameFramework::AnimateObjects()
 	if (m_pScene) {
 		m_pScene->AnimateObjects(fTimeElapsed);
 
-		// 임시방편
-		if (m_pPlayer->GetPosition().x < 0) {
-			m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pForestTerrain);
+		//// 임시방편
+		//if (m_pPlayer->GetPosition().x < 0) {
+		//	m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pForestTerrain);
+		//}
+		//else if (m_pPlayer->GetPosition().x < 2048) {
+		//	m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pTerrain);
+		//}
+		//else {
+		//	m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pSnowTerrain);
+		//}
+		XMFLOAT3 pos = m_pPlayer->GetPosition();
+		int nPlace = m_pPlayer->GetPlace();
+		if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+			m_pPlayer->SetPlace(nPlace - 1);
 		}
-		else if (m_pPlayer->GetPosition().x < 2048) {
-			m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pTerrain);
-		}
-		else {
-			m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pSnowTerrain);
+		else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+			m_pPlayer->SetPlace(nPlace + 1);
 		}
 
+		if (pos.z < m_vMapArrange[nPlace][1] * 2048&&nPlace>2) {
+			m_pPlayer->SetPlace(nPlace - 3);
+		}
+		else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+			m_pPlayer->SetPlace(nPlace + 3);
+		}
 	}
 	if(m_p1HswordPlayer)
 		m_p1HswordPlayer->Animate(fTimeElapsed);
