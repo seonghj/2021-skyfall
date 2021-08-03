@@ -214,6 +214,7 @@ void CMaterial::ReleaseUploadBuffers()
 CShader *CMaterial::m_pWireFrameShader = NULL;
 CShader *CMaterial::m_pSkinnedAnimationWireFrameShader = NULL;
 CShader* CMaterial::m_pBoundingBoxShader = NULL;
+CShader* CMaterial::m_pHpBarShader = NULL;
 void CMaterial::PrepareShaders(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature)
 {
 	m_pWireFrameShader = new CWireFrameShader();
@@ -227,6 +228,10 @@ void CMaterial::PrepareShaders(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	m_pBoundingBoxShader = new CBoundingBoxShader();
 	m_pBoundingBoxShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
 	m_pBoundingBoxShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	m_pHpBarShader = new CHpBarShader();
+	m_pHpBarShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT);
+	m_pHpBarShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
 void CMaterial::UpdateShaderVariable(ID3D12GraphicsCommandList *pd3dCommandList)
@@ -236,7 +241,7 @@ void CMaterial::UpdateShaderVariable(ID3D12GraphicsCommandList *pd3dCommandList)
 	pd3dCommandList->SetGraphicsRoot32BitConstants(1, 4, &m_xmf4SpecularColor, 24);
 	pd3dCommandList->SetGraphicsRoot32BitConstants(1, 4, &m_xmf4EmissiveColor, 28);
 
-	pd3dCommandList->SetGraphicsRoot32BitConstants(1, 1, &m_nType, 32);
+	/*pd3dCommandList->SetGraphicsRoot32BitConstants(1, 1, &m_nType, 32);*/
 
 	for (int i = 0; i < m_nTextures; i++)
 	{
@@ -705,6 +710,31 @@ CGameObject* CGameObject::SetBBObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	return pBBObj;
 }
 
+CGameObject* CGameObject::SetHpBar(CGeometryBillboardMesh* pHpBarMesh)
+{
+	CGameObject* pHpBar = new CGameObject();
+	strcpy_s(pHpBar->m_pstrFrameName, "HpBar");
+	pHpBar->SetMesh(pHpBarMesh);
+	pHpBar->SetHpBarShader();
+	SetChild(pHpBar, true);
+
+	return pHpBar;
+}
+
+CGameObject* CGameObject::SetHpBar(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 Center, XMFLOAT2 Size)
+{
+	CGameObject* pHpBar = new CGameObject();
+	strcpy_s(pHpBar->m_pstrFrameName, "HpBar");
+	CGeometryHpBarVertex* pVertex = new CGeometryHpBarVertex(Center, Size);
+	CGeometryBillboardMesh* pMesh = new CGeometryBillboardMesh(pd3dDevice, pd3dCommandList, pVertex, 1);
+
+	pHpBar->SetMesh(pMesh);
+	pHpBar->SetHpBarShader();
+	SetChild(pHpBar, true);
+
+	return pHpBar;
+}
+
 bool CGameObject::isCollide(CGameObject* pObject)
 {
 	BoundingOrientedBox bb = BoundingOrientedBox(
@@ -790,6 +820,16 @@ void CGameObject::SetBoundingBoxShader()
 	SetMaterial(0, pMaterial);
 }
 
+void CGameObject::SetHpBarShader()
+{
+	m_nMaterials = 1;
+	m_ppMaterials = new CMaterial * [m_nMaterials];
+	m_ppMaterials[0] = NULL;
+	CMaterial* pMaterial = new CMaterial(0);
+
+	pMaterial->SetHpBarShader();
+	SetMaterial(0, pMaterial);
+}
 void CGameObject::SetMaterial(int nMaterial, CMaterial *pMaterial)
 {
 	if (m_ppMaterials[nMaterial]) m_ppMaterials[nMaterial]->Release();
@@ -895,15 +935,18 @@ void CGameObject::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pC
 				}
 			}
 		}
-	}
 
-	if (m_pSibling) m_pSibling->Render(pd3dCommandList, pCamera);
-	if (m_pChild) m_pChild->Render(pd3dCommandList, pCamera);
+		if (m_pSibling) m_pSibling->Render(pd3dCommandList, pCamera);
+		if (m_pChild) m_pChild->Render(pd3dCommandList, pCamera);
+	}
 }
 
 void CGameObject::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	if (!strcmp(m_pstrFrameName, "BoundingBox")) {
+		return;
+	}
+	if (!strcmp(m_pstrFrameName, "HpBar")) {
 		return;
 	}
 
@@ -946,11 +989,11 @@ void CGameObject::UpdateShaderVariable(ID3D12GraphicsCommandList *pd3dCommandLis
 	XMFLOAT4X4 xmf4x4World;
 	XMStoreFloat4x4(&xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(pxmf4x4World)));
 	pd3dCommandList->SetGraphicsRoot32BitConstants(1, 16, &xmf4x4World, 0);
-/*
-	XMFLOAT4 xmf4Color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	if (!strcmp(m_pstrFrameName, "L_shoulder")) xmf4Color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
-	pd3dCommandList->SetGraphicsRoot32BitConstants(1, 4, &xmf4Color, 16);
-*/
+
+	if (m_iMaxHp > 0) {
+		float fPercent = (float)m_iHp / m_iMaxHp;
+		pd3dCommandList->SetGraphicsRoot32BitConstants(1, 1, &fPercent, 32);
+	}
 }
 
 void CGameObject::UpdateShaderVariable(ID3D12GraphicsCommandList *pd3dCommandList, CMaterial *pMaterial)
@@ -2286,23 +2329,20 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 
 	CGameObject* pObject = pDragonModel->m_pModelRootObject->FindFrame("Polygonal_Dragon");
 
-	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
-	/*CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
+	XMFLOAT3 xmf3Extents = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents).Extents;
 
-	SetBBObject(pBoundingBox);*/
+	float yExtents = SetBBObject(pd3dDevice, pd3dCommandList,
+		XMFLOAT3(0, xmf3Extents.y-350, -50),
+		XMFLOAT3(80, xmf3Extents.y - 250, xmf3Extents.z-50))->m_pMesh->m_xmf3AABBExtents.y;
 
-	SetBBObject(pd3dDevice, pd3dCommandList,
-		XMFLOAT3(0, bb.Extents.y-350, -50),					// Center
-		XMFLOAT3(80, bb.Extents.y - 250, bb.Extents.z-50));	// Extents
+	SetHpBar(pd3dDevice, pd3dCommandList,
+		XMFLOAT3(0, 0, 100),
+		XMFLOAT2(80, 20))->SetHp(100);
 
-	//BoundingBox detect = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, Vector3::ScalarProduct(pObject->m_pMesh->m_xmf3AABBExtents,1.5f,false));
-	//SetBBObject(pd3dDevice, pd3dCommandList,
-	//	XMFLOAT3(0, 0, 0),					// Center
-	//	detect.Extents);	// Extents
-	//
+
 
 	SetUpdatedContext(ppContext);
-
+	m_nPlace = nPlace;
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)ppContext[m_nPlace];
 	XMFLOAT3 pos = pTerrain->GetPosition();
 	pos.x += 100 + rand() % 1900;
@@ -2310,7 +2350,7 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	SetPosition(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z);
 
 	OnUpdateCallback();
-	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.2f);
+	MoveUp(xmf3Extents.y * 0.2f);
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, 20.0f, 0.0f);
 
@@ -2386,18 +2426,19 @@ CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 
 	CGameObject* pObject = pWolfModel->m_pModelRootObject->FindFrame("Polygonal_Wolf");
 
-	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
-	/*CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
+	XMFLOAT3 xmf3Extents = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents).Extents;
 
-	SetBBObject(pBoundingBox)->MoveForward(-bb.Extents.z);*/
+	float zExtents =SetBBObject(pd3dDevice, pd3dCommandList,
+		XMFLOAT3(0, 20, -xmf3Extents.z),
+		XMFLOAT3(xmf3Extents.x, xmf3Extents.y - 20, xmf3Extents.z))->m_pMesh->m_xmf3AABBExtents.z;
 
-	SetBBObject(pd3dDevice, pd3dCommandList,
-		XMFLOAT3(0, 20, -bb.Extents.z),									// Center
-		XMFLOAT3(bb.Extents.x, bb.Extents.y - 20, bb.Extents.z));	// Extents
-
+	SetHpBar(pd3dDevice, pd3dCommandList,
+		XMFLOAT3(0, 30, zExtents / 2),
+		XMFLOAT2(80, 20))->SetHp(100);
 
 	SetUpdatedContext(ppContext);
 
+	m_nPlace = nPlace;
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)ppContext[m_nPlace];
 	XMFLOAT3 pos = pTerrain->GetPosition();
 	pos.x += 100 + rand() % 1900;
@@ -2405,7 +2446,7 @@ CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 	SetPosition(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z);
 
 	OnUpdateCallback();
-	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y * 0.5f);
+	MoveUp(xmf3Extents.y * 0.5f);
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, -40.0f, 0.0f);
 
@@ -2479,18 +2520,19 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 
 	CGameObject* pObject = pMetalonModel->m_pModelRootObject->FindFrame("Polygonal_Metalon");
 
-	BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
+	XMFLOAT3 xmf3Extents = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents).Extents;
 
-	/*CCubeMesh* pBoundingBox = new CCubeMesh(pd3dDevice, pd3dCommandList, bb.Extents.x * 2, bb.Extents.y * 2, bb.Extents.z * 2);
+	float yExtents = SetBBObject(pd3dDevice, pd3dCommandList,
+		XMFLOAT3(0, 20, -xmf3Extents.z),
+		XMFLOAT3(xmf3Extents.x, xmf3Extents.y - 20, xmf3Extents.z))->m_pMesh->m_xmf3AABBExtents.y;
 
-	SetBBObject(pBoundingBox);*/
-
-	pObject->SetBBObject(pd3dDevice, pd3dCommandList,
-		XMFLOAT3(0, 20, -bb.Extents.z),													// Center
-		XMFLOAT3(bb.Extents.x, bb.Extents.y-20, bb.Extents.z));	// Extents
+	SetHpBar(pd3dDevice, pd3dCommandList,
+		XMFLOAT3(0, 0, 100),
+		XMFLOAT2(80, 20))->SetHp(100);
 
 	SetUpdatedContext(ppContext);
 
+	m_nPlace = nPlace;
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)ppContext[m_nPlace];
 	XMFLOAT3 pos = pTerrain->GetPosition();
 	pos.x += 100 + rand() % 1900;
@@ -2502,7 +2544,8 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 	MoveUp(pObject->m_pMesh->m_xmf3AABBExtents.y*0.1f);
 	SetScale(0.1f, 0.1f, 0.1f);
 	Rotate(-90.0f, 0.0f, 0.0f);
-
+	//pHpBar->Rotate(90.f, 0, 0);
+	//pHpBar->SetScale(10.f, 10.f, 10.f);
 	InitAnimation();
 
 	delete pMetalonModel;
@@ -2562,7 +2605,7 @@ void CMetalon::Move(const XMFLOAT3& vDirection, float fSpeed)
 CMonster::CMonster()
 {
 	m_nAnimations = 3;
-	m_iHp = 100;
+	SetHp(100);
 	m_iAtkStat = 10;
 	m_iDefStat = 0;
 	m_iState = Idle;
@@ -2575,6 +2618,7 @@ CMonster::~CMonster()
 void CMonster::TakeDamage(int iDamage)
 {
 	CGameObject::TakeDamage(iDamage);
+	FindFrame("HpBar")->TakeDamage(iDamage);
 	if (m_iHp > 0)
 		m_iState = MonsterState::TakeDamage;
 	else {

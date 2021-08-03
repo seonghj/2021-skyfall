@@ -5,6 +5,11 @@
 #include "stdafx.h"
 #include "GameFramework.h"
 
+#define NO_FOG 0.0f
+#define LINEAR_FOG 1.0f
+#define EXP_FOG 2.0f
+#define EXP2_FOG 3.0f
+
 CGameFramework::CGameFramework()
 {
 	m_pdxgiFactory = NULL;
@@ -954,10 +959,20 @@ void CGameFramework::FrameAdvance()
 
 void CGameFramework::CreateShaderVariables()
 {
+	//FRAMEWORK
 	UINT ncbElementBytes = ((sizeof(CB_FRAMEWORK_INFO) + 255) & ~255); //256의 배수
 	m_pd3dcbFrameworkInfo = ::CreateBufferResource(m_pd3dDevice, m_pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
 
 	m_pd3dcbFrameworkInfo->Map(0, NULL, (void**)&m_pcbMappedFrameworkInfo);
+
+	//FOG
+	ncbElementBytes = ((sizeof(CB_FOG_INFO) + 255) & ~255); //256의 배수
+	m_pd3dcbFog = ::CreateBufferResource(m_pd3dDevice, m_pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+
+	m_pd3dcbFog->Map(0, NULL, (void**)&m_pcbMappedFog);
+
+	m_pcbMappedFog->gcFogColor = XMFLOAT4(0.7f, 0.7f, 0.7f, 0.2f);
+	m_pcbMappedFog->gvFogParameter = XMFLOAT4(/*EXP_FOG*/NO_FOG, 1.f, 300.f, 0.001f);
 }
 
 void CGameFramework::UpdateShaderVariables()
@@ -967,4 +982,23 @@ void CGameFramework::UpdateShaderVariables()
 
 	D3D12_GPU_VIRTUAL_ADDRESS d3dGpuVirtualAddress = m_pd3dcbFrameworkInfo->GetGPUVirtualAddress();
 	m_pd3dCommandList->SetGraphicsRootConstantBufferView(17, d3dGpuVirtualAddress);
+
+
+	D3D12_GPU_VIRTUAL_ADDRESS d3dcbFogGpuVirtualAddress = m_pd3dcbFog->GetGPUVirtualAddress();
+	m_pd3dCommandList->SetGraphicsRootConstantBufferView(18, d3dcbFogGpuVirtualAddress); //Fog
+
+}
+
+void CGameFramework::ReleaseShaderVariables()
+{
+	if (m_pd3dcbFrameworkInfo)
+	{
+		m_pd3dcbFrameworkInfo->Unmap(0, NULL);
+		m_pd3dcbFrameworkInfo->Release();
+	}
+	if (m_pd3dcbFog)
+	{
+		m_pd3dcbFog->Unmap(0, NULL);
+		m_pd3dcbFog->Release();
+	}
 }

@@ -14,6 +14,12 @@ struct CB_FRAMEWORK_INFO
 	float					m_fElapsedTime;
 };
 
+struct CB_FOG_INFO
+{
+	XMFLOAT4 gcFogColor;
+	XMFLOAT4 gvFogParameter; //(Mode, Start, Range, Density)
+};
+
 class CGameFramework
 {
 public:
@@ -44,8 +50,8 @@ public:
     void FrameAdvance();
 
 	void CreateShaderVariables();
-
 	void UpdateShaderVariables();
+	void ReleaseShaderVariables();
 
 	void WaitForGpuComplete();
 	void MoveToNextFrame();
@@ -110,7 +116,7 @@ private:
 	CTerrainPlayer				*m_ppOtherPlayer[OTHER_PLAYER_NUM];
 	CCamera						*m_pCamera = NULL;
 
-	CPacket* m_pPacket = NULL;
+	CPacket						*m_pPacket = NULL;
 
 	POINT						m_ptOldCursorPos;
 
@@ -124,11 +130,14 @@ private:
 	C1HswordPlayer				*m_p1HswordPlayer;
 
 	bool						m_bMouseHold = false; 
-	vector<vector<int>> m_vMapArrange;
+	vector<vector<int>>			m_vMapArrange;
 
-	CShadowMap* m_pShadowMap;
+	CShadowMap					*m_pShadowMap;
 
-	ID3D12Resource* m_pd3dcbFrameworkInfo = NULL;
-	CB_FRAMEWORK_INFO* m_pcbMappedFrameworkInfo = NULL;
+	ID3D12Resource				*m_pd3dcbFrameworkInfo = NULL;
+	CB_FRAMEWORK_INFO			*m_pcbMappedFrameworkInfo = NULL;
+
+	ID3D12Resource				*m_pd3dcbFog = NULL;
+	CB_FOG_INFO					*m_pcbMappedFog = NULL;
 };
 

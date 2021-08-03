@@ -149,11 +149,13 @@ public:
 	static CShader					*m_pWireFrameShader;
 	static CShader					*m_pSkinnedAnimationWireFrameShader;
 	static CShader					*m_pBoundingBoxShader;
+	static CShader					*m_pHpBarShader;
 	static void CMaterial::PrepareShaders(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature);
 
 	void SetWireFrameShader() { CMaterial::SetShader(m_pWireFrameShader); }
 	void SetSkinnedAnimationWireFrameShader() { CMaterial::SetShader(m_pSkinnedAnimationWireFrameShader); }
 	void SetBoundingBoxShader() { CMaterial::SetShader(m_pBoundingBoxShader); }
+	void SetHpBarShader() { CMaterial::SetShader(m_pHpBarShader); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -397,10 +399,16 @@ public:
 
 	CGameObject* SetBBObject(CCubeMesh* pBoundingBox);
 	CGameObject* SetBBObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,XMFLOAT3 Center,XMFLOAT3 Extents);
-	bool isCollide(CGameObject* pObject);
-	virtual void TakeDamage(int iDamage) { m_iHp -= iDamage * (100 - m_iDefStat) / 100; };
+	CGameObject* SetHpBar(CGeometryBillboardMesh* pHpBar);
+	CGameObject* SetHpBar(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 Center, XMFLOAT2 Size);
 
-	void SetHp(int hp) { m_iHp = hp; }
+
+	bool isCollide(CGameObject* pObject);
+	virtual void TakeDamage(int iDamage) {
+		m_iHp -= iDamage * (100 - m_iDefStat) / 100;
+	};
+
+	void SetHp(int hp) {m_iMaxHp = m_iHp = hp;}
 	void SetAtkStat(float atk) { m_iAtkStat = atk; }
 	void SetDefStat(float def) { m_iDefStat = def; }
 	void SetBehaviorActivate(bool activate) { m_bBehaviorActivate = activate; }
@@ -416,6 +424,7 @@ public:
 	void SetWireFrameShader();
 	void SetSkinnedAnimationWireFrameShader();
 	void SetBoundingBoxShader();
+	void SetHpBarShader();
 	void SetMaterial(int nMaterial, CMaterial *pMaterial);
 	 
 	void SetChild(CGameObject *pChild, bool bReferenceUpdate=false);
@@ -494,6 +503,7 @@ public:
 
 protected:
 		int							m_iHp;
+		int							m_iMaxHp;
 		int							m_iAtkStat;
 		int							m_iDefStat;
 		int							m_nTrackOffSet;
