@@ -125,7 +125,7 @@ public:
 	CHeightMapTerrain					*m_pTerrain = NULL;
 	CHeightMapTerrain					* m_pForestTerrain = NULL;
 	CHeightMapTerrain					* m_pSnowTerrain = NULL;
-	CHeightMapTerrain*					m_pTestTerrain[3] = {NULL};
+	CHeightMapTerrain*					m_pTestTerrain[9] = {NULL};
 
 	LIGHT								*m_pLights = NULL;
 	int									m_nLights = 0;

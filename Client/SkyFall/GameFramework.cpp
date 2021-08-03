@@ -522,7 +522,7 @@ void CGameFramework::BuildObjects()
 
 	m_pScene = new CScene();
 
-	vector<int>test_arrange{ 0, 0, -1, 0, 1, 0 };
+	vector<int>test_arrange{ 0, 0, -1, 0, 1, 0, -1, 1, 0, 1, 1, 1, -1, -1, 0, -1, 1, -1 };
 	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList,test_arrange);
 	m_pScene->InitPlayerIDs();
 
