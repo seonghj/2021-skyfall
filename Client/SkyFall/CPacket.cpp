@@ -450,11 +450,19 @@ void CPacket::CheckCollision(CMonster * mon)
     for (int i = 0; i < 3; ++i) {
         pObject = m_pMap->GetMap(3 * i)->FindFrame("RootNode")->m_pChild->m_pChild;
         while (true) {
+
+            XMFLOAT3 temp = mon->GetPosition();
+
             if (mon->isCollide(pObject)) {
+              
                 XMFLOAT3 d = Vector3::Subtract(mon->GetPosition(), pObject->GetPosition());
                 mon->Move(Vector3::ScalarProduct(d, 50.25f, true), true);
-
                 cout << "monster Map Collision - " << pObject->m_pstrFrameName << endl;
+                
+                if (_isnanf(mon->GetPosition().x) || _isnanf(mon->GetPosition().y) || _isnanf(mon->GetPosition().z)) {
+                    mon->SetPosition(temp);
+                }
+                
                 return;
             }
             if (pObject->m_pSibling)
@@ -463,7 +471,6 @@ void CPacket::CheckCollision(CMonster * mon)
                 return;
         }
     }
-    return;
 }
 
 void CPacket::ProcessPacket(char* buf)
@@ -687,6 +694,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_stop: {
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
         int key = p->key;
+
         if (p->key != client_key) {
             m_pScene->AnimatePlayer(key, 0);
             m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
@@ -696,7 +704,6 @@ void CPacket::ProcessPacket(char* buf)
         }
         else
             m_pPlayer->SetPosition(p->Position);
-
         break;
     }
 
@@ -726,19 +733,23 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_pos: {
         mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
         int key = p->key;
+
+        XMFLOAT3 BeforePos = m_pScene->m_ppGameObjects[key]->GetPosition();
+
         m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
         CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_pTerrain;
         p->Position.y = pTerrain->GetHeight(300.f, 300.f) + m_pScene->m_ppGameObjects[key]->m_AABBExtentsY - m_pScene->m_ppGameObjects[key]->GetPosition().y;
         m_pScene->m_ppGameObjects[key]->Move(p->Position, 0.5f);
         //m_pScene->m_ppGameObjects[key]->MoveUp(m_pScene->m_ppGameObjects[key]->m_AABBExtentsY);
         CheckCollision(m_pScene->m_ppGameObjects[key]);
+
         p->type = CS_monster_pos;
         p->Position = m_pScene->m_ppGameObjects[key]->GetPosition();
 
         SendPacket(reinterpret_cast<char*>(p));
-        printf("%f, %f, %f\n", m_pScene->m_ppGameObjects[key]->GetPosition().x
+        /*printf("%f, %f, %f\n", m_pScene->m_ppGameObjects[key]->GetPosition().x
             , m_pScene->m_ppGameObjects[key]->GetPosition().y
-            , m_pScene->m_ppGameObjects[key]->GetPosition().z);
+            , m_pScene->m_ppGameObjects[key]->GetPosition().z);*/
         break;
     }
     }

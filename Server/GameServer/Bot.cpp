@@ -105,6 +105,7 @@ void Bot::CheckBehavior(int roomID)
 			XMFLOAT3 subtract;
 			float rotation;
 			float range;
+			float distance;
 
 			XMFLOAT3 player_pos = (XMFLOAT3&)player.f3Position.load();
 			XMFLOAT3 mon_pos = (XMFLOAT3&)mon.GetPosition();
@@ -113,41 +114,46 @@ void Bot::CheckBehavior(int roomID)
 			mon_pos.y = 0;
 
 			subtract = Vector3::Subtract(player_pos, mon_pos);
+			subtract.y = 0;
 			range = Vector3::Length(subtract);
 
-			//float distance = (pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z - pMonster->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z) / 2.0f;
-			if (30 < range &&range < 300.0f)
+			switch (mon.type) {
+			case MonsterType::Dragon:
+				distance = Atack_Distance_Dragon;
+				break;
+			case MonsterType::Wolf:
+				distance = Atack_Distance_Wolf;
+				break;
+			case MonsterType::Metalon:
+				distance = Atack_Distance_Metalon;
+				break;
+			}
+
+			if (range < 300.0f)
 			{
 				subtract = Vector3::Normalize(subtract);
-				subtract.y = 0;
+
 				// 실제 몬스터의 look 벡터
 				XMFLOAT3 look = Vector3::ScalarProduct((XMFLOAT3&)mon.GetUp(), -1);
 
 				rotation = acosf(Vector3::DotProduct(subtract, look)) * 180 / PI;
 				//printf("rotation : %f\n", rotation);
 
-				// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
-				/*if (range <= distance && rotation <= 5) {
-					pMonster->Attack();
-					return;
-				}
-				else if (range > distance) {
-					mon.Move(subtract, 0.5f);
-				}*/
-
-				//mon.Move(subtract, 0.5f);
 				// 외적에 따라 가까운 방향으로 회전하도록
 				XMFLOAT3 cross = Vector3::CrossProduct(subtract, look);
 
 				float rotate_degree = -cross.y * rotation / 10;
-				//float rotate_degree = 0;
 				if (EPSILON <= rotation)
 					mon.Rotate(0.0f, 0.0f, rotate_degree);
-				//printf("%f, %f, %f\n", cross.y, rotation, -cross.y * rotation / 10);
 				mon.recv_pos = false;
-				m_pServer->send_monster_pos(mon, subtract, cross, rotate_degree);
 
-
+				// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
+				if (range <= distance && rotation <= 5) {
+					m_pServer->send_monster_pos(mon, XMFLOAT3(0, 0, 0), cross, rotate_degree);
+				}
+				else if (range > distance) {
+					m_pServer->send_monster_pos(mon, subtract, cross, round(rotate_degree));
+				}
 			}
 		}
 	}
@@ -161,7 +167,7 @@ void Bot::RunBot(int roomID)
 		e.type = EventType::Mon_move_to_player;
 		e.key = 0;
 		e.roomid = roomID;
-		m_pTimer->push_event(roomID, OE_gEvent, 1, reinterpret_cast<char*>(&e));
+		m_pTimer->push_event(roomID, OE_gEvent, 16, reinterpret_cast<char*>(&e));
 	}
 }
 

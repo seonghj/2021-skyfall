@@ -825,6 +825,7 @@ void CGameFramework::FrameAdvance()
 				m_pPlayer->SetStanding(false);
 			}
 			p.type = CS_player_pos;
+			
 			if (m_pPacket->canmove == TRUE)
 				m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 
@@ -842,6 +843,7 @@ void CGameFramework::FrameAdvance()
 			sp.key = m_pPacket->Get_clientkey();
 			sp.size = sizeof(sp);
 			sp.type = PacketType::CS_player_stop;
+			sp.Position = m_pPlayer->GetPosition();
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
 		}
 	}

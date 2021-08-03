@@ -1850,7 +1850,7 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	MoveUp(m_AABBExtentsY);
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, 20.0f, 0.0f);
-	printf(" x : %f / y : %f / z : %f\n", GetPosition().x, GetPosition().y, GetPosition().z);
+	//printf(" x : %f / y : %f / z : %f\n", GetPosition().x, GetPosition().y, GetPosition().z);
 
 	m_nTrackOffSet = nAnimationCount;
 	InitAnimation();

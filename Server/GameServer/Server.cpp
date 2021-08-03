@@ -215,6 +215,7 @@ void Server::Accept()
         m_pBot->monsterRun = TRUE;
         m_pBot->monsters[roomID][0].SetPosition(300, 197.757935, 300);
         m_pBot->monsters[roomID][0].state = 1;
+        m_pBot->monsters[roomID][0].type = MonsterType::Dragon;
         m_pBot->monsters[roomID][0].Rotate(-90.0f, 20.0f, 0.0f);
         m_pBot->RunBot(roomID);
 
@@ -747,11 +748,15 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_monster_pos: {
         mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
         if (m_pBot->monsters[roomID][p->key].recv_pos == TRUE) break;
+        if (_isnanf(p->Position.x) || _isnanf(p->Position.y) || _isnanf(p->Position.z)) {
+            m_pBot->monsters[roomID][p->key].recv_pos = TRUE;
+            break;
+        }
         m_pBot->monsters[roomID][p->key].recv_pos = TRUE;
         m_pBot->monsters[roomID][p->key].SetPosition(p->Position.x, p->Position.y, p->Position.z);
-        printf("%f, %f, %f\n", m_pBot->monsters[roomID][p->key].f3Position.load().x
+       /* printf("%f, %f, %f\n", m_pBot->monsters[roomID][p->key].f3Position.load().x
             , m_pBot->monsters[roomID][p->key].f3Position.load().y
-            , m_pBot->monsters[roomID][p->key].f3Position.load().z);
+            , m_pBot->monsters[roomID][p->key].f3Position.load().z);*/
         break;
     }
     }

@@ -138,9 +138,9 @@ enum PlayerType {
 };
 
 enum MonsterType {
-	LOW,
-	MIDDLE,
-	BOSS
+	Metalon,
+	Wolf,
+	Dragon
 };
 
 #define DIR_FORWARD					0x01

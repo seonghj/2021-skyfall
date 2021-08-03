@@ -119,6 +119,10 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
+	float distance1 = (m_ppGameObjects[0]->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z - m_ppGameObjects[0]->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z) / 2.0f;
+	float distance2 = (m_ppGameObjects[1]->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z - m_ppGameObjects[1]->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z) / 2.0f;
+	float distance3 = (m_ppGameObjects[3]->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBExtents.z - m_ppGameObjects[3]->FindFrame("BoundingBox")->m_pMesh->m_xmf3AABBCenter.z) / 2.0f;
+
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
@@ -480,6 +484,10 @@ void CScene::CheckCollision()
 {
 	for (int i = 0; i < m_nGameObjects; ++i) {
 		if (m_ppGameObjects[i]->GetHp() > 0) {
+			if (_isnanf(m_ppGameObjects[i]->GetPosition().x)
+				|| _isnanf(m_ppGameObjects[i]->GetPosition().y)
+				|| _isnanf(m_ppGameObjects[i]->GetPosition().z))
+				continue;
 			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
 			//if (i == 0) {
 			//	/*if (m_ppGameObjects[i]->GetBehaviorActivate() == true)
