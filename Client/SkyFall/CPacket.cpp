@@ -287,38 +287,39 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
 
 void CPacket::Map_set(map_block_set* p)
 {
-    int Forest_count = 3;
     int Desert_count = 0;
+    int Forest_count = 3;
     int Snowy_count = 6;
 
     vector<vector<int>> m_vMapArrange = { { -1, -1}, {0, -1}, {1, -1}, {-1, 0}, {0, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1} };
 
     for (int i = 0; i < MAX_MAP_BLOCK; i++){
+        printf("%d\n", i);
         switch (p->block_type[i]) {
+        case Desert: {
+            m_pScene->GetTerrain(Desert_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            if (Desert_count >= 6)  m_pScene->GetTerrain(Desert_count)->MoveUp(125.f);
+            m_pMap->GetMap(Desert_count * 3)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            m_pMap->GetMap((Desert_count * 3) + 1)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            m_pMap->GetMap((Desert_count * 3) + 2)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            ++Desert_count;
+            break;
+        }
         case Forest: {
             m_pScene->GetTerrain(Forest_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
-            if (i >= 6)  m_pScene->GetTerrain(Forest_count)->MoveUp(125.f);
+            if (Forest_count >= 6)  m_pScene->GetTerrain(Forest_count)->MoveUp(125.f);
             m_pMap->GetMap(Forest_count * 3)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
             m_pMap->GetMap((Forest_count * 3) + 1)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
             m_pMap->GetMap((Forest_count * 3) + 2)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
             ++Forest_count;
             break;
         }
-        case Desert: {
-            m_pScene->GetTerrain(Desert_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
-            if (i >= 6)  m_pScene->GetTerrain(Desert_count)->MoveUp(125.f);
-            m_pMap->GetMap(Desert_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
-            m_pMap->GetMap(Desert_count + 1)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
-            m_pMap->GetMap(Desert_count + 2)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
-            ++Desert_count;
-            break;
-        }
         case Snowy_field: {
             m_pScene->GetTerrain(Snowy_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
-            if (i >= 6)  m_pScene->GetTerrain(Snowy_count)->MoveUp(125.f);
-            m_pMap->GetMap((Snowy_count * 3))->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
-            m_pMap->GetMap((Snowy_count * 3) + 1)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
-            m_pMap->GetMap((Snowy_count * 3) + 2)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            if (Snowy_count >= 6)  m_pScene->GetTerrain(Snowy_count)->MoveUp(125.f);
+            m_pMap->GetMap((Snowy_count * 3))->SetPosition(2048.0f * m_vMapArrange[i][0], 60.0f, 2048.0f * m_vMapArrange[i][1]);
+            m_pMap->GetMap((Snowy_count * 3) + 1)->SetPosition(2048.0f * m_vMapArrange[i][0], 60.0f, 2048.0f * m_vMapArrange[i][1]);
+            m_pMap->GetMap((Snowy_count * 3) + 2)->SetPosition(2048.0f * m_vMapArrange[i][0], 60.0f, 2048.0f * m_vMapArrange[i][1]);
             ++Snowy_count;
             break;
         }
@@ -608,6 +609,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_map_set: {
         map_block_set* p = reinterpret_cast<map_block_set*>(buf);
         //Map_set(p);
+        m_pPlayer->SetPosition(XMFLOAT3(m_pPlayer->GetPosition().x, 200, m_pPlayer->GetPosition().z));
         break;
     }
     case PacketType::SC_bot_add: {

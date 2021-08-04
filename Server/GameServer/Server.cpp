@@ -20,7 +20,7 @@ void SESSION::init()
     key = -1;
 
     state = 0;
-    f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+    f3Position = DirectX::XMFLOAT3(0.0f, 124.0f, 0.0f);
     m_fPitch = 0;
     m_fYaw = 0;
 
