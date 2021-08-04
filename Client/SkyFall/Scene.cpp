@@ -141,7 +141,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	
 
-	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
+	//m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
@@ -569,11 +569,11 @@ void CScene::CheckCollision()
 			}
 			
 			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
-			//if (i == 0) {
-			//	/*if (m_ppGameObjects[i]->GetBehaviorActivate() == true)
-			//		CheckBehavior(m_ppGameObjects[i]);*/
-			//	CheckBehavior(m_ppGameObjects[i]);
-			//}
+			if (i == 0) {
+				if (m_ppGameObjects[i]->GetBehaviorActivate() == true)
+					CheckBehavior(m_ppGameObjects[i]);
+				//CheckBehavior(m_ppGameObjects[i]);
+			}
 		}
 	}
 	if(m_pMap)
@@ -607,7 +607,7 @@ void CScene::CheckBehavior(CMonster *pMonster)
 			return;
 		}
 		else if (range > distance) {
-			pMonster->Move(subtract, 0.5f);
+			pMonster->Move(subtract, 2.f);
 		}
 		// 외적에 따라 가까운 방향으로 회전하도록
 		XMFLOAT3 cross = Vector3::CrossProduct(subtract, look);
