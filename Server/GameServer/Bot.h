@@ -36,8 +36,10 @@ public:
     std::atomic<float>      m_fYaw = 0;
     std::atomic<float>      m_fRoll = 0;
 
-    std::atomic<float>      hp = 0;
+    std::atomic<float>      hp = 100;
+    std::atomic<float>      def = 0;
     std::atomic<float>      lv = 0;
+    std::atomic<float>      att = 10;
     std::atomic<float>      speed = 20;
 
     void init();
@@ -45,6 +47,8 @@ public:
     void Move(const XMFLOAT3& vDirection, float fSpeed);
     void Rotate(float fPitch, float fYaw, float fRoll);
     void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent);
+
+    void TakeDamage(int iDamage) { hp -= iDamage * (100 - def) / 100; };
 
     bool recv_pos = TRUE;
 

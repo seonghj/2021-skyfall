@@ -30,8 +30,10 @@ void SESSION::init()
     shoes = 0;
     armor = 0;
 
-    hp = 0;
+    hp = 100;
+    def = 0;
     lv = 0;
+    att = 10;
     speed = 20;
 
     for (int i = 0; i < INVENTORY_MAX; i++)
@@ -96,6 +98,14 @@ int Server::SetroomID()
             maps[cnt].SetNum(cnt);
             maps[cnt].init_Map(this, m_pTimer);
             maps_lock.unlock();
+
+            m_pBot->monsters.emplace(cnt, std::array<Monster, 50>{});
+            m_pBot->monsterRun = TRUE;
+            m_pBot->monsters[cnt][0].SetPosition(300, 197.757935, 300);
+            m_pBot->monsters[cnt][0].state = 1;
+            m_pBot->monsters[cnt][0].type = MonsterType::Dragon;
+            m_pBot->monsters[cnt][0].Rotate(-90.0f, 20.0f, 0.0f);
+            m_pBot->RunBot(cnt);
 
             printf("create game room - %d\n", cnt);
             return cnt;
@@ -210,14 +220,6 @@ void Server::Accept()
 
         //printf("client_key: %d\n", client_key);
         send_player_key_packet(client_key, roomID);
-
-        m_pBot->monsters.emplace(roomID, std::array<Monster, 50>{});
-        m_pBot->monsterRun = TRUE;
-        m_pBot->monsters[roomID][0].SetPosition(300, 197.757935, 300);
-        m_pBot->monsters[roomID][0].state = 1;
-        m_pBot->monsters[roomID][0].type = MonsterType::Dragon;
-        m_pBot->monsters[roomID][0].Rotate(-90.0f, 20.0f, 0.0f);
-        m_pBot->RunBot(roomID);
 
         do_recv(client_key, roomID);
     }
@@ -441,6 +443,10 @@ void Server::send_add_monster(int key, int roomID, int to)
     p.dz = m_pBot->monsters[roomID][key].m_fRoll;
     p.MonsterType = m_pBot->monsters[roomID][key].type;
 
+     printf("%f, %f, %f\n", m_pBot->monsters[roomID][key].f3Position.load().x
+            , m_pBot->monsters[roomID][key].f3Position.load().y
+            , m_pBot->monsters[roomID][key].f3Position.load().z);
+
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
@@ -470,6 +476,27 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 pos, XMFLOAT3 directi
     p.MoveType = 0;
     p.state = 0;
     
+    for (int i = 0; i < MAX_PLAYER; ++i) {
+        if (sessions[roomID][i].connected == FALSE) continue;
+        if (true == in_VisualField(mon, sessions[roomID][i], roomID)) {
+            send_packet(sessions[roomID][i].key.load(), reinterpret_cast<char*>(&p), roomID);
+            //printf("send to %d \n", sessions[roomID][i].key.load());
+        }
+    }
+}
+
+void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, float degree, int target)
+{
+    int roomID = mon.roomID;
+
+    mon_attack_packet p;
+    p.size = sizeof(mon_attack_packet);
+    p.type = PacketType::SC_monster_attack;
+    p.key = mon.key.load();
+    p.roomid = mon.roomID.load();
+    p.direction = direction;
+    p.degree = degree;
+
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == FALSE) continue;
         if (true == in_VisualField(mon, sessions[roomID][i], roomID)) {
@@ -633,6 +660,10 @@ void Server::process_packet(int key, char* buf, int roomID)
             if ((TRUE == s.connected) && (s.key.load() != client_key))
                 send_add_player_packet(client_key, s.key.load(), roomID);
         }
+        for (auto& m : m_pBot->monsters[roomID]) {
+            if (m.state == 1)
+                send_add_monster(m.key.load(), roomID, client_key);
+        }
 
         sessions[roomID][client_key].state = 1;
 
@@ -757,6 +788,12 @@ void Server::process_packet(int key, char* buf, int roomID)
        /* printf("%f, %f, %f\n", m_pBot->monsters[roomID][p->key].f3Position.load().x
             , m_pBot->monsters[roomID][p->key].f3Position.load().y
             , m_pBot->monsters[roomID][p->key].f3Position.load().z);*/
+        break;
+    }
+    case PacketType::CS_monster_attack: {
+        mon_attack_packet* p = reinterpret_cast<mon_attack_packet*>(buf);
+
+        std::cout << "target: " << p->target << " key: " << p->key << std::endl;
         break;
     }
     }

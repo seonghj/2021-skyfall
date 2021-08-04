@@ -610,6 +610,8 @@ public:
 	virtual void InitAnimation();
 
 	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
+
+	bool m_iReady = false;
 };
 
 

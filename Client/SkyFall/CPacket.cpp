@@ -467,6 +467,17 @@ void CPacket::CheckCollision(CMonster * mon)
     }
 }
 
+int CPacket::MonsterAttackCheck(CMonster* mon)
+{
+    for (int i = 0; i < MAX_PLAYER; ++i) {
+        if (m_pScene->m_mPlayer[i]->GetHp() > 0) {
+            if (mon->isCollide(m_pScene->m_mPlayer[i]) == true)
+                return i;
+        }
+    }
+    return -1;
+}
+
 void CPacket::ProcessPacket(char* buf)
 {
     switch (buf[1])
@@ -733,8 +744,8 @@ void CPacket::ProcessPacket(char* buf)
         m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
         CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_pTerrain;
         p->Position.y = pTerrain->GetHeight(300.f, 300.f) + m_pScene->m_ppGameObjects[key]->m_AABBExtentsY - m_pScene->m_ppGameObjects[key]->GetPosition().y;
-        m_pScene->m_ppGameObjects[key]->Move(p->Position, 0.5f);
-        CheckCollision(m_pScene->m_ppGameObjects[key]);
+        m_pScene->m_ppGameObjects[key]->Move(p->Position, 1.f);
+        //CheckCollision(m_pScene->m_ppGameObjects[key]);
 
         p->type = CS_monster_pos;
         p->Position = m_pScene->m_ppGameObjects[key]->GetPosition();
@@ -743,6 +754,34 @@ void CPacket::ProcessPacket(char* buf)
         /*printf("%f, %f, %f\n", m_pScene->m_ppGameObjects[key]->GetPosition().x
             , m_pScene->m_ppGameObjects[key]->GetPosition().y
             , m_pScene->m_ppGameObjects[key]->GetPosition().z);*/
+        break;
+    }
+    case PacketType::SC_monster_attack: {
+        mon_attack_packet* p = reinterpret_cast<mon_attack_packet*>(buf);
+        int key = p->key;
+
+        if (m_pScene->m_ppGameObjects[key]->m_iReady == FALSE) break;
+
+        m_pScene->m_ppGameObjects[key]->Attack();
+
+        int target = MonsterAttackCheck(m_pScene->m_ppGameObjects[key]);
+
+        if (target != -1) {
+            p->type = CS_monster_attack;
+            p->target = target;
+            SendPacket(reinterpret_cast<char*>(p));
+        }
+        break;
+    }
+    case PacketType::SC_monster_add: {
+        mon_add_packet* p = reinterpret_cast<mon_add_packet*>(buf);
+        int key = p->key;
+
+        m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
+        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->dz);
+
+        m_pScene->m_ppGameObjects[key]->m_iReady = TRUE;
+
         break;
     }
     }

@@ -307,6 +307,13 @@ struct mon_pos_packet : public Packet {
 	DWORD MoveType;
 };
 
+struct mon_attack_packet : public Packet {
+	DirectX::XMFLOAT3 direction;
+	float degree;
+	DWORD MoveType;
+	int target;
+};
+
 struct player_record_packet : public Packet {
 	char id[50];
 	short survivalTime;

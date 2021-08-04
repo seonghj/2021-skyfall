@@ -138,9 +138,9 @@ enum PlayerType {
 };
 
 enum MonsterType {
-	LOW,
-	MIDDLE,
-	BOSS
+	Metalon,
+	Wolf,
+	Dragon
 };
 
 #define DIR_FORWARD					0x01
@@ -305,6 +305,13 @@ struct mon_pos_packet : public Packet {
 	DirectX::XMFLOAT3 direction;
 	float degree;
 	DWORD MoveType;
+};
+
+struct mon_attack_packet : public Packet {
+	DirectX::XMFLOAT3 direction;
+	float degree;
+	DWORD MoveType;
+	int target;
 };
 
 struct player_record_packet : public Packet {

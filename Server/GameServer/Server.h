@@ -60,8 +60,10 @@ public:
     std::atomic<short>      shoes = 0;
     std::atomic<short>      armor = 0;
 
-    std::atomic<float>      hp = 0;
+    std::atomic<float>      hp = 100;
+    std::atomic<float>      def = 0;
     std::atomic<float>      lv = 0;
+    std::atomic<float>      att = 10;
     std::atomic<float>      speed = 20;
 
     std::atomic<short>      inventory[INVENTORY_MAX]{};
@@ -69,6 +71,8 @@ public:
     void init();
 
     DirectX::XMFLOAT3 GetPosition() { return f3Position; }
+
+    void TakeDamage(int iDamage) { hp -= iDamage * (100 - def) / 100; };
 
 public:
     std::unordered_set<int> near_monster;
@@ -125,6 +129,7 @@ public:
     void send_add_monster(int key, int roomID, int to);
     void send_remove_monster(int key, int roomID, int to);
     void send_monster_pos(const Monster& mon, XMFLOAT3 pos, XMFLOAT3 direction, float degree);
+    void send_monster_attack(const Monster& mon, XMFLOAT3 direction, float degree, int target);
 
     void send_player_record(int key, int roomID, const SESSION& s, int time, int rank);
     

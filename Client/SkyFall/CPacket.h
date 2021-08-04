@@ -43,6 +43,7 @@ public:
 	void Swap_weapon(int key, PlayerType weapon);
 	void Map_set(int type, int pos);
 	void CheckCollision(CMonster* mon);
+	int MonsterAttackCheck(CMonster* mon);
 
 	void ProcessPacket(char* buf);
 

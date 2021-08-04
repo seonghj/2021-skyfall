@@ -2,7 +2,21 @@
 
 void Monster::init()
 {
+	m_xmf4x4ToParent = Matrix4x4::Identity();
+	m_xmf4x4World = Matrix4x4::Identity();
 
+	state = 1;
+	type = 0;
+	f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_fPitch = 0;
+	m_fYaw = 0;
+	m_fRoll = 0;
+
+	hp = 100;
+	def = 0;
+	lv = 0;
+	att = 10;
+	speed = 20;
 }
 
 void Monster::SetPosition(float x, float y, float z)
@@ -149,7 +163,10 @@ void Bot::CheckBehavior(int roomID)
 
 				// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
 				if (range <= distance && rotation <= 5) {
-					m_pServer->send_monster_pos(mon, XMFLOAT3(0, 0, 0), cross, rotate_degree);
+
+					player.TakeDamage(mon.att);
+					m_pServer->send_monster_attack(mon, cross, rotate_degree, player.key);
+					
 				}
 				else if (range > distance) {
 					m_pServer->send_monster_pos(mon, subtract, cross, rotate_degree);
