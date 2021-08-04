@@ -2353,7 +2353,6 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	MoveUp(xmf3Extents.y * 0.2f);
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, 20.0f, 0.0f);
-	//printf(" x : %f / y : %f / z : %f\n", GetPosition().x, GetPosition().y, GetPosition().z);
 
 	InitAnimation();
 
