@@ -742,8 +742,13 @@ void CPacket::ProcessPacket(char* buf)
         XMFLOAT3 BeforePos = m_pScene->m_ppGameObjects[key]->GetPosition();
 
         m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
-        CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_pTerrain;
-        p->Position.y = pTerrain->GetHeight(300.f, 300.f) + m_pScene->m_ppGameObjects[key]->m_AABBExtentsY - m_pScene->m_ppGameObjects[key]->GetPosition().y;
+        CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
+        XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
+        XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
+        bool bReverseQuad = (((int)xmf3MonsterPosition.z % 2) != 0);
+        p->Position.y = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
+        printf("x : %f, y : %f z : %f\n", p->Position.x, p->Position.y, p->Position.z);
+        //p->Position.y = pTerrain->GetHeight(300.f, 300.f) + m_pScene->m_ppGameObjects[key]->m_AABBExtentsY - m_pScene->m_ppGameObjects[key]->GetPosition().y;
         m_pScene->m_ppGameObjects[key]->Move(p->Position, 1.f);
         //CheckCollision(m_pScene->m_ppGameObjects[key]);
 
