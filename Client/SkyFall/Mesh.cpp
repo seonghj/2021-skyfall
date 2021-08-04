@@ -950,3 +950,22 @@ CCubeMesh::CCubeMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCo
 CCubeMesh::~CCubeMesh()
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+CGeometryBillboardMesh::CGeometryBillboardMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGeometryHpBarVertex* pGeometryHpBarVertices, UINT nGeometryHpBarVertices)
+{
+	m_nVertices = nGeometryHpBarVertices;
+	UINT nStride = sizeof(CGeometryHpBarVertex);
+	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+	m_pd3dPositionBuffer = CreateBufferResource(pd3dDevice, pd3dCommandList, pGeometryHpBarVertices, nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
+
+	m_d3dPositionBufferView.BufferLocation = m_pd3dPositionBuffer->GetGPUVirtualAddress();
+	m_d3dPositionBufferView.StrideInBytes = nStride;
+	m_d3dPositionBufferView.SizeInBytes = nStride * m_nVertices;
+}
+
+CGeometryBillboardMesh::~CGeometryBillboardMesh()
+{
+}

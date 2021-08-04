@@ -26,6 +26,35 @@ class CGameObject;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+
+
+class CVertex
+{
+public:
+	XMFLOAT3						m_xmf3Position;
+
+public:
+	CVertex() { m_xmf3Position = XMFLOAT3(0.0f, 0.0f, 0.0f); }
+	CVertex(XMFLOAT3 xmf3Position) { m_xmf3Position = xmf3Position; }
+	~CVertex() { }
+};
+
+class CGeometryHpBarVertex : public CVertex
+{
+public:
+	XMFLOAT2						m_xmf2Size;
+
+public:
+	CGeometryHpBarVertex() { m_xmf3Position = XMFLOAT3(0.0f, 0.0f, 0.0f); m_xmf2Size = XMFLOAT2(5.0f, 10.0f); }
+	CGeometryHpBarVertex(float x, float y, float z, XMFLOAT2 xmf2Size = XMFLOAT2(5.0f, 10.0f)) { m_xmf3Position = XMFLOAT3(x, y, z); m_xmf2Size = xmf2Size; }
+	CGeometryHpBarVertex(XMFLOAT3 xmf3Position, XMFLOAT2 xmf2Size = XMFLOAT2(5.0f, 10.0f)) { m_xmf3Position = xmf3Position; m_xmf2Size = xmf2Size;  }
+	~CGeometryHpBarVertex() { }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+
 class CMesh
 {
 public:
@@ -268,4 +297,16 @@ public:
 	virtual ~CCubeMesh();
 
 
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class CGeometryBillboardMesh : public CMesh
+{
+protected:
+
+public:
+	CGeometryBillboardMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGeometryHpBarVertex* pGeometryHpBarVertices, UINT nGeometryHpBarVertices);
+	virtual ~CGeometryBillboardMesh();
 };

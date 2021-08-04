@@ -25,7 +25,7 @@ std::thread						Connect_thread;
 ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK Login(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
@@ -115,6 +115,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	gGameFramework.Set_m_pPacket(gCPacket);
 	gGameFramework.OnCreate(hInstance, hMainWnd);
 
+	::DialogBox(ghAppInstance, MAKEINTRESOURCE(IDD_ABOUTBOX), hMainWnd, Login);
+
 	::ShowWindow(hMainWnd, nCmdShow);
 	::UpdateWindow(hMainWnd);
 
@@ -145,7 +147,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (wmId)
 		{
 		case IDM_ABOUT:
-			::DialogBox(ghAppInstance, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+			::DialogBox(ghAppInstance, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, Login);
 			break;
 		case IDM_EXIT:
 			::DestroyWindow(hWnd);
@@ -167,9 +169,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK Login(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	UNREFERENCED_PARAMETER(lParam);
+
 	switch (message)
 	{
 	case WM_INITDIALOG:
@@ -177,9 +180,13 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
 		{
+			wchar_t id[10], address[20];
+			GetDlgItemText(hDlg, IDC_EDIT_ID,id,10);
+			GetDlgItemText(hDlg, IDC_EDIT_ADDRESS,address,20);
 			::EndDialog(hDlg, LOWORD(wParam));
 			return((INT_PTR)TRUE);
 		}
+		if(LOWORD(wParam))
 		break;
 	}
 	return((INT_PTR)FALSE);

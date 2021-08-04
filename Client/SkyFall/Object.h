@@ -25,10 +25,10 @@ class CStandardShader;
 #define RESOURCE_TEXTURE_CUBE		0x04
 #define RESOURCE_BUFFER				0x05
 
-struct SRVROOTARGUMENTINFO
+struct ROOTARGUMENTINFO
 {
 	int								m_nRootParameterIndex = 0;
-	D3D12_GPU_DESCRIPTOR_HANDLE		m_d3dSrvGpuDescriptorHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE		m_d3dGpuDescriptorHandle;
 };
 
 class CTexture
@@ -49,21 +49,36 @@ private:
 	int								m_nSamplers = 0;
 	D3D12_GPU_DESCRIPTOR_HANDLE		*m_pd3dSamplerGpuDescriptorHandles = NULL;
 
+	D3D12_GPU_DESCRIPTOR_HANDLE		*m_pd3dUavGpuDescriptorHandles = NULL;
+	D3D12_GPU_DESCRIPTOR_HANDLE		*m_pd3dSrvGpuDescriptorHandles = NULL;
+
 public:
-	SRVROOTARGUMENTINFO				*m_pRootArgumentInfos = NULL;
+	ROOTARGUMENTINFO				*m_pGraphicsSrvRootArgumentInfos = NULL;
+	ROOTARGUMENTINFO				*m_pComputeSrvRootArgumentInfos = NULL;
+	ROOTARGUMENTINFO				*m_pComputeUavRootArgumentInfos = NULL;
 
 public:
 	void AddRef() { m_nReferences++; }
 	void Release() { if (--m_nReferences <= 0) delete this; }
 
-	void SetRootArgument(int nIndex, UINT nRootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dsrvGpuDescriptorHandle);
+
+	void SetSrvGpuDescriptorHandle(int nIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGpuDescriptorHandle);
+	void SetUavGpuDescriptorHandle(int nIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dUavGpuDescriptorHandle);
+
+	void SetGraphicsSrvRootArgument(int nIndex, UINT nRootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGpuDescriptorHandle);
+	void SetComputeSrvRootArgument(int nIndex, UINT nRootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGpuDescriptorHandle);
+	void SetComputeUavRootArgument(int nIndex, UINT nRootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dUavGpuDescriptorHandle);
+	void SetGraphicsSrvRootArgument(int nIndex, UINT nRootParameterIndex, int nGpuHandleIndex);
+	void SetComputeSrvRootArgument(int nIndex, UINT nRootParameterIndex, int nGpuHandleIndex);
+	void SetComputeUavRootArgument(int nIndex, UINT nRootParameterIndex, int nGpuHandleIndex);
 	void SetSampler(int nIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSamplerGpuDescriptorHandle);
 
-	void UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList);
+	void UpdateGraphicsShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList);
 	void UpdateShaderVariable(ID3D12GraphicsCommandList *pd3dCommandList, int nIndex);
 	void ReleaseShaderVariables();
 
 	void LoadTextureFromFile(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, wchar_t *pszFileName, UINT nIndex, bool bIsDDSFile=true);
+	ID3D12Resource* CreateTexture(ID3D12Device* pd3dDevice, UINT nWidth, UINT nHeight, DXGI_FORMAT dxgiFormat, D3D12_RESOURCE_FLAGS d3dResourceFlags, D3D12_RESOURCE_STATES d3dResourceStates, D3D12_CLEAR_VALUE* pd3dClearValue, UINT nIndex);
 
 	int GetTextures() { return(m_nTextures); }
 	ID3D12Resource *GetTexture(int nIndex) { return(m_ppd3dTextures[nIndex]); }
@@ -134,11 +149,13 @@ public:
 	static CShader					*m_pWireFrameShader;
 	static CShader					*m_pSkinnedAnimationWireFrameShader;
 	static CShader					*m_pBoundingBoxShader;
+	static CShader					*m_pHpBarShader;
 	static void CMaterial::PrepareShaders(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature);
 
 	void SetWireFrameShader() { CMaterial::SetShader(m_pWireFrameShader); }
 	void SetSkinnedAnimationWireFrameShader() { CMaterial::SetShader(m_pSkinnedAnimationWireFrameShader); }
 	void SetBoundingBoxShader() { CMaterial::SetShader(m_pBoundingBoxShader); }
+	void SetHpBarShader() { CMaterial::SetShader(m_pHpBarShader); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -384,10 +401,16 @@ public:
 
 	CGameObject* SetBBObject(CCubeMesh* pBoundingBox);
 	CGameObject* SetBBObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,XMFLOAT3 Center,XMFLOAT3 Extents);
-	bool isCollide(CGameObject* pObject);
-	virtual void TakeDamage(int iDamage) { m_iHp -= iDamage * (100 - m_iDefStat) / 100; };
+	CGameObject* SetHpBar(CGeometryBillboardMesh* pHpBar);
+	CGameObject* SetHpBar(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT3 Center, XMFLOAT2 Size);
 
-	void SetHp(int hp) { m_iHp = hp; }
+
+	bool isCollide(CGameObject* pObject);
+	virtual void TakeDamage(int iDamage) {
+		m_iHp -= iDamage * (100 - m_iDefStat) / 100;
+	};
+
+	void SetHp(int hp) {m_iMaxHp = m_iHp = hp;}
 	void SetAtkStat(float atk) { m_iAtkStat = atk; }
 	void SetDefStat(float def) { m_iDefStat = def; }
 	void SetBehaviorActivate(bool activate) { m_bBehaviorActivate = activate; }
@@ -403,6 +426,7 @@ public:
 	void SetWireFrameShader();
 	void SetSkinnedAnimationWireFrameShader();
 	void SetBoundingBoxShader();
+	void SetHpBarShader();
 	void SetMaterial(int nMaterial, CMaterial *pMaterial);
 	 
 	void SetChild(CGameObject *pChild, bool bReferenceUpdate=false);
@@ -414,6 +438,7 @@ public:
 
 	virtual void OnPrepareRender() { }
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera=NULL);
+	virtual void RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 
 	virtual void CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList);
@@ -465,6 +490,10 @@ public:
 	static CGameObject* LoadGeometryFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, char* pstrFileName, CShader* pShader);
 
 	void LoadMaterialsFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pParent, FILE* pInFile, CShader* pShader);
+	
+	static void SkipFrameHierarchyFromFile(FILE* pInFile);
+	static void SkipMaterialsFromFile(FILE* pInFile);
+	static void SkipMeshFromFile(FILE* pInFile);
 
 	D3D12_GPU_DESCRIPTOR_HANDLE CreateShaderResourceViews(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameter, bool bAutoIncrement);
 
@@ -476,6 +505,7 @@ public:
 
 protected:
 		int							m_iHp;
+		int							m_iMaxHp;
 		int							m_iAtkStat;
 		int							m_iDefStat;
 		int							m_nTrackOffSet;
@@ -520,13 +550,16 @@ public:
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera = NULL);
 };
 
+
+
 class CMap : public CGameObject
 {
 public:
-	CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, vector<int>arrange, void* pContext=0);
+	CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, vector<vector<int>>arrange, void* pContext=0);
 	virtual ~CMap();
 
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
+	virtual void RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 		
 	void CheckCollision(CPlayer* pPlayer);
 	virtual void ReleaseUploadBuffers();
@@ -535,7 +568,11 @@ public:
 
 		
 private:
-	CGameObject** m_ppMaps = new CGameObject * [9];
+	CGameObject** m_ppMaps;
+	int m_nMaps;
+public:
+	static CGameObject** m_ppObjectInstance;
+	static int m_nObjectInstance;
 };
 
 
@@ -598,6 +635,8 @@ protected:
 	const int nMonster_TakeDamage = 2;
 
 	int m_iState;
+	LPVOID* m_ppUpdatedContext = NULL;
+	int							m_nPlace;
 public:
 	CMonster();
 	virtual ~CMonster();
@@ -608,6 +647,8 @@ public:
 	void ChangeState(int nState);
 	virtual void Attack();
 	virtual void InitAnimation();
+	void OnUpdateCallback();
+	void SetUpdatedContext(LPVOID* ppContext) { m_ppUpdatedContext = ppContext; }
 
 	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 
@@ -626,7 +667,7 @@ private:
 	const int nDragon_BreathAttack = 5;
 
 public:
-	CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext = 0, int nAnimationCount=0);
+	CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext = 0, int nPlace=0);
 	virtual ~CDragon();
 	virtual void Update(float fTimeElapsed);
 	virtual void Attack();
@@ -647,7 +688,7 @@ private:
 	const int nWolf_PoundAttack = 4;
 	const int nWolf_Howl = 8;
 public:
-	CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext = 0, int nAnimationCount=0);
+	CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext = 0, int nPlace = 0);
 	virtual ~CWolf();
 	virtual void Update(float fTimeElapsed);
 	virtual void Attack();
@@ -666,7 +707,7 @@ private:
 	const int nMetalon_Defend = 4;
 	const int nMetalon_Jump = 5;
 public:
-	CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void* pContext = 0, int nAnimationCount = 0);
+	CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext = 0, int nPlace = 0);
 	virtual ~CMetalon();
 	virtual void Update(float fTimeElapsed);
 	virtual void Attack();

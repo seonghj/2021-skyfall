@@ -8,6 +8,18 @@
 #include "Scene.h"
 #include "CPacket.h"
 
+struct CB_FRAMEWORK_INFO
+{
+	float					m_fCurrentTime;
+	float					m_fElapsedTime;
+};
+
+struct CB_FOG_INFO
+{
+	XMFLOAT4 gcFogColor;
+	XMFLOAT4 gvFogParameter; //(Mode, Start, Range, Density)
+};
+
 class CGameFramework
 {
 public:
@@ -26,6 +38,8 @@ public:
 	void CreateRenderTargetViews();
 	void CreateDepthStencilView();
 
+	void CreateShadowMap();
+
 	void ChangeSwapChainState();
 
     void BuildObjects();
@@ -35,17 +49,22 @@ public:
     void AnimateObjects();
     void FrameAdvance();
 
-	void OtherPlayerMove(int player_num, XMFLOAT3 pos);
+	void CreateShaderVariables();
+	void UpdateShaderVariables();
+	void ReleaseShaderVariables();
 
 	void WaitForGpuComplete();
 	void MoveToNextFrame();
 
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
+	void OnProcessingKeyboardMessageForLogIn(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	LRESULT CALLBACK OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 
 	void Set_m_pPacket(CPacket* t) { m_pPacket = t; };
 	void CheckCollision();
+
+
 
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
@@ -111,6 +130,15 @@ private:
 	CBowPlayer					*m_pBowPlayer;
 	C1HswordPlayer				*m_p1HswordPlayer;
 
-	bool						m_bMouseHold = false;
+	bool						m_bMouseHold = false; 
+	vector<vector<int>>			m_vMapArrange;
+
+	CShadowMap					*m_pShadowMap;
+
+	ID3D12Resource				*m_pd3dcbFrameworkInfo = NULL;
+	CB_FRAMEWORK_INFO			*m_pcbMappedFrameworkInfo = NULL;
+
+	ID3D12Resource				*m_pd3dcbFog = NULL;
+	CB_FOG_INFO					*m_pcbMappedFog = NULL;
 };
 

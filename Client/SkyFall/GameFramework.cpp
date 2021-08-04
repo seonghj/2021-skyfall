@@ -5,6 +5,11 @@
 #include "stdafx.h"
 #include "GameFramework.h"
 
+#define NO_FOG 0.0f
+#define LINEAR_FOG 1.0f
+#define EXP_FOG 2.0f
+#define EXP2_FOG 3.0f
+
 CGameFramework::CGameFramework()
 {
 	m_pdxgiFactory = NULL;
@@ -54,7 +59,7 @@ bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 	CreateRtvAndDsvDescriptorHeaps();
 	CreateSwapChain();
 	CreateDepthStencilView();
-
+	CreateShaderVariables();
 	CoInitialize(NULL);
 
 	BuildObjects();
@@ -204,7 +209,7 @@ void CGameFramework::CreateRtvAndDsvDescriptorHeaps()
 	hResult = m_pd3dDevice->CreateDescriptorHeap(&d3dDescriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&m_pd3dDsvDescriptorHeap);
 	m_nDsvDescriptorIncrementSize = m_pd3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
-	::gnCbvSrvDescriptorIncrementSize = m_pd3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	::gnCbvSrvUavDescriptorIncrementSize = m_pd3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
 void CGameFramework::CreateRenderTargetViews()
@@ -256,6 +261,10 @@ void CGameFramework::CreateDepthStencilView()
 
 	D3D12_CPU_DESCRIPTOR_HANDLE d3dDsvCPUDescriptorHandle = m_pd3dDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	m_pd3dDevice->CreateDepthStencilView(m_pd3dDepthStencilBuffer, &d3dDepthStencilViewDesc, d3dDsvCPUDescriptorHandle);
+}
+
+void CGameFramework::CreateShadowMap()
+{
 }
 
 void CGameFramework::ChangeSwapChainState()
@@ -354,7 +363,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			{
 				case VK_CONTROL:
 					m_bRotateEnable = false;
-					m_pCamera->Rotate(-m_fPitch, -m_fYaw, 0);
+					//m_pCamera->Rotate(-m_fPitch, -m_fYaw, 0);
 					m_fPitch = 0;
 					m_fYaw = 0;
 					break;
@@ -400,10 +409,31 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				m_pPlayer->SetPosition(XMFLOAT3(pos.x, 1000.0f, pos.z));
 				m_pPlayer->SetGravity(XMFLOAT3(0.0f, 0.0f, 0.0f));
 				break;
+			case VK_HOME:
+				m_pShadowMap->Plus();
+				break;
+			case VK_END:
+				m_pShadowMap->Minus();
+				break;
 			}
 			break;
 		default:
 			break;
+	}
+}
+
+void CGameFramework::OnProcessingKeyboardMessageForLogIn(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessageID)
+	{
+	case WM_KEYUP:
+
+		break;
+	case WM_KEYDOWN:
+
+		break;
+	default:
+		break;
 	}
 }
 
@@ -480,11 +510,26 @@ void CGameFramework::BuildObjects()
 	m_pd3dCommandList->Reset(m_pd3dCommandAllocator, NULL);
 
 	m_pScene = new CScene();
-	vector<int>test_arrange{ 0, 0, -1, 0, 1, 0 };
-	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList,test_arrange);
+
+	m_vMapArrange = { { -1, -1}, {0, -1}, {1, -1}, {-1, 0}, {0, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1} };
+	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList, m_vMapArrange);
+
+	m_pd3dCommandList->SetGraphicsRootSignature(m_pScene->GetGraphicsRootSignature());
+	CCamera* pCamera = new CCamera();
+	pCamera->SetPosition(m_pScene->m_pLights[0].m_xmf3Position);
+	pCamera->SetLookVector(m_pScene->m_pLights[0].m_xmf3Direction);
+	pCamera->RegenerateViewMatrix();
+	pCamera->GenerateProjectionMatrixOrtho(1.01f, 2000.0f, m_nWndClientWidth*2, m_nWndClientHeight*2);
+	pCamera->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
+
+	m_pShadowMap = new CShadowMap(m_nWndClientWidth, m_nWndClientHeight, pCamera);
+	m_pShadowMap->CreateShader(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature());
+	m_pShadowMap->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
+	m_pShadowMap->CreateShadowMap(m_pd3dDevice);
 
 	CLoadedModelInfo* pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_1Hsword.bin", NULL);
-	C1HswordPlayer* p1HswordPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pSwordModel, m_pScene->m_pTerrain);
+	C1HswordPlayer* p1HswordPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pSwordModel, (void**)m_pScene->m_ppTerrain);
+	
 	m_p1HswordPlayer = p1HswordPlayer;
 	if (pSwordModel) delete pSwordModel;
 
@@ -494,6 +539,7 @@ void CGameFramework::BuildObjects()
 	for (int i = 0; i < 20; ++i)
 		m_pScene->MovePlayer(i, XMFLOAT3(80.0f, 50.0f, 0.0f));
 
+	m_pPlayer->SetPlace(4);
 	m_pCamera = m_pPlayer->GetCamera();
 	m_pPacket->m_pScene = m_pScene;
 	m_pPacket->m_pFramework = this;
@@ -530,8 +576,14 @@ void CGameFramework::ReleaseObjects()
 	/*if (m_p1HswordPlayer) m_p1HswordPlayer->Release();
 	if (m_pBowPlayer) m_pBowPlayer->Release();*/
 
-	if (m_pScene) m_pScene->ReleaseObjects();
-	if (m_pScene) delete m_pScene;
+	if (m_pScene) {
+		m_pScene->ReleaseObjects();
+		delete m_pScene;
+	}
+	if (m_pShadowMap) {
+		m_pShadowMap->ReleaseObjects();
+		delete m_pShadowMap;
+	}
 }
 
 void CGameFramework::ProcessInput()
@@ -625,7 +677,8 @@ void CGameFramework::ProcessInput()
 				if (m_bRotateEnable) {
 					m_fPitch += cyDelta;
 					m_fYaw += cxDelta;
-					m_pCamera->Rotate(cyDelta, cxDelta, 0);
+					//m_pCamera->Rotate(cyDelta, cxDelta, 0);
+					m_pShadowMap->Rotate(cyDelta, cxDelta, 0);
 				}
 				else {
 					m_DegreeX = cyDelta;
@@ -676,17 +729,31 @@ void CGameFramework::AnimateObjects()
 	if (m_pScene) {
 		m_pScene->AnimateObjects(fTimeElapsed);
 
-		// 임시방편
-		if (m_pPlayer->GetPosition().x < 0) {
-			m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pForestTerrain);
+		//// 임시방편
+		//if (m_pPlayer->GetPosition().x < 0) {
+		//	m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pForestTerrain);
+		//}
+		//else if (m_pPlayer->GetPosition().x < 2048) {
+		//	m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pTerrain);
+		//}
+		//else {
+		//	m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pSnowTerrain);
+		//}
+		XMFLOAT3 pos = m_pPlayer->GetPosition();
+		int nPlace = m_pPlayer->GetPlace();
+		if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+			m_pPlayer->SetPlace(nPlace - 1);
 		}
-		else if (m_pPlayer->GetPosition().x < 2048) {
-			m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pTerrain);
-		}
-		else {
-			m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pSnowTerrain);
+		else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+			m_pPlayer->SetPlace(nPlace + 1);
 		}
 
+		if (pos.z < m_vMapArrange[nPlace][1] * 2048&&nPlace>2) {
+			m_pPlayer->SetPlace(nPlace - 3);
+		}
+		else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+			m_pPlayer->SetPlace(nPlace + 3);
+		}
 	}
 	/*if(m_p1HswordPlayer)
 		m_p1HswordPlayer->Animate(fTimeElapsed);
@@ -726,24 +793,45 @@ void CGameFramework::FrameAdvance()
 {
 	m_GameTimer.Tick(60.0f);
 
+
 	ProcessInput();
 	CheckCollision();
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
-	AnimateObjects();
-
+	CCamera* pCamera = m_pShadowMap->GetCamera();
+	pCamera->SetPosition(XMFLOAT3(m_pPlayer->GetPosition().x, 0, m_pPlayer->GetPosition().z));
+	pCamera->Move(XMFLOAT3(-500, 200, -500));
+	pCamera->RegenerateViewMatrix();
+    AnimateObjects();
 
 	HRESULT hResult = m_pd3dCommandAllocator->Reset();
 	hResult = m_pd3dCommandList->Reset(m_pd3dCommandAllocator, NULL);
 
-	D3D12_RESOURCE_BARRIER d3dResourceBarrier;
-	::ZeroMemory(&d3dResourceBarrier, sizeof(D3D12_RESOURCE_BARRIER));
-	d3dResourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	d3dResourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	d3dResourceBarrier.Transition.pResource = m_ppd3dSwapChainBackBuffers[m_nSwapChainBufferIndex];
-	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	d3dResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	m_pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);
+	m_pShadowMap->Set(m_pd3dCommandList);
+	m_pScene->Set(m_pd3dCommandList);
+
+	UpdateShaderVariables();
+	m_pShadowMap->UpdateShaderVariable(m_pd3dCommandList);
+
+	m_pShadowMap->Render(m_pd3dCommandList, NULL);
+	if (m_pScene) m_pScene->RenderShadow(m_pd3dCommandList, m_pShadowMap->GetCamera());
+	m_pPlayer->RenderShadow(m_pd3dCommandList, NULL);
+
+	//if (m_pBowPlayer) m_pBowPlayer->RenderShadow(m_pd3dCommandList, m_pCamera);
+	//if (m_p1HswordPlayer) m_p1HswordPlayer->RenderShadow(m_pd3dCommandList, m_pCamera);
+
+	m_pShadowMap->Reset(m_pd3dCommandList);
+
+	::SynchronizeResourceTransition(m_pd3dCommandList, m_ppd3dSwapChainBackBuffers[m_nSwapChainBufferIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	//D3D12_RESOURCE_BARRIER d3dResourceBarrier;
+	//::ZeroMemory(&d3dResourceBarrier, sizeof(D3D12_RESOURCE_BARRIER));
+	//d3dResourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	//d3dResourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	//d3dResourceBarrier.Transition.pResource = m_ppd3dSwapChainBackBuffers[m_nSwapChainBufferIndex];
+	//d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	//d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	//d3dResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	//m_pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);
+
 	D3D12_CPU_DESCRIPTOR_HANDLE d3dRtvCPUDescriptorHandle = m_pd3dRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	d3dRtvCPUDescriptorHandle.ptr += (m_nSwapChainBufferIndex * m_nRtvDescriptorIncrementSize);
 
@@ -755,6 +843,7 @@ void CGameFramework::FrameAdvance()
 
 	m_pd3dCommandList->OMSetRenderTargets(1, &d3dRtvCPUDescriptorHandle, TRUE, &d3dDsvCPUDescriptorHandle);
 
+	m_pShadowMap->UpdateShaderVariables(m_pd3dCommandList);
 	if (m_pScene) m_pScene->Render(m_pd3dCommandList, m_pCamera);
 
 #ifdef _WITH_PLAYER_TOP
@@ -764,10 +853,11 @@ void CGameFramework::FrameAdvance()
 	if (m_p1HswordPlayer) m_p1HswordPlayer->Render(m_pd3dCommandList, m_pCamera);*/
 
 
-	d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	::SynchronizeResourceTransition(m_pd3dCommandList, m_ppd3dSwapChainBackBuffers[m_nSwapChainBufferIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	/*d3dResourceBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	d3dResourceBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	d3dResourceBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	m_pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);
+	m_pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);*/
 
 	hResult = m_pd3dCommandList->Close();
 
@@ -855,7 +945,48 @@ void CGameFramework::FrameAdvance()
 	::SetWindowText(m_hWnd, m_pszFrameRate);
 }
 
-void CGameFramework::OtherPlayerMove(int player_num, XMFLOAT3 pos)
+void CGameFramework::CreateShaderVariables()
 {
+	//FRAMEWORK
+	UINT ncbElementBytes = ((sizeof(CB_FRAMEWORK_INFO) + 255) & ~255); //256의 배수
+	m_pd3dcbFrameworkInfo = ::CreateBufferResource(m_pd3dDevice, m_pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
 
+	m_pd3dcbFrameworkInfo->Map(0, NULL, (void**)&m_pcbMappedFrameworkInfo);
+
+	//FOG
+	ncbElementBytes = ((sizeof(CB_FOG_INFO) + 255) & ~255); //256의 배수
+	m_pd3dcbFog = ::CreateBufferResource(m_pd3dDevice, m_pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+
+	m_pd3dcbFog->Map(0, NULL, (void**)&m_pcbMappedFog);
+
+	m_pcbMappedFog->gcFogColor = XMFLOAT4(0.7f, 0.7f, 0.7f, 0.2f);
+	m_pcbMappedFog->gvFogParameter = XMFLOAT4(/*EXP_FOG*/NO_FOG, 1.f, 300.f, 0.001f);
+}
+
+void CGameFramework::UpdateShaderVariables()
+{
+	m_pcbMappedFrameworkInfo->m_fCurrentTime = m_GameTimer.GetTotalTime();
+	m_pcbMappedFrameworkInfo->m_fElapsedTime = m_GameTimer.GetTimeElapsed();
+
+	D3D12_GPU_VIRTUAL_ADDRESS d3dGpuVirtualAddress = m_pd3dcbFrameworkInfo->GetGPUVirtualAddress();
+	m_pd3dCommandList->SetGraphicsRootConstantBufferView(17, d3dGpuVirtualAddress);
+
+
+	D3D12_GPU_VIRTUAL_ADDRESS d3dcbFogGpuVirtualAddress = m_pd3dcbFog->GetGPUVirtualAddress();
+	m_pd3dCommandList->SetGraphicsRootConstantBufferView(18, d3dcbFogGpuVirtualAddress); //Fog
+
+}
+
+void CGameFramework::ReleaseShaderVariables()
+{
+	if (m_pd3dcbFrameworkInfo)
+	{
+		m_pd3dcbFrameworkInfo->Unmap(0, NULL);
+		m_pd3dcbFrameworkInfo->Release();
+	}
+	if (m_pd3dcbFog)
+	{
+		m_pd3dcbFog->Unmap(0, NULL);
+		m_pd3dcbFog->Release();
+	}
 }
