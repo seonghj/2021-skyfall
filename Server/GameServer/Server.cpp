@@ -449,10 +449,6 @@ void Server::send_add_monster(int key, int roomID, int to)
     p.dz = m_pBot->monsters[roomID][key].m_fRoll;
     p.MonsterType = m_pBot->monsters[roomID][key].type;
 
-     printf("%f, %f, %f\n", m_pBot->monsters[roomID][key].f3Position.load().x
-            , m_pBot->monsters[roomID][key].f3Position.load().y
-            , m_pBot->monsters[roomID][key].f3Position.load().z);
-
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
@@ -530,6 +526,21 @@ void Server::send_player_record(int key, int roomID
     p.armor = s.armor;
 
     send_packet(key, reinterpret_cast<char*>(&p), roomID);
+}
+
+void Server::send_map_packet(int to, int roomID)
+{
+    map_block_set p;
+    p.type = PacketType::SC_map_set;
+    p.size = sizeof(p);
+    p.key = roomID;
+    p.roomid = roomID;
+
+    for (int i = 0; i < MAX_MAP_BLOCK; i++){
+        p.block_type[i] = maps[roomID].Map_type[i];
+    }
+
+    send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
 void Server::game_end(int roomnum)
@@ -672,6 +683,8 @@ void Server::process_packet(int key, char* buf, int roomID)
         }
 
         sessions[roomID][client_key].state = 1;
+
+        send_map_packet(client_key, roomID);
 
         //m_pBot->monsters[roomID][0].SetPosition()
 

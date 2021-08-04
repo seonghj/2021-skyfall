@@ -294,9 +294,9 @@ void CPacket::Map_set(map_block_set* p)
     vector<vector<int>> m_vMapArrange = { { -1, -1}, {0, -1}, {1, -1}, {-1, 0}, {0, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1} };
 
     for (int i = 0; i < MAX_MAP_BLOCK; i++){
-        printf("%d\n", i);
         switch (p->block_type[i]) {
         case Desert: {
+            //printf("%d\n", Desert_count);
             m_pScene->GetTerrain(Desert_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
             if (Desert_count >= 6)  m_pScene->GetTerrain(Desert_count)->MoveUp(125.f);
             m_pMap->GetMap(Desert_count * 3)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
@@ -306,6 +306,7 @@ void CPacket::Map_set(map_block_set* p)
             break;
         }
         case Forest: {
+            //printf("%d\n", Forest_count);
             m_pScene->GetTerrain(Forest_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
             if (Forest_count >= 6)  m_pScene->GetTerrain(Forest_count)->MoveUp(125.f);
             m_pMap->GetMap(Forest_count * 3)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
@@ -315,6 +316,7 @@ void CPacket::Map_set(map_block_set* p)
             break;
         }
         case Snowy_field: {
+           // printf("%d\n", Snowy_count);
             m_pScene->GetTerrain(Snowy_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
             if (Snowy_count >= 6)  m_pScene->GetTerrain(Snowy_count)->MoveUp(125.f);
             m_pMap->GetMap((Snowy_count * 3))->SetPosition(2048.0f * m_vMapArrange[i][0], 60.0f, 2048.0f * m_vMapArrange[i][1]);

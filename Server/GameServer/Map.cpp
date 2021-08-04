@@ -12,6 +12,25 @@ void Map::init_Map(Server* s, Timer* t)
 	over.type = 1;
 	over.roomID = roomnum;
 
+	std::random_device rd;
+	std::mt19937_64 gen(rd());
+	std::uniform_int_distribution<int> dis1(0, 2);
+	int num_count[3] = { 0 };
+
+	for (int i = 0; i < MAX_MAP_BLOCK; i++)
+	{
+		while (1)
+		{
+			int n = rand() % 3;
+			if (num_count[n] < 3)
+			{
+				num_count[n]++;
+				Map_type[i] = dis1(gen);
+				break;
+			}
+		}
+	}
+
 	// 맵생성 이벤트 전달
 	map_block_set p;
 	p.type = EventType::Mapset;
@@ -35,30 +54,10 @@ void Map::Set_map()
 	int num_count[3] = { 0 };
 	int n;
 
-	map_block_set p;
-	p.type = PacketType::SC_map_set;
-	p.size = sizeof(p);
-	p.key = roomnum;
-
 	std::random_device rd;
 	std::mt19937_64 gen(rd());
-	std::uniform_int_distribution<int> dis1(0, 2);
 	std::uniform_int_distribution<int> dis2(1000, 1100);
 
-	for (int i = 0; i < MAX_MAP_BLOCK; i++)
-	{
-		while (1)
-		{
-			int n = rand() % 3;
-			if (num_count[n] < 3)
-			{
-				num_count[n]++;
-				Map_type[i] = dis1(gen);
-				p.block_type[i] = Map_type[i];
-				break;
-			}
-		}
-	}
 	for (int i = 0; i < 9; i++)
 	{
 		atm[i] = dis2(gen);
@@ -68,9 +67,6 @@ void Map::Set_map()
 			atm[i] += 100;
 		isMap_block[i] = TRUE;
 	}
-	over.dataBuffer.len = sizeof(p);
-	strcpy_s(over.messageBuffer, reinterpret_cast<char*>(&p));
-	m_pServer->send_packet_to_allplayers(p.key, reinterpret_cast<char*>(&p));
 
 	ismove = true;
 	Set_wind();
