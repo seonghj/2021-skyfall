@@ -150,17 +150,19 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 {
 	CLoadedModelInfo* pSwordModel = NULL;
 	CLoadedModelInfo* pBowModel = NULL;
-	pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);;
-	pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+	CBullet::m_pArrow = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Arrow.bin", NULL);
 	for (int i = 0; i < MAX_PLAYER; ++i) {
+		pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);;
+		pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
 		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pSwordModel, (void**)m_ppTerrain);
 		m_mBowPlayer[i] = new CBowPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBowModel, (void**)m_ppTerrain);
 		m_mPlayer[i] = m_m1HswordPlayer[i];
-		m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, 124.0f, 650.0f));
-		MovePlayer(i, XMFLOAT3(80.0f, 0.0f, 0.0f));
+		//m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, 124.0f, 650.0f));
+		//MovePlayer(i, XMFLOAT3(80.0f, 0.0f, 0.0f));
 	}
 	if (pSwordModel) delete pSwordModel;
 	if (pBowModel) delete pBowModel;
+	//if (CBullet::m_pArrow) delete CBullet::m_pArrow;
 }
 
 void CScene::MovePlayer(int player_num, XMFLOAT3 pos)

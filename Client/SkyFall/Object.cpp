@@ -10,6 +10,7 @@
 
 CGameObject** CMap::m_ppObjectInstance;
 int CMap::m_nObjectInstance;
+CGameObject* CBullet::m_pArrow;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 CTexture::CTexture(int nTextures, UINT nTextureType, int nSamplers)
@@ -2520,7 +2521,7 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 {
 	CLoadedModelInfo* pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
 
-	SetChild(pMetalonModel->m_pModelRootObject, true);
+	SetChild(pMetalonModel->m_pModelRootObject, false);
 
 	m_nAnimations = nAnimationTracks;
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMetalonModel);
