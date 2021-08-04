@@ -148,11 +148,11 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	CLoadedModelInfo* pSwordModel;
-	CLoadedModelInfo* pBowModel;
-	for (int i = 0; i < 20; ++i) {
-		pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
-		pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+	CLoadedModelInfo* pSwordModel = NULL;
+	CLoadedModelInfo* pBowModel = NULL;
+	pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);;
+	pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+	for (int i = 0; i < MAX_PLAYER; ++i) {
 		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pSwordModel, (void**)m_ppTerrain);
 		m_mBowPlayer[i] = new CBowPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBowModel, (void**)m_ppTerrain);
 		m_mPlayer[i] = m_m1HswordPlayer[i];
@@ -541,6 +541,17 @@ void CScene::ReleaseUploadBuffers()
 
 	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_nGameObjects; i++) m_ppGameObjects[i]->ReleaseUploadBuffers();
+
+	for (int i = 0; i < MAX_PLAYER; i++) {
+		if (m_mBowPlayer[i]) {
+			m_mBowPlayer[i]->ReleaseUploadBuffers();
+		}
+	}
+	for (int i = 0; i < MAX_PLAYER; i++) {
+		if (m_m1HswordPlayer[i]) {
+			m_m1HswordPlayer[i]->ReleaseUploadBuffers();
+		}
+	}
 }
 
 
@@ -847,8 +858,10 @@ void CScene::AnimateObjects(float fTimeElapsed)
 	m_fElapsedTime = fTimeElapsed;
 
 	for (int i = 0; i < MAX_PLAYER; ++i) {
-		m_mPlayer[i]->Animate(fTimeElapsed);
-		m_mPlayer[i]->UpdateTransform();
+		if (m_mPlayer[i]) {
+			m_mPlayer[i]->Animate(fTimeElapsed);
+			m_mPlayer[i]->UpdateTransform();
+		}
 	}
 
 	for (int i = 0; i < m_nGameObjects; i++)
