@@ -157,7 +157,7 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		m_mBowPlayer[i] = new CBowPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBowModel, (void**)m_ppTerrain);
 		m_mPlayer[i] = m_m1HswordPlayer[i];
 		m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, 124.0f, 650.0f));
-		MovePlayer(i, XMFLOAT3(80.0f, 50.0f, 0.0f));
+		MovePlayer(i, XMFLOAT3(80.0f, 0.0f, 0.0f));
 	}
 	if (pSwordModel) delete pSwordModel;
 	if (pBowModel) delete pBowModel;
@@ -559,10 +559,13 @@ void CScene::CheckCollision()
 {
 	for (int i = 0; i < m_nGameObjects; ++i) {
 		if (m_ppGameObjects[i]->GetHp() > 0) {
+
 			if (_isnanf(m_ppGameObjects[i]->GetPosition().x)
 				|| _isnanf(m_ppGameObjects[i]->GetPosition().y)
-				|| _isnanf(m_ppGameObjects[i]->GetPosition().z))
+				|| _isnanf(m_ppGameObjects[i]->GetPosition().z)){ 
 				continue;
+			}
+			
 			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
 			//if (i == 0) {
 			//	/*if (m_ppGameObjects[i]->GetBehaviorActivate() == true)

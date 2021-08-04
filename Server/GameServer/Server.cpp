@@ -20,7 +20,7 @@ void SESSION::init()
     key = -1;
 
     state = 0;
-    f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+    f3Position = DirectX::XMFLOAT3(0.0f, 124.0f, 0.0f);
     m_fPitch = 0;
     m_fYaw = 0;
 
@@ -105,6 +105,12 @@ int Server::SetroomID()
             m_pBot->monsters[cnt][0].state = 1;
             m_pBot->monsters[cnt][0].type = MonsterType::Dragon;
             m_pBot->monsters[cnt][0].Rotate(-90.0f, 20.0f, 0.0f);
+
+            /*m_pBot->monsters[cnt][1].SetPosition(400, 197.757935, 400);
+            m_pBot->monsters[cnt][1].state = 1;
+            m_pBot->monsters[cnt][1].type = MonsterType::Wolf;
+            m_pBot->monsters[cnt][1].Rotate(-90.0f, -40.0f, 0.0f);*/
+
             m_pBot->RunBot(cnt);
 
             printf("create game room - %d\n", cnt);
@@ -785,15 +791,15 @@ void Server::process_packet(int key, char* buf, int roomID)
         }
         m_pBot->monsters[roomID][p->key].recv_pos = TRUE;
         m_pBot->monsters[roomID][p->key].SetPosition(p->Position.x, p->Position.y, p->Position.z);
-       /* printf("%f, %f, %f\n", m_pBot->monsters[roomID][p->key].f3Position.load().x
+        printf("%f, %f, %f\n", m_pBot->monsters[roomID][p->key].f3Position.load().x
             , m_pBot->monsters[roomID][p->key].f3Position.load().y
-            , m_pBot->monsters[roomID][p->key].f3Position.load().z);*/
+            , m_pBot->monsters[roomID][p->key].f3Position.load().z);
         break;
     }
     case PacketType::CS_monster_attack: {
         mon_attack_packet* p = reinterpret_cast<mon_attack_packet*>(buf);
 
-        std::cout << "target: " << p->target << " key: " << p->key << std::endl;
+        //std::cout << "target: " << p->target << " key: " << p->key << std::endl;
         break;
     }
     }

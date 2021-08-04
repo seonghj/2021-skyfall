@@ -1090,6 +1090,15 @@ void CGameObject::MoveForward(float fDistance)
 
 void CGameObject::Move(const XMFLOAT3& vDirection, float fSpeed)
 {
+	float x = m_xmf4x4World._41 + vDirection.x * fSpeed;
+	float y = m_xmf4x4World._42 + vDirection.y * fSpeed;
+	float z = m_xmf4x4World._43 + vDirection.z * fSpeed;
+
+	if (_isnanf(x) || _isnanf(y) || _isnanf(z)) {
+		std::cout << "dsadas";
+		return;
+	}
+
 	SetPosition(m_xmf4x4World._41 + vDirection.x * fSpeed,
 		m_xmf4x4World._42 + vDirection.y * fSpeed, m_xmf4x4World._43 +
 		vDirection.z * fSpeed);
