@@ -20,6 +20,8 @@ TCHAR							szWindowClass[MAX_LOADSTRING];
 CGameFramework					gGameFramework;
 CPacket*						gCPacket = new CPacket;
 
+wchar_t id[10], address[20];
+
 std::thread						Connect_thread;
 
 ATOM MyRegisterClass(HINSTANCE hInstance);
@@ -53,6 +55,17 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 	Connect_thread = std::thread(&CPacket::GameConnect, gCPacket);
 	gGameFramework.Set_m_pPacket(gCPacket);
+
+	size_t size = 0;
+	char str[50];
+
+	wcstombs_s(&size, str, sizeof(str), address, sizeof(address));
+	str[size] = '\0';
+	gCPacket->Set_IP(str);
+
+	wcstombs_s(&size, str, sizeof(str), id, sizeof(id));
+	str[size] = '\0';
+	gCPacket->Set_UserID(str);
 
 	while (1)
 	{
@@ -180,7 +193,6 @@ INT_PTR CALLBACK Login(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
 		{
-			wchar_t id[10], address[20];
 			GetDlgItemText(hDlg, IDC_EDIT_ID,id,10);
 			GetDlgItemText(hDlg, IDC_EDIT_ADDRESS,address,20);
 			::EndDialog(hDlg, LOWORD(wParam));

@@ -17,6 +17,7 @@ public:
 	SOCKET sock;
 	char Sendbuf[BUFSIZE];
 	char Recvbuf[BUFSIZE];
+	char ipaddr[50];
 	DWORD recvbytes;
 	DWORD sendbytes;
 	WSABUF wsabuf;
@@ -59,6 +60,13 @@ public:
 	std::thread Recv_thread;
 
 	bool canmove = false;
+
+	void Set_UserID(char* ID) { strcpy_s(userID, ID); 
+	cout << userID << endl;
+	}
+	void Set_IP(char* IP) { strcpy_s(ipaddr, IP); 
+	cout << ipaddr << endl;
+	}
 
 private:
 	int client_key = INVALIDID;

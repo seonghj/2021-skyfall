@@ -808,7 +808,6 @@ void CPacket::Set_currentfps(unsigned long FrameRate)
 void CPacket::Login()
 {
     int retval = 0;
-    char ipaddr[50];
 
     /*cout << "IP를 입력하시오: ";
     cin >> ipaddr;
