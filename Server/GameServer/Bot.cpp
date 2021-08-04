@@ -165,11 +165,11 @@ void Bot::CheckBehavior(int roomID)
 				if (range <= distance && rotation <= 5) {
 
 					player.TakeDamage(mon.att);
-					//m_pServer->send_monster_attack(mon, cross, rotate_degree, player.key);
+					m_pServer->send_monster_attack(mon, cross, rotate_degree, player.key);
 					
 				}
 				else if (range > distance) {
-					//m_pServer->send_monster_pos(mon, subtract, cross, rotate_degree);
+					m_pServer->send_monster_pos(mon, subtract, cross, rotate_degree);
 				}
 			}
 		}
