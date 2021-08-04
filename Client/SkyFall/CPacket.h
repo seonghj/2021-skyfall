@@ -42,7 +42,7 @@ public:
 	void Send_login_packet(char* id);
 	void Send_swap_weapon_packet(PlayerType weapon);
 	void Swap_weapon(int key, PlayerType weapon);
-	void Map_set(int type, int pos);
+	void Map_set(player_move_packet& p);
 	void CheckCollision(CMonster* mon);
 	int MonsterAttackCheck(CMonster* mon);
 
@@ -75,6 +75,9 @@ private:
 	unsigned long currentfps = 1;
 
 	bool isLogin = false;
+
+	XMFLOAT3 Mon_pos_before_error[50];
+
 	//static DWORD WINAPI ServerConnect(LPVOID arg);
 };
 

@@ -292,12 +292,8 @@ void CPlayer::CheckCollision(CGameObject* pObject)
 			cout << "damage : "  << pObject->GetAtkStat() << endl;
 		}
 
-		XMFLOAT3 p = m_xmf3Position;
-		XMFLOAT3 o = pObject->GetPosition();
-
-		XMFLOAT3 d = Vector3::Subtract(p, o);
+		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
 		Move(Vector3::ScalarProduct(d, 50.f, true), true);
-
 
 		// 여기는 플레이어가 몬스터한테 맞는 부분
 		//pObject->SetBehaviorActivate(true);

@@ -285,163 +285,13 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
     }
 }
 
-void CPacket::Map_set(int type, int pos)
+void CPacket::Map_set(player_move_packet& p)
 {
-    switch (pos) {
-    case 0: {
-        switch (type) {
-        case terrain::Forest: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Desert: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Snowy_field: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        }
-        break;
-    }
-    case 1: {
-        switch (type) {
-        case terrain::Forest: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Desert: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Snowy_field: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        }
-        break;
-    }
-    case 2: {
-        switch (type) {
-        case terrain::Forest: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Desert: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Snowy_field: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        }
-        break;
-    }
-    case 3: {
-        switch (type) {
-        case terrain::Forest: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Desert: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Snowy_field: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        }
-        break;
-    }
-    case 4: {
-        switch (type) {
-        case terrain::Forest: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Desert: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Snowy_field: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        }
-        break;
-    }
-    case 5: {
-        switch (type) {
-        case terrain::Forest: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Desert: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Snowy_field: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        }
-        break;
-    }
-    case 6: {
-        switch (type) {
-        case terrain::Forest: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Desert: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Snowy_field: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        }
-        break;
-    }
-    case 7: {
-        switch (type) {
-        case terrain::Forest: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Desert: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Snowy_field: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        }
-        break;
-    }
-    case 8: {
-        switch (type) {
-        case terrain::Forest: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Desert: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        case terrain::Snowy_field: {
-            m_pScene->m_pTerrain->SetPosition(2048.0f * -1, 0.0f, 2048.0f * -1);
-            break;
-        }
-        }
-        break;
-    }
-    }
+    int Forest_count = 0;
+    int Desert_count = 0;
+    int Snowy_count = 0;
+
+    
 }
 
 void CPacket::CheckCollision(CMonster * mon)
@@ -725,8 +575,8 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_map_set: {
         map_block_set* p = reinterpret_cast<map_block_set*>(buf);
-        /*for (int i = 0; i < MAX_MAP_BLOCK; i++)
-            Map_set(p->block_type[i], i);*/
+        for (int i = 0; i < MAX_MAP_BLOCK; i++)
+            Map_set(p->block_type[i], i);
         break;
     }
     case PacketType::SC_bot_add: {
@@ -739,21 +589,27 @@ void CPacket::ProcessPacket(char* buf)
         mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
         int key = p->key;
 
-        XMFLOAT3 BeforePos = m_pScene->m_ppGameObjects[key]->GetPosition();
-
         m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
-        CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_pTerrain;
-        p->Position.y = pTerrain->GetHeight(300.f, 300.f) + m_pScene->m_ppGameObjects[key]->m_AABBExtentsY - m_pScene->m_ppGameObjects[key]->GetPosition().y;
+
+        CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain;
+        //p->Position.y = pTerrain->GetHeight(p->Position.x, p->Position.z) + m_pScene->m_ppGameObjects[key]->m_AABBExtentsY - m_pScene->m_ppGameObjects[key]->GetPosition().y;
         m_pScene->m_ppGameObjects[key]->Move(p->Position, 1.f);
         //CheckCollision(m_pScene->m_ppGameObjects[key]);
 
         p->type = CS_monster_pos;
         p->Position = m_pScene->m_ppGameObjects[key]->GetPosition();
 
+        if (_isnanf(p->Position.x) || _isnanf(p->Position.y) || _isnanf(p->Position.z)) {
+            //m_pScene->m_ppGameObjects[key]->SetPosition(Mon_pos_before_error[key]);
+            break;
+        }
+
+        //Mon_pos_before_error[key] = m_pScene->m_ppGameObjects[key]->GetPosition();
+
         SendPacket(reinterpret_cast<char*>(p));
-        /*printf("%f, %f, %f\n", m_pScene->m_ppGameObjects[key]->GetPosition().x
+        printf("%f, %f, %f\n", m_pScene->m_ppGameObjects[key]->GetPosition().x
             , m_pScene->m_ppGameObjects[key]->GetPosition().y
-            , m_pScene->m_ppGameObjects[key]->GetPosition().z);*/
+            , m_pScene->m_ppGameObjects[key]->GetPosition().z);
         break;
     }
     case PacketType::SC_monster_attack: {
@@ -809,13 +665,6 @@ void CPacket::Login()
 {
     int retval = 0;
 
-    /*cout << "IP를 입력하시오: ";
-    cin >> ipaddr;
-
-    char ID[50];
-
-    cout << "ID를 입력하시오: ";
-    cin >> ID;*/
     std::random_device rd;
     std::mt19937_64 gen(rd());
     std::uniform_int_distribution<int> dis(0, 5000);

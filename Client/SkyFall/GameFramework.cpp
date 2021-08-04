@@ -884,9 +884,6 @@ void CGameFramework::FrameAdvance()
 	//	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
 	MoveToNextFrame();
 
-	m_pScene->m_ppGameObjects[0]->SetPosition(m_pScene->m_ppGameObjects[0]->GetPosition().x
-		, m_pScene->m_ppGameObjects[0]->GetPosition().y, m_pScene->m_ppGameObjects[0]->GetPosition().z);
-
 	XMFLOAT3 NowPosition = m_pPlayer->GetPosition();
 	if (m_BeforePosition.x != NowPosition.x || m_BeforePosition.y != NowPosition.y || m_BeforePosition.z != NowPosition.z
 		|| m_DegreeX != 0.0f || m_DegreeY != 0.0f)

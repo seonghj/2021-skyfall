@@ -72,6 +72,8 @@ public:
 
 	CTerrainPlayer						*m_pPlayer = NULL;
 
+	CHeightMapTerrain* GetTerrain(int i) { return m_ppTerrain[i]; }
+
 protected:
 	ID3D12RootSignature					*m_pd3dGraphicsRootSignature = NULL;
 
