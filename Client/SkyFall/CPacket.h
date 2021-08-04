@@ -42,7 +42,7 @@ public:
 	void Send_login_packet(char* id);
 	void Send_swap_weapon_packet(PlayerType weapon);
 	void Swap_weapon(int key, PlayerType weapon);
-	void Map_set(player_move_packet& p);
+	void Map_set(map_block_set* p);
 	void CheckCollision(CMonster* mon);
 	int MonsterAttackCheck(CMonster* mon);
 

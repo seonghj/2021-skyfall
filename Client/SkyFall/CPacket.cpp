@@ -285,13 +285,45 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
     }
 }
 
-void CPacket::Map_set(player_move_packet& p)
+void CPacket::Map_set(map_block_set* p)
 {
-    int Forest_count = 0;
+    int Forest_count = 3;
     int Desert_count = 0;
-    int Snowy_count = 0;
+    int Snowy_count = 6;
 
-    
+    vector<vector<int>> m_vMapArrange = { { -1, -1}, {0, -1}, {1, -1}, {-1, 0}, {0, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1} };
+
+    for (int i = 0; i < MAX_MAP_BLOCK; i++){
+        switch (p->block_type[i]) {
+        case Forest: {
+            m_pScene->GetTerrain(Forest_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            if (i >= 6)  m_pScene->GetTerrain(Forest_count)->MoveUp(125.f);
+            m_pMap->GetMap(Forest_count * 3)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            m_pMap->GetMap((Forest_count * 3) + 1)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            m_pMap->GetMap((Forest_count * 3) + 2)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            ++Forest_count;
+            break;
+        }
+        case Desert: {
+            m_pScene->GetTerrain(Desert_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            if (i >= 6)  m_pScene->GetTerrain(Desert_count)->MoveUp(125.f);
+            m_pMap->GetMap(Desert_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            m_pMap->GetMap(Desert_count + 1)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            m_pMap->GetMap(Desert_count + 2)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            ++Desert_count;
+            break;
+        }
+        case Snowy_field: {
+            m_pScene->GetTerrain(Snowy_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            if (i >= 6)  m_pScene->GetTerrain(Snowy_count)->MoveUp(125.f);
+            m_pMap->GetMap((Snowy_count * 3))->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            m_pMap->GetMap((Snowy_count * 3) + 1)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            m_pMap->GetMap((Snowy_count * 3) + 2)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
+            ++Snowy_count;
+            break;
+        }
+        }
+    }
 }
 
 void CPacket::CheckCollision(CMonster * mon)
@@ -575,8 +607,7 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_map_set: {
         map_block_set* p = reinterpret_cast<map_block_set*>(buf);
-        for (int i = 0; i < MAX_MAP_BLOCK; i++)
-            Map_set(p->block_type[i], i);
+        //Map_set(p);
         break;
     }
     case PacketType::SC_bot_add: {
@@ -590,9 +621,13 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
 
         m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
-
-        CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain;
-        //p->Position.y = pTerrain->GetHeight(p->Position.x, p->Position.z) + m_pScene->m_ppGameObjects[key]->m_AABBExtentsY - m_pScene->m_ppGameObjects[key]->GetPosition().y;
+        CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
+        XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
+        XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
+        bool bReverseQuad = (((int)xmf3MonsterPosition.z % 2) != 0);
+        p->Position.y = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
+        //printf("x : %f, y : %f z : %f\n", p->Position.x, p->Position.y, p->Position.z);
+        //p->Position.y = pTerrain->GetHeight(300.f, 300.f) + m_pScene->m_ppGameObjects[key]->m_AABBExtentsY - m_pScene->m_ppGameObjects[key]->GetPosition().y;
         m_pScene->m_ppGameObjects[key]->Move(p->Position, 1.f);
         //CheckCollision(m_pScene->m_ppGameObjects[key]);
 

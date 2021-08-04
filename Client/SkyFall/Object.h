@@ -649,7 +649,7 @@ public:
 	virtual void InitAnimation();
 	void OnUpdateCallback();
 	void SetUpdatedContext(LPVOID* ppContext) { m_ppUpdatedContext = ppContext; }
-
+	int	 GetPlace() { return (m_nPlace); }
 	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 
 	bool m_iReady = false;
