@@ -51,6 +51,17 @@ public:
 	~CGeometryHpBarVertex() { }
 };
 
+class CUIVertex : public CVertex
+{
+public:
+	XMFLOAT2						m_xmf2TexCoord;
+
+public:
+	CUIVertex() {}
+	CUIVertex(float x, float y, float z, XMFLOAT2 xmf2TexCoord = XMFLOAT2(5.0f, 10.0f)) { m_xmf3Position = XMFLOAT3(x, y, z); m_xmf2TexCoord = xmf2TexCoord; }
+	CUIVertex(XMFLOAT3 xmf3Position, XMFLOAT2 xmf2TexCoord = XMFLOAT2(5.0f, 10.0f)) { m_xmf3Position = xmf3Position; m_xmf2TexCoord = xmf2TexCoord; }
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
@@ -309,4 +320,15 @@ protected:
 public:
 	CGeometryBillboardMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGeometryHpBarVertex* pGeometryHpBarVertices, UINT nGeometryHpBarVertices);
 	virtual ~CGeometryBillboardMesh();
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+class CUIMesh : public CMesh
+{
+public:
+	CUIMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float left, float top, float right, float bottom );
+	virtual ~CUIMesh();
+
 };

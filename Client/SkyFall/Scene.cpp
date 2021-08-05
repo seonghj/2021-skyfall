@@ -137,6 +137,10 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_ppGameObjects[3] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, (void**)m_ppTerrain,4);
 	if (pMetalonModel)delete pMetalonModel;
 
+
+	m_nUIs = 1;
+	m_ppUIObjects = new CUIObject * [m_nUIs];
+	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Water.dds", 0.1, 0.1, 0.5, 0.5);
 	
 
 	//m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
@@ -331,7 +335,7 @@ ID3D12RootSignature *CScene::CreateGraphicsRootSignature(ID3D12Device *pd3dDevic
 
 	pd3dDescriptorRanges[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	pd3dDescriptorRanges[4].NumDescriptors = 1;
-	pd3dDescriptorRanges[4].BaseShaderRegister = 10; //t10: gtxtEmissionTexture
+	pd3dDescriptorRanges[4].BaseShaderRegister = 3; //t3: gtxtUI
 	pd3dDescriptorRanges[4].RegisterSpace = 0;
 	pd3dDescriptorRanges[4].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
@@ -569,6 +573,10 @@ void CScene::ReleaseUploadBuffers()
 	for (auto p : m_mPlayer) {
 		p.second->ReleaseUploadBuffers();
 	}
+	for (int i = 0; i < m_nUIs; ++i)
+		if (m_ppUIObjects[i]) m_ppUIObjects[i]->ReleaseUploadBuffers();
+
+	
 }
 
 
@@ -931,6 +939,9 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	//}
 
 	for (int i = 0; i < m_nShaders; i++) if (m_ppShaders[i]) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
+
+	for (int i = 0; i < m_nUIs; ++i)
+		if(m_ppUIObjects[i]) m_ppUIObjects[i]->Render(pd3dCommandList, pCamera);
 }
 
 void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)

@@ -2696,3 +2696,38 @@ void CMonster::OnUpdateCallback()
 		SetGround(false);
 	}*/
 }
+
+
+//void CUIObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+//{
+//}
+
+CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName,float l, float t, float r, float b)
+{
+	CUIMesh* pMesh = new CUIMesh(pd3dDevice, pd3dCommandList, l, t, r, b);
+	SetMesh(pMesh);
+
+	CTexture* pUITexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
+	pUITexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrTextureName, 0);
+
+	CScene::CreateShaderResourceViews(pd3dDevice, pUITexture, false);
+	pUITexture->SetGraphicsSrvRootArgument(0, 7, 0);
+
+	CUIShader* pUIShader = new CUIShader();
+	pUIShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+	pUIShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	CMaterial* pTerrainMaterial = new CMaterial(1);
+	pTerrainMaterial->SetTexture(pUITexture, 0);
+	pTerrainMaterial->SetShader(pUIShader);
+
+	m_nMaterials = 1;
+	m_ppMaterials = new CMaterial * [m_nMaterials];
+	m_ppMaterials[0] = NULL;
+
+	SetMaterial(0, pTerrainMaterial);
+}
+
+CUIObject::~CUIObject()
+{
+}
