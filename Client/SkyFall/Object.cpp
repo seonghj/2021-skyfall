@@ -1090,15 +1090,6 @@ void CGameObject::MoveForward(float fDistance)
 
 void CGameObject::Move(const XMFLOAT3& vDirection, float fSpeed)
 {
-	float x = m_xmf4x4World._41 + vDirection.x * fSpeed;
-	float y = m_xmf4x4World._42 + vDirection.y * fSpeed;
-	float z = m_xmf4x4World._43 + vDirection.z * fSpeed;
-
-	if (_isnanf(x) || _isnanf(y) || _isnanf(z)) {
-		std::cout << "dsadas";
-		return;
-	}
-
 	SetPosition(m_xmf4x4World._41 + vDirection.x * fSpeed,
 		m_xmf4x4World._42 + vDirection.y * fSpeed, m_xmf4x4World._43 +
 		vDirection.z * fSpeed);
@@ -2360,6 +2351,7 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 
 	OnUpdateCallback();
 	MoveUp(xmf3Extents.y * 0.2f);
+	m_fHeight = xmf3Extents.y * 0.2f;
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, 20.0f, 0.0f);
 	//printf(" x : %f / y : %f / z : %f\n", GetPosition().x, GetPosition().y, GetPosition().z);
