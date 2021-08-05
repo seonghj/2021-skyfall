@@ -607,7 +607,7 @@ void CScene::CheckBehavior(CMonster *pMonster)
 			return;
 		}
 		else if (range > distance) {
-			pMonster->Move(subtract, 2.f);
+			pMonster->Move(subtract, 3.f);
 		}
 		// 외적에 따라 가까운 방향으로 회전하도록
 		XMFLOAT3 cross = Vector3::CrossProduct(subtract, look);
