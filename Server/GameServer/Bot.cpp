@@ -170,6 +170,10 @@ void Bot::CheckBehavior(int roomID)
 				}
 				else if (range > distance) {
 					m_pServer->send_monster_pos(mon, subtract, cross, rotate_degree);
+					printf("%f, %f, %f\n", subtract.x
+						, subtract.y
+						, subtract.z);
+
 				}
 			}
 		}

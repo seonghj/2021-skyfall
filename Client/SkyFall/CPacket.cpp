@@ -624,7 +624,6 @@ void CPacket::ProcessPacket(char* buf)
         mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
         int key = p->key;
 
-        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
         CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
         XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
         XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
@@ -633,12 +632,11 @@ void CPacket::ProcessPacket(char* buf)
         bool bReverseQuad = ((z % 2) != 0);
         float fHeight = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
         printf("Height  = %f\n", m_pScene->m_ppGameObjects[key]->m_fHeight);
-        printf("p->Position = %f / fHeight = %f / monster.y = %f\n\n", p->Position.y,fHeight,m_pScene->m_ppGameObjects[key]->GetPosition().y);
-        //printf("x : %f, y : %f z : %f\n", p->Position.x, p->Position.y, p->Position.z);
-        //p->Position.y = pTerrain->GetHeight(300.f, 300.f) + m_pScene->m_ppGameObjects[key]->m_AABBExtentsY - m_pScene->m_ppGameObjects[key]->GetPosition().y;
-        m_pScene->m_ppGameObjects[key]->MoveUp(fHeight - p->Position.y + m_pScene->m_ppGameObjects[key]->m_fHeight);
-        p->Position.y = 0;
-        m_pScene->m_ppGameObjects[key]->Move(p->Position,0.5f);
+        printf("p->Position = %f / fHeight = %f / monster.y = %f\n\n", p->Position.y, fHeight,m_pScene->m_ppGameObjects[key]->GetPosition().y);
+        
+        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
+        p->Position.y = (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight) - m_pScene->m_ppGameObjects[key]->GetPosition().y;
+        m_pScene->m_ppGameObjects[key]->Move(p->Position, 1.0f);
         //CheckCollision(m_pScene->m_ppGameObjects[key]);
 
         p->type = CS_monster_pos;
