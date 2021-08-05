@@ -76,7 +76,6 @@ private:
 
 	bool isLogin = false;
 
-	XMFLOAT3 Mon_pos_before_error[50];
 
 	//static DWORD WINAPI ServerConnect(LPVOID arg);
 };

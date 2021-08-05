@@ -548,13 +548,6 @@ void CScene::CheckCollision()
 {
 	for (int i = 0; i < m_nGameObjects; ++i) {
 		if (m_ppGameObjects[i]->GetHp() > 0) {
-
-			if (_isnanf(m_ppGameObjects[i]->GetPosition().x)
-				|| _isnanf(m_ppGameObjects[i]->GetPosition().y)
-				|| _isnanf(m_ppGameObjects[i]->GetPosition().z)){ 
-				continue;
-			}
-			
 			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
 			//if (i == 0) {
 			//	/*if (m_ppGameObjects[i]->GetBehaviorActivate() == true)

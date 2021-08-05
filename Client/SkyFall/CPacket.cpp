@@ -631,8 +631,6 @@ void CPacket::ProcessPacket(char* buf)
         int z = (int)(xmf3MonsterPosition.z / xmf3Scale.z);
         bool bReverseQuad = ((z % 2) != 0);
         float fHeight = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
-        printf("Height  = %f\n", m_pScene->m_ppGameObjects[key]->m_fHeight);
-        printf("p->Position = %f / fHeight = %f / monster.y = %f\n\n", p->Position.y, fHeight,m_pScene->m_ppGameObjects[key]->GetPosition().y);
         
         m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
         p->Position.y = (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight) - m_pScene->m_ppGameObjects[key]->GetPosition().y;
@@ -641,13 +639,6 @@ void CPacket::ProcessPacket(char* buf)
 
         p->type = CS_monster_pos;
         p->Position = m_pScene->m_ppGameObjects[key]->GetPosition();
-
-        if (_isnanf(p->Position.x) || _isnanf(p->Position.y) || _isnanf(p->Position.z)) {
-            //m_pScene->m_ppGameObjects[key]->SetPosition(Mon_pos_before_error[key]);
-            break;
-        }
-
-        //Mon_pos_before_error[key] = m_pScene->m_ppGameObjects[key]->GetPosition();
 
         SendPacket(reinterpret_cast<char*>(p));
         printf("%f, %f, %f\n", m_pScene->m_ppGameObjects[key]->GetPosition().x

@@ -804,9 +804,6 @@ void Server::process_packet(int key, char* buf, int roomID)
         }
         m_pBot->monsters[roomID][p->key].recv_pos = TRUE;
         m_pBot->monsters[roomID][p->key].SetPosition(p->Position.x, p->Position.y, p->Position.z);
-        printf("%f, %f, %f\n", m_pBot->monsters[roomID][p->key].f3Position.load().x
-            , m_pBot->monsters[roomID][p->key].f3Position.load().y
-            , m_pBot->monsters[roomID][p->key].f3Position.load().z);
         break;
     }
     case PacketType::CS_monster_attack: {
