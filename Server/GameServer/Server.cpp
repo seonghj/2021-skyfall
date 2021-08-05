@@ -651,14 +651,16 @@ void Server::process_packet(int key, char* buf, int roomID)
         bool b;
 
 #ifdef Run_DB
-        b = m_pDB->Search_ID(p->id, &is_Login);
+        if (strcmp(p->id, "test")) {
+            b = m_pDB->Search_ID(p->id, &is_Login);
 
-        if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
+            if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
 
-        if (is_Login) {
-            send_player_loginFail_packet(client_key, sessions[roomID][client_key].roomID);
-            Disconnected(client_key, sessions[roomID][client_key].roomID);
-            break;
+            if (is_Login) {
+                send_player_loginFail_packet(client_key, sessions[roomID][client_key].roomID);
+                Disconnected(client_key, sessions[roomID][client_key].roomID);
+                break;
+            }
         }
 #endif
         strcpy_s(sessions[roomID][client_key].id, p->id);

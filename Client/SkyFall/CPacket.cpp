@@ -702,14 +702,12 @@ void CPacket::Login()
     std::random_device rd;
     std::mt19937_64 gen(rd());
     std::uniform_int_distribution<int> dis(0, 5000);
-    sprintf_s(userID, "TEST%d", dis(gen));
-    //strcpy(userID, "TEST");
 
     // connect()
     SOCKADDR_IN serveraddr;
     ZeroMemory(&serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
-    serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
+    serveraddr.sin_addr.s_addr = inet_addr(ipaddr);
     serveraddr.sin_port = htons(GAMESERVERPORT);
     retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
     if (retval == SOCKET_ERROR) err_quit("connect()");
