@@ -76,7 +76,6 @@ private:
 
 	bool isLogin = false;
 
-
 	//static DWORD WINAPI ServerConnect(LPVOID arg);
 };
 

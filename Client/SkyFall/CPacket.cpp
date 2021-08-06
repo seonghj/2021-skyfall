@@ -641,9 +641,6 @@ void CPacket::ProcessPacket(char* buf)
         p->Position = m_pScene->m_ppGameObjects[key]->GetPosition();
 
         SendPacket(reinterpret_cast<char*>(p));
-        printf("%f, %f, %f\n", m_pScene->m_ppGameObjects[key]->GetPosition().x
-            , m_pScene->m_ppGameObjects[key]->GetPosition().y
-            , m_pScene->m_ppGameObjects[key]->GetPosition().z);
         break;
     }
     case PacketType::SC_monster_attack: {
@@ -654,13 +651,18 @@ void CPacket::ProcessPacket(char* buf)
 
         m_pScene->m_ppGameObjects[key]->Attack();
 
-        int target = MonsterAttackCheck(m_pScene->m_ppGameObjects[key]);
-
-        if (target != -1) {
-            p->type = CS_monster_attack;
-            p->target = target;
-            SendPacket(reinterpret_cast<char*>(p));
+        if (0 == strcmp(m_pScene->m_mPlayer[p->target]->m_pstrFrameName, "Player_Bow")) {
+            m_pScene->AnimatePlayer(p->target, 9);
         }
+        else if (0 == strcmp(m_pScene->m_mPlayer[p->target]->m_pstrFrameName, "Player_1Hsword")) {
+            m_pScene->AnimatePlayer(p->target, 10);
+        }
+
+        if (p->target == client_key) {
+            m_pPlayer->SetHp(p->PlayerLeftHp);
+            cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
+        }
+
         break;
     }
     case PacketType::SC_monster_add: {

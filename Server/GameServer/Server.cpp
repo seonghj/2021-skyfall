@@ -498,6 +498,8 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, float d
     p.roomid = mon.roomID.load();
     p.direction = direction;
     p.degree = degree;
+    p.target = target;
+    p.PlayerLeftHp = sessions[roomID][target].hp;
 
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == FALSE) continue;
@@ -651,7 +653,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         bool b;
 
 #ifdef Run_DB
-        if (strcmp(p->id, "test")) {
+        if (strcmp(p->id, "test") != 0) {
             b = m_pDB->Search_ID(p->id, &is_Login);
 
             if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
@@ -910,6 +912,12 @@ void Server::WorkerFunc()
                 //m_pBot->CheckTarget(e->roomid);
                 m_pBot->CheckBehavior(e->roomid);
                 m_pBot->RunBot(e->roomid);
+                delete over_ex;
+                break;
+            }
+            case EventType::Mon_attack_cooltime: {
+                mon_attack_cooltime_event* e = reinterpret_cast<mon_attack_cooltime_event*>(over_ex->messageBuffer);
+                m_pBot->monsters[roomID][e->key].CanAttack = TRUE;
                 delete over_ex;
                 break;
             }

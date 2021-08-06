@@ -42,6 +42,8 @@ public:
     std::atomic<float>      att = 10;
     std::atomic<float>      speed = 20;
 
+    std::atomic<bool>       CanAttack = TRUE;
+
     void init();
     void SetPosition(float x, float y, float z);
     void Move(const XMFLOAT3& vDirection, float fSpeed);
