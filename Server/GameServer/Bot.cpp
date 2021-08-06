@@ -159,17 +159,29 @@ void Bot::CheckBehavior(int roomID)
 				float rotate_degree = -cross.y * rotation / 10;
 				if (EPSILON <= rotation)
 					mon.Rotate(0.0f, 0.0f, rotate_degree);
+				else
+					rotate_degree = 0;
 				mon.recv_pos = false;
 
 				// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
 				if (range <= distance && rotation <= 5) {
+					if (mon.CanAttack == TRUE) {
+						player.s_lock.lock();
+						player.TakeDamage(mon.att);
+						player.s_lock.unlock();
+						m_pServer->send_monster_attack(mon, cross, rotate_degree, player.key);
+						mon.CanAttack = false;
 
-					player.TakeDamage(mon.att);
-					//m_pServer->send_monster_attack(mon, cross, rotate_degree, player.key);
-					
+						mon_attack_cooltime_event e;
+						e.size = sizeof(e);
+						e.type = EventType::Mon_attack_cooltime;
+						e.key = mon.key;
+						e.roomid = roomID;
+						m_pTimer->push_event(roomID, OE_gEvent, 1000, reinterpret_cast<char*>(&e));
+					}
 				}
 				else if (range > distance) {
-					//m_pServer->send_monster_pos(mon, subtract, cross, rotate_degree);
+					m_pServer->send_monster_pos(mon, subtract, cross, rotate_degree);
 				}
 			}
 		}

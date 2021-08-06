@@ -62,10 +62,10 @@ public:
 	bool canmove = false;
 
 	void Set_UserID(char* ID) { strcpy_s(userID, ID); 
-	cout << userID << endl;
+	cout << "ID: " << userID << endl;
 	}
 	void Set_IP(char* IP) { strcpy_s(ipaddr, IP); 
-	cout << ipaddr << endl;
+	cout << "IP: " << ipaddr << endl;
 	}
 
 private:
@@ -75,8 +75,6 @@ private:
 	unsigned long currentfps = 1;
 
 	bool isLogin = false;
-
-	XMFLOAT3 Mon_pos_before_error[50];
 
 	//static DWORD WINAPI ServerConnect(LPVOID arg);
 };

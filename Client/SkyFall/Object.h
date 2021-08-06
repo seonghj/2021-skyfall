@@ -654,6 +654,7 @@ public:
 	int	 GetPlace() { return (m_nPlace); }
 	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 
+	float m_fHeight = 0.0f;
 	bool m_iReady = false;
 };
 
