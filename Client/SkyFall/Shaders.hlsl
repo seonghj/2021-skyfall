@@ -540,12 +540,14 @@ struct VS_UI_INPUT
 {
 	float3 position : POSITION;
 	float2 uv : TEXCOORD;
+	float alpha : COLOR;
 };
 
 struct VS_UI_OUTPUT
 {
 	float4 position : SV_POSITION;
 	float2 uv : TEXCOORD;
+	float alpha : COLOR;
 };
 
 VS_UI_OUTPUT VSUI(VS_UI_INPUT input)
@@ -553,14 +555,14 @@ VS_UI_OUTPUT VSUI(VS_UI_INPUT input)
 	VS_UI_OUTPUT output;
 	output.position = float4(input.position, 1.f);
 	output.uv = input.uv;
-
+	output.alpha = input.alpha;
 	return output;
 }
 
 float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 {
 	float4 cColor = gtxtUI.Sample(gssWrap, input.uv);
-	cColor.a = 1.0f;
+	cColor.a = input.alpha;
 
 	return cColor;
 }

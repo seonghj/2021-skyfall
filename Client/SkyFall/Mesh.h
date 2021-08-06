@@ -55,11 +55,11 @@ class CUIVertex : public CVertex
 {
 public:
 	XMFLOAT2						m_xmf2TexCoord;
-
+	float							m_fAlpha;
 public:
 	CUIVertex() {}
-	CUIVertex(float x, float y, float z, XMFLOAT2 xmf2TexCoord = XMFLOAT2(5.0f, 10.0f)) { m_xmf3Position = XMFLOAT3(x, y, z); m_xmf2TexCoord = xmf2TexCoord; }
-	CUIVertex(XMFLOAT3 xmf3Position, XMFLOAT2 xmf2TexCoord = XMFLOAT2(5.0f, 10.0f)) { m_xmf3Position = xmf3Position; m_xmf2TexCoord = xmf2TexCoord; }
+	CUIVertex(float x, float y, float z, XMFLOAT2 xmf2TexCoord, float fAlpha=1.f) { m_xmf3Position = XMFLOAT3(x, y, z); m_xmf2TexCoord = xmf2TexCoord; m_fAlpha = fAlpha; }
+	CUIVertex(XMFLOAT3 xmf3Position, XMFLOAT2 xmf2TexCoord, float fAlpha=1.f) { m_xmf3Position = xmf3Position; m_xmf2TexCoord = xmf2TexCoord;  m_fAlpha = fAlpha; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -328,7 +328,7 @@ public:
 class CUIMesh : public CMesh
 {
 public:
-	CUIMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float left, float top, float right, float bottom );
+	CUIMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float left, float top, float right, float bottom,float alpha );
 	virtual ~CUIMesh();
 
 };

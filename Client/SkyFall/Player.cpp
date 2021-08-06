@@ -347,10 +347,10 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Idle, nBasic_Idle);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Walk, nBasic_Walk);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Run, nBasic_Run);
-	/*m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunBack, nBasic_RunBack);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunBack, nBasic_RunBack);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunLeft, nBasic_RunLeft);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunRight, nBasic_RunRight);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_TakeDamage, nBasic_TakeDamage);*/
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_TakeDamage, nBasic_TakeDamage);
 
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Jump, nBasic_Jump);
@@ -536,8 +536,22 @@ void CTerrainPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVeloci
 	if (dwDirection&&m_isGround)
 	{
 		if (m_isRunning) {
-			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Run, true);
+			if (dwDirection & DIR_FORWARD) {
+				m_pSkinnedAnimationController->SetAllTrackDisable();
+				m_pSkinnedAnimationController->SetTrackEnable(nBasic_Run, true);
+			}
+			else if (dwDirection & DIR_BACKWARD) {
+				m_pSkinnedAnimationController->SetAllTrackDisable();
+				m_pSkinnedAnimationController->SetTrackEnable(nBasic_RunBack, true);
+			}
+			else if (dwDirection & DIR_LEFT) {
+				m_pSkinnedAnimationController->SetAllTrackDisable();
+				m_pSkinnedAnimationController->SetTrackEnable(nBasic_RunLeft, true);
+			}
+			else if (dwDirection & DIR_RIGHT) {
+				m_pSkinnedAnimationController->SetAllTrackDisable();
+				m_pSkinnedAnimationController->SetTrackEnable(nBasic_RunRight, true);
+			}
 		}
 		else {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
@@ -579,38 +593,39 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 12, pPlayerModel);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Idle, nBow_Idle);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Walk, nBow_Walk);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Run, nBow_Run);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunBack, nBow_RunBack);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunLeft, nBow_RunLeft);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_RunRight, nBow_RunRight);
+
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Idle, nBasic_Idle);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Death, nBasic_Death);
+	m_pSkinnedAnimationController->SetTrackType(nBasic_Death, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Jump, nBasic_Jump);
+	m_pSkinnedAnimationController->SetTrackType(nBasic_Jump, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Walk, nBasic_Walk);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Run, nBasic_Run);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunBack, nBasic_RunBack);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunLeft, nBasic_RunLeft);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunRight, nBasic_RunRight);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_TakeDamage, nBasic_TakeDamage);
+
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotHold, nBow_ShotHold);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotRelease, nBow_ShotRelease);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_TakeDamage, nBow_TakeDamage);
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_ShotReady, nBow_ShotReady);
 	m_pSkinnedAnimationController->SetTrackType(nBow_ShotReady, ANIMATION_TYPE_ONCE);
 
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Jump, nBow_Jump);
-	m_pSkinnedAnimationController->SetTrackType(nBow_Jump, ANIMATION_TYPE_ONCE);
-
-	m_pSkinnedAnimationController->SetTrackAnimationSet(nBow_Death, nBow_Death);
-	m_pSkinnedAnimationController->SetTrackType(nBow_Death, ANIMATION_TYPE_ONCE);
 
 
 #ifdef _WITH_SOUND_CALLBACK
-	m_pSkinnedAnimationController->SetCallbackKeys(nBow_Walk, 1);
-	m_pSkinnedAnimationController->SetCallbackKey(nBow_Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
+	m_pSkinnedAnimationController->SetCallbackKeys(nBasic_Walk, 1);
+	m_pSkinnedAnimationController->SetCallbackKey(nBasic_Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
 
 	CAnimationCallbackHandler* pAnimationCallbackHandler = new CSoundCallbackHandler();
-	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nBow_Walk, pAnimationCallbackHandler);
+	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nBasic_Walk, pAnimationCallbackHandler);
 #endif
 
 	SetPlayerUpdatedContext(ppContext);
 	//SetCameraUpdatedContext(pContext);
 	m_pSkinnedAnimationController->SetAllTrackDisable();
-	m_pSkinnedAnimationController->SetTrackEnable(nBow_Idle, true);
+	m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -640,25 +655,6 @@ CBowPlayer::~CBowPlayer()
 {
 }
 
-
-
-void CBowPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity)
-{
-	if (dwDirection && m_isGround)
-	{
-		if (m_isRunning) {
-			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackEnable(nBow_Run, true);
-		}
-		else {
-			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackEnable(nBow_Walk, true);
-		}
-	}
-
-	CPlayer::Move(dwDirection, fDistance, bUpdateVelocity);
-}
-
 void CBowPlayer::Update(float fTimeElapsed)
 {
 	if (m_pSkinnedAnimationController)
@@ -667,8 +663,8 @@ void CBowPlayer::Update(float fTimeElapsed)
 
 		if (m_isJump) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackPosition(nBow_Jump, 0);
-			m_pSkinnedAnimationController->SetTrackEnable(nBow_Jump, true);
+			m_pSkinnedAnimationController->SetTrackPosition(nBasic_Jump, 0);
+			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Jump, true);
 		}
 		else if (m_isCharging) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
@@ -677,7 +673,7 @@ void CBowPlayer::Update(float fTimeElapsed)
 		else if (::IsZero(fLength) && m_isGround)
 		{
 			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackEnable(nBow_Idle, true);
+			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
 		}
 	}
 	CPlayer::Update(fTimeElapsed);
@@ -819,33 +815,34 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 13, pPlayerModel);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Idle, n1Hsword_Idle);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Walk, n1Hsword_Walk);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Run, n1Hsword_Run);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_RunBack, n1Hsword_RunBack);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_RunLeft, n1Hsword_RunLeft);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_RunRight, n1Hsword_RunRight);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Idle, nBasic_Idle);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Death, nBasic_Death);
+	m_pSkinnedAnimationController->SetTrackType(nBasic_Death, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Jump, nBasic_Jump);
+	m_pSkinnedAnimationController->SetTrackType(nBasic_Jump, ANIMATION_TYPE_ONCE);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Walk, nBasic_Walk);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Run, nBasic_Run);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunBack, nBasic_RunBack);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunLeft, nBasic_RunLeft);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunRight, nBasic_RunRight);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_TakeDamage, nBasic_TakeDamage);
+
 	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Attack1, n1Hsword_Attack1);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Attack2, n1Hsword_Attack2);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Attack3, n1Hsword_Attack3);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Attack4, n1Hsword_Attack4);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_TakeDamage, n1Hsword_TakeDamage);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Jump, n1Hsword_Jump);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(n1Hsword_Death, n1Hsword_Death);
 
-	m_pSkinnedAnimationController->SetTrackType(n1Hsword_Jump, ANIMATION_TYPE_ONCE);
-	m_pSkinnedAnimationController->SetTrackType(n1Hsword_Death, ANIMATION_TYPE_ONCE);
 	m_pSkinnedAnimationController->SetTrackType(n1Hsword_Attack1, ANIMATION_TYPE_ONCE);
 	m_pSkinnedAnimationController->SetTrackType(n1Hsword_Attack2, ANIMATION_TYPE_ONCE);
 	m_pSkinnedAnimationController->SetTrackSpeed(n1Hsword_Attack1, 1.5f);
 	m_pSkinnedAnimationController->SetTrackSpeed(n1Hsword_Attack2, 1.5f);
 
 #ifdef _WITH_SOUND_CALLBACK
-	m_pSkinnedAnimationController->SetCallbackKeys(n1Hsword_Walk, 1);
-	m_pSkinnedAnimationController->SetCallbackKey(n1Hsword_Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
+	m_pSkinnedAnimationController->SetCallbackKeys(nBasic_Walk, 1);
+	m_pSkinnedAnimationController->SetCallbackKey(nBasic_Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
 
 	CAnimationCallbackHandler* pAnimationCallbackHandler = new CSoundCallbackHandler();
-	m_pSkinnedAnimationController->SetAnimationCallbackHandler(n1Hsword_Walk, pAnimationCallbackHandler);
+	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nBasic_Walk, pAnimationCallbackHandler);
 #endif
 
 	SetPlayerUpdatedContext(ppContext);
@@ -853,7 +850,7 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 
 
 	m_pSkinnedAnimationController->SetAllTrackDisable();
-	m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Idle, true);
+	m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	CGameObject* pBlade = pPlayerModel->m_pModelRootObject->FindFrame("Sword_Blade");
 
@@ -869,22 +866,6 @@ C1HswordPlayer::~C1HswordPlayer()
 {
 }
 
-void C1HswordPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity)
-{
-	if (dwDirection && GetGround())
-	{
-		if (m_isRunning) {
-			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Run, true);
-		}
-		else {
-			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Walk, true);
-		}
-	}
-
-	CPlayer::Move(dwDirection, fDistance, bUpdateVelocity);
-}
 
 void C1HswordPlayer::Update(float fTimeElapsed)
 {
@@ -894,8 +875,8 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 
 		if (m_isJump) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackPosition(n1Hsword_Jump, 0);
-			m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Jump, true);
+			m_pSkinnedAnimationController->SetTrackPosition(nBasic_Jump, 0);
+			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Jump, true);
 		}
 		else if (m_isAttack) {
 			float d = m_pSkinnedAnimationController->GetTrackPosition(n1Hsword_Attack1 + m_nAttack);
@@ -916,7 +897,7 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 		else if (::IsZero(fLength) && m_isGround)
 		{
 			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackEnable(n1Hsword_Idle, true);
+			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
 		}
 	}
 	CPlayer::Update(fTimeElapsed);

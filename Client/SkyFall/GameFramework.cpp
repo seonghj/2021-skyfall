@@ -363,7 +363,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			{
 				case VK_CONTROL:
 					m_bRotateEnable = false;
-					//m_pCamera->Rotate(-m_fPitch, -m_fYaw, 0);
+					m_pCamera->Rotate(-m_fPitch, -m_fYaw, 0);
 					m_fPitch = 0;
 					m_fYaw = 0;
 					break;
@@ -623,7 +623,6 @@ void CGameFramework::ProcessInput()
 			/*if (pKeysBuffer['Q'] & 0xF0) dwDirection |= DIR_UP;
 			if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_DOWN;*/
 
-
 			if (pKeysBuffer[VK_SPACE] & 0xF0)
 			{
 				//m_pPlayer->SetJump(true);
@@ -689,8 +688,8 @@ void CGameFramework::ProcessInput()
 				if (m_bRotateEnable) {
 					m_fPitch += cyDelta;
 					m_fYaw += cxDelta;
-					//m_pCamera->Rotate(cyDelta, cxDelta, 0);
-					m_pShadowMap->Rotate(cyDelta, cxDelta, 0);
+					m_pCamera->Rotate(cyDelta, cxDelta, 0);
+					//m_pShadowMap->Rotate(cyDelta, cxDelta, 0);
 				}
 				else {
 					m_DegreeX = cyDelta;

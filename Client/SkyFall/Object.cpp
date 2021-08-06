@@ -2702,9 +2702,9 @@ void CMonster::OnUpdateCallback()
 //{
 //}
 
-CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName,float l, float t, float r, float b)
+CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName, float l, float t, float r, float b, float a)
 {
-	CUIMesh* pMesh = new CUIMesh(pd3dDevice, pd3dCommandList, l, t, r, b);
+	CUIMesh* pMesh = new CUIMesh(pd3dDevice, pd3dCommandList, l, t, r, b, a);
 	SetMesh(pMesh);
 
 	CTexture* pUITexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);

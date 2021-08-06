@@ -970,19 +970,19 @@ CGeometryBillboardMesh::~CGeometryBillboardMesh()
 {
 }
 
-CUIMesh::CUIMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float left, float top, float right, float bottom)
+CUIMesh::CUIMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float left, float top, float right, float bottom, float alpha)
 {
 	m_nVertices = 6;
 	UINT nStride = sizeof(CUIVertex);
 	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	CUIVertex* pVertex = new CUIVertex[m_nVertices];
 
-	pVertex[0] = CUIVertex(XMFLOAT3(left, top, 0),XMFLOAT2(-1,1));
-	pVertex[1] = CUIVertex(XMFLOAT3(right, top, 0), XMFLOAT2(1, 1));
-	pVertex[2] = CUIVertex(XMFLOAT3(left, bottom, 0), XMFLOAT2(-1, -1));
-	pVertex[3] = CUIVertex(XMFLOAT3(left, bottom, 0), XMFLOAT2(-1, -1));
-	pVertex[4] = CUIVertex(XMFLOAT3(right, top, 0), XMFLOAT2(1, 1));
-	pVertex[5] = CUIVertex(XMFLOAT3(right, bottom, 0), XMFLOAT2(1, -1));
+	pVertex[0] = CUIVertex(XMFLOAT3(left, top, 0),XMFLOAT2(-1,1),alpha);
+	pVertex[1] = CUIVertex(XMFLOAT3(right, top, 0), XMFLOAT2(1, 1), alpha);
+	pVertex[2] = CUIVertex(XMFLOAT3(left, bottom, 0), XMFLOAT2(-1, -1), alpha);
+	pVertex[3] = CUIVertex(XMFLOAT3(left, bottom, 0), XMFLOAT2(-1, -1), alpha);
+	pVertex[4] = CUIVertex(XMFLOAT3(right, top, 0), XMFLOAT2(1, 1), alpha);
+	pVertex[5] = CUIVertex(XMFLOAT3(right, bottom, 0), XMFLOAT2(1, -1), alpha);
 
 	m_pd3dPositionBuffer = CreateBufferResource(pd3dDevice, pd3dCommandList, pVertex, nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dPositionUploadBuffer);
 

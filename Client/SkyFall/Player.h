@@ -167,12 +167,15 @@ public:
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
 #endif
-	const int nBasic_Death = 0;
-	const int nBasic_Idle = 1;
+	const int nBasic_Idle = 0;
+	const int nBasic_Death = 1;
 	const int nBasic_Jump = 2;
-	const int nBasic_Run = 3;
-	const int nBasic_Walk = 4;
-
+	const int nBasic_Walk = 3;
+	const int nBasic_Run = 4;
+	const int nBasic_RunBack = 5;
+	const int nBasic_RunLeft = 7;
+	const int nBasic_RunRight = 6;
+	const int nBasic_TakeDamage = 8;
 };
 
 
@@ -187,7 +190,6 @@ public:
 	CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
 	virtual ~CBowPlayer();
 
-	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
 	virtual void SetAttack(bool shoot);
 
@@ -200,18 +202,9 @@ public:
 
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 
-	const int nBow_Idle = 0;
-	const int nBow_Jump = 1;
-	const int nBow_Run = 2;
-	const int nBow_RunBack = 3;
-	const int nBow_RunLeft = 4;
-	const int nBow_RunRight = 5;
-	const int nBow_ShotHold = 6;
-	const int nBow_ShotReady = 7;
-	const int nBow_ShotRelease = 8;
-	const int nBow_TakeDamage = 9;
-	const int nBow_Walk = 10;
-	const int nBow_Death = 11;
+	const int nBow_ShotHold = 9;
+	const int nBow_ShotReady = 10;
+	const int nBow_ShotRelease = 11;
 
 protected:
 	int m_nBullets = 0;
@@ -227,7 +220,6 @@ public:
 	C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
 	virtual ~C1HswordPlayer();
 
-	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 
@@ -241,17 +233,8 @@ public:
 	int m_nAttack = 0;
 	bool m_bHit = false;
 	
-	const int n1Hsword_Idle = 0;
-	const int n1Hsword_Jump = 1;
-	const int n1Hsword_Run = 2;
-	const int n1Hsword_RunBack = 3;
-	const int n1Hsword_RunLeft = 4;
-	const int n1Hsword_RunRight = 5;
-	const int n1Hsword_Attack1 = 6;
-	const int n1Hsword_Attack2 = 7;
-	const int n1Hsword_Attack3 = 8;
-	const int n1Hsword_Attack4 = 9;
-	const int n1Hsword_TakeDamage = 10;
-	const int n1Hsword_Walk = 11;
-	const int n1Hsword_Death = 12;
+	const int n1Hsword_Attack1 = 9;
+	const int n1Hsword_Attack2 = 10;
+	const int n1Hsword_Attack3 = 11;
+	const int n1Hsword_Attack4 = 12;
 };
