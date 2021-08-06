@@ -113,7 +113,7 @@ public:
 
 	int									m_nGameObjects = 0;
 	CMonster							**m_ppGameObjects = NULL;
-	unordered_map<int, CPlayer*>		m_mPlayer;
+	unordered_map<int, CTerrainPlayer*>		m_mPlayer;
 	int									m_nPlayer;
 
 	float								m_fElapsedTime = 0.0f;

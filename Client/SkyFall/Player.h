@@ -44,6 +44,7 @@ protected:
 	bool						m_isCharging;
 
 	int							m_nPlace;
+	bool						m_bHit = false;
 	// stat
 
 	LPVOID*						m_ppPlayerUpdatedContext = NULL;
@@ -154,7 +155,6 @@ public:
 	CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void ** ppContext=NULL);
 	virtual ~CTerrainPlayer();
 
-public:
 	virtual void OnPrepareRender();
 	virtual CCamera *ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed);
 
@@ -202,9 +202,9 @@ public:
 
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 
-	const int nBow_ShotHold = 9;
-	const int nBow_ShotReady = 10;
-	const int nBow_ShotRelease = 11;
+	const int nShotHold = 9;
+	const int nShotReady = 10;
+	const int nShotRelease = 11;
 
 protected:
 	int m_nBullets = 0;
@@ -217,6 +217,7 @@ protected:
 class C1HswordPlayer : public CTerrainPlayer
 {
 public:
+	C1HswordPlayer() :CTerrainPlayer() {};
 	C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
 	virtual ~C1HswordPlayer();
 
@@ -230,11 +231,29 @@ public:
 
 	virtual void CheckCollision(CGameObject* pObject);
 
+protected:
 	int m_nAttack = 0;
-	bool m_bHit = false;
+	CGameObject* pWeapon;
 	
-	const int n1Hsword_Attack1 = 9;
-	const int n1Hsword_Attack2 = 10;
-	const int n1Hsword_Attack3 = 11;
-	const int n1Hsword_Attack4 = 12;
+	const int nAttack1 = 9;
+	const int nAttack2 = 10;
+	const int nAttack3 = 11;
+	const int nAttack4 = 12;
+};
+
+class C2HswordPlayer : public C1HswordPlayer
+{
+public:
+	C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
+	virtual ~C2HswordPlayer();
+
+};
+
+class C2HspearPlayer : public C1HswordPlayer
+{
+public:
+	C2HspearPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
+	virtual ~C2HspearPlayer();
+
+
 };

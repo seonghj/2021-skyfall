@@ -302,10 +302,10 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	switch (nMessageID)
 	{
 	case WM_LBUTTONDOWN: {
-		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL);
-		else if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
+		if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
 			m_pPacket->Send_attack_packet(PlayerAttackType::BOWL);
+		else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
+			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL);
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
@@ -316,10 +316,10 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		break;
 	}
 	case WM_RBUTTONDOWN: {
-		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
-		else if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
 			m_pPacket->Send_attack_packet(PlayerAttackType::BOWR);
+		else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
+			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
@@ -329,7 +329,8 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		break;
 	}
 	case WM_LBUTTONUP: {
-		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+		//if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+		if(strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
 			m_pPacket->Send_animation_stop_packet();
 		::ReleaseCapture();
 		m_ChargeTimer.Stop();
@@ -337,7 +338,8 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		break;
 	}
 	case WM_RBUTTONUP: {
-		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+		//if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+		if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
 			m_pPacket->Send_animation_stop_packet();
 		m_pPlayer->RButtonUp();
 		CCamera* pCamera = m_pPlayer->GetCamera();
@@ -544,14 +546,16 @@ void CGameFramework::BuildObjects()
 	m_pShadowMap->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
 	m_pShadowMap->CreateShadowMap(m_pd3dDevice);
 
-	CLoadedModelInfo* pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_1Hsword.bin", NULL);
-	C1HswordPlayer* p1HswordPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pSwordModel, (void**)m_pScene->m_ppTerrain);
+	//CLoadedModelInfo* pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_1Hsword.bin", NULL);
+	CLoadedModelInfo* pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_2Hsword.bin", NULL);
+	C2HswordPlayer* p1HswordPlayer = new C2HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pSwordModel, (void**)m_pScene->m_ppTerrain);
 	
 	m_p1HswordPlayer = p1HswordPlayer;
 	if (pSwordModel) delete pSwordModel;
 	
-	CLoadedModelInfo* pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Bow.bin", NULL);
-	CBowPlayer* pBowPlayer = new CBowPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pBowModel, (void**)m_pScene->m_ppTerrain);
+	//CLoadedModelInfo* pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Bow.bin", NULL);
+	CLoadedModelInfo* pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_2Hspear.bin", NULL);
+	C2HspearPlayer* pBowPlayer = new C2HspearPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pBowModel, (void**)m_pScene->m_ppTerrain);
 	m_pBowPlayer = pBowPlayer;
 	if (pBowModel) delete pBowModel;
 

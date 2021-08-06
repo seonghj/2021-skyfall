@@ -246,17 +246,17 @@ void CScene::AnimatePlayer(int id, int animation_num)
 
 	//	if (m_mPlayer[id]->GetJump()) {
 	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(m_mPlayer[id]->n1Hsword_Jump, 0);
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->n1Hsword_Jump, true);
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(m_mPlayer[id]->nJump, 0);
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->nJump, true);
 	//	}
 	//	else if (m_mPlayer[id]->GetAttack()) {
 	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->n1Hsword_Attack1 + m_mPlayer[id]->m_nAttack, true);
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->nAttack1 + m_mPlayer[id]->m_nAttack, true);
 	//	}
 	//	else if (::IsZero(fLength) && m_mPlayer[id]->GetGround())
 	//	{
 	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->n1Hsword_Idle, true);
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->nIdle, true);
 	//	}
 	//}
 }
