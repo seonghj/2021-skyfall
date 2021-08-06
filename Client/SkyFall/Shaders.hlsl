@@ -560,7 +560,7 @@ VS_UI_OUTPUT VSUI(VS_UI_INPUT input)
 float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 {
 	float4 cColor = gtxtUI.Sample(gssWrap, input.uv);
-	cColor.a = 0.7f;
+	cColor.a = 1.0f;
 
 	return cColor;
 }
