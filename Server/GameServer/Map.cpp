@@ -83,11 +83,11 @@ void Map::Set_wind()
 		if (i < 6)
 		{
 			if (i == 0 || i == 1)
-				wind[i] = calc_windpower(atm[i], atm[i + 1]) * 3.f;
+				wind[i] = calc_windpower(atm[i], atm[i + 1]);
 			else if (i == 2 || i == 3)
-				wind[i] = calc_windpower(atm[i + 1], atm[i + 2]) * 3.f;
+				wind[i] = calc_windpower(atm[i + 1], atm[i + 2]);
 			else if (i == 4 || i == 5)
-				wind[i] = calc_windpower(atm[i + 2], atm[i + 3] * 3.f);
+				wind[i] = calc_windpower(atm[i + 2], atm[i + 3]);
 		}
 		else
 		{
