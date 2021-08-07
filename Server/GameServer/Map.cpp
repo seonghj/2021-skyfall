@@ -173,7 +173,7 @@ void Map::cloud_move()
 		Set_cloudpos();
 	}
 
-	printf("%f,%f\n", Cloud.x, Cloud.y);
+	//printf("%f,%f\n", Cloud.x, Cloud.y);
 
 	cloud_move_packet p;
 	p.type = EventType::Cloud_move;

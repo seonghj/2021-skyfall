@@ -496,11 +496,13 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
         printf("login key: %d\n", p->key);
         if (key != client_key) {
+            Swap_weapon(p->key, p->WeaponType);
             m_pScene->MovePlayer(key, p->Position);
             m_pScene->m_mPlayer[key]->Rotate(p->dx, p->dy, 0);
             m_pScene->AnimatePlayer(key, 0);
         }
         else {
+            Swap_weapon(p->key, p->WeaponType);
             m_pPlayer->SetPosition(p->Position);
             m_pPlayer->Rotate(p->dx, p->dy, 0);
         }
@@ -563,14 +565,18 @@ void CPacket::ProcessPacket(char* buf)
         else {
             switch (p->MoveType) {
             case PlayerMove::WAKING:
-                if (!strcmp(m_pScene->m_mPlayer[key]->m_pstrFrameName, "Player_Bow")) {
-                    m_pScene->AnimatePlayer(key, 3);
-                }
-                else if (!strcmp(m_pScene->m_mPlayer[key]->m_pstrFrameName, "Player_1Hsword"))
-                    m_pScene->AnimatePlayer(key, 3); // 11
+                m_pScene->AnimatePlayer(key, 3);
                 break;
             case PlayerMove::RUNNING:
-                m_pScene->AnimatePlayer(key, 4); // 2
+                /*if (p->dir & DIR_FORWARD)
+                    m_pScene->AnimatePlayer(key, 4);
+                else if (p->dir & DIR_BACKWARD)
+                    m_pScene->AnimatePlayer(key, 5);
+                else if (p->dir & DIR_LEFT)
+                    m_pScene->AnimatePlayer(key, 6);
+                else if (p->dir & DIR_RIGHT)
+                    m_pScene->AnimatePlayer(key, 7);*/
+                m_pScene->AnimatePlayer(key, 4);
                 break;
             case PlayerMove::JUMP:
                 m_pScene->AnimatePlayer(key, 2);
@@ -667,9 +673,6 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
         if (p->key != client_key) {
             m_pScene->AnimatePlayer(key, 0);
-            /*m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
-            m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(6, 0);
-            m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(9, 0);*/
             m_pScene->m_mPlayer[key]->SetPosition(p->Position);
         }
         else
@@ -686,7 +689,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_cloud_move: {
         cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(buf);
         m_pFramework->SetCloud(p->x, p->z);
-        printf("key: %d cloud move x = %f, z = %f\n",p->roomid, p->x, p->z);
+        //printf("key: %d cloud move x = %f, z = %f\n",p->roomid, p->x, p->z);
         break;
     }
     case PacketType::SC_map_set: {

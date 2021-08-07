@@ -352,6 +352,7 @@ void Server::send_add_player_packet(int key, int to, int roomID)
     p.Position = sessions[roomID][key].f3Position.load();
     p.dx = sessions[roomID][key].m_fPitch.load();
     p.dy = sessions[roomID][key].m_fYaw.load();
+    p.WeaponType = sessions[roomID][key].using_weapon;
 
     //printf("%d send login to %d\n",key, to);
 
@@ -737,6 +738,7 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_weapon_swap :{
          Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
          p->type = SC_weapon_swap;
+         sessions[roomID][p->key].using_weapon = p->weapon;
          send_packet_to_players(p->key, reinterpret_cast<char*>(p), roomID);
          break;
     }

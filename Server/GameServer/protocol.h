@@ -186,7 +186,7 @@ struct player_loginFail_packet :public Packet {
 struct player_add_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
 	float dx, dy;
-	short PlayerType;
+	PlayerType WeaponType;
 };
 
 struct game_ready_packet :public Packet {
@@ -255,7 +255,7 @@ struct player_stat_packet : public Packet {
 };
 
 struct Weapon_swap_packet : public Packet {
-	char weapon;
+	PlayerType weapon;
 };
 
 struct player_equipment_packet : public Packet {

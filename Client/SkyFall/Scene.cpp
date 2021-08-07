@@ -219,21 +219,21 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		break;
 	case 4:	// LbuttonDown
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(4, true);
 		//cout << "0" << endl;
 		break;
 	case 5:	// LbuttonUp
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(1, true);
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(5, true);
 		//cout << "1" << endl;
 		break;
 	case 6: // RbuttonDown
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(2, true);
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(6, true);
 		break;
 	case 7:
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(3, true);
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(7, true);
 		//cout << "3" << endl;
 		break;
 	case 8:
@@ -242,15 +242,18 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		//cout << "6" << endl;
 		break;
 	case 9:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(9, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(9, true);
 		//cout << "6" << endl;
 		break;
 	case 10:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(10, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(10, true);
 		break;
 	case 11:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(11, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(11, true);
 		if (!strcmp(m_mPlayer[id]->m_pstrFrameName, "Player_Bow")) {
@@ -259,6 +262,7 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		}
 		break;
 	case 12:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(12, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(12, true);
 		break;
