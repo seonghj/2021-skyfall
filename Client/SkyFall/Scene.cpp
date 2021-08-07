@@ -571,11 +571,11 @@ void CScene::CheckCollision()
 	for (int i = 0; i < m_nGameObjects; ++i) {
 		if (m_ppGameObjects[i]->GetHp() > 0) {
 			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
-			if (i == 0) {
-				if (m_ppGameObjects[i]->GetBehaviorActivate() == true)
-					CheckBehavior(m_ppGameObjects[i]);
-				//CheckBehavior(m_ppGameObjects[i]);
-			}
+			//if (i == 0) {
+			//	if (m_ppGameObjects[i]->GetBehaviorActivate() == true)
+			//		CheckBehavior(m_ppGameObjects[i]);
+			//	//CheckBehavior(m_ppGameObjects[i]);
+			//}
 		}
 	}
 	if(m_pMap)
@@ -597,14 +597,14 @@ void CScene::CheckBehavior(CMonster *pMonster)
 		subtract = Vector3::Normalize(subtract);
 		//printf("range : %f\n", range);
 		// 실제 몬스터의 look 벡터
-		XMFLOAT3 look = Vector3::ScalarProduct(pMonster->GetUp(),-1);
+		XMFLOAT3 look = Vector3::ScalarProduct(pMonster->GetUp(), -1);
 		//printf(" x : %f / y : %f / z : %f\n", pMonster->GetUp().x, pMonster->GetUp().y, pMonster->GetUp().z);
 
 		rotation = acosf(Vector3::DotProduct(subtract, look)) * 180 / PI;
 		//printf("rotation : %f\n", rotation);
 
 		// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
-		if (range <= distance && rotation <=5) {
+		if (range <= distance && rotation <= 5) {
 			pMonster->Attack();
 			return;
 		}
@@ -616,10 +616,12 @@ void CScene::CheckBehavior(CMonster *pMonster)
 
 		/*rotation = Vector3::Angle(subtract, look);
 		printf("rotation2 : %f\n", rotation);*/
-		if(EPSILON <= rotation)
+		if (EPSILON <= rotation)
 			pMonster->Rotate(0.0f, 0.0f, -cross.y * rotation / 10);
 		//printf("%f, %f, %f\n", cross.y, rotation, -cross.y * rotation / 10);
 	}
+	else
+		pMonster->SetBehaviorActivate(false);
 	//printf("%d 번째 크기 : %f\n", i, Vector3::Length(Vector3::Subtract(m_ppGameObjects[i]->GetPosition(), m_pPlayer->GetPosition())));
 
 }

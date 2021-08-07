@@ -2339,6 +2339,7 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	SetHpBar(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, 0, 100),
 		XMFLOAT2(80, 20))->SetHp(100);
+	SetActive("HpBar", false);
 
 
 
@@ -2372,6 +2373,8 @@ void CDragon::Update(float fTimeElapsed)
 		SetIdle();
 		SetActive("BoundingBox", false);
 		SetActive("Polygonal_Dragon", false);
+		SetActive("HpBar", false);
+		SetBehaviorActivate(false);
 	}
 }
 
@@ -2437,6 +2440,7 @@ CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 	SetHpBar(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, 30, zExtents / 2),
 		XMFLOAT2(80, 20))->SetHp(100);
+	SetActive("HpBar", false);
 
 	SetUpdatedContext(ppContext);
 
@@ -2468,6 +2472,8 @@ void CWolf::Update(float fTimeElapsed)
 		SetIdle();
 		SetActive("BoundingBox", false);
 		SetActive("Polygonal_Wolf", false);
+		SetActive("HpBar", false);
+		SetBehaviorActivate(false);
 	}
 }
 
@@ -2531,6 +2537,7 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 	SetHpBar(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, 0, 100),
 		XMFLOAT2(80, 20))->SetHp(100);
+	SetActive("HpBar", false);
 
 	SetUpdatedContext(ppContext);
 
@@ -2564,6 +2571,8 @@ void CMetalon::Update(float fTimeElapsed)
 		SetIdle();
 		SetActive("Polygonal_Metalon", false);
 		SetActive("BoundingBox", false);
+		SetActive("HpBar", false);
+		SetBehaviorActivate(false);
 	}
 }
 
