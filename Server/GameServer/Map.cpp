@@ -91,7 +91,7 @@ void Map::Set_wind()
 		}
 		else
 		{
-			wind[i] = -calc_windpower(atm[i - 6], atm[i - 3] * 3.f);
+			wind[i] = -calc_windpower(atm[i - 6], atm[i - 3]);
 		}
 	}
 }
