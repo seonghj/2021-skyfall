@@ -13,8 +13,8 @@ constexpr int GAMESERVER_ID = 0;
 constexpr int AI_ID = 5000;
 
 constexpr int MAX_MAP_BLOCK = 9;
-constexpr int MAP_SIZE = 99999;
-constexpr int MAP_BLOCK_SIZE = 33333;
+constexpr int MAP_SIZE = 6000;
+constexpr int MAP_BLOCK_SIZE = 2048;
 constexpr int MAP_BREAK_TIME = 30;
 
 constexpr float VIEWING_DISTANCE = 16666.f;

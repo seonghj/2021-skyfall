@@ -56,7 +56,7 @@ void Map::Set_map()
 
 	std::random_device rd;
 	std::mt19937_64 gen(rd());
-	std::uniform_int_distribution<int> dis2(1000, 1100);
+	std::uniform_int_distribution<int> dis2(10, 20);
 
 	for (int i = 0; i < 9; i++)
 	{
@@ -100,7 +100,7 @@ void Map::Set_cloudpos()
 {
 	std::random_device rd;
 	std::mt19937_64 gen(rd());
-	std::uniform_int_distribution<int> dis(10, MAP_SIZE - 5000);
+	std::uniform_int_distribution<int> dis(10, MAP_SIZE - MAP_BLOCK_SIZE);
 	Cloud.x = dis(gen);
 	Cloud.y = dis(gen);
 }
@@ -173,6 +173,7 @@ void Map::cloud_move()
 		Set_cloudpos();
 	}
 
+	printf("%f,%f\n", Cloud.x, Cloud.y);
 
 	cloud_move_packet p;
 	p.type = EventType::Cloud_move;

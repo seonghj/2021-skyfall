@@ -42,6 +42,7 @@ cbuffer cbFog:register(b5)
 {
 	float4 gcFogColor;
 	float4 gvFogParameter; //(Mode, Start, Range, Density)
+	float2 gvFogPos;
 }
 
 float4 Fog(float4 cColor, float3 vPosition)
@@ -50,11 +51,12 @@ float4 Fog(float4 cColor, float3 vPosition)
 	float3 vPositionToCamera = vCameraPosition - vPosition;
 	float fDistanceToCamera = length(vPositionToCamera);
 	float fFogFactor = 0.f;
+	float fDistanceToFog = length(float2(vCameraPosition.x, vCameraPosition.z) - gvFogPos);
 	if (gvFogParameter.x == LINEAR_FOG) {
 		fFogFactor = (fDistanceToCamera - gvFogParameter.y) / gvFogParameter.z - 1.f;
 	}
 	else if (gvFogParameter.x == EXP_FOG) {
-		fFogFactor = 1.f - (1 / exp(fDistanceToCamera * gvFogParameter.w));
+		fFogFactor = 1.f - (1 / exp((fDistanceToCamera - fDistanceToFog) * gvFogParameter.w));
 	}
 	else if (gvFogParameter.x == EXP2_FOG) {
 		fFogFactor = 1.f - (1 / exp2(fDistanceToCamera * gvFogParameter.w));
