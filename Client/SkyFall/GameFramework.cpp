@@ -553,9 +553,10 @@ void CGameFramework::BuildObjects()
 	m_p1HswordPlayer = p1HswordPlayer;
 	if (pSwordModel) delete pSwordModel;
 	
-	//CLoadedModelInfo* pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Bow.bin", NULL);
-	CLoadedModelInfo* pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_2Hspear.bin", NULL);
-	C2HspearPlayer* pBowPlayer = new C2HspearPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pBowModel, (void**)m_pScene->m_ppTerrain);
+	CLoadedModelInfo* pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Bow.bin", NULL);
+	CBowPlayer* pBowPlayer = new CBowPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pBowModel, (void**)m_pScene->m_ppTerrain);
+	//CLoadedModelInfo* pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_2Hspear.bin", NULL);
+	//C2HspearPlayer* pBowPlayer = new C2HspearPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pBowModel, (void**)m_pScene->m_ppTerrain);
 	m_pBowPlayer = pBowPlayer;
 	if (pBowModel) delete pBowModel;
 
@@ -619,7 +620,7 @@ void CGameFramework::ProcessInput()
 		if (pKeysBuffer[VK_RIGHT] & 0xF0) dwDirection |= DIR_RIGHT;
 		if (pKeysBuffer[VK_PRIOR] & 0xF0) dwDirection |= DIR_UP;
 		if (pKeysBuffer[VK_NEXT] & 0xF0) dwDirection |= DIR_DOWN;*/
-		if (m_pPlayer->GetGround()) {
+		if (m_pPlayer->GetGround()&&!m_pPlayer->GetCharging()) {
 			if (pKeysBuffer['W'] & 0xF0) dwDirection |= DIR_FORWARD;
 			if (pKeysBuffer['S'] & 0xF0) dwDirection |= DIR_BACKWARD;
 			if (pKeysBuffer['A'] & 0xF0) dwDirection |= DIR_LEFT;
