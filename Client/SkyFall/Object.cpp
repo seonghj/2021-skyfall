@@ -2702,6 +2702,28 @@ void CMonster::OnUpdateCallback()
 //{
 //}
 
+void CUIObject::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	UINT ncbElementBytes = ((sizeof(CB_UI_INFO) + 255) & ~255);
+	m_pd3dcbUI = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+	m_pd3dcbUI->Map(0, NULL, (void**)&m_pcbMappedUI);
+}
+
+void CUIObject::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	D3D12_GPU_VIRTUAL_ADDRESS d3dcbFogGpuVirtualAddress = m_pd3dcbUI->GetGPUVirtualAddress();
+	pd3dCommandList->SetGraphicsRootConstantBufferView(19, d3dcbFogGpuVirtualAddress); //UI
+}
+
+void CUIObject::ReleaseShaderVariables()
+{
+	if (m_pd3dcbUI)
+	{
+		m_pd3dcbUI->Unmap(0, NULL);
+		m_pd3dcbUI->Release();
+	}
+}
+
 CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName, float l, float t, float r, float b, float a)
 {
 	CUIMesh* pMesh = new CUIMesh(pd3dDevice, pd3dCommandList, l, t, r, b, a);

@@ -29,6 +29,12 @@ cbuffer cbFrameworkInfo : register(b3)
 	float		gfElapsedTime : packoffset(c0.y);
 };
 
+cbuffer cbUIInfo : register(b6)
+{
+	float		gfAlpha : packoffset(c0);
+	float		gfasdasd : packoffset(c4);
+
+};
 #include "Light.hlsl"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +135,7 @@ VS_STANDARD_OUTPUT VSStandard(VS_STANDARD_INPUT input)
 	VS_STANDARD_OUTPUT output;
 
 	output.positionW = (float3)mul(float4(input.position, 1.0f), gmtxGameObject);
-	output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
+	output.normalW = (float3)mul(float4(input.normal, 1.f), gmtxGameObject);
 	output.tangentW = (float3)mul(float4(input.tangent, 1.0f), gmtxGameObject);
 	output.bitangentW = (float3)mul(float4(input.bitangent, 1.0f), gmtxGameObject);
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
@@ -173,7 +179,7 @@ VS_WIREFRAME_OUTPUT VSWireFrame(VS_WIREFRAME_INPUT input)
 	VS_WIREFRAME_OUTPUT output;
 
 	output.positionW = (float3)mul(float4(input.position, 1.0f), gmtxGameObject);
-	output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
+	output.normalW = (float3)mul(float4(input.normal, 1.f), gmtxGameObject);
 	output.tangentW = (float3)mul(float4(input.tangent, 1.0f), gmtxGameObject);
 	output.bitangentW = (float3)mul(float4(input.bitangent, 1.0f), gmtxGameObject);
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
@@ -198,7 +204,8 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //그림자가 아님
 
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
-	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	float4 cNormalColor = float4(input.normalW, 1.f);
 
 
 	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -207,7 +214,7 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 	{
 		float3 normalW = input.normalW;
 		float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] → [-1, 1]
+		float3 vNormal = cNormalColor.rgb;/*normalize(cNormalColor.rgb * 2.0f - 1.0f);*/ //[0, 1] → [-1, 1]
 		normalW = normalize(mul(vNormal, TBN));
 		cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
 		cColor = lerp(cColor, cIllumination, 0.5f);
@@ -270,7 +277,7 @@ VS_SKINNED_WIREFRAME_OUTPUT VSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_INP
 	//output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
 //	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
 
-	output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
+	output.normalW = (float3)mul(float4(input.normal,1.f), gmtxGameObject);
 	output.tangentW = (float3)mul(float4(input.tangent, 1.0f), gmtxGameObject);
 	output.bitangentW = (float3)mul(float4(input.bitangent, 1.0f), gmtxGameObject);
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
@@ -296,7 +303,7 @@ float4 PSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_OUTPUT input) : SV_TARGE
 	
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
 
-	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	float4 cNormalColor = float4(1.f, 1.f, 1.f, 1.0f);
 
 	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -555,14 +562,14 @@ VS_UI_OUTPUT VSUI(VS_UI_INPUT input)
 	VS_UI_OUTPUT output;
 	output.position = float4(input.position, 1.f);
 	output.uv = input.uv;
-	output.alpha = input.alpha;
+	//output.alpha = input.alpha;
 	return output;
 }
 
 float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 {
 	float4 cColor = gtxtUI.Sample(gssWrap, input.uv);
-	cColor.a = input.alpha;
+	cColor.a = gfAlpha;
 
 	return cColor;
 }

@@ -822,6 +822,7 @@ void CGameFramework::FrameAdvance()
 	CCamera* pCamera = m_pShadowMap->GetCamera();
 	pCamera->SetPosition(XMFLOAT3(m_pPlayer->GetPosition().x, 0, m_pPlayer->GetPosition().z));
 	pCamera->Move(XMFLOAT3(-500, 200, -500));
+	m_pScene->m_pLights[0].m_xmf3Position = pCamera->GetPosition();
 	pCamera->RegenerateViewMatrix();
     AnimateObjects();
 
