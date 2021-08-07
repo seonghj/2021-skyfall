@@ -1,7 +1,6 @@
 #pragma once
 #include "stdafx.h"
-#include "protocol.h"
-
+#include "../GameServer/protocol.h"
 class Player {
 public:
 	POINT pos = POINT{ 1500, 1500 };
@@ -17,7 +16,8 @@ public:
 	int   prev_size;
 
 	BOOL connected;
-	int id;
+	int key;
+	int roomid;
 
 	int event_type;
 };

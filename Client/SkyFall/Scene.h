@@ -37,6 +37,11 @@ struct LIGHTS
 	int									m_nLights;
 };
 
+enum SCENE {
+	LOBBY,INGAME,
+};
+
+
 class CScene
 {
 public:
@@ -68,11 +73,11 @@ public:
 	void ReleaseUploadBuffers();
 
 	void CheckCollision();
-	void CheckBehavior(CMonster* pObject);
-	void InitPlayerIDs() { for (int i = 0; i < 20; ++i) PlayerIDs[i] = -1; }
+	void CheckBehavior(CMonster * pObject);
 
-	CPlayer								*m_pPlayer = NULL;
-	int									PlayerIDs[20];
+	CTerrainPlayer						*m_pPlayer = NULL;
+
+	CHeightMapTerrain* GetTerrain(int i) { return m_ppTerrain[i]; }
 
 protected:
 	ID3D12RootSignature					*m_pd3dGraphicsRootSignature = NULL;
@@ -113,8 +118,11 @@ public:
 
 	int									m_nGameObjects = 0;
 	CMonster							**m_ppGameObjects = NULL;
-	unordered_map<int, CTerrainPlayer*>		m_mPlayer;
-	int									m_nPlayer;
+	array<CTerrainPlayer*, 20>			m_mPlayer;
+	array<C1HswordPlayer*, 20>			m_m1HswordPlayer;
+	array<CBowPlayer*, 20>				m_mBowPlayer;
+	array<C2HswordPlayer*, 20>			m_m2HswordPlayer;
+	array<C2HspearPlayer*, 20>			m_m2HspearPlayer;
 
 	float								m_fElapsedTime = 0.0f;
 
@@ -138,6 +146,8 @@ public:
 	CMap								*m_pMap = NULL;
 	CUIObject							**m_ppUIObjects = NULL;
 	int									m_nUIs = 0;
+
+	int m_iState;
 
 };
 

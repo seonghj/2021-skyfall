@@ -10,6 +10,7 @@
 
 CGameObject** CMap::m_ppObjectInstance;
 int CMap::m_nObjectInstance;
+CGameObject* CBullet::m_pArrow;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 CTexture::CTexture(int nTextures, UINT nTextureType, int nSamplers)
@@ -2338,6 +2339,7 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	SetHpBar(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, 0, 100),
 		XMFLOAT2(80, 20))->SetHp(100);
+	SetActive("HpBar", false);
 
 
 
@@ -2351,6 +2353,7 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 
 	OnUpdateCallback();
 	MoveUp(xmf3Extents.y * 0.2f);
+	m_fHeight = xmf3Extents.y * 0.2f;
 	SetScale(0.5f, 0.5f, 0.5f);
 	Rotate(-90.0f, 20.0f, 0.0f);
 
@@ -2370,6 +2373,8 @@ void CDragon::Update(float fTimeElapsed)
 		SetIdle();
 		SetActive("BoundingBox", false);
 		SetActive("Polygonal_Dragon", false);
+		SetActive("HpBar", false);
+		SetBehaviorActivate(false);
 	}
 }
 
@@ -2435,6 +2440,7 @@ CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 	SetHpBar(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, 30, zExtents / 2),
 		XMFLOAT2(80, 20))->SetHp(100);
+	SetActive("HpBar", false);
 
 	SetUpdatedContext(ppContext);
 
@@ -2466,6 +2472,8 @@ void CWolf::Update(float fTimeElapsed)
 		SetIdle();
 		SetActive("BoundingBox", false);
 		SetActive("Polygonal_Wolf", false);
+		SetActive("HpBar", false);
+		SetBehaviorActivate(false);
 	}
 }
 
@@ -2511,7 +2519,7 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 {
 	CLoadedModelInfo* pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
 
-	SetChild(pMetalonModel->m_pModelRootObject, true);
+	SetChild(pMetalonModel->m_pModelRootObject, false);
 
 	m_nAnimations = nAnimationTracks;
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMetalonModel);
@@ -2529,6 +2537,7 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 	SetHpBar(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, 0, 100),
 		XMFLOAT2(80, 20))->SetHp(100);
+	SetActive("HpBar", false);
 
 	SetUpdatedContext(ppContext);
 
@@ -2562,6 +2571,8 @@ void CMetalon::Update(float fTimeElapsed)
 		SetIdle();
 		SetActive("Polygonal_Metalon", false);
 		SetActive("BoundingBox", false);
+		SetActive("HpBar", false);
+		SetBehaviorActivate(false);
 	}
 }
 

@@ -5,6 +5,7 @@
 
 //struct OVER_EX;
 class Server;
+class Timer;
 
 class Map{
 public:
@@ -17,7 +18,7 @@ public:
 	Vector2D Cloud;
 	HANDLE hMove;
 
-	int Map_num[MAX_MAP_BLOCK];
+	int Map_type[MAX_MAP_BLOCK];
 
 	float atm[9] = { 0 };
 	float wind[12] = { 0 };
@@ -28,7 +29,7 @@ public:
 
 	void SetNum(int n) { roomnum = n; }
 
-	void init_Map(Server* s);
+	void init_Map(Server* s, Timer* t);
 
 	void Set_map();
 	void Set_wind();
@@ -42,6 +43,7 @@ public:
 
 private:
 	int game_time;
-	Server* m_pServer = NULL;
+	Server* m_pServer = NULL; 
+	Timer* m_pTimer = NULL;
 	int roomnum = -1;
 };

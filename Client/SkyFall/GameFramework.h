@@ -18,6 +18,7 @@ struct CB_FOG_INFO
 {
 	XMFLOAT4 gcFogColor;
 	XMFLOAT4 gvFogParameter; //(Mode, Start, Range, Density)
+	XMFLOAT2 gvFogPos;
 };
 
 class CGameFramework
@@ -63,6 +64,7 @@ public:
 
 	void Set_m_pPacket(CPacket* t) { m_pPacket = t; };
 	void CheckCollision();
+	void SetCloud(float x, float z) { m_pcbMappedFog->gvFogPos = XMFLOAT2(x, z); }
 
 
 
@@ -70,6 +72,10 @@ public:
 	float						m_DegreeX;
 	float						m_DegreeY;
 	float						m_DegreeZ;
+
+	CTerrainPlayer*				m_pPlayer = NULL;
+	CCamera*					m_pCamera = NULL;
+	CScene*						m_pScene = NULL;
 
 private:
 	HINSTANCE					m_hInstance;
@@ -111,10 +117,7 @@ private:
 	CGameTimer					m_GameTimer;
 	CGameTimer					m_ChargeTimer;
 
-	CScene						*m_pScene = NULL;
-	CTerrainPlayer				*m_pPlayer = NULL;
 	CTerrainPlayer				*m_ppOtherPlayer[OTHER_PLAYER_NUM];
-	CCamera						*m_pCamera = NULL;
 
 	CPacket						*m_pPacket = NULL;
 
@@ -139,5 +142,8 @@ private:
 
 	ID3D12Resource				*m_pd3dcbFog = NULL;
 	CB_FOG_INFO					*m_pcbMappedFog = NULL;
+
+	DWORD						dwDirection = 0;
+	BOOL						PressDirButton = false;
 };
 

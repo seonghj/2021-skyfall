@@ -1,8 +1,11 @@
 #pragma once
-#include"stdafx.h"
+#include "stdafx.h"
 #include "player.h"
 #include "Scene.h"
 #include "protocol.h"
+#include "GameFramework.h"
+
+class CGameFramework;
 
 class CPacket {
 public:
@@ -14,13 +17,16 @@ public:
 	SOCKET sock;
 	char Sendbuf[BUFSIZE];
 	char Recvbuf[BUFSIZE];
+	char ipaddr[50];
 	DWORD recvbytes;
 	DWORD sendbytes;
 	WSABUF wsabuf;
 	HANDLE SendEvent;
 
-	CPlayer* m_pPlayer = NULL;
-	CScene* m_pScene = NULL;
+	CTerrainPlayer*		m_pPlayer = NULL;
+	CGameFramework*		m_pFramework = NULL;
+	CScene*				m_pScene = NULL;
+	CMap*				m_pMap = NULL;
 
 	float fTimeElapsed;
 	float ChargeTimer;
@@ -32,21 +38,47 @@ public:
 	void SendPacket(char* buf);
 	void Send_ready_packet();
 	void Send_attack_packet(int type);
-	void Send_animation_stop_packet();
+	void Send_stop_packet();
+	void Send_login_packet(char* id);
+	void Send_swap_weapon_packet(PlayerType weapon);
+	void Swap_weapon(int key, PlayerType weapon);
+	void Map_set(map_block_set* p);
+	void CheckCollision(CMonster* mon);
+	int MonsterAttackCheck(CMonster* mon);
+
 	void ProcessPacket(char* buf);
 
-	void Set_clientid(int n);
-	int Get_clientid();
+	void Login();
+
+	void Set_clientkey(int n);
+	int Get_clientkey();
 	void Set_currentfps(unsigned long FrameRate);
 
 	void LobbyConnect();
 	void GameConnect();
 
+	std::thread Recv_thread;
+
+	bool canmove = false;
+
+	void Set_UserID(char* ID) { strcpy_s(userID, ID); 
+	cout << "ID: " << userID << endl;
+	}
+	void Set_IP(char* IP) { strcpy_s(ipaddr, IP); 
+	cout << "IP: " << ipaddr << endl;
+	}
 
 private:
-	int client_id = 0;
+	int client_key = INVALIDID;
+	int roomID = INVALIDID;
+	char userID[50];
 	unsigned long currentfps = 1;
 
-	std::thread Recv_thread;
+	bool isLogin = false;
+
+	HANDLE                         hcp;
+	std::vector <std::thread>      working_threads;
+
+
 	//static DWORD WINAPI ServerConnect(LPVOID arg);
 };

@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include "Scene.h"
+#include "protocol.h"
 
 ID3D12DescriptorHeap *CScene::m_pd3dCbvSrvDescriptorHeap = NULL;
 
@@ -126,6 +127,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
 	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 9, (void**)m_ppTerrain,4);
 	if (pDragonModel)delete pDragonModel;
+	//printf(" x : %f / y : %f / z : %f\n", m_ppGameObjects[0]->GetUp().x, m_ppGameObjects[0]->GetUp().y, m_ppGameObjects[0]->GetUp().z);
 
 	CLoadedModelInfo* pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
 	m_ppGameObjects[1] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, (void**)m_ppTerrain, 4);
@@ -146,20 +148,33 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	m_iState =SCENE::LOBBY;
 }
 
 void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	CLoadedModelInfo* pSwordModel;
+	CLoadedModelInfo* p1HSwordModel;
+	CLoadedModelInfo* pBowModel;
+	CLoadedModelInfo* p2HSwordModel;
+	CLoadedModelInfo* p2HSpearModel;
 
-	m_nPlayer = 0;
-	for (int i = 0; i < m_nPlayer; ++i) {
-		pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
-		m_mPlayer.emplace(i, new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature,pSwordModel, (void**)m_ppTerrain));
-		m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, m_pTerrain->GetHeight(400.0f, 650.0f), 650.0f));
-		MovePlayer(i, XMFLOAT3(80.0f, 50.0f, 0.0f));
+	for (int i = 0; i < 20; ++i) {
+		p1HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
+		pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+		p2HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2Hsword.bin", NULL);
+		p2HSpearModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2HSpear.bin", NULL);
+		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p1HSwordModel, (void**)m_ppTerrain);
+		m_mBowPlayer[i] = new CBowPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBowModel, (void**)m_ppTerrain);
+		m_m2HswordPlayer[i] = new C2HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p2HSwordModel, (void**)m_ppTerrain);
+		m_m2HspearPlayer[i] = new C2HspearPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p2HSpearModel, (void**)m_ppTerrain);
+		m_mPlayer[i] = m_m1HswordPlayer[i];
+		//m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, 124.0f, 650.0f));
+		//MovePlayer(i, XMFLOAT3(80.0f, 0.0f, 0.0f));
 	}
-	//if (pSwordModel) delete pSwordModel;
+	if (p1HSwordModel) delete p1HSwordModel;
+	if (pBowModel) delete pBowModel;
+	if (p2HSwordModel) delete p2HSwordModel;
+	if (p2HSpearModel) delete p2HSpearModel;
 }
 
 void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
@@ -190,7 +205,6 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		break;
 	case 1:	// LbuttonUp
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-		//m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(1, true);
 		//cout << "1" << endl;
 		break;
@@ -203,60 +217,56 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(3, true);
 		//cout << "3" << endl;
 		break;
-	case 6:
+	case 4:	// LbuttonDown
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(4, true);
+		//cout << "0" << endl;
+		break;
+	case 5:	// LbuttonUp
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(5, true);
+		//cout << "1" << endl;
+		break;
+	case 6: // RbuttonDown
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(6, true);
+		break;
+	case 7:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(7, true);
+		//cout << "3" << endl;
+		break;
+	case 8:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(8, true);
 		//cout << "6" << endl;
 		break;
 	case 9:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(9, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(9, true);
 		//cout << "6" << endl;
 		break;
+	case 10:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(10, 0);
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(10, true);
+		break;
 	case 11:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(11, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(11, true);
+		if (!strcmp(m_mPlayer[id]->m_pstrFrameName, "Player_Bow")) {
+			m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+			m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
+		}
 		break;
-	//case 0:	// LbuttonDown
-	//	m_mPlayer[id]->LButtonDown();
-	//	m_mPlayer[id]->Update(0.016);
-	//	cout << "0" << endl;
-	//	break;
-	//case 1:	// LbuttonUp
-	//	m_mPlayer[id]->LButtonUp();
-	//	m_mPlayer[id]->Update(0.016);
-	//	cout << "1" << endl;
-	//	break;
-	//case 2: // RbuttonDown
-	//	m_mPlayer[id]->RButtonDown();
-	//	m_mPlayer[id]->Update(0.016);
-	//	cout << "2" << endl;
-	//	break;
-	//case 3:
-	//	m_mPlayer[id]->RButtonUp();
-	//	m_mPlayer[id]->Update(0.016);
-	//	cout << "3" << endl;
-	//	break;
+	case 12:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(12, 0);
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(12, true);
+		break;
 	}
-	//m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(animation_num, 3);
-	//if (m_mPlayer[id]->m_pSkinnedAnimationController)
-	//{
-	//	XMFLOAT3 vel = m_mPlayer[id]->GetVelocity();
-	//	float fLength = sqrtf(vel.x * vel.x + vel.z * vel.z);
-
-	//	if (m_mPlayer[id]->GetJump()) {
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(m_mPlayer[id]->nJump, 0);
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->nJump, true);
-	//	}
-	//	else if (m_mPlayer[id]->GetAttack()) {
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->nAttack1 + m_mPlayer[id]->m_nAttack, true);
-	//	}
-	//	else if (::IsZero(fLength) && m_mPlayer[id]->GetGround())
-	//	{
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
-	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->nIdle, true);
 	//	}
 	//}
 }
@@ -294,9 +304,6 @@ void CScene::ReleaseObjects()
 		m_pMap->Release();
 		delete m_pMap;
 	}
-
-	m_mPlayer.clear();
-
 
 	ReleaseShaderVariables();
 
@@ -577,11 +584,28 @@ void CScene::ReleaseUploadBuffers()
 	for (int i = 0; i < 9; i++)
 		if (m_ppTerrain[i]) m_ppTerrain[i]->ReleaseUploadBuffers();
 
-	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseUploadBuffers();
-	for (int i = 0; i < m_nGameObjects; i++) m_ppGameObjects[i]->ReleaseUploadBuffers();
-
-	for (auto p : m_mPlayer) {
-		p.second->ReleaseUploadBuffers();
+	//for (auto p : m_mPlayer) {
+	//	p.second->ReleaseUploadBuffers();
+	//}
+	for (int i = 0; i < MAX_PLAYER; i++) {
+		if (m_mBowPlayer[i]) {
+			m_mBowPlayer[i]->ReleaseUploadBuffers();
+		}
+	}
+	for (int i = 0; i < MAX_PLAYER; i++) {
+		if (m_m1HswordPlayer[i]) {
+			m_m1HswordPlayer[i]->ReleaseUploadBuffers();
+		}
+	}
+	for (int i = 0; i < MAX_PLAYER; i++) {
+		if (m_m2HswordPlayer[i]) {
+			m_m2HswordPlayer[i]->ReleaseUploadBuffers();
+		}
+	}
+	for (int i = 0; i < MAX_PLAYER; i++) {
+		if (m_m2HspearPlayer[i]) {
+			m_m2HspearPlayer[i]->ReleaseUploadBuffers();
+		}
 	}
 	for (int i = 0; i < m_nUIs; ++i)
 		if (m_ppUIObjects[i]) m_ppUIObjects[i]->ReleaseUploadBuffers();
@@ -595,8 +619,11 @@ void CScene::CheckCollision()
 	for (int i = 0; i < m_nGameObjects; ++i) {
 		if (m_ppGameObjects[i]->GetHp() > 0) {
 			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
-			if(m_ppGameObjects[i]->GetBehaviorActivate() == true)
-				CheckBehavior(m_ppGameObjects[i]);
+			//if (i == 0) {
+			//	if (m_ppGameObjects[i]->GetBehaviorActivate() == true)
+			//		CheckBehavior(m_ppGameObjects[i]);
+			//	//CheckBehavior(m_ppGameObjects[i]);
+			//}
 		}
 	}
 	if(m_pMap)
@@ -618,28 +645,31 @@ void CScene::CheckBehavior(CMonster *pMonster)
 		subtract = Vector3::Normalize(subtract);
 		//printf("range : %f\n", range);
 		// 실제 몬스터의 look 벡터
-		XMFLOAT3 look = Vector3::ScalarProduct(pMonster->GetUp(),-1);
+		XMFLOAT3 look = Vector3::ScalarProduct(pMonster->GetUp(), -1);
 		//printf(" x : %f / y : %f / z : %f\n", pMonster->GetUp().x, pMonster->GetUp().y, pMonster->GetUp().z);
 
 		rotation = acosf(Vector3::DotProduct(subtract, look)) * 180 / PI;
 		//printf("rotation : %f\n", rotation);
 
 		// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
-		if (range <= distance && rotation <=5) {
+		if (range <= distance && rotation <= 5) {
 			pMonster->Attack();
 			return;
 		}
 		else if (range > distance) {
-			pMonster->Move(subtract, 0.5f);
+			pMonster->Move(subtract, 3.f);
 		}
 		// 외적에 따라 가까운 방향으로 회전하도록
 		XMFLOAT3 cross = Vector3::CrossProduct(subtract, look);
 
 		/*rotation = Vector3::Angle(subtract, look);
 		printf("rotation2 : %f\n", rotation);*/
-		if(EPSILON <= rotation)
+		if (EPSILON <= rotation)
 			pMonster->Rotate(0.0f, 0.0f, -cross.y * rotation / 10);
+		//printf("%f, %f, %f\n", cross.y, rotation, -cross.y * rotation / 10);
 	}
+	else
+		pMonster->SetBehaviorActivate(false);
 	//printf("%d 번째 크기 : %f\n", i, Vector3::Length(Vector3::Subtract(m_ppGameObjects[i]->GetPosition(), m_pPlayer->GetPosition())));
 
 }
@@ -884,9 +914,11 @@ void CScene::AnimateObjects(float fTimeElapsed)
 {
 	m_fElapsedTime = fTimeElapsed;
 
-	for (int i = 0; i < m_nPlayer; ++i) {
-		m_mPlayer[i]->Animate(fTimeElapsed);
-		m_mPlayer[i]->UpdateTransform();
+	for (int i = 0; i < MAX_PLAYER; ++i) {
+		if (m_mPlayer[i]) {
+			m_mPlayer[i]->Animate(fTimeElapsed);
+			m_mPlayer[i]->UpdateTransform();
+		}
 	}
 
 	for (int i = 0; i < m_nGameObjects; i++)
@@ -936,7 +968,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 		}
 	}
 
-	for (int i = 0; i < m_nPlayer; ++i)
+	for (int i = 0; i < MAX_PLAYER; ++i)
 		if (m_mPlayer[i]) m_mPlayer[i]->Render(pd3dCommandList, pCamera);
 	//for (auto p : m_mPlayer)
 	//{
@@ -986,7 +1018,7 @@ void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* p
 		}
 	}
 
-	for (int i = 0; i < m_nPlayer; ++i)
+	for (int i = 0; i < MAX_PLAYER; ++i)
 		if (m_mPlayer[i]) m_mPlayer[i]->RenderShadow(pd3dCommandList, pCamera);
 }
 

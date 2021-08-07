@@ -155,46 +155,46 @@ void CPacket::SendPacket(int id, char* packet)
 void CPacket::Send_ready_packet()
 {
     game_ready_packet p;
-    p.id = client_id;
+    p.key = client_id;
     p.size = sizeof(p);
-    p.type = PacketType::Type_game_ready;
-    SendPacket(p.id, reinterpret_cast<char*>(&p));
+    p.type = PacketType::CS_game_ready;
+    SendPacket(p.key, reinterpret_cast<char*>(&p));
+}
+
+void CPacket::Send_login_packet(int key, char* id)
+{
+    player_login_packet p;
+    p.key = players[key].key;
+    p.size = sizeof(p);
+    p.type = PacketType::CS_player_login;
+    p.roomid = players[key].roomid;
+    strcpy_s(p.id, id);
+    SendPacket(key, reinterpret_cast<char*>(&p));
 }
 
 void CPacket::ProcessPacket(int id, char* buf)
 {
     switch (buf[1])
     {
-    case PacketType::Type_player_ID: {
-        player_ID_packet* p = reinterpret_cast<player_ID_packet*>(buf);
-        players[p->id].id = p->id;
-        //printf("recv id from server: %d\n", p->id);
+    case PacketType::SC_player_key: {
+        player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
+        players[id].key = p->key;
+        players[id].roomid = p->roomid;
+        //printf("recv id from server: %d\n", p->key);
+
+        Send_login_packet(id, "test");
         break;
     }
-    case PacketType::Type_player_login: {
-        player_login_packet* p = reinterpret_cast<player_login_packet*>(buf);
-        printf("login id: %d\n", p->id);
+    case PacketType::SC_player_loginOK: {
+        player_loginOK_packet* p = reinterpret_cast<player_loginOK_packet*>(buf);
+        printf("login room: %d - key: %d\n", players[id].roomid, players[id].key);
         break;
     }
-    case PacketType::Type_player_remove: {
+    case PacketType::SC_player_remove: {
 
         break;
     }
-    case PacketType::Type_start_ok: {
-        //GameConnect();
-        break;
-    }
-    case PacketType::Type_game_end: {
-        printf("gameover\n");
-        //LobbyConnect();
-        break;
-    }
-    case PacketType::Type_player_info: {
-
-        break;
-    }
-
-    case PacketType::Type_player_move: {
+    case PacketType::SC_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
 
         switch (p->MoveType){
@@ -204,39 +204,26 @@ void CPacket::ProcessPacket(int id, char* buf)
         }
         break;
     }
-    case PacketType::Type_player_pos: {
+    case PacketType::SC_player_pos: {
         //printf("¿Õ\n");
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
-        players[p->id].pos.x = p->Position.x;
-        players[p->id].pos.y = p->Position.z;
-        printf("¾Æ\n");
+        players[p->key].pos.x = p->Position.x;
+        players[p->key].pos.y = p->Position.z;
+        //printf("¾Æ\n");
         
         break;
     }
-    case PacketType::Type_start_pos: {
+    case PacketType::SC_start_pos: {
         player_start_pos* p = reinterpret_cast<player_start_pos*>(buf);
-        players[p->id].pos.x = p->Position.x;
-        players[p->id].pos.y = p->Position.z;
+        players[p->key].pos.x = p->Position.x;
+        players[p->key].pos.y = p->Position.z;
         break;
     }
-    case PacketType::Type_player_attack: {
+    case PacketType::SC_player_attack: {
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
 
         break;
     }
-
-    case PacketType::Type_map_collapse: {
-        map_collapse_packet* p = reinterpret_cast<map_collapse_packet*>(buf);
-        //printf("break map: %d\n", p->block_num);
-        break;
-    }
-
-    case PacketType::Type_cloud_move: {
-        cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(buf);
-        printf("id: %d cloud move x = %f, z = %f\n", client_id, p->x, p->z);
-        break;
-    }
-
     }
 }
 
@@ -285,21 +272,20 @@ void CPacket::TestGameConnect()
         /*players[num_connections].pos.x = rand() % 3000;
         players[num_connections].pos.y = rand() % 3000;*/
 
-        player_start_pos p;
-        p.size = sizeof(p);
-        p.type = Type_start_pos;
-        p.Position.x = players[num_connections].pos.x;
-        p.Position.z = players[num_connections].pos.y;
-        p.id = num_connections;
-        p.Position.y = 0;
-        SendPacket(num_connections, reinterpret_cast<char*>(&p));
-        
-
         CreateIoCompletionPort(reinterpret_cast<HANDLE>(players[num_connections].sock), hcp, num_connections, 0);
 
-        printf("%d is connected\n", num_connections);
-        do_recv(num_connections);
+        //printf("%d is connected\n", num_connections);
 
+       /* player_start_pos p;
+        p.size = sizeof(p);
+        p.type = CS_start_pos;
+        p.Position.x = players[num_connections].pos.x;
+        p.Position.z = players[num_connections].pos.y;
+        p.key = num_connections;
+        p.Position.y = 0;
+        SendPacket(num_connections, reinterpret_cast<char*>(&p));*/
+
+        do_recv(num_connections);
     }
 }
 
@@ -315,46 +301,47 @@ void CPacket::Test_Thread()
             if (false == players[i].connected) continue;
             player_pos_packet p;
             p.size = sizeof(p);
-            p.type = Type_player_pos;
+            p.type = CS_player_pos;
             switch (rand() % 4) {
             case 0: p.Position.x = (players[i].pos.x) - 20; break;
             case 1: p.Position.x = (players[i].pos.x) + 20; break;
             case 2: p.Position.z = (players[i].pos.y) - 20; break;
             case 3: p.Position.z = (players[i].pos.y) + 20; break;
             }
-            p.id = i;
+            p.roomid = players[i].roomid;
+            p.key = players[i].key;
             p.dx = 0;
             p.dy = 0;
-            p.dz = 0;
             p.Position.y = 0;
             p.state = 1;
             SendPacket(i, reinterpret_cast<char*>(&p));
-            switch (rand() % 4) {
-            case 2: {
-                player_move_packet p1;
-                p1.size = sizeof(p1);
-                p1.type = Type_player_pos;
-                p1.id = i;
-                p1.dx = 0;
-                p1.dy = 0;
-                p1.dz = 0;
-                p1.MoveType = PlayerMove::JUMP;
-                p1.state = 1;
-                SendPacket(i, reinterpret_cast<char*>(&p1));
-            }
-            case 3: {
-                //std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                player_attack_packet p1;
-                p1.attack_type = 0;
-                p1.id = i;
-                p1.size = sizeof(p1);
-                p1.type = PacketType::Type_player_attack;
-                SendPacket(i, reinterpret_cast<char*>(&p1));
-            }
-            }
+            //switch (rand() % 4) {
+            //case 2: {
+            //    player_move_packet p1;
+            //    p1.size = sizeof(p1);
+            //    p1.type = CS_player_pos;
+            //    p1.key = players[i].key;
+            //    p1.dx = 0;
+            //    p1.dy = 0;
+            //    p1.MoveType = PlayerMove::JUMP;
+            //    p1.state = 1;
+            //    p1.roomid = players[i].roomid;
+            //    SendPacket(i, reinterpret_cast<char*>(&p1));
+            //}
+            ////case 3: {
+            ////    //std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            ////    player_attack_packet p1;
+            ////    p1.attack_type = 0;
+            ////    p1.key = i; 
+            ////    p1.size = sizeof(p1);
+            ////    p1.type = PacketType::CS_player_attack;
+            ////    p1.roomid = players[i].roomid;
+            ////    SendPacket(i, reinterpret_cast<char*>(&p1));
+            ////}
+            //}
         }
 
-        //std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 
@@ -365,7 +352,7 @@ bool CPacket::Init()
 
     for (auto& cl : players) {
         cl.connected = false;
-        cl.id = 0;
+        cl.key = 0;
     }
 
     num_connections = 0;

@@ -15,7 +15,6 @@
 #include <memory.h>
 #include <tchar.h>
 #include <math.h>
-
 #include <string>
 #include <wrl.h>
 #include <shellapi.h>

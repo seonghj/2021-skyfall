@@ -1,7 +1,7 @@
 #pragma once
 #include"stdafx.h"
 #include "player.h"
-#include "protocol.h"
+#include "../GameServer/protocol.h"
 
 enum OPTYPE { OP_SEND, OP_RECV, OP_DO_MOVE };
 
@@ -25,6 +25,7 @@ public:
 	void do_recv(int id);
 	void SendPacket(int id, char* buf);
 	void Send_ready_packet();
+	void Send_login_packet(int key, char* id);
 	void ProcessPacket(int id,char* buf);
 
 	void Set_clientid(int n);

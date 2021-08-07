@@ -114,12 +114,12 @@ void draw(HDC hDC)
 {
 	for (auto& p : packet->players) {
 		if (p.connected) {
-			packet->rcTmpPlayer[p.id] = p.m_rcObject;
-			packet->rcTmpPlayer[p.id].left += p.pos.x / 5.f;
-			packet->rcTmpPlayer[p.id].right += p.pos.x / 5.f;
-			packet->rcTmpPlayer[p.id].top += p.pos.y / 5.f;
-			packet->rcTmpPlayer[p.id].bottom += p.pos.y / 5.f;
-			FillRect(hDC, &packet->rcTmpPlayer[p.id], p.m_hbrObject);
+			packet->rcTmpPlayer[p.key] = p.m_rcObject;
+			packet->rcTmpPlayer[p.key].left += p.pos.x / 5.f;
+			packet->rcTmpPlayer[p.key].right += p.pos.x / 5.f;
+			packet->rcTmpPlayer[p.key].top += p.pos.y / 5.f;
+			packet->rcTmpPlayer[p.key].bottom += p.pos.y / 5.f;
+			FillRect(hDC, &packet->rcTmpPlayer[p.key], p.m_hbrObject);
 		}
 	}
 }
