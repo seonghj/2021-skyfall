@@ -353,7 +353,7 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 	VS_TERRAIN_OUTPUT output;
 
 	output.positionW = (float3)mul(float4(input.position, 1.0f), gmtxGameObject);
-	if (output.positionW.y <= 90.f) {
+	if (output.positionW.y <= 87.f) {
 		output.positionW.y = 85.f + 2 * cos(output.positionW.x /3 + output.positionW.z /2 + gfCurrentTime * 2);
 		output.nState = WATER;
 	}
@@ -362,11 +362,16 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 
 
 	const int2 arrange[10] = { int2(0,0),int2(1,0),int2(2,0),int2(0,1),int2(1,1),int2(2,1),int2(0,2),int2(1,2),int2(2,2),int2(-1,-1) };
-	float2 pos = arrange[gnIndexFall] * 2048.f;
-	if (pos.x < output.positionW.x && output.positionW.x < pos.x + 2048 &&
-		pos.y < output.positionW.z && output.positionW.z < pos.y + 2048) {
+	float2 pos = float2(output.positionW.x, output.positionW.z) - arrange[gnIndexFall] * 2048.f;
+
+	if (0 < pos.x && pos.x < 2048 &&
+		0 < pos.y && pos.y < 2048) {
+		
 		//output.nState |= STATE::FALL;
-		output.positionW.y -= 100 * gfTime;
+		float r = length(float2(1024, 1024) - pos);
+		if (r < gfTime * 100) {
+			output.positionW.y -= 50 * (gfTime - r) + 9.8f * (gfTime - r) * (gfTime - r);
+		}
 	}
 
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
@@ -400,7 +405,7 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
 
 	float4 cColor;
-	if (input.positionW.y <= 87.f) {
+	if (input.nState == WATER&& input.positionW.y <= 87.f) {
 		float2 uv = input.positionW.xz/50;
 		uv.x += gfCurrentTime / 10;
 		uv.y -= gfCurrentTime / 10;
