@@ -195,11 +195,13 @@ void Map::cloud_move()
 
 void Map::Map_collapse()
 {
-	srand((unsigned int)time(NULL));
+	std::random_device rd;
+	std::mt19937_64 gen(rd());
+	std::uniform_int_distribution<int> dis(0, 8);
 	int num = 0;
 	while (1)
 	{
-		num = rand() % 9;
+		num = dis(gen);
 
 		if (isMap_block[num] == TRUE)
 		{

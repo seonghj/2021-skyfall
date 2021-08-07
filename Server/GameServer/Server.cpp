@@ -413,12 +413,16 @@ void Server::send_packet_to_allplayers(int roomID, char* buf)
 
 void Server::send_map_collapse_packet(int num, int map_num)
 {
+    std::vector<std::vector<int>> m_vMapArrange = { { 0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}, {0, 2}, {1, 2}, {2, 2} };
+
     map_collapse_packet p;
     p.size = sizeof(map_collapse_packet);
     p.type = PacketType::SC_map_collapse;
     p.block_num = num;
     p.key = 0;
     p.roomid = map_num;
+    p.index[0] = m_vMapArrange[num][0];
+    p.index[1] = m_vMapArrange[num][1];
 
     send_packet_to_allplayers(map_num, reinterpret_cast<char*>(&p));
 }
@@ -896,6 +900,14 @@ void Server::WorkerFunc()
                 ep.size = sizeof(ep);
                 ep.type = EventType::game_end;
                 m_pTimer->push_event(key, OE_gEvent, 1000 * (MAP_BREAK_TIME*9), reinterpret_cast<char*>(&ep));
+
+
+                Mapbreak_event e;
+                e.roomid = key;
+                e.size = sizeof(e);
+                e.type = EventType::MapBreak;
+                m_pTimer->push_event(key, OE_gEvent, MAP_BREAK_TIME, reinterpret_cast<char*>(&e));
+
                 break;
             }
             case EventType::Cloud_move: {
@@ -918,6 +930,12 @@ void Server::WorkerFunc()
             case EventType::Mon_attack_cooltime: {
                 mon_attack_cooltime_event* e = reinterpret_cast<mon_attack_cooltime_event*>(over_ex->messageBuffer);
                 m_pBot->monsters[roomID][e->key].CanAttack = TRUE;
+                delete over_ex;
+                break;
+            }
+            case EventType::MapBreak: {
+                Mapbreak_event* p = reinterpret_cast<Mapbreak_event*>(over_ex->messageBuffer);
+                maps[key].Map_collapse();
                 delete over_ex;
                 break;
             }

@@ -6,16 +6,16 @@ constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
 constexpr int BUFSIZE = 128;
 constexpr int MAX_CLIENT = 3000;
-constexpr int MAX_PLAYER = 2;
+constexpr int MAX_PLAYER = 20;
 constexpr int INVALIDID = -1;
 constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
 constexpr int AI_ID = 5000;
 
 constexpr int MAX_MAP_BLOCK = 9;
-constexpr int MAP_SIZE = 99999;
-constexpr int MAP_BLOCK_SIZE = 33333;
-constexpr int MAP_BREAK_TIME = 30;
+constexpr int MAP_SIZE = 6000;
+constexpr int MAP_BLOCK_SIZE = 2048;
+constexpr int MAP_BREAK_TIME = 3000;
 
 constexpr float VIEWING_DISTANCE = 16666.f;
 
@@ -110,7 +110,8 @@ enum EventType {
 	Cloud_move,
 	game_end,
 	Mon_move_to_player,
-	Mon_attack_cooltime
+	Mon_attack_cooltime,
+	MapBreak
 };
 
 enum PlayerState {
@@ -285,6 +286,7 @@ struct map_block_set : public Packet {
 
 struct map_collapse_packet : public Packet {
 	char block_num;
+	short index[2];
 };
 
 struct cloud_move_packet : public Packet {
@@ -336,6 +338,10 @@ struct mon_move_to_player_event : public Packet {
 };
 
 struct mon_attack_cooltime_event : public Packet {
+
+};
+
+struct Mapbreak_event : public Packet {
 
 };
 #pragma pack(pop)
