@@ -37,6 +37,11 @@ struct LIGHTS
 	int									m_nLights;
 };
 
+enum SCENE {
+	LOBBY,INGAME,
+};
+
+
 class CScene
 {
 public:
@@ -137,6 +142,8 @@ public:
 	LIGHTS								*m_pcbMappedLights = NULL;
 
 	CMap								*m_pMap = NULL;
+
+	int m_iState;
 
 };
 
