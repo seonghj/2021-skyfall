@@ -62,6 +62,7 @@ enum PacketType {
 	SC_weapon_swap,
 	SC_player_pos,
 	SC_player_move,
+	SC_player_rotate,
 	SC_start_pos,
 	SC_player_attack,
 	SC_allow_shot,
@@ -223,6 +224,7 @@ struct player_pos_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
 	float dx, dy;
 	DWORD MoveType;
+	DWORD dir;
 };
 
 struct player_start_pos : public Packet {
@@ -232,6 +234,11 @@ struct player_start_pos : public Packet {
 struct player_move_packet : public Packet {
 	char state;
 	DWORD MoveType;
+	DWORD direction;
+	float dx, dy;
+};
+
+struct player_rotate_packet : public Packet {
 	float dx, dy;
 };
 

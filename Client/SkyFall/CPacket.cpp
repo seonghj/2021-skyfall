@@ -453,7 +453,6 @@ void CPacket::ProcessPacket(char* buf)
             switch (p->MoveType) {
             case PlayerMove::JUMP: {
                 m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
-                printf("key %d jump\n", key);
                 break;
             }
             }
@@ -584,7 +583,6 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_stop: {
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
         int key = p->key;
-
         if (p->key != client_key) {
             m_pScene->AnimatePlayer(key, 0);
             m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
@@ -730,6 +728,9 @@ void CPacket::LobbyConnect()
 
     WSADATA wsa;
     WSAStartup(MAKEWORD(2, 2), &wsa);
+
+    hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
+    if (hcp == NULL) return;
 
     // socket()
     sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);

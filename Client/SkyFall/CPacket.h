@@ -76,6 +76,10 @@ private:
 
 	bool isLogin = false;
 
+	HANDLE                         hcp;
+	std::vector <std::thread>      working_threads;
+
+
 	//static DWORD WINAPI ServerConnect(LPVOID arg);
 };
 

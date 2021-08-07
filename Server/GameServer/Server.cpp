@@ -611,7 +611,7 @@ void Server::player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, f
     else
         sessions[roomID][client_key].f3Position = pos;
 
-    std::lock_guard <std::mutex> lg(sessions[roomID][client_key].nm_lock);
+    /*std::lock_guard <std::mutex> lg(sessions[roomID][client_key].nm_lock);
     std::unordered_set<int> old_nm;
     std::unordered_set<int> new_nm;
 
@@ -638,7 +638,7 @@ void Server::player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, f
             sessions[roomID][client_key].near_monster.erase(m);
             send_remove_monster(m, roomID, client_key);
         }
-    }
+    }*/
 }
 
 void Server::process_packet(int key, char* buf, int roomID)
@@ -877,9 +877,6 @@ void Server::WorkerFunc()
             }
             else {
                 delete over_ex;
-                over_ex = NULL;
-                if (_heapchk() != _HEAPOK)
-                    DebugBreak();
             }
             break;
         }

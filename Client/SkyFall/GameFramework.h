@@ -140,5 +140,8 @@ private:
 
 	ID3D12Resource				*m_pd3dcbFog = NULL;
 	CB_FOG_INFO					*m_pcbMappedFog = NULL;
+
+	DWORD						dwDirection = 0;
+	BOOL						PressDirButton = false;
 };
 
