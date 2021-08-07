@@ -148,6 +148,8 @@ public:
 	CUIObject							**m_ppUIObjects = NULL;
 	int									m_nUIs = 0;
 
+	CGameObject							** m_ppWeapons = new CGameObject * [4];
+
 	int m_iState;
 
 };

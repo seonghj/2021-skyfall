@@ -344,8 +344,9 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	CLoadedModelInfo* pPlayerModel = pModel;
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 
-	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,30), XMFLOAT3(10,10,30));
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
+
+	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,30), XMFLOAT3(7,7,30));
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 9, pPlayerModel);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Idle, nBasic_Idle);
@@ -371,19 +372,17 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	CAnimationCallbackHandler *pAnimationCallbackHandler = new CSoundCallbackHandler();
 	m_pSkinnedAnimationController->SetAnimationCallbackHandler(nBasic_Walk, pAnimationCallbackHandler);
 #endif
-
+	
 	SetPlayerUpdatedContext(ppContext);
 	//SetCameraUpdatedContext(pContext);
-
-	SetPlace(0);
+	SetPlace(2);
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)ppContext[m_nPlace];
 	XMFLOAT3 pos = pTerrain->GetPosition();
-	pos.x += 100 + rand() % 1900;
-	pos.z += 100 + rand() % 1900;
+	pos.x += 1270;
+	pos.z += 1480;
 	SetPosition(XMFLOAT3(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z));
 
-	m_pSkinnedAnimationController->SetAllTrackDisable();
-	m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
+	SetJump(true);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -603,7 +602,7 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 
-	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(10, 10, 30));
+	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(7, 7, 30));
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 12, pPlayerModel);
@@ -651,6 +650,15 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	SetPosition(XMFLOAT3(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z));
 
 	m_isRelease = false;
+
+	pWeapon = pPlayerModel->m_pModelRootObject->FindFrame("Bow_Main");
+
+	BoundingBox bb = BoundingBox(pWeapon->m_pMesh->m_xmf3AABBCenter, pWeapon->m_pMesh->m_xmf3AABBExtents);
+
+	pWeapon->SetBBObject(pd3dDevice, pd3dCommandList,
+		XMFLOAT3(0,0,-bb.Center.z/4),
+		XMFLOAT3(bb.Extents.x, bb.Extents.y, bb.Extents.z));
+
 
 	m_ppBullets = new CBullet * [MAX_BULLET];
 
@@ -836,7 +844,7 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	CLoadedModelInfo* pPlayerModel = pModel;
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 
-	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(10, 10, 30));
+	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(7, 7, 30));
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 13, pPlayerModel);
@@ -874,15 +882,15 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	//SetCameraUpdatedContext(pContext);
 
 
-	m_pSkinnedAnimationController->SetAllTrackDisable();
-	m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
+	SetJump(true);
+
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	pWeapon = pPlayerModel->m_pModelRootObject->FindFrame("Sword_Blade");
 
 	BoundingBox bb = BoundingBox(pWeapon->m_pMesh->m_xmf3AABBCenter, pWeapon->m_pMesh->m_xmf3AABBExtents);
 
 	pWeapon->SetBBObject(pd3dDevice, pd3dCommandList,
-		XMFLOAT3(0,0,0),
+		XMFLOAT3(0,0,-bb.Center.z/4),
 		XMFLOAT3(bb.Extents.x, bb.Extents.y, bb.Extents.z));
 
 	SetPlace(4);
@@ -1011,7 +1019,7 @@ C2HswordPlayer::C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	CLoadedModelInfo* pPlayerModel = pModel;
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 
-	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(10, 10, 30));
+	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(7, 7, 30));
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 13, pPlayerModel);
@@ -1057,7 +1065,7 @@ C2HswordPlayer::C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	BoundingBox bb = BoundingBox(pWeapon->m_pMesh->m_xmf3AABBCenter, pWeapon->m_pMesh->m_xmf3AABBExtents);
 
 	pWeapon->SetBBObject(pd3dDevice, pd3dCommandList,
-		XMFLOAT3(0, 0, 0),
+		XMFLOAT3(0, -bb.Center.y / 4, 0),
 		XMFLOAT3(bb.Extents.x, bb.Extents.y, bb.Extents.z));
 }
 
@@ -1071,7 +1079,7 @@ C2HspearPlayer::C2HspearPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	CLoadedModelInfo* pPlayerModel = pModel;
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 
-	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(10, 10, 30));
+	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(7, 7, 30));
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 13, pPlayerModel);
@@ -1119,7 +1127,7 @@ C2HspearPlayer::C2HspearPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	BoundingBox bb = BoundingBox(pWeapon->m_pMesh->m_xmf3AABBCenter, pWeapon->m_pMesh->m_xmf3AABBExtents);
 
 	pWeapon->SetBBObject(pd3dDevice, pd3dCommandList,
-		XMFLOAT3(0, 0, 0),
+		XMFLOAT3(0, -bb.Center.y/4, 0),
 		XMFLOAT3(bb.Extents.x, bb.Extents.y, bb.Extents.z));
 }
 

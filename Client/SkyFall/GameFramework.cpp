@@ -335,6 +335,8 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		::ReleaseCapture();
 		m_ChargeTimer.Stop();
 		m_pPlayer->LButtonUp();
+		m_DegreeX = 0;
+		m_DegreeY = 0;
 		break;
 	}
 	case WM_RBUTTONUP: {
@@ -542,10 +544,11 @@ void CGameFramework::BuildObjects()
 
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
 	m_pPlayer = m_pScene->m_pPlayer = pPlayer;
-
+	pPlayer->Rotate(60.0f, -90.f, 0);
 	//m_pPlayer->SetPlace(4);
 	
 	m_pCamera = pPlayer->GetCamera();
+
 	m_pPacket->m_pScene = m_pScene;
 	m_pPacket->m_pFramework = this;
 	m_pPacket->m_pPlayer = m_pPlayer;
@@ -726,15 +729,6 @@ void CGameFramework::AnimateObjects()
 		m_pScene->AnimateObjects(fTimeElapsed);
 
 		//// 임시방편
-		//if (m_pPlayer->GetPosition().x < 0) {
-		//	m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pForestTerrain);
-		//}
-		//else if (m_pPlayer->GetPosition().x < 2048) {
-		//	m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pTerrain);
-		//}
-		//else {
-		//	m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pSnowTerrain);
-		//}
 		XMFLOAT3 pos = m_pPlayer->GetPosition();
 		int nPlace = m_pPlayer->GetPlace();
 		if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {

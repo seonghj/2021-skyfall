@@ -148,7 +148,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
-	m_iState =SCENE::LOBBY;
+	m_iState = SCENE::LOBBY;
 }
 
 void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
@@ -171,6 +171,26 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		//m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, 124.0f, 650.0f));
 		//MovePlayer(i, XMFLOAT3(80.0f, 0.0f, 0.0f));
 	}
+	for (int i = 0; i < 4; ++i) {
+		m_ppWeapons[i] = new CGameObject();
+		m_ppWeapons[i]->SetScale(0.6f, 0.6f, 0.6f);
+	}
+
+	m_ppWeapons[0]->SetChild(p1HSwordModel->m_pModelRootObject->FindFrame("Sword_Pivot"));
+	m_ppWeapons[1]->SetChild(pBowModel->m_pModelRootObject->FindFrame("Bow_Pivot"));
+	m_ppWeapons[2]->SetChild(p2HSwordModel->m_pModelRootObject->FindFrame("Long_Sword_Pivot"));
+	m_ppWeapons[3]->SetChild(p2HSpearModel->m_pModelRootObject->FindFrame("Spear_Pivot"));
+
+	XMFLOAT3 pos = m_ppTerrain[2]->GetPosition();
+	m_ppWeapons[0]->SetPosition(Vector3::Add(pos,XMFLOAT3(1135,190,1370)));
+	m_ppWeapons[1]->SetPosition(Vector3::Add(pos,XMFLOAT3(1135,170,1430)));
+	m_ppWeapons[2]->SetPosition(Vector3::Add(pos,XMFLOAT3(1135,200,1490)));
+	m_ppWeapons[3]->SetPosition(Vector3::Add(pos,XMFLOAT3(1135,200,1550)));
+	m_ppWeapons[0]->Rotate(0, 0.f, -20.f);
+	m_ppWeapons[1]->Rotate(0, 0.f, 0.f);
+	m_ppWeapons[2]->Rotate(0, 0.f, -20.f);
+	m_ppWeapons[3]->Rotate(0, 0.f, -20.f);
+	
 
 	if (p1HSwordModel) delete p1HSwordModel;
 	if (pBowModel) delete pBowModel;
@@ -983,17 +1003,13 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	if (m_pSnowTerrain) m_pSnowTerrain->Render(pd3dCommandList, pCamera);
 	for (int i = 0; i < 9; i++)
 		if (m_ppTerrain[i]) m_ppTerrain[i]->Render(pd3dCommandList, pCamera);
+	if (m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
 	
 	if (m_iState == SCENE::LOBBY) {
-		//m_pPlayer->Render(pd3dCommandList, pCamera);
-
-		m_mBowPlayer[0]->Render(pd3dCommandList, pCamera);
-		m_m1HswordPlayer[0]->Render(pd3dCommandList, pCamera);
-		m_m2HswordPlayer[0]->Render(pd3dCommandList, pCamera);
-		m_m2HspearPlayer[0]->Render(pd3dCommandList, pCamera);
+		for(int i=0;i<4;++i)
+			m_ppWeapons[i]->Render(pd3dCommandList, pCamera);
 	}
 	else if (m_iState == SCENE::INGAME) {
-		if (m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
 
 		for (int i = 0; i < m_nGameObjects; i++)
 		{
@@ -1037,21 +1053,20 @@ void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* p
 	D3D12_GPU_VIRTUAL_ADDRESS d3dcbLightsGpuVirtualAddress = m_pd3dcbLights->GetGPUVirtualAddress();
 	pd3dCommandList->SetGraphicsRootConstantBufferView(2, d3dcbLightsGpuVirtualAddress); //Lights
 
+	if (m_pTerrain) m_pTerrain->RenderShadow(pd3dCommandList, pCamera);
+	if (m_pForestTerrain) m_pForestTerrain->RenderShadow(pd3dCommandList, pCamera);
+	if (m_pSnowTerrain) m_pSnowTerrain->RenderShadow(pd3dCommandList, pCamera);
+	for (int i = 0; i < 9; i++)
+		if (m_ppTerrain[i]) m_ppTerrain[i]->RenderShadow(pd3dCommandList, pCamera);
+
+	if (m_pMap) m_pMap->RenderShadow(pd3dCommandList, pCamera);
+
 	if (m_iState == SCENE::LOBBY) {
-		m_mBowPlayer[0]->RenderShadow(pd3dCommandList, pCamera);
-		m_m1HswordPlayer[0]->RenderShadow(pd3dCommandList, pCamera);
-		m_m2HswordPlayer[0]->RenderShadow(pd3dCommandList, pCamera);
-		m_m2HspearPlayer[0]->RenderShadow(pd3dCommandList, pCamera);
+		for (int i = 0; i < 4; ++i)
+			m_ppWeapons[i]->RenderShadow(pd3dCommandList, pCamera);
 	}
 	else if (m_iState == SCENE::INGAME) {
 		//if (m_pSkyBox) m_pSkyBox->RenderShadow(pd3dCommandList, pCamera);
-		if (m_pTerrain) m_pTerrain->RenderShadow(pd3dCommandList, pCamera);
-		if (m_pForestTerrain) m_pForestTerrain->RenderShadow(pd3dCommandList, pCamera);
-		if (m_pSnowTerrain) m_pSnowTerrain->RenderShadow(pd3dCommandList, pCamera);
-		for (int i = 0; i < 9; i++)
-			if (m_ppTerrain[i]) m_ppTerrain[i]->Render(pd3dCommandList, pCamera);
-
-		if (m_pMap) m_pMap->RenderShadow(pd3dCommandList, pCamera);
 
 		for (int i = 0; i < m_nGameObjects; i++)
 		{
