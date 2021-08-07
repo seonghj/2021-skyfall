@@ -303,7 +303,7 @@ float4 PSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_OUTPUT input) : SV_TARGE
 	
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
 
-	float4 cNormalColor = float4(1.f, 1.f, 1.f, 1.0f);
+	float4 cNormalColor = float4(0.f,0.f, 0.f, 1.0f);
 
 	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
 
