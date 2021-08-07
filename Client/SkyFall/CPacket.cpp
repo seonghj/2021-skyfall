@@ -206,11 +206,13 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             float beforeyaw = m_pScene->m_mPlayer[key]->GetYaw();
             float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
             XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
+            int beforplace = m_pScene->m_mPlayer[key]->GetPlace();
 
-            m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
+            //m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
             m_pScene->m_mPlayer[key] = m_pScene->m_mBowPlayer[key];
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
+            m_pScene->m_mPlayer[key]->SetPlace(beforplace);
 
             float tpitch = m_pScene->m_mPlayer[key]->GetPitch();
             float tyaw = m_pScene->m_mPlayer[key]->GetYaw();
@@ -224,11 +226,13 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             float beforeyaw = m_pScene->m_mPlayer[key]->GetYaw();
             float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
             XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
+            int beforplace = m_pScene->m_mPlayer[key]->GetPlace();
 
-            m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
+            //m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
             m_pScene->m_mPlayer[key] = m_pScene->m_m1HswordPlayer[key];
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
+            m_pScene->m_mPlayer[key]->SetPlace(beforplace);
 
             float tpitch = m_pScene->m_mPlayer[key]->GetPitch();
             float tyaw = m_pScene->m_mPlayer[key]->GetYaw();
@@ -281,6 +285,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             float beforepitch = m_pPlayer->GetPitch();
             float beforeyaw = m_pPlayer->GetYaw();
             XMFLOAT3 beforepos = m_pPlayer->GetPosition();
+            int beforplace = m_pPlayer->GetPlace();
 
             m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
             m_pScene->m_mPlayer[client_key] = m_pScene->m_mBowPlayer[client_key];
@@ -289,6 +294,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pPlayer = m_pFramework->m_pPlayer;
 
             m_pPlayer->SetPosition(beforepos);
+            m_pPlayer->SetPlace(beforplace);
 
             float tpitch = m_pPlayer->GetPitch();
             float tyaw = m_pPlayer->GetYaw();
@@ -301,6 +307,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             XMFLOAT3 beforepos = m_pPlayer->GetPosition();
             float beforepitch = m_pPlayer->GetPitch();
             float beforeyaw = m_pPlayer->GetYaw();
+            int beforplace = m_pPlayer->GetPlace();
 
             m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
             m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
@@ -309,6 +316,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pPlayer = m_pFramework->m_pPlayer;
 
             m_pPlayer->SetPosition(beforepos);
+            m_pPlayer->SetPlace(beforplace);
 
             float tpitch = m_pPlayer->GetPitch();
             float tyaw = m_pPlayer->GetYaw();
@@ -457,11 +465,9 @@ void CPacket::ProcessPacket(char* buf)
         roomID = p->roomid;
         printf("recv key from server: %d\n", key);
 
-        m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
-        m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
-        m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
-        m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
-        m_pPlayer = m_pFramework->m_pPlayer;
+        m_pPlayer = m_pFramework->m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
+        //m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
+
         m_pFramework->m_pCamera = m_pPlayer->GetCamera();
 
         Send_login_packet(userID);
@@ -679,7 +685,8 @@ void CPacket::ProcessPacket(char* buf)
 
     case PacketType::SC_cloud_move: {
         cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(buf);
-        //printf("key: %d cloud move x = %f, z = %f\n",p->roomid, p->x, p->z);
+        m_pFramework->SetCloud(p->x, p->z);
+        printf("key: %d cloud move x = %f, z = %f\n",p->roomid, p->x, p->z);
         break;
     }
     case PacketType::SC_map_set: {

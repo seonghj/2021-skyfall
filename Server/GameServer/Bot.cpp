@@ -125,7 +125,7 @@ void Bot::CheckBehavior(int roomID)
 			XMFLOAT3 mon_pos = (XMFLOAT3&)mon.GetPosition();
 
 			player_pos.y = 0;
-			mon_pos.y = 0;
+			//mon_pos.y = 0;
 
 			subtract = Vector3::Subtract(player_pos, mon_pos);
 			subtract.y = 0;

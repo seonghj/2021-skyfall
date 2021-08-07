@@ -329,7 +329,8 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		break;
 	}
 	case WM_LBUTTONUP: {
-		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+		//if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+		if(strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
 			m_pPacket->Send_stop_packet();
 		::ReleaseCapture();
 		m_ChargeTimer.Stop();
@@ -337,7 +338,8 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		break;
 	}
 	case WM_RBUTTONUP: {
-		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+		//if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+		if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
 			m_pPacket->Send_stop_packet();
 		m_pPlayer->RButtonUp();
 		CCamera* pCamera = m_pPlayer->GetCamera();
@@ -560,27 +562,6 @@ void CGameFramework::BuildObjects()
 
 	if (m_pScene) m_pScene->ReleaseUploadBuffers();
 	//if (p1HswordPlayer) p1HswordPlayer->ReleaseUploadBuffers();
-
-	for (int i = 0; i < MAX_PLAYER; i++) {
-		if (m_pScene->m_mBowPlayer[i]) {
-			m_pScene->m_mBowPlayer[i]->ReleaseUploadBuffers();
-		}
-	}
-	for (int i = 0; i < MAX_PLAYER; i++) {
-		if (m_pScene->m_m1HswordPlayer[i]) {
-			m_pScene->m_m1HswordPlayer[i]->ReleaseUploadBuffers();
-		}
-	}
-	for (int i = 0; i < MAX_PLAYER; i++) {
-		if (m_pScene->m_m2HswordPlayer[i]) {
-			m_pScene->m_m2HswordPlayer[i]->ReleaseUploadBuffers();
-		}
-	}
-	for (int i = 0; i < MAX_PLAYER; i++) {
-		if (m_pScene->m_m2HspearPlayer[i]) {
-			m_pScene->m_m2HspearPlayer[i]->ReleaseUploadBuffers();
-		}
-	}
 
 	m_GameTimer.Reset();
 	m_ChargeTimer.Reset();
@@ -829,7 +810,7 @@ void CGameFramework::FrameAdvance()
 	m_pShadowMap->UpdateShaderVariable(m_pd3dCommandList);
 
 	m_pShadowMap->Render(m_pd3dCommandList, NULL);
-	if (m_pScene) m_pScene->RenderShadow(m_pd3dCommandList, m_pShadowMap->GetCamera());
+	if (m_pScene) m_pScene->RenderShadow(m_pd3dCommandList,pCamera);
 	m_pPlayer->RenderShadow(m_pd3dCommandList, NULL);
 
 	//if (m_pBowPlayer) m_pBowPlayer->RenderShadow(m_pd3dCommandList, m_pCamera);
@@ -861,6 +842,7 @@ void CGameFramework::FrameAdvance()
 
 	m_pShadowMap->UpdateShaderVariables(m_pd3dCommandList);
 	if (m_pScene) m_pScene->Render(m_pd3dCommandList, m_pCamera);
+	//m_pPlayer->Render(m_pd3dCommandList, NULL);
 
 #ifdef _WITH_PLAYER_TOP
 	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
@@ -981,7 +963,7 @@ void CGameFramework::CreateShaderVariables()
 	m_pd3dcbFog->Map(0, NULL, (void**)&m_pcbMappedFog);
 
 	m_pcbMappedFog->gcFogColor = XMFLOAT4(0.7f, 0.7f, 0.7f, 0.2f);
-	m_pcbMappedFog->gvFogParameter = XMFLOAT4(/*EXP_FOG*/NO_FOG, 1.f, 300.f, 0.001f);
+	m_pcbMappedFog->gvFogParameter = XMFLOAT4(EXP_FOG, 1.f, 300.f, 0.001f);
 }
 
 void CGameFramework::UpdateShaderVariables()

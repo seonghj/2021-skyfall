@@ -587,7 +587,10 @@ void CTerrainPlayer::Update(float fTimeElapsed)
 CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext)
 {
 	strcpy_s(m_pstrFrameName, "Player_Bow");
-	CLoadedModelInfo* pPlayerModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+	if(!pModel)
+		pModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+	CLoadedModelInfo* pPlayerModel = pModel;
+
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 
 	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(10, 10, 30));
@@ -630,16 +633,19 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	//CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
-	//SetPosition(XMFLOAT3(310.0f, pTerrain->GetHeight(310.0f, 595.0f), 595.0f));
+	SetPlace(4);
+	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)ppContext[m_nPlace];
+	XMFLOAT3 pos = pTerrain->GetPosition();
+	pos.x += 100 + rand() % 1900;
+	pos.z += 100 + rand() % 1900;
+	SetPosition(XMFLOAT3(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z));
 
 
 	m_ppBullets = new CBullet * [MAX_BULLET];
 
-
 	CGameObject* pArrow = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Arrow.bin", NULL);
 	CMesh* pMesh = pArrow->m_pMesh;
-
+	//CMesh* pMesh = CBullet::m_pArrow->m_pMesh;
 
 	for (int i = 0; i < MAX_BULLET; ++i)
 	{
@@ -861,6 +867,12 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 		XMFLOAT3(0,0,0),
 		XMFLOAT3(bb.Extents.x, bb.Extents.y, bb.Extents.z));
 
+	SetPlace(4);
+	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)ppContext[m_nPlace];
+	XMFLOAT3 pos = pTerrain->GetPosition();
+	pos.x += 100 + rand() % 1900;
+	pos.z += 100 + rand() % 1900;
+	SetPosition(XMFLOAT3(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z));
 }
 
 C1HswordPlayer::~C1HswordPlayer()
@@ -970,6 +982,7 @@ void C1HswordPlayer::CheckCollision(CGameObject* pObject)
 
 			pObject->SetBehaviorActivate(true);
 			cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
+			pObject->FindFrame("HpBar")->m_bActive = true;
 		}
 	}
 }

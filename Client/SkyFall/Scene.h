@@ -37,6 +37,11 @@ struct LIGHTS
 	int									m_nLights;
 };
 
+enum SCENE {
+	LOBBY,INGAME,
+};
+
+
 class CScene
 {
 public:
@@ -141,6 +146,8 @@ public:
 	CMap								*m_pMap = NULL;
 	CUIObject							**m_ppUIObjects = NULL;
 	int									m_nUIs = 0;
+
+	int m_iState;
 
 };
 
