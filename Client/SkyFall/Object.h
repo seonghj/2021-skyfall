@@ -717,3 +717,13 @@ public:
 
 	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 };
+
+
+class CUIObject : public CGameObject
+{
+public:
+	CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName, float l, float t, float r, float b, float a);
+	~CUIObject();
+
+	//virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
+};

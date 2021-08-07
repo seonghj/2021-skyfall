@@ -302,10 +302,10 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	switch (nMessageID)
 	{
 	case WM_LBUTTONDOWN: {
-		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL);
-		else if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
+		if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
 			m_pPacket->Send_attack_packet(PlayerAttackType::BOWL);
+		else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
+			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL);
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
@@ -316,10 +316,10 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		break;
 	}
 	case WM_RBUTTONDOWN: {
-		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
-		else if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
 			m_pPacket->Send_attack_packet(PlayerAttackType::BOWR);
+		else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
+			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
@@ -329,16 +329,18 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		break;
 	}
 	case WM_LBUTTONUP: {
-		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-			m_pPacket->Send_stop_packet();
+		//if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+		if(strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
+			m_pPacket->Send_animation_stop_packet();
 		::ReleaseCapture();
 		m_ChargeTimer.Stop();
 		m_pPlayer->LButtonUp();
 		break;
 	}
 	case WM_RBUTTONUP: {
-		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-			m_pPacket->Send_stop_packet();
+		//if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+		if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
+			m_pPacket->Send_animation_stop_packet();
 		m_pPlayer->RButtonUp();
 		CCamera* pCamera = m_pPlayer->GetCamera();
 		m_pCamera = pCamera;
@@ -363,7 +365,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			{
 				case VK_CONTROL:
 					m_bRotateEnable = false;
-					//m_pCamera->Rotate(-m_fPitch, -m_fYaw, 0);
+					m_pCamera->Rotate(-m_fPitch, -m_fYaw, 0);
 					m_fPitch = 0;
 					m_fYaw = 0;
 					break;
@@ -601,7 +603,6 @@ void CGameFramework::ProcessInput()
 			/*if (pKeysBuffer['Q'] & 0xF0) dwDirection |= DIR_UP;
 			if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_DOWN;*/
 
-
 			if (pKeysBuffer[VK_SPACE] & 0xF0)
 			{
 				//m_pPlayer->SetJump(true);
@@ -667,8 +668,8 @@ void CGameFramework::ProcessInput()
 				if (m_bRotateEnable) {
 					m_fPitch += cyDelta;
 					m_fYaw += cxDelta;
-					//m_pCamera->Rotate(cyDelta, cxDelta, 0);
-					m_pShadowMap->Rotate(cyDelta, cxDelta, 0);
+					m_pCamera->Rotate(cyDelta, cxDelta, 0);
+					//m_pShadowMap->Rotate(cyDelta, cxDelta, 0);
 				}
 				else {
 					m_DegreeX = cyDelta;
