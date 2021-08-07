@@ -2109,9 +2109,9 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 
 	for (int i = 3; i < 6; i++)
 	{
-		CLoadedModelInfo* pForest_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Collision.bin", NULL);
-		CLoadedModelInfo* pForest_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Passable.bin", NULL);
-		CLoadedModelInfo* pForest_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Forest_Passable.bin", NULL);
+		CLoadedModelInfo* pForest_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Delete_Forest_Collision.bin", NULL);
+		CLoadedModelInfo* pForest_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Delete_Forest_Passable.bin", NULL);
+		CLoadedModelInfo* pForest_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Delete_Forest_Passable.bin", NULL);
 
 		m_ppMaps[0 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Collision, true);
 		m_ppMaps[1 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Steppable);
@@ -2697,4 +2697,39 @@ void CMonster::OnUpdateCallback()
 	{
 		SetGround(false);
 	}*/
+}
+
+
+//void CUIObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+//{
+//}
+
+CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName, float l, float t, float r, float b, float a)
+{
+	CUIMesh* pMesh = new CUIMesh(pd3dDevice, pd3dCommandList, l, t, r, b, a);
+	SetMesh(pMesh);
+
+	CTexture* pUITexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);
+	pUITexture->LoadTextureFromFile(pd3dDevice, pd3dCommandList, pstrTextureName, 0);
+
+	CScene::CreateShaderResourceViews(pd3dDevice, pUITexture, false);
+	pUITexture->SetGraphicsSrvRootArgument(0, 7, 0);
+
+	CUIShader* pUIShader = new CUIShader();
+	pUIShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+	pUIShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	CMaterial* pTerrainMaterial = new CMaterial(1);
+	pTerrainMaterial->SetTexture(pUITexture, 0);
+	pTerrainMaterial->SetShader(pUIShader);
+
+	m_nMaterials = 1;
+	m_ppMaterials = new CMaterial * [m_nMaterials];
+	m_ppMaterials[0] = NULL;
+
+	SetMaterial(0, pTerrainMaterial);
+}
+
+CUIObject::~CUIObject()
+{
 }

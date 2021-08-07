@@ -44,6 +44,7 @@ protected:
 	bool						m_isCharging;
 
 	int							m_nPlace;
+	bool						m_bHit = false;
 	// stat
 
 	LPVOID*						m_ppPlayerUpdatedContext = NULL;
@@ -150,7 +151,6 @@ public:
 	CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void ** ppContext=NULL);
 	virtual ~CTerrainPlayer();
 
-public:
 	virtual void OnPrepareRender();
 	virtual CCamera *ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed);
 
@@ -163,12 +163,15 @@ public:
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
 #endif
-	const int nBasic_Death = 0;
-	const int nBasic_Idle = 1;
+	const int nBasic_Idle = 0;
+	const int nBasic_Death = 1;
 	const int nBasic_Jump = 2;
-	const int nBasic_Run = 3;
-	const int nBasic_Walk = 4;
-
+	const int nBasic_Walk = 3;
+	const int nBasic_Run = 4;
+	const int nBasic_RunBack = 5;
+	const int nBasic_RunLeft = 7;
+	const int nBasic_RunRight = 6;
+	const int nBasic_TakeDamage = 8;
 };
 
 
@@ -183,7 +186,6 @@ public:
 	CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
 	virtual ~CBowPlayer();
 
-	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
 	virtual void SetAttack(bool shoot);
 
@@ -196,18 +198,9 @@ public:
 
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 
-	const int nBow_Idle = 0;
-	const int nBow_Jump = 1;
-	const int nBow_Run = 2;
-	const int nBow_RunBack = 3;
-	const int nBow_RunLeft = 4;
-	const int nBow_RunRight = 5;
-	const int nBow_ShotHold = 6;
-	const int nBow_ShotReady = 7;
-	const int nBow_ShotRelease = 8;
-	const int nBow_TakeDamage = 9;
-	const int nBow_Walk = 10;
-	const int nBow_Death = 11;
+	const int nShotHold = 9;
+	const int nShotReady = 10;
+	const int nShotRelease = 11;
 
 protected:
 	int m_nBullets = 0;
@@ -220,10 +213,10 @@ protected:
 class C1HswordPlayer : public CTerrainPlayer
 {
 public:
+	C1HswordPlayer() :CTerrainPlayer() {};
 	C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
 	virtual ~C1HswordPlayer();
 
-	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 
@@ -234,20 +227,29 @@ public:
 
 	virtual void CheckCollision(CGameObject* pObject);
 
+protected:
 	int m_nAttack = 0;
-	bool m_bHit = false;
+	CGameObject* pWeapon;
 	
-	const int n1Hsword_Idle = 0;
-	const int n1Hsword_Jump = 1;
-	const int n1Hsword_Run = 2;
-	const int n1Hsword_RunBack = 3;
-	const int n1Hsword_RunLeft = 4;
-	const int n1Hsword_RunRight = 5;
-	const int n1Hsword_Attack1 = 6;
-	const int n1Hsword_Attack2 = 7;
-	const int n1Hsword_Attack3 = 8;
-	const int n1Hsword_Attack4 = 9;
-	const int n1Hsword_TakeDamage = 10;
-	const int n1Hsword_Walk = 11;
-	const int n1Hsword_Death = 12;
+	const int nAttack1 = 9;
+	const int nAttack2 = 10;
+	const int nAttack3 = 11;
+	const int nAttack4 = 12;
+};
+
+class C2HswordPlayer : public C1HswordPlayer
+{
+public:
+	C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
+	virtual ~C2HswordPlayer();
+
+};
+
+class C2HspearPlayer : public C1HswordPlayer
+{
+public:
+	C2HspearPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
+	virtual ~C2HspearPlayer();
+
+
 };

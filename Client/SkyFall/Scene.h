@@ -137,6 +137,8 @@ public:
 	LIGHTS								*m_pcbMappedLights = NULL;
 
 	CMap								*m_pMap = NULL;
+	CUIObject							**m_ppUIObjects = NULL;
+	int									m_nUIs = 0;
 
 };
 

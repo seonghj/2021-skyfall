@@ -139,9 +139,13 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_ppGameObjects[3] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, (void**)m_ppTerrain,4);
 	if (pMetalonModel)delete pMetalonModel;
 
+
+	m_nUIs = 1;
+	m_ppUIObjects = new CUIObject * [m_nUIs];
+	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Water.dds", 0.1, 0.1, 0.5, 0.5, 0.8);
 	
 
-	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
+	//m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
@@ -234,6 +238,27 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(11, true);
 		break;
 	}
+	//m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackAnimationSet(animation_num, 3);
+	//if (m_mPlayer[id]->m_pSkinnedAnimationController)
+	//{
+	//	XMFLOAT3 vel = m_mPlayer[id]->GetVelocity();
+	//	float fLength = sqrtf(vel.x * vel.x + vel.z * vel.z);
+
+	//	if (m_mPlayer[id]->GetJump()) {
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(m_mPlayer[id]->nJump, 0);
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->nJump, true);
+	//	}
+	//	else if (m_mPlayer[id]->GetAttack()) {
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->nAttack1 + m_mPlayer[id]->m_nAttack, true);
+	//	}
+	//	else if (::IsZero(fLength) && m_mPlayer[id]->GetGround())
+	//	{
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
+	//		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(m_mPlayer[id]->nIdle, true);
+	//	}
+	//}
 }
 
 void CScene::ReleaseObjects()
@@ -307,7 +332,7 @@ ID3D12RootSignature *CScene::CreateGraphicsRootSignature(ID3D12Device *pd3dDevic
 
 	pd3dDescriptorRanges[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	pd3dDescriptorRanges[4].NumDescriptors = 1;
-	pd3dDescriptorRanges[4].BaseShaderRegister = 10; //t10: gtxtEmissionTexture
+	pd3dDescriptorRanges[4].BaseShaderRegister = 3; //t3: gtxtUI
 	pd3dDescriptorRanges[4].RegisterSpace = 0;
 	pd3dDescriptorRanges[4].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
@@ -541,6 +566,14 @@ void CScene::ReleaseUploadBuffers()
 
 	for (int i = 0; i < m_nShaders; i++) m_ppShaders[i]->ReleaseUploadBuffers();
 	for (int i = 0; i < m_nGameObjects; i++) m_ppGameObjects[i]->ReleaseUploadBuffers();
+
+	//for (auto p : m_mPlayer) {
+	//	p.second->ReleaseUploadBuffers();
+	//}
+	for (int i = 0; i < m_nUIs; ++i)
+		if (m_ppUIObjects[i]) m_ppUIObjects[i]->ReleaseUploadBuffers();
+
+	
 }
 
 
@@ -907,6 +940,9 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	//}
 
 	for (int i = 0; i < m_nShaders; i++) if (m_ppShaders[i]) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
+
+	for (int i = 0; i < m_nUIs; ++i)
+		if(m_ppUIObjects[i]) m_ppUIObjects[i]->Render(pd3dCommandList, pCamera);
 }
 
 void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
