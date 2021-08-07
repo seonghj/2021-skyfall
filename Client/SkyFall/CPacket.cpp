@@ -302,9 +302,9 @@ void CPacket::Map_set(map_block_set* p)
     vector<vector<int>> m_vMapArrange = { { -1, -1}, {0, -1}, {1, -1}, {-1, 0}, {0, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1} };
 
     for (int i = 0; i < MAX_MAP_BLOCK; i++){
-        printf("%d\n", i);
         switch (p->block_type[i]) {
         case Desert: {
+            //printf("%d\n", Desert_count);
             m_pScene->GetTerrain(Desert_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
             if (Desert_count >= 6)  m_pScene->GetTerrain(Desert_count)->MoveUp(125.f);
             m_pMap->GetMap(Desert_count * 3)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
@@ -314,6 +314,7 @@ void CPacket::Map_set(map_block_set* p)
             break;
         }
         case Forest: {
+            //printf("%d\n", Forest_count);
             m_pScene->GetTerrain(Forest_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
             if (Forest_count >= 6)  m_pScene->GetTerrain(Forest_count)->MoveUp(125.f);
             m_pMap->GetMap(Forest_count * 3)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
@@ -323,6 +324,7 @@ void CPacket::Map_set(map_block_set* p)
             break;
         }
         case Snowy_field: {
+           // printf("%d\n", Snowy_count);
             m_pScene->GetTerrain(Snowy_count)->SetPosition(2048.0f * m_vMapArrange[i][0], 0.0f, 2048.0f * m_vMapArrange[i][1]);
             if (Snowy_count >= 6)  m_pScene->GetTerrain(Snowy_count)->MoveUp(125.f);
             m_pMap->GetMap((Snowy_count * 3))->SetPosition(2048.0f * m_vMapArrange[i][0], 60.0f, 2048.0f * m_vMapArrange[i][1]);
@@ -628,31 +630,23 @@ void CPacket::ProcessPacket(char* buf)
         mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
         int key = p->key;
 
-        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
         CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
         XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
         XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
-        bool bReverseQuad = (((int)xmf3MonsterPosition.z % 2) != 0);
-        p->Position.y = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
-        //printf("x : %f, y : %f z : %f\n", p->Position.x, p->Position.y, p->Position.z);
-        //p->Position.y = pTerrain->GetHeight(300.f, 300.f) + m_pScene->m_ppGameObjects[key]->m_AABBExtentsY - m_pScene->m_ppGameObjects[key]->GetPosition().y;
-        m_pScene->m_ppGameObjects[key]->Move(p->Position, 1.f);
+        XMFLOAT3 xmf3Scale = pTerrain->GetScale();
+        int z = (int)(xmf3MonsterPosition.z / xmf3Scale.z);
+        bool bReverseQuad = ((z % 2) != 0);
+        float fHeight = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
+        
+        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
+        p->Position.y = (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight) - m_pScene->m_ppGameObjects[key]->GetPosition().y;
+        m_pScene->m_ppGameObjects[key]->Move(p->Position, 1.0f);
         //CheckCollision(m_pScene->m_ppGameObjects[key]);
 
         p->type = CS_monster_pos;
         p->Position = m_pScene->m_ppGameObjects[key]->GetPosition();
 
-        if (_isnanf(p->Position.x) || _isnanf(p->Position.y) || _isnanf(p->Position.z)) {
-            //m_pScene->m_ppGameObjects[key]->SetPosition(Mon_pos_before_error[key]);
-            break;
-        }
-
-        //Mon_pos_before_error[key] = m_pScene->m_ppGameObjects[key]->GetPosition();
-
         SendPacket(reinterpret_cast<char*>(p));
-        printf("%f, %f, %f\n", m_pScene->m_ppGameObjects[key]->GetPosition().x
-            , m_pScene->m_ppGameObjects[key]->GetPosition().y
-            , m_pScene->m_ppGameObjects[key]->GetPosition().z);
         break;
     }
     case PacketType::SC_monster_attack: {
@@ -663,13 +657,18 @@ void CPacket::ProcessPacket(char* buf)
 
         m_pScene->m_ppGameObjects[key]->Attack();
 
-        int target = MonsterAttackCheck(m_pScene->m_ppGameObjects[key]);
-
-        if (target != -1) {
-            p->type = CS_monster_attack;
-            p->target = target;
-            SendPacket(reinterpret_cast<char*>(p));
+        if (0 == strcmp(m_pScene->m_mPlayer[p->target]->m_pstrFrameName, "Player_Bow")) {
+            m_pScene->AnimatePlayer(p->target, 9);
         }
+        else if (0 == strcmp(m_pScene->m_mPlayer[p->target]->m_pstrFrameName, "Player_1Hsword")) {
+            m_pScene->AnimatePlayer(p->target, 10);
+        }
+
+        if (p->target == client_key) {
+            m_pPlayer->SetHp(p->PlayerLeftHp);
+            cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
+        }
+
         break;
     }
     case PacketType::SC_monster_add: {
@@ -711,14 +710,12 @@ void CPacket::Login()
     std::random_device rd;
     std::mt19937_64 gen(rd());
     std::uniform_int_distribution<int> dis(0, 5000);
-    sprintf_s(userID, "TEST%d", dis(gen));
-    //strcpy(userID, "TEST");
 
     // connect()
     SOCKADDR_IN serveraddr;
     ZeroMemory(&serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
-    serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
+    serveraddr.sin_addr.s_addr = inet_addr(ipaddr);
     serveraddr.sin_port = htons(GAMESERVERPORT);
     retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
     if (retval == SOCKET_ERROR) err_quit("connect()");

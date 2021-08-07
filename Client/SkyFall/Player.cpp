@@ -286,6 +286,7 @@ void CPlayer::CheckCollision(CGameObject* pObject)
 {
 	// Player - pObject
 	if (isCollide(pObject)) {
+
 		if (m_fHitCool <= 0) {
 			m_fHitCool = 1.f;
 			TakeDamage(pObject->GetAtkStat());

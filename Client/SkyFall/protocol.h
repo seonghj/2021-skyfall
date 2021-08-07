@@ -109,7 +109,8 @@ enum EventType {
 	Mapset,
 	Cloud_move,
 	game_end,
-	Mon_move_to_player
+	Mon_move_to_player,
+	Mon_attack_cooltime
 };
 
 enum PlayerState {
@@ -312,6 +313,7 @@ struct mon_attack_packet : public Packet {
 	float degree;
 	DWORD MoveType;
 	int target;
+	float PlayerLeftHp;
 };
 
 struct player_record_packet : public Packet {
@@ -330,6 +332,10 @@ struct player_getitem_packet :public Packet {
 };
 
 struct mon_move_to_player_event : public Packet {
+
+};
+
+struct mon_attack_cooltime_event : public Packet {
 
 };
 #pragma pack(pop)

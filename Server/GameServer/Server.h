@@ -132,7 +132,8 @@ public:
     void send_monster_attack(const Monster& mon, XMFLOAT3 direction, float degree, int target);
 
     void send_player_record(int key, int roomID, const SESSION& s, int time, int rank);
-    
+    void send_map_packet(int to, int roomID);
+
     void game_end(int roomnum);
 
     bool in_VisualField(SESSION a, SESSION b, int roomID);

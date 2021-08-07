@@ -449,10 +449,6 @@ void Server::send_add_monster(int key, int roomID, int to)
     p.dz = m_pBot->monsters[roomID][key].m_fRoll;
     p.MonsterType = m_pBot->monsters[roomID][key].type;
 
-     printf("%f, %f, %f\n", m_pBot->monsters[roomID][key].f3Position.load().x
-            , m_pBot->monsters[roomID][key].f3Position.load().y
-            , m_pBot->monsters[roomID][key].f3Position.load().z);
-
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
@@ -502,6 +498,8 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, float d
     p.roomid = mon.roomID.load();
     p.direction = direction;
     p.degree = degree;
+    p.target = target;
+    p.PlayerLeftHp = sessions[roomID][target].hp;
 
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == FALSE) continue;
@@ -530,6 +528,21 @@ void Server::send_player_record(int key, int roomID
     p.armor = s.armor;
 
     send_packet(key, reinterpret_cast<char*>(&p), roomID);
+}
+
+void Server::send_map_packet(int to, int roomID)
+{
+    map_block_set p;
+    p.type = PacketType::SC_map_set;
+    p.size = sizeof(p);
+    p.key = roomID;
+    p.roomid = roomID;
+
+    for (int i = 0; i < MAX_MAP_BLOCK; i++){
+        p.block_type[i] = maps[roomID].Map_type[i];
+    }
+
+    send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
 void Server::game_end(int roomnum)
@@ -640,14 +653,16 @@ void Server::process_packet(int key, char* buf, int roomID)
         bool b;
 
 #ifdef Run_DB
-        b = m_pDB->Search_ID(p->id, &is_Login);
+        if (strcmp(p->id, "test") != 0) {
+            b = m_pDB->Search_ID(p->id, &is_Login);
 
-        if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
+            if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
 
-        if (is_Login) {
-            send_player_loginFail_packet(client_key, sessions[roomID][client_key].roomID);
-            Disconnected(client_key, sessions[roomID][client_key].roomID);
-            break;
+            if (is_Login) {
+                send_player_loginFail_packet(client_key, sessions[roomID][client_key].roomID);
+                Disconnected(client_key, sessions[roomID][client_key].roomID);
+                break;
+            }
         }
 #endif
         strcpy_s(sessions[roomID][client_key].id, p->id);
@@ -672,6 +687,8 @@ void Server::process_packet(int key, char* buf, int roomID)
         }
 
         sessions[roomID][client_key].state = 1;
+
+        send_map_packet(client_key, roomID);
 
         //m_pBot->monsters[roomID][0].SetPosition()
 
@@ -791,9 +808,6 @@ void Server::process_packet(int key, char* buf, int roomID)
         }
         m_pBot->monsters[roomID][p->key].recv_pos = TRUE;
         m_pBot->monsters[roomID][p->key].SetPosition(p->Position.x, p->Position.y, p->Position.z);
-        printf("%f, %f, %f\n", m_pBot->monsters[roomID][p->key].f3Position.load().x
-            , m_pBot->monsters[roomID][p->key].f3Position.load().y
-            , m_pBot->monsters[roomID][p->key].f3Position.load().z);
         break;
     }
     case PacketType::CS_monster_attack: {
@@ -898,6 +912,12 @@ void Server::WorkerFunc()
                 //m_pBot->CheckTarget(e->roomid);
                 m_pBot->CheckBehavior(e->roomid);
                 m_pBot->RunBot(e->roomid);
+                delete over_ex;
+                break;
+            }
+            case EventType::Mon_attack_cooltime: {
+                mon_attack_cooltime_event* e = reinterpret_cast<mon_attack_cooltime_event*>(over_ex->messageBuffer);
+                m_pBot->monsters[roomID][e->key].CanAttack = TRUE;
                 delete over_ex;
                 break;
             }
