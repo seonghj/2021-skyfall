@@ -152,19 +152,28 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	CLoadedModelInfo* pSwordModel;
+	CLoadedModelInfo* p1HSwordModel;
 	CLoadedModelInfo* pBowModel;
+	CLoadedModelInfo* p2HSwordModel;
+	CLoadedModelInfo* p2HSpearModel;
+
 	for (int i = 0; i < 20; ++i) {
-		pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
+		p1HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
 		pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
-		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pSwordModel, (void**)m_ppTerrain);
+		p2HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2Hsword.bin", NULL);
+		p2HSpearModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2HSpear.bin", NULL);
+		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p1HSwordModel, (void**)m_ppTerrain);
 		m_mBowPlayer[i] = new CBowPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBowModel, (void**)m_ppTerrain);
+		m_m2HswordPlayer[i] = new C2HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p2HSwordModel, (void**)m_ppTerrain);
+		m_m2HspearPlayer[i] = new C2HspearPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p2HSpearModel, (void**)m_ppTerrain);
 		m_mPlayer[i] = m_m1HswordPlayer[i];
 		m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, 124.0f, 650.0f));
 		MovePlayer(i, XMFLOAT3(80.0f, 0.0f, 0.0f));
 	}
-	if (pSwordModel) delete pSwordModel;
+	if (p1HSwordModel) delete p1HSwordModel;
 	if (pBowModel) delete pBowModel;
+	if (p2HSwordModel) delete p2HSwordModel;
+	if (p2HSpearModel) delete p2HSpearModel;
 }
 
 void CScene::MovePlayer(int player_num, XMFLOAT3 pos)

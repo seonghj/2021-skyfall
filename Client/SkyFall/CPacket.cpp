@@ -237,6 +237,42 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pScene->m_mPlayer[key]->Rotate(-tpitch + beforepitch, -tyaw + beforeyaw, 0);
             break;
         }
+        case PT_SWORD2H: {
+            float beforepitch = m_pScene->m_mPlayer[key]->GetPitch();
+            float beforeyaw = m_pScene->m_mPlayer[key]->GetYaw();
+            float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
+            XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
+
+            m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
+            m_pScene->m_mPlayer[key] = m_pScene->m_m2HswordPlayer[key];
+
+            m_pScene->m_mPlayer[key]->SetPosition(beforepos);
+
+            float tpitch = m_pScene->m_mPlayer[key]->GetPitch();
+            float tyaw = m_pScene->m_mPlayer[key]->GetYaw();
+            float troll = m_pScene->m_mPlayer[key]->GetRoll();
+
+            m_pScene->m_mPlayer[key]->Rotate(-tpitch + beforepitch, -tyaw + beforeyaw, 0);
+            break;
+        }
+        case PT_SPEAR2H: {
+            float beforepitch = m_pScene->m_mPlayer[key]->GetPitch();
+            float beforeyaw = m_pScene->m_mPlayer[key]->GetYaw();
+            float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
+            XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
+
+            m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
+            m_pScene->m_mPlayer[key] = m_pScene->m_m2HspearPlayer[key];
+
+            m_pScene->m_mPlayer[key]->SetPosition(beforepos);
+
+            float tpitch = m_pScene->m_mPlayer[key]->GetPitch();
+            float tyaw = m_pScene->m_mPlayer[key]->GetYaw();
+            float troll = m_pScene->m_mPlayer[key]->GetRoll();
+
+            m_pScene->m_mPlayer[key]->Rotate(-tpitch + beforepitch, -tyaw + beforeyaw, 0);
+            break;
+        }
         }
     }
     else {
@@ -278,6 +314,50 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             float tyaw = m_pPlayer->GetYaw();
 
             m_pPlayer->Rotate(-tpitch + beforepitch, -tyaw + beforeyaw, 0);
+            m_pFramework->m_pCamera = m_pPlayer->GetCamera();
+            break;
+        }
+        case PT_SWORD2H: {
+            float beforepitch = m_pScene->m_mPlayer[key]->GetPitch();
+            float beforeyaw = m_pScene->m_mPlayer[key]->GetYaw();
+            float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
+            XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
+
+            m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
+            m_pScene->m_mPlayer[client_key] = m_pScene->m_m2HswordPlayer[client_key];
+            m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
+            m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
+            m_pPlayer = m_pFramework->m_pPlayer;
+
+            m_pScene->m_mPlayer[key]->SetPosition(beforepos);
+
+            float tpitch = m_pScene->m_mPlayer[key]->GetPitch();
+            float tyaw = m_pScene->m_mPlayer[key]->GetYaw();
+            float troll = m_pScene->m_mPlayer[key]->GetRoll();
+
+            m_pScene->m_mPlayer[key]->Rotate(-tpitch + beforepitch, -tyaw + beforeyaw, 0);
+            m_pFramework->m_pCamera = m_pPlayer->GetCamera();
+            break;
+        }
+        case PT_SPEAR2H: {
+            float beforepitch = m_pScene->m_mPlayer[key]->GetPitch();
+            float beforeyaw = m_pScene->m_mPlayer[key]->GetYaw();
+            float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
+            XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
+
+            m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
+            m_pScene->m_mPlayer[client_key] = m_pScene->m_m2HspearPlayer[client_key];
+            m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
+            m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
+            m_pPlayer = m_pFramework->m_pPlayer;
+
+            m_pScene->m_mPlayer[key]->SetPosition(beforepos);
+
+            float tpitch = m_pScene->m_mPlayer[key]->GetPitch();
+            float tyaw = m_pScene->m_mPlayer[key]->GetYaw();
+            float troll = m_pScene->m_mPlayer[key]->GetRoll();
+
+            m_pScene->m_mPlayer[key]->Rotate(-tpitch + beforepitch, -tyaw + beforeyaw, 0);
             m_pFramework->m_pCamera = m_pPlayer->GetCamera();
             break;
         }
@@ -452,7 +532,7 @@ void CPacket::ProcessPacket(char* buf)
         else {
             switch (p->MoveType) {
             case PlayerMove::JUMP: {
-                m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
+                m_pScene->AnimatePlayer(key, 2);
                 break;
             }
             }
@@ -478,16 +558,16 @@ void CPacket::ProcessPacket(char* buf)
             switch (p->MoveType) {
             case PlayerMove::WAKING:
                 if (!strcmp(m_pScene->m_mPlayer[key]->m_pstrFrameName, "Player_Bow")) {
-                    m_pScene->AnimatePlayer(key, animation_Bow::B_Walk);
+                    m_pScene->AnimatePlayer(key, 3);
                 }
                 else if (!strcmp(m_pScene->m_mPlayer[key]->m_pstrFrameName, "Player_1Hsword"))
-                    m_pScene->AnimatePlayer(key, animation_1HSword::SH1_Walk); // 11
+                    m_pScene->AnimatePlayer(key, 3); // 11
                 break;
             case PlayerMove::RUNNING:
-                m_pScene->AnimatePlayer(key, 2); // 2
+                m_pScene->AnimatePlayer(key, 4); // 2
                 break;
             case PlayerMove::JUMP:
-                m_pScene->AnimatePlayer(key, 1);
+                m_pScene->AnimatePlayer(key, 2);
                 break;
             default:
                 break;
@@ -540,23 +620,19 @@ void CPacket::ProcessPacket(char* buf)
         else {
             switch (p->attack_type) {
             case SWORD1HL: {
-                m_pScene->AnimatePlayer(key, animation_1HSword::SH1_Attack1);
-                printf("key: %d SWORD1HL attack\n", p->key);
+                m_pScene->AnimatePlayer(key, 9);
                 break;
             }
             case SWORD1HR: {
-                m_pScene->AnimatePlayer(key, animation_1HSword::SH1_Attack4);
-                printf("key: %d SWORD1HR attack\n", p->key);
+                m_pScene->AnimatePlayer(key, 12);
                 break;
             }
             case BOWL: {
-                m_pScene->AnimatePlayer(key, animation_Bow::B_ShotReady);
-                printf("key: %d BOWL attack\n", p->key);
+                m_pScene->AnimatePlayer(key, 10);
                 break;
             }
             case BOWR: {
-                m_pScene->AnimatePlayer(key, animation_Bow::B_ShotReady);
-                printf("key: %d BOWR attack\n", p->key);
+                m_pScene->AnimatePlayer(key, 10);
                 break;
             }
             }
@@ -571,12 +647,12 @@ void CPacket::ProcessPacket(char* buf)
             m_pPlayer->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
             m_pPlayer->SetAttack(false);
             m_pPlayer->SetCharging(false);
-            m_pScene->AnimatePlayer(key, animation_Bow::B_ShotRelease);
+            m_pScene->AnimatePlayer(key, 11);
         }
         else {
             m_pScene->m_mPlayer[key]->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
             m_pScene->m_mPlayer[key]->SetAttack(false);
-            m_pScene->AnimatePlayer(key, animation_Bow::B_ShotRelease);
+            m_pScene->AnimatePlayer(key, 11);
         }
         break;
     }
@@ -585,9 +661,9 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
         if (p->key != client_key) {
             m_pScene->AnimatePlayer(key, 0);
-            m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
+            /*m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(1, 0);
             m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(6, 0);
-            m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(9, 0);
+            m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(9, 0);*/
             m_pScene->m_mPlayer[key]->SetPosition(p->Position);
         }
         else
@@ -649,12 +725,7 @@ void CPacket::ProcessPacket(char* buf)
 
         m_pScene->m_ppGameObjects[key]->Attack();
 
-        if (0 == strcmp(m_pScene->m_mPlayer[p->target]->m_pstrFrameName, "Player_Bow")) {
-            m_pScene->AnimatePlayer(p->target, 9);
-        }
-        else if (0 == strcmp(m_pScene->m_mPlayer[p->target]->m_pstrFrameName, "Player_1Hsword")) {
-            m_pScene->AnimatePlayer(p->target, 10);
-        }
+        m_pScene->AnimatePlayer(p->target, 8);
 
         if (p->target == client_key) {
             m_pPlayer->SetHp(p->PlayerLeftHp);

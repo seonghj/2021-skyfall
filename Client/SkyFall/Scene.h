@@ -116,6 +116,8 @@ public:
 	array<CTerrainPlayer*, 20>			m_mPlayer;
 	array<C1HswordPlayer*, 20>			m_m1HswordPlayer;
 	array<CBowPlayer*, 20>				m_mBowPlayer;
+	array<C2HswordPlayer*, 20>			m_m2HswordPlayer;
+	array<C2HspearPlayer*, 20>			m_m2HspearPlayer;
 
 	float								m_fElapsedTime = 0.0f;
 

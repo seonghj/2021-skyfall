@@ -384,6 +384,12 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 					m_pPacket->Send_swap_weapon_packet(PT_SWORD1H);
 					break;
 				case VK_F6:
+					m_pPacket->Send_swap_weapon_packet(PT_SWORD2H);
+					break;
+				case VK_F7:
+					m_pPacket->Send_swap_weapon_packet(PT_SPEAR2H);
+					break;
+				case VK_F8:
 					m_bMouseHold = !m_bMouseHold;
 					break;
 				case VK_F9:
@@ -528,19 +534,18 @@ void CGameFramework::BuildObjects()
 	m_pShadowMap->CreateShadowMap(m_pd3dDevice);
 
 	//CLoadedModelInfo* pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_1Hsword.bin", NULL);
-	CLoadedModelInfo* pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_2Hsword.bin", NULL);
-	C2HswordPlayer* p1HswordPlayer = new C2HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pSwordModel, (void**)m_pScene->m_ppTerrain);
-	
-	m_p1HswordPlayer = p1HswordPlayer;
-	if (pSwordModel) delete pSwordModel;
+	//C1HswordPlayer* p1HswordPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pSwordModel, (void**)m_pScene->m_ppTerrain);
+	//
+	//m_p1HswordPlayer = p1HswordPlayer;
+	//if (pSwordModel) delete pSwordModel;
 
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
-	m_pScene->m_pPlayer = m_p1HswordPlayer;
-	m_pPlayer = m_pScene->m_pPlayer;
-	for (int i = 0; i < 20; ++i)
-		m_pScene->MovePlayer(i, XMFLOAT3(80.0f, 50.0f, 0.0f));
+	//for (int i = 0; i < MAX_PLAYER; ++i)
+	//	m_pScene->MovePlayer(i, XMFLOAT3(80.0f, 50.0f, 0.0f));
+	//m_pScene->m_pPlayer = m_p1HswordPlayer;
+	m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[0];
 
-	m_pPlayer->SetPlace(4);
+	//m_pPlayer->SetPlace(4);
 	m_pCamera = m_pPlayer->GetCamera();
 	m_pPacket->m_pScene = m_pScene;
 	m_pPacket->m_pFramework = this;
@@ -554,7 +559,7 @@ void CGameFramework::BuildObjects()
 	WaitForGpuComplete();
 
 	if (m_pScene) m_pScene->ReleaseUploadBuffers();
-	if (p1HswordPlayer) p1HswordPlayer->ReleaseUploadBuffers();
+	//if (p1HswordPlayer) p1HswordPlayer->ReleaseUploadBuffers();
 
 	for (int i = 0; i < MAX_PLAYER; i++) {
 		if (m_pScene->m_mBowPlayer[i]) {
@@ -564,6 +569,16 @@ void CGameFramework::BuildObjects()
 	for (int i = 0; i < MAX_PLAYER; i++) {
 		if (m_pScene->m_m1HswordPlayer[i]) {
 			m_pScene->m_m1HswordPlayer[i]->ReleaseUploadBuffers();
+		}
+	}
+	for (int i = 0; i < MAX_PLAYER; i++) {
+		if (m_pScene->m_m2HswordPlayer[i]) {
+			m_pScene->m_m2HswordPlayer[i]->ReleaseUploadBuffers();
+		}
+	}
+	for (int i = 0; i < MAX_PLAYER; i++) {
+		if (m_pScene->m_m2HspearPlayer[i]) {
+			m_pScene->m_m2HspearPlayer[i]->ReleaseUploadBuffers();
 		}
 	}
 
