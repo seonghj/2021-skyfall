@@ -536,21 +536,16 @@ void CGameFramework::BuildObjects()
 	m_pShadowMap->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
 	m_pShadowMap->CreateShadowMap(m_pd3dDevice);
 
-	//CLoadedModelInfo* pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_1Hsword.bin", NULL);r
-	//C1HswordPlayer* p1HswordPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pSwordModel, (void**)m_pScene->m_ppTerrain);
-	//
-	//m_p1HswordPlayer = p1HswordPlayer;
-	//if (pSwordModel) delete pSwordModel;
 
+	CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Basic.bin", NULL);
+	CTerrainPlayer* pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pModel, (void**)m_pScene->m_ppTerrain);
 
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
-	//for (int i = 0; i < MAX_PLAYER; ++i)
-	//	m_pScene->MovePlayer(i, XMFLOAT3(80.0f, 50.0f, 0.0f));
-	//m_pScene->m_pPlayer = m_p1HswordPlayer;
-	m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[0];
+	m_pPlayer = m_pScene->m_pPlayer = pPlayer;
 
 	//m_pPlayer->SetPlace(4);
-	m_pCamera = m_pPlayer->GetCamera();
+	
+	m_pCamera = pPlayer->GetCamera();
 	m_pPacket->m_pScene = m_pScene;
 	m_pPacket->m_pFramework = this;
 	m_pPacket->m_pPlayer = m_pPlayer;
@@ -726,6 +721,7 @@ void CGameFramework::AnimateObjects()
 {
 	float fTimeElapsed = m_GameTimer.GetTimeElapsed();
 
+	m_pPlayer->Animate(fTimeElapsed);
 	if (m_pScene) {
 		m_pScene->AnimateObjects(fTimeElapsed);
 
@@ -845,7 +841,7 @@ void CGameFramework::FrameAdvance()
 
 	m_pShadowMap->UpdateShaderVariables(m_pd3dCommandList);
 	if (m_pScene) m_pScene->Render(m_pd3dCommandList, m_pCamera);
-	//m_pPlayer->Render(m_pd3dCommandList, NULL);
+	m_pPlayer->Render(m_pd3dCommandList, NULL);
 
 #ifdef _WITH_PLAYER_TOP
 	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);

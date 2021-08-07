@@ -336,15 +336,18 @@ void CSoundCallbackHandler::HandleCallback(void *pCallbackData, float fTrackPosi
 
 CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void **ppContext)
 {
+
 	strcpy_s(m_pstrFrameName, "Player_Basic");
 
+	if (!pModel)
+		pModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
 	CLoadedModelInfo* pPlayerModel = pModel;
 	SetChild(pPlayerModel->m_pModelRootObject, true);
 
 	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,30), XMFLOAT3(10,10,30));
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 12, pPlayerModel);
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 9, pPlayerModel);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Idle, nBasic_Idle);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Walk, nBasic_Walk);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Run, nBasic_Run);
@@ -371,6 +374,13 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 
 	SetPlayerUpdatedContext(ppContext);
 	//SetCameraUpdatedContext(pContext);
+
+	SetPlace(0);
+	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)ppContext[m_nPlace];
+	XMFLOAT3 pos = pTerrain->GetPosition();
+	pos.x += 100 + rand() % 1900;
+	pos.z += 100 + rand() % 1900;
+	SetPosition(XMFLOAT3(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z));
 
 	m_pSkinnedAnimationController->SetAllTrackDisable();
 	m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
@@ -612,6 +622,7 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nShotHold, nShotHold);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nShotRelease, nShotRelease);
+	m_pSkinnedAnimationController->SetTrackType(nShotRelease, ANIMATION_TYPE_ONCE);
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nShotReady, nShotReady);
 	m_pSkinnedAnimationController->SetTrackType(nShotReady, ANIMATION_TYPE_ONCE);
@@ -628,8 +639,7 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	SetPlayerUpdatedContext(ppContext);
 	//SetCameraUpdatedContext(pContext);
-	m_pSkinnedAnimationController->SetAllTrackDisable();
-	m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
+	SetJump(true);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
@@ -640,10 +650,11 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	pos.z += 100 + rand() % 1900;
 	SetPosition(XMFLOAT3(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z));
 
+	m_isRelease = false;
 
 	m_ppBullets = new CBullet * [MAX_BULLET];
 
-	CGameObject* pArrow = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Arrow.bin", NULL);
+	CGameObject* pArrow = FindFrame("Arrow_Obj");/*CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Arrow.bin", NULL);*/
 	CMesh* pMesh = pArrow->m_pMesh;
 	//CMesh* pMesh = CBullet::m_pArrow->m_pMesh;
 
@@ -667,7 +678,9 @@ void CBowPlayer::Update(float fTimeElapsed)
 	if (m_pSkinnedAnimationController)
 	{
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
-
+		if (m_isRelease&&m_pSkinnedAnimationController->IsTrackFinish(nShotRelease)) {
+			m_isRelease = false;
+		}
 		if (m_isJump) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackPosition(nBasic_Jump, 0);
@@ -677,7 +690,7 @@ void CBowPlayer::Update(float fTimeElapsed)
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nShotReady, true);
 		}
-		else if (::IsZero(fLength) && m_isGround)
+		else if (::IsZero(fLength) && m_isGround && !m_isRelease)
 		{
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
@@ -708,8 +721,10 @@ void CBowPlayer::RButtonUp()
 
 void CBowPlayer::LButtonDown()
 {
-	if (!m_isCharging && !m_isAttack)
+	if (!m_isCharging && !m_isAttack) {
 		SetCharging(true);
+		SetActive("Arrow_Obj", true);
+	}
 }
 
 void CBowPlayer::LButtonUp()
@@ -717,6 +732,9 @@ void CBowPlayer::LButtonUp()
 	if (m_isCharging) {
 		SetAttack(true);
 		SetCharging(false);
+		SetActive("Arrow_Obj", false);
+		m_isRelease = true;
+		//m_pSkinnedAnimationController->SetTrackEnable(nShotRelease, true);
 	}
 }
 

@@ -208,6 +208,7 @@ protected:
 	CBullet** m_ppBullets = 0;
 
 	const int MAX_BULLET = 1000;
+	bool		m_isRelease;
 };
 
 class C1HswordPlayer : public CTerrainPlayer

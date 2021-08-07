@@ -465,7 +465,8 @@ void CPacket::ProcessPacket(char* buf)
         roomID = p->roomid;
         printf("recv key from server: %d\n", key);
 
-        m_pPlayer = m_pFramework->m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
+        //m_pPlayer = m_pFramework->m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
+        m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pFramework->m_pPlayer;
         //m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
 
         m_pFramework->m_pCamera = m_pPlayer->GetCamera();
@@ -486,6 +487,7 @@ void CPacket::ProcessPacket(char* buf)
             roomID = p->roomid;
             /* m_pPlayer->SetPosition(p->Position);
              m_pPlayer->Rotate(p->dx, p->dy, 0);*/
+            m_pScene->InitPlayers();
             printf("Login game\n");
             canmove = TRUE;
         }
