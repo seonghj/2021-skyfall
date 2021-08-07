@@ -2094,9 +2094,9 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 
 	for (int i = 0; i < 3; i++)
 	{
-		CLoadedModelInfo* pDesert_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Collision.bin", NULL);
-		CLoadedModelInfo* pDesert_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
-		CLoadedModelInfo* pDesert_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
+		CLoadedModelInfo* pDesert_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Collision_0807.bin", NULL);
+		CLoadedModelInfo* pDesert_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Passable_0807.bin", NULL);
+		CLoadedModelInfo* pDesert_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Passable_0807.bin", NULL);
 
 		m_ppMaps[0 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
 		m_ppMaps[1 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
@@ -2124,9 +2124,9 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 
 	for (int i = 6; i < 9; i++)
 	{
-		CLoadedModelInfo* pSnow_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Collision.bin", NULL);
-		CLoadedModelInfo* pSnow_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
-		CLoadedModelInfo* pSnow_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
+		CLoadedModelInfo* pSnow_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Collision_0807.bin", NULL);
+		CLoadedModelInfo* pSnow_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Passable_Probuilder_0807.bin", NULL);
+		CLoadedModelInfo* pSnow_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Passable_Probuilder_0807.bin", NULL);
 
 		m_ppMaps[0 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Collision, true);
 		m_ppMaps[1 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Steppable);

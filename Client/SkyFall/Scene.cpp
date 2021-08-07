@@ -105,7 +105,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	{
 		if (i < 3)
 		{
-			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Desert.raw"), 257, 257, xmf3Scale, xmf4Color, 0);
+			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Desert_0807.raw"), 257, 257, xmf3Scale, xmf4Color, 0);
 		}
 		else if (i >= 3 && i < 6)
 		{
@@ -113,7 +113,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 		}
 		else if (i >= 6)
 		{
-			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Snow.raw"), 257, 257, xmf3Scale, xmf4Color, 2);
+			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Snow_0807.raw"), 257, 257, xmf3Scale, xmf4Color, 2);
 		}
 		m_ppTerrain[i]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
 		if (i >= 6) m_ppTerrain[i]->MoveUp(125.f);
@@ -138,12 +138,12 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	if (pMetalonModel)delete pMetalonModel;
 
 
-	m_nUIs = 1;
+	/*m_nUIs = 1;
 	m_ppUIObjects = new CUIObject * [m_nUIs];
 	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Water.dds", 0.1, 0.1, 0.5, 0.5, 0.8);
-	
+	*/
 
-	//m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
+	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
