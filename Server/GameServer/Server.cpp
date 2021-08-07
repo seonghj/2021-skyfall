@@ -726,6 +726,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         packet.dx = p->dx;
         packet.dy = p->dy;
         packet.MoveType = p->MoveType;
+        packet.dir = p->dir;
         send_packet_to_players(key, reinterpret_cast<char*>(&packet), roomID);
         break;
     }

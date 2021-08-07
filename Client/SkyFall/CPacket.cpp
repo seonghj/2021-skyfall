@@ -568,15 +568,15 @@ void CPacket::ProcessPacket(char* buf)
                 m_pScene->AnimatePlayer(key, 3);
                 break;
             case PlayerMove::RUNNING:
-                /*if (p->dir & DIR_FORWARD)
+                if (p->dir & DIR_FORWARD)
                     m_pScene->AnimatePlayer(key, 4);
                 else if (p->dir & DIR_BACKWARD)
                     m_pScene->AnimatePlayer(key, 5);
-                else if (p->dir & DIR_LEFT)
-                    m_pScene->AnimatePlayer(key, 6);
                 else if (p->dir & DIR_RIGHT)
-                    m_pScene->AnimatePlayer(key, 7);*/
-                m_pScene->AnimatePlayer(key, 4);
+                    m_pScene->AnimatePlayer(key, 6);
+                else if (p->dir & DIR_LEFT)
+                    m_pScene->AnimatePlayer(key, 7);
+                //m_pScene->AnimatePlayer(key, 4);
                 break;
             case PlayerMove::JUMP:
                 m_pScene->AnimatePlayer(key, 2);
