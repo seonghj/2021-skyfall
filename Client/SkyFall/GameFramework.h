@@ -12,6 +12,8 @@ struct CB_FRAMEWORK_INFO
 {
 	float					m_fCurrentTime;
 	float					m_fElapsedTime;
+	int						m_nIndexFall;
+	float					m_fTime;
 };
 
 struct CB_FOG_INFO

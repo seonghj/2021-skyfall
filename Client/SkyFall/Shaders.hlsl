@@ -27,6 +27,8 @@ cbuffer cbFrameworkInfo : register(b3)
 {
 	float		gfCurrentTime : packoffset(c0.x);
 	float		gfElapsedTime : packoffset(c0.y);
+	int			gnIndexFall : packoffset(c0.z);
+	float		gfTime : packoffset(c0.w);
 };
 
 #include "Light.hlsl"
@@ -339,20 +341,39 @@ struct VS_TERRAIN_OUTPUT
 	float2 uv0 : TEXCOORD0;
 	float2 uv1 : TEXCOORD1;
 	float4 shadowPosition: TEXCOORD2;
+	int nState : STATE;
 };
+
+static const int GROUND = 1;
+static const int WATER = 2;
+
 
 VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 {
 	VS_TERRAIN_OUTPUT output;
 
 	output.positionW = (float3)mul(float4(input.position, 1.0f), gmtxGameObject);
-	if (output.positionW.y <= 100.f) {
+	if (output.positionW.y <= 90.f) {
 		output.positionW.y = 85.f + 2 * cos(output.positionW.x /3 + output.positionW.z /2 + gfCurrentTime * 2);
+		output.nState = WATER;
 	}
+	else
+		output.nState = GROUND;
+
+
+	const int2 arrange[10] = { int2(0,0),int2(1,0),int2(2,0),int2(0,1),int2(1,1),int2(2,1),int2(0,2),int2(1,2),int2(2,2),int2(-1,-1) };
+	float2 pos = arrange[gnIndexFall] * 2048.f;
+	if (pos.x < output.positionW.x && output.positionW.x < pos.x + 2048 &&
+		pos.y < output.positionW.z && output.positionW.z < pos.y + 2048) {
+		//output.nState |= STATE::FALL;
+		output.positionW.y -= 100 * gfTime;
+	}
+
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
 	output.color = input.color;
 	output.uv0 = input.uv0;
 	output.uv1 = input.uv1;
+
 	
 
 
@@ -365,8 +386,10 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 	return(output);
 }
 
+
 float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 {
+
 	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
 	float fShadowFactor = 0.0f, fBias = 0.046f;
 
@@ -377,7 +400,7 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
 
 	float4 cColor;
-	if (input.positionW.y <= 90.f) {
+	if (input.positionW.y <= 87.f) {
 		float2 uv = input.positionW.xz/50;
 		uv.x += gfCurrentTime / 10;
 		uv.y -= gfCurrentTime / 10;
@@ -564,7 +587,7 @@ VS_UI_OUTPUT VSUI(VS_UI_INPUT input)
 float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 {
 	float4 cColor = gtxtUI.Sample(gssWrap, input.uv);
-	cColor.a = input.alpha;
+	cColor.a = 0.1f;
 
 	return cColor;
 }
