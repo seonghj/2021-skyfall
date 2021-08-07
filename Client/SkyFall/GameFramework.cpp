@@ -519,7 +519,8 @@ void CGameFramework::BuildObjects()
 
 	m_pScene = new CScene();
 
-	m_vMapArrange = { { -1, -1}, {0, -1}, {1, -1}, {-1, 0}, {0, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1} };
+	//m_vMapArrange = { { -1, -1}, {0, -1}, {1, -1}, {-1, 0}, {0, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1} };
+	m_vMapArrange = { { 0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}, {0, 2}, {1, 2}, {2, 2} };
 	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList, m_vMapArrange);
 
 	m_pd3dCommandList->SetGraphicsRootSignature(m_pScene->GetGraphicsRootSignature());
@@ -535,11 +536,12 @@ void CGameFramework::BuildObjects()
 	m_pShadowMap->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
 	m_pShadowMap->CreateShadowMap(m_pd3dDevice);
 
-	//CLoadedModelInfo* pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_1Hsword.bin", NULL);
+	//CLoadedModelInfo* pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_1Hsword.bin", NULL);r
 	//C1HswordPlayer* p1HswordPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pSwordModel, (void**)m_pScene->m_ppTerrain);
 	//
 	//m_p1HswordPlayer = p1HswordPlayer;
 	//if (pSwordModel) delete pSwordModel;
+
 
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
 	//for (int i = 0; i < MAX_PLAYER; ++i)
@@ -797,6 +799,7 @@ void CGameFramework::FrameAdvance()
 	CCamera* pCamera = m_pShadowMap->GetCamera();
 	pCamera->SetPosition(XMFLOAT3(m_pPlayer->GetPosition().x, 0, m_pPlayer->GetPosition().z));
 	pCamera->Move(XMFLOAT3(-500, 200, -500));
+	m_pScene->m_pLights[0].m_xmf3Position = pCamera->GetPosition();
 	pCamera->RegenerateViewMatrix();
     AnimateObjects();
 

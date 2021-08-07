@@ -29,6 +29,12 @@ cbuffer cbFrameworkInfo : register(b3)
 	float		gfElapsedTime : packoffset(c0.y);
 };
 
+cbuffer cbUIInfo : register(b6)
+{
+	float		gfAlpha : packoffset(c0);
+	float		gfasdasd : packoffset(c4);
+
+};
 #include "Light.hlsl"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -200,7 +206,8 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //그림자가 아님
 
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
-	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	float4 cNormalColor = float4(0.f,0.f,1.f, 1.f);
 
 
 	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -298,7 +305,7 @@ float4 PSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_OUTPUT input) : SV_TARGE
 	
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
 
-	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	float4 cNormalColor = float4(0.f,0.f, 0.f, 1.0f);
 
 	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -557,14 +564,14 @@ VS_UI_OUTPUT VSUI(VS_UI_INPUT input)
 	VS_UI_OUTPUT output;
 	output.position = float4(input.position, 1.f);
 	output.uv = input.uv;
-	output.alpha = input.alpha;
+	//output.alpha = input.alpha;
 	return output;
 }
 
 float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 {
 	float4 cColor = gtxtUI.Sample(gssWrap, input.uv);
-	cColor.a = input.alpha;
+	cColor.a = gfAlpha;
 
 	return cColor;
 }
