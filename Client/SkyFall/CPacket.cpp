@@ -688,7 +688,7 @@ void CPacket::ProcessPacket(char* buf)
 
     case PacketType::SC_map_collapse: {
         map_collapse_packet* p = reinterpret_cast<map_collapse_packet*>(buf);
-        //printf("break map: %d\n", p->block_num);
+        printf("break map: %d %d\n", p->index[0], p->index[1]);
         break;
     }
 
