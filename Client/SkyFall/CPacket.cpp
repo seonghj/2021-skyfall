@@ -2,6 +2,7 @@
 #include "CPacket.h"
 #include <iostream>
 #include <random>
+#include "player.h"
 #pragma warning(disable : 4996)
 
 CPacket::CPacket()

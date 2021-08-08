@@ -9,7 +9,6 @@
 
 #include "Object.h"
 #include "Camera.h"
-#include "CPacket.h"
 
 class CPacket;
 

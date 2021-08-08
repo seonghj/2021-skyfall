@@ -1,11 +1,11 @@
 #pragma once
 #include "stdafx.h"
-#include "player.h"
 #include "Scene.h"
 #include "protocol.h"
 #include "GameFramework.h"
 
 class CGameFramework;
+class player;
 
 class CPacket {
 public:
