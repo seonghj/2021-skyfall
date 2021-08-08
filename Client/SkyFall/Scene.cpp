@@ -142,10 +142,10 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	if (pMetalonModel)delete pMetalonModel;
 
 
-	/*m_nUIs = 1;
+	m_nUIs = 1;
 	m_ppUIObjects = new CUIObject * [m_nUIs];
-	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Water.dds", 0.1, 0.1, 0.5, 0.5, 0.8);
-	*/
+	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_Box.dds", 0.1, 0.1, 0.35, 0.35, 0.8);
+	
 
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
@@ -616,6 +616,7 @@ void CScene::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
 	::memcpy(m_pcbMappedLights->m_pLights, m_pLights, sizeof(LIGHT) * m_nLights);
 	::memcpy(&m_pcbMappedLights->m_xmf4GlobalAmbient, &m_xmf4GlobalAmbient, sizeof(XMFLOAT4));
 	::memcpy(&m_pcbMappedLights->m_nLights, &m_nLights, sizeof(int));
+
 }
 
 void CScene::ReleaseShaderVariables()
@@ -954,6 +955,10 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 			gbShowBoundingBox = !gbShowBoundingBox;
 			break;
 		case '9':
+			//CB_UI_INFO ui;
+			//ui.gfAlpha = m_ppUIObjects[0]->GetAlpha() + 0.1f;
+			//m_ppUIObjects[0]->SetUI(&ui);
+			m_ppUIObjects[0]->SetAlpha(0.8f);
 			//m_ppGameObjects[0]->FindFrame("HpBar")->MoveStrafe(10.f);
 			break;
 		case '0':
