@@ -746,10 +746,12 @@ void CPacket::ProcessPacket(char* buf)
         m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
         p->Position.y = (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight) - m_pScene->m_ppGameObjects[key]->GetPosition().y;
         m_pScene->m_ppGameObjects[key]->Move(p->Position, 1.0f);
-        //CheckCollision(m_pScene->m_ppGameObjects[key]);
+        CheckCollision(m_pScene->m_ppGameObjects[key]);
 
         p->type = CS_monster_pos;
         p->Position = m_pScene->m_ppGameObjects[key]->GetPosition();
+
+        //printf("%f, %f, %f\n", p->Position.x, p->Position.y, p->Position.z);
 
         SendPacket(reinterpret_cast<char*>(p));
         break;
@@ -777,7 +779,7 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
         m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
         m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->dz);
-        CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
+        /*CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
         XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
         XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
         XMFLOAT3 xmf3Scale = pTerrain->GetScale();
@@ -785,10 +787,10 @@ void CPacket::ProcessPacket(char* buf)
         bool bReverseQuad = ((z % 2) != 0);
         float fHeight = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
         m_pScene->m_ppGameObjects[key]->Move(XMFLOAT3(0, 
-            (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight) - m_pScene->m_ppGameObjects[key]->GetPosition().y, 0), 1.0f);
+            (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight), 0), 1.0f);*/
 
         m_pScene->m_ppGameObjects[key]->m_iReady = TRUE;
-        printf("key: %d y : %f\n", key, m_pScene->m_ppGameObjects[key]->GetPosition().y);
+        //printf("key: %d y : %f\n", key, m_pScene->m_ppGameObjects[key]->GetPosition().y);
 
         break;
     }

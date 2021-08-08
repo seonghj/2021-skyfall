@@ -93,7 +93,13 @@ int Server::SetroomID()
 
             m_pBot->monsters.emplace(cnt, std::array<Monster, 20>{});
             m_pBot->monsterRun = TRUE;
-            m_pBot->Init(cnt);
+            //m_pBot->Init(cnt);
+
+            m_pBot->monsters[cnt][0].SetPosition(2000, 197.757935, 5000);
+            m_pBot->monsters[cnt][0].state = 1;
+            m_pBot->monsters[cnt][0].type = MonsterType::Dragon;
+            m_pBot->monsters[cnt][0].Rotate(-90.0f, 20.0f, 0.0f);
+            m_pBot->monsters[cnt][0].key = 0;
 
             m_pBot->RunBot(cnt);
 
@@ -461,7 +467,7 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 pos, XMFLOAT3 directi
     mon_pos_packet p;
     p.size = sizeof(mon_pos_packet);
     p.type = PacketType::SC_monster_pos;
-    p.key = mon.key.load();
+    p.key = mon.key;
     p.roomid = mon.roomID.load();
     p.Position = pos;
     p.direction = direction;
@@ -469,11 +475,13 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 pos, XMFLOAT3 directi
     p.MoveType = 0;
     p.state = 0;
 
+    //printf("%d\n", mon.key);
+
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == FALSE) continue;
         if (sessions[roomID][i].playing == FALSE) continue;
         if (true == in_VisualField(mon, sessions[roomID][i], roomID)) {
-            send_packet(sessions[roomID][i].key.load(), reinterpret_cast<char*>(&p), roomID);
+            send_packet(i, reinterpret_cast<char*>(&p), roomID);
             //printf("send to %d \n", sessions[roomID][i].key.load());
         }
     }
@@ -486,7 +494,7 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, float d
     mon_attack_packet p;
     p.size = sizeof(mon_attack_packet);
     p.type = PacketType::SC_monster_attack;
-    p.key = mon.key.load();
+    p.key = mon.key;
     p.roomid = mon.roomID.load();
     p.direction = direction;
     p.degree = degree;
@@ -711,7 +719,7 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         for (int i = 0; i < 15; ++i) {
             if (m_pBot->monsters[roomID][i].state == 1) {
-                printf("send monster %d\n", i);
+                //printf("send monster %d\n", i);
                 send_add_monster(i, roomID, p->key);
             }
         }

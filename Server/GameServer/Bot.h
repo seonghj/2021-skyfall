@@ -24,7 +24,7 @@ public:
 
     std::mutex               Mon_lock;
 
-    std::atomic<int>         key = -1;
+    int                     key = -1;
     std::atomic<int>         roomID = -1;
     char                     id[50];
 
@@ -43,7 +43,7 @@ public:
     std::atomic<float>      att = 10;
     std::atomic<float>      speed = 20;
 
-    std::atomic<bool>       CanAttack = TRUE;
+    bool                    CanAttack = TRUE;
 
     void init();
     void SetPosition(float x, float y, float z);
