@@ -122,12 +122,15 @@ void CPacket::SendPacket(char* buf)
     }
 }
 
-void CPacket::Send_ready_packet()
+void CPacket::Send_ready_packet(PlayerType t)
 {
     game_ready_packet p;
     p.key = client_key;
+    p.roomid = roomID;
     p.size = sizeof(p);
-    p.type = PacketType::CS_game_ready;
+    p.type = CS_game_ready;
+    p.weaponType = t;
+
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
@@ -520,6 +523,9 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_start_ok: {
         //GameConnect();
+        game_start_packet* p = reinterpret_cast<game_start_packet*>(buf);
+        Swap_weapon(p->key, p->weaponType);
+        m_pScene->m_iState = INGAME;
         break;
     }
     case PacketType::SC_game_end: {
@@ -609,7 +615,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_weapon_swap: {
         Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
         int key = p->key;
-        Swap_weapon(key, (PlayerType)p->weapon);
+        Swap_weapon(key, p->weapon);
         break;
     }
     case PacketType::SC_player_attack: {
@@ -679,6 +685,7 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
         if (p->key != client_key) {
             m_pScene->AnimatePlayer(key, 0);
+            m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(2, 0);
             m_pScene->m_mPlayer[key]->SetPosition(p->Position);
         }
         else

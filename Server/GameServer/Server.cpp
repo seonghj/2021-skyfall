@@ -21,8 +21,8 @@ void SESSION::init()
 
     state = 0;
     f3Position = DirectX::XMFLOAT3(0.0f, 124.0f, 0.0f);
-    m_fPitch = 0;
-    m_fYaw = 0;
+    m_fPitch = 60;
+    m_fYaw = -90;
 
     weapon1 = PlayerType::PT_BASIC;
     weapon2 = PlayerType::PT_BASIC;
@@ -394,6 +394,7 @@ void Server::send_packet_to_players(int key, char* buf, int roomID)
    //sessions_lock.lock();
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == FALSE) continue;
+        if (sessions[roomID][i].playing == FALSE) continue;
         if (in_VisualField(sessions[roomID][key], sessions[roomID][i], roomID)) {
             send_packet(i, buf, roomID);
         }
@@ -406,6 +407,7 @@ void Server::send_packet_to_allplayers(int roomID, char* buf)
    //sessions_lock.lock();
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == FALSE) continue;
+        if (sessions[roomID][i].playing == FALSE) continue;
         if (sessions[roomID][i].connected.load(std::memory_order_seq_cst))
             send_packet(i, buf, roomID);
     }
@@ -482,9 +484,10 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 pos, XMFLOAT3 directi
     p.degree = degree;
     p.MoveType = 0;
     p.state = 0;
-    
+
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == FALSE) continue;
+        if (sessions[roomID][i].playing == FALSE) continue;
         if (true == in_VisualField(mon, sessions[roomID][i], roomID)) {
             send_packet(sessions[roomID][i].key.load(), reinterpret_cast<char*>(&p), roomID);
             //printf("send to %d \n", sessions[roomID][i].key.load());
@@ -546,6 +549,18 @@ void Server::send_map_packet(int to, int roomID)
     for (int i = 0; i < MAX_MAP_BLOCK; i++){
         p.block_type[i] = maps[roomID].Map_type[i];
     }
+
+    send_packet(to, reinterpret_cast<char*>(&p), roomID);
+}
+
+void Server::send_start_packet(int to, int roomID)
+{
+    game_start_packet p;
+    p.type = PacketType::SC_start_ok;
+    p.size = sizeof(p);
+    p.key = to;
+    p.roomid = roomID;
+    p.weaponType = sessions[roomID][to].using_weapon;
 
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
@@ -677,20 +692,6 @@ void Server::process_packet(int key, char* buf, int roomID)
             inet_ntoa(sessions[roomID][client_key].clientaddr.sin_addr)
             , ntohs(sessions[roomID][client_key].clientaddr.sin_port), client_key, roomID);
 
-        for (auto& s : sessions[roomID]) {
-            if ((TRUE == s.connected) && (s.key.load() != client_key)){
-                send_add_player_packet(s.key.load(), client_key, roomID);
-            }
-        }
-        for (auto& s : sessions[roomID]) {
-            if ((TRUE == s.connected) && (s.key.load() != client_key))
-                send_add_player_packet(client_key, s.key.load(), roomID);
-        }
-        for (auto& m : m_pBot->monsters[roomID]) {
-            if (m.state == 1)
-                send_add_monster(m.key.load(), roomID, client_key);
-        }
-
         sessions[roomID][client_key].state = 1;
 
         send_map_packet(client_key, roomID);
@@ -701,7 +702,27 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_game_ready: {
         game_ready_packet* p = reinterpret_cast<game_ready_packet*>(buf);
+        sessions[roomID][p->key].using_weapon = p->weaponType;
         sessions[roomID][p->key].isready = true;
+        sessions[roomID][p->key].playing = true;
+        // 임시
+        send_start_packet(p->key, roomID);
+        
+        for (auto& s : sessions[roomID]) {
+            if ((TRUE == s.connected) && (s.key.load() != p->key)) {
+                send_add_player_packet(s.key.load(), p->key, roomID);
+            }
+        }
+        for (auto& s : sessions[roomID]) {
+            if ((TRUE == s.connected) && (s.key.load() != p->key))
+                send_add_player_packet(p->key, s.key.load(), roomID);
+        }
+
+        for (auto& m : m_pBot->monsters[roomID]) {
+            if (m.state == 1)
+                send_add_monster(m.key.load(), roomID, p->key);
+        }
+
         break;
     }
     case PacketType::CS_game_start: {
@@ -731,6 +752,12 @@ void Server::process_packet(int key, char* buf, int roomID)
         packet.dy = p->dy;
         packet.MoveType = p->MoveType;
         packet.dir = p->dir;
+
+        if (sessions[roomID][p->key].playing == FALSE) {
+            send_packet(p->key, reinterpret_cast<char*>(&packet), roomID);
+            break;
+        }
+
         send_packet_to_players(key, reinterpret_cast<char*>(&packet), roomID);
         break;
     }
@@ -744,7 +771,10 @@ void Server::process_packet(int key, char* buf, int roomID)
          Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
          p->type = SC_weapon_swap;
          sessions[roomID][p->key].using_weapon = p->weapon;
-         send_packet_to_players(p->key, reinterpret_cast<char*>(p), roomID);
+         for (int i = 0; i < MAX_PLAYER; ++i) {
+             if (sessions[roomID][i].connected == FALSE) continue;
+             send_packet(i, buf, roomID);
+         }
          break;
     }
     case PacketType::CS_player_move: {
@@ -936,6 +966,12 @@ void Server::WorkerFunc()
             case EventType::MapBreak: {
                 Mapbreak_event* p = reinterpret_cast<Mapbreak_event*>(over_ex->messageBuffer);
                 maps[key].Map_collapse();
+
+                Mapbreak_event e;
+                e.roomid = key;
+                e.size = sizeof(e);
+                e.type = EventType::MapBreak;
+                m_pTimer->push_event(key, OE_gEvent, MAP_BREAK_TIME, reinterpret_cast<char*>(&e));
                 delete over_ex;
 
                 Mapbreak_event e;
