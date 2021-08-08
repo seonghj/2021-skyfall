@@ -41,6 +41,8 @@ public:
 	void cloud_move();
 	void Map_collapse();
 
+	bool game_start = false;
+
 private:
 	int game_time;
 	Server* m_pServer = NULL; 
