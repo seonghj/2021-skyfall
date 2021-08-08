@@ -619,7 +619,7 @@ void CGameFramework::ProcessInput()
 
 			if (pKeysBuffer[VK_SPACE] & 0xF0)
 			{
-				//m_pPlayer->SetJump(true);
+				m_pPlayer->SetJump(true);
 				player_move_packet p;
 				p.key = m_pPacket->Get_clientkey();
 				p.dx = m_DegreeX;

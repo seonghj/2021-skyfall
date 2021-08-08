@@ -669,6 +669,9 @@ void CScene::ReleaseUploadBuffers()
 
 void CScene::CheckCollision(CPacket* pPacket)
 {
+	if (m_pMap)
+		m_pMap->CheckCollision(m_pPlayer);
+
 	if (m_iState == LOBBY) {
 		for (int i = 0; i < 4; ++i) {
 			CGameObject* pHpBar = m_ppWeapons[i]->FindFrame("HpBar");
@@ -703,8 +706,6 @@ void CScene::CheckCollision(CPacket* pPacket)
 				//}
 			}
 		}
-		if (m_pMap)
-			m_pMap->CheckCollision(m_pPlayer);
 	}
 }
 
