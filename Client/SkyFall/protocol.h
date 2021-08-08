@@ -48,6 +48,7 @@ enum terrain {
 	Snowy_field
 };
 
+
 enum PacketType {
 	SC_NONE,
 	SC_player_key,
@@ -134,11 +135,11 @@ enum PlayerAttackType {
 };
 
 enum PlayerType {
-	PT_BASIC,
 	PT_SWORD1H,
 	PT_BOW,
 	PT_SWORD2H,
-	PT_SPEAR2H
+	PT_SPEAR2H,
+	PT_BASIC,
 };
 
 enum MonsterType {

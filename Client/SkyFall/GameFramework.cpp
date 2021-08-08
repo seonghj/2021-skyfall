@@ -478,7 +478,7 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 
 void CGameFramework::CheckCollision()
 {
-	m_pScene->CheckCollision();
+	m_pScene->CheckCollision(m_pPacket);
 	//m_pScene->CheckTarget();
 }
 
@@ -541,8 +541,10 @@ void CGameFramework::BuildObjects()
 
 	CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Basic.bin", NULL);
 	CTerrainPlayer* pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pModel, (void**)m_pScene->m_ppTerrain);
+	delete pModel;
 
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
+	m_pScene->AddWeapon(m_pd3dDevice, m_pd3dCommandList);
 	m_pPlayer = m_pScene->m_pPlayer = pPlayer;
 	pPlayer->Rotate(60.0f, -90.f, 0);
 	//m_pPlayer->SetPlace(4);
@@ -723,8 +725,6 @@ void CGameFramework::ProcessInput()
 void CGameFramework::AnimateObjects()
 {
 	float fTimeElapsed = m_GameTimer.GetTimeElapsed();
-
-	m_pPlayer->Animate(fTimeElapsed);
 	if (m_pScene) {
 		m_pScene->AnimateObjects(fTimeElapsed);
 
@@ -835,7 +835,6 @@ void CGameFramework::FrameAdvance()
 
 	m_pShadowMap->UpdateShaderVariables(m_pd3dCommandList);
 	if (m_pScene) m_pScene->Render(m_pd3dCommandList, m_pCamera);
-	m_pPlayer->Render(m_pd3dCommandList, NULL);
 
 #ifdef _WITH_PLAYER_TOP
 	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);

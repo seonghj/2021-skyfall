@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "Scene.h"
 #include "protocol.h"
+#include "CPacket.h"
 
 ID3D12DescriptorHeap *CScene::m_pd3dCbvSrvDescriptorHeap = NULL;
 
@@ -151,6 +152,44 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_iState = SCENE::LOBBY;
 }
 
+void CScene::AddWeapon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	CLoadedModelInfo* p1HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
+	CLoadedModelInfo* pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+	CLoadedModelInfo* p2HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2Hsword.bin", NULL);
+	CLoadedModelInfo* p2HSpearModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2HSpear.bin", NULL);
+
+	for (int i = 0; i < 4; ++i) {
+		m_ppWeapons[i] = new CGameObject();
+		m_ppWeapons[i]->SetScale(0.6f, 0.6f, 0.6f);
+		m_ppWeapons[i]->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 0), XMFLOAT3(80, 60, 40))->Rotate(0, 0, 20.f);
+		m_ppWeapons[i]->SetHpBar(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 60, 0), XMFLOAT2(40, 10))->SetHp(100);
+		m_ppWeapons[i]->FindFrame("HpBar")->m_iHp = 0;
+		m_ppWeapons[i]->SetActive("HpBar", false);
+	}
+	m_ppWeapons[0]->SetChild(p1HSwordModel->m_pModelRootObject->FindFrame("Sword_Pivot"));
+	m_ppWeapons[1]->SetChild(pBowModel->m_pModelRootObject->FindFrame("Bow_Pivot"));
+	m_ppWeapons[2]->SetChild(p2HSwordModel->m_pModelRootObject->FindFrame("Long_Sword_Pivot"));
+	m_ppWeapons[3]->SetChild(p2HSpearModel->m_pModelRootObject->FindFrame("Spear_Pivot"));
+
+	XMFLOAT3 pos = m_ppTerrain[2]->GetPosition();
+	m_ppWeapons[0]->SetPosition(Vector3::Add(pos, XMFLOAT3(1135, 190, 1370)));
+	m_ppWeapons[1]->SetPosition(Vector3::Add(pos, XMFLOAT3(1135, 170, 1430)));
+	m_ppWeapons[2]->SetPosition(Vector3::Add(pos, XMFLOAT3(1135, 200, 1490)));
+	m_ppWeapons[3]->SetPosition(Vector3::Add(pos, XMFLOAT3(1135, 200, 1550)));
+	m_ppWeapons[0]->Rotate(0, 0.f, -20.f);
+	m_ppWeapons[1]->Rotate(0, 0.f, -20.f);
+	m_ppWeapons[2]->Rotate(0, 0.f, -20.f);
+	m_ppWeapons[3]->Rotate(0, 0.f, -20.f);
+
+
+	if (p1HSwordModel) delete p1HSwordModel;
+	if (pBowModel) delete pBowModel;
+	if (p2HSwordModel) delete p2HSwordModel;
+	if (p2HSpearModel) delete p2HSpearModel;
+
+}
+
 void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	CLoadedModelInfo* p1HSwordModel;
@@ -170,27 +209,7 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		m_mPlayer[i] = m_m1HswordPlayer[i];
 		//m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, 124.0f, 650.0f));
 		//MovePlayer(i, XMFLOAT3(80.0f, 0.0f, 0.0f));
-	}
-	for (int i = 0; i < 4; ++i) {
-		m_ppWeapons[i] = new CGameObject();
-		m_ppWeapons[i]->SetScale(0.6f, 0.6f, 0.6f);
-	}
-
-	m_ppWeapons[0]->SetChild(p1HSwordModel->m_pModelRootObject->FindFrame("Sword_Pivot"));
-	m_ppWeapons[1]->SetChild(pBowModel->m_pModelRootObject->FindFrame("Bow_Pivot"));
-	m_ppWeapons[2]->SetChild(p2HSwordModel->m_pModelRootObject->FindFrame("Long_Sword_Pivot"));
-	m_ppWeapons[3]->SetChild(p2HSpearModel->m_pModelRootObject->FindFrame("Spear_Pivot"));
-
-	XMFLOAT3 pos = m_ppTerrain[2]->GetPosition();
-	m_ppWeapons[0]->SetPosition(Vector3::Add(pos,XMFLOAT3(1135,190,1370)));
-	m_ppWeapons[1]->SetPosition(Vector3::Add(pos,XMFLOAT3(1135,170,1430)));
-	m_ppWeapons[2]->SetPosition(Vector3::Add(pos,XMFLOAT3(1135,200,1490)));
-	m_ppWeapons[3]->SetPosition(Vector3::Add(pos,XMFLOAT3(1135,200,1550)));
-	m_ppWeapons[0]->Rotate(0, 0.f, -20.f);
-	m_ppWeapons[1]->Rotate(0, 0.f, 0.f);
-	m_ppWeapons[2]->Rotate(0, 0.f, -20.f);
-	m_ppWeapons[3]->Rotate(0, 0.f, -20.f);
-	
+	}	
 
 	if (p1HSwordModel) delete p1HSwordModel;
 	if (pBowModel) delete pBowModel;
@@ -200,11 +219,11 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 void CScene::InitPlayers()
 {
-	m_m1HswordPlayer[0]->SetPosition(XMFLOAT3(10, 124, 25));
-	m_mBowPlayer[0]->SetPosition(XMFLOAT3(70, 124, 50));
-	m_mBowPlayer[0]->SetPlace(0);
-	m_m2HswordPlayer[0]->SetPosition(XMFLOAT3(130, 124, 50));
-	m_m2HspearPlayer[0]->SetPosition(XMFLOAT3(190, 124, 25));
+	//m_m1HswordPlayer[0]->SetPosition(XMFLOAT3(10, 124, 25));
+	//m_mBowPlayer[0]->SetPosition(XMFLOAT3(70, 124, 50));
+	//m_mBowPlayer[0]->SetPlace(0);
+	//m_m2HswordPlayer[0]->SetPosition(XMFLOAT3(130, 124, 50));
+	//m_m2HspearPlayer[0]->SetPosition(XMFLOAT3(190, 124, 25));
 
 }
 
@@ -645,9 +664,31 @@ void CScene::ReleaseUploadBuffers()
 }
 
 
-void CScene::CheckCollision()
+void CScene::CheckCollision(CPacket* pPacket)
 {
-	if (m_iState == INGAME) {
+	if (m_iState == LOBBY) {
+		for (int i = 0; i < 4; ++i) {
+			CGameObject* pHpBar = m_ppWeapons[i]->FindFrame("HpBar");
+			if (m_ppWeapons[i]->isCollide(m_pPlayer)) {
+				if (pHpBar->m_iMaxHp < ++pHpBar->m_iHp) {
+					// i = PlayerType
+					/* state 변경후 서버와 통신 알아서*/
+					m_iState = INGAME;
+					//for (int i = 0; i < 4; ++i)
+					//	m_ppWeapons[i]->Release();
+					pPacket->Send_swap_weapon_packet((PlayerType)i);
+				}
+				pHpBar->m_bActive = true;
+			}
+			else {
+				if (--pHpBar->m_iHp < 0) {
+					pHpBar->m_iHp = 0;
+					pHpBar->m_bActive = false;
+				}
+			}
+		}
+	}
+	else if (m_iState == INGAME) {
 		for (int i = 0; i < m_nGameObjects; ++i) {
 			if (m_ppGameObjects[i]->GetHp() > 0) {
 				m_pPlayer->CheckCollision(m_ppGameObjects[i]);
@@ -947,12 +988,13 @@ void CScene::AnimateObjects(float fTimeElapsed)
 {
 	m_fElapsedTime = fTimeElapsed;
 	if (m_iState == LOBBY) {
-		m_mBowPlayer[0]->Update(fTimeElapsed);
+		m_pPlayer->Animate(fTimeElapsed);
+		/*m_mBowPlayer[0]->Update(fTimeElapsed);
 
 		m_m1HswordPlayer[0]->Animate(fTimeElapsed);
 		m_mBowPlayer[0]->Animate(fTimeElapsed);
 		m_m2HswordPlayer[0]->Animate(fTimeElapsed);
-		m_m2HspearPlayer[0]->Animate(fTimeElapsed);
+		m_m2HspearPlayer[0]->Animate(fTimeElapsed);*/
 		//m_m1HswordPlayer[0]->UpdateTransform();
 		//m_mBowPlayer[0]->UpdateTransform();
 		//m_m2HswordPlayer[0]->UpdateTransform();
@@ -1006,6 +1048,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	if (m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
 	
 	if (m_iState == SCENE::LOBBY) {
+		m_pPlayer->Render(pd3dCommandList, NULL);
 		for(int i=0;i<4;++i)
 			m_ppWeapons[i]->Render(pd3dCommandList, pCamera);
 	}

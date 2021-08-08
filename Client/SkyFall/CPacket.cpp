@@ -369,6 +369,10 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pFramework->m_pCamera = m_pPlayer->GetCamera();
             break;
         }
+        case PT_BASIC: {
+
+            break;
+        }
         }
     }
 }
@@ -487,7 +491,7 @@ void CPacket::ProcessPacket(char* buf)
             roomID = p->roomid;
             /* m_pPlayer->SetPosition(p->Position);
              m_pPlayer->Rotate(p->dx, p->dy, 0);*/
-            m_pScene->InitPlayers();
+
             printf("Login game\n");
             canmove = TRUE;
         }

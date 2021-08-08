@@ -503,7 +503,7 @@ public:
 
 	static void PrintFrameInfo(CGameObject *pGameObject, CGameObject *pParent);
 
-protected:
+public:
 		int							m_iHp;
 		int							m_iMaxHp;
 		int							m_iAtkStat;
