@@ -192,9 +192,11 @@ struct player_add_packet : public Packet {
 };
 
 struct game_ready_packet :public Packet {
+	PlayerType weaponType;
 };
 
 struct game_start_packet :public Packet {
+	PlayerType weaponType;
 };
 
 struct start_ok_packet :public Packet {

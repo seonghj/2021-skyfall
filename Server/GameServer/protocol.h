@@ -15,7 +15,7 @@ constexpr int AI_ID = 5000;
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 6144;
 constexpr int MAP_BLOCK_SIZE = 2048;
-constexpr int MAP_BREAK_TIME = 10000;
+constexpr int MAP_BREAK_TIME = 30;
 
 constexpr float VIEWING_DISTANCE = 1000.f;
 
@@ -47,6 +47,7 @@ enum terrain {
 	Desert,
 	Snowy_field
 };
+
 
 enum PacketType {
 	SC_NONE,
@@ -135,11 +136,11 @@ enum PlayerAttackType {
 };
 
 enum PlayerType {
-	PT_BASIC,
 	PT_SWORD1H,
 	PT_BOW,
 	PT_SWORD2H,
-	PT_SPEAR2H
+	PT_SPEAR2H,
+	PT_BASIC,
 };
 
 enum MonsterType {
@@ -191,9 +192,11 @@ struct player_add_packet : public Packet {
 };
 
 struct game_ready_packet :public Packet {
+	PlayerType weaponType;
 };
 
 struct game_start_packet :public Packet {
+	PlayerType weaponType;
 };
 
 struct start_ok_packet :public Packet {
@@ -351,6 +354,6 @@ struct mon_attack_cooltime_event : public Packet {
 };
 
 struct Mapbreak_event : public Packet {
-	
+
 };
 #pragma pack(pop)

@@ -673,10 +673,11 @@ void CScene::CheckCollision(CPacket* pPacket)
 				if (pHpBar->m_iMaxHp < ++pHpBar->m_iHp) {
 					// i = PlayerType
 					/* state 변경후 서버와 통신 알아서*/
-					m_iState = INGAME;
+					// m_iState = INGAME;
 					//for (int i = 0; i < 4; ++i)
 					//	m_ppWeapons[i]->Release();
-					pPacket->Send_swap_weapon_packet((PlayerType)i);
+					pPacket->Set_StartWeapon((PlayerType)i);
+					pPacket->Send_ready_packet((PlayerType)i);
 				}
 				pHpBar->m_bActive = true;
 			}
