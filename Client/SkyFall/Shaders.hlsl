@@ -27,8 +27,6 @@ cbuffer cbFrameworkInfo : register(b3)
 {
 	float		gfCurrentTime : packoffset(c0.x);
 	float		gfElapsedTime : packoffset(c0.y);
-	int			gnIndexFall : packoffset(c0.z);
-	float		gfTime : packoffset(c0.w);
 };
 
 cbuffer cbUIInfo : register(b6)
@@ -331,6 +329,11 @@ Texture2D gtxtTerrainDetailTexture : register(t2);
 Texture2D gtxtWater : register(t8);
 Texture2D gtxtWaterNormal : register(t9);
 
+cbuffer cbTerrainInfo : register(b9)
+{
+	float		gfTime : packoffset(c0.x);
+	bool		gbFalling : packoffset(c0.y);
+};
 
 struct VS_TERRAIN_INPUT
 {
@@ -368,12 +371,10 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 		output.nState = GROUND;
 
 
-	const int2 arrange[10] = { int2(0,0),int2(1,0),int2(2,0),int2(0,1),int2(1,1),int2(2,1),int2(0,2),int2(1,2),int2(2,2),int2(-1,-1) };
-	float2 pos = float2(output.positionW.x, output.positionW.z) - arrange[gnIndexFall] * 2048.f;
-
-	if (0 < pos.x && pos.x < 2048 &&
-		0 < pos.y && pos.y < 2048) {
-		
+	//const int2 arrange[10] = { int2(0,0),int2(1,0),int2(2,0),int2(0,1),int2(1,1),int2(2,1),int2(0,2),int2(1,2),int2(2,2),int2(-1,-1) };
+	float2 pos = float2(output.positionW.x, output.positionW.z) % 2048;
+	
+	if (gbFalling) {		
 		//output.nState |= STATE::FALL;
 		float r = length(float2(1024, 1024) - pos);
 		if (r < gfTime * 100) {

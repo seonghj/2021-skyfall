@@ -937,6 +937,12 @@ void Server::WorkerFunc()
                 Mapbreak_event* p = reinterpret_cast<Mapbreak_event*>(over_ex->messageBuffer);
                 maps[key].Map_collapse();
                 delete over_ex;
+
+                Mapbreak_event e;
+                e.roomid = key;
+                e.size = sizeof(e);
+                e.type = EventType::MapBreak;
+                m_pTimer->push_event(key, OE_gEvent, MAP_BREAK_TIME, reinterpret_cast<char*>(&e));
                 break;
             }
             }

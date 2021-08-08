@@ -2041,6 +2041,55 @@ CHeightMapTerrain::~CHeightMapTerrain(void)
 	if (m_pHeightMapImage) delete m_pHeightMapImage;
 }
 
+float CHeightMapTerrain::GetHeight(float x, float z, bool bReverseQuad)
+{
+	float h = m_pHeightMapImage->GetHeight(x, z, bReverseQuad) * m_xmf3Scale.y;
+
+	if (IsFalling()) {
+		x = x - 2048 * (int)(x / 2048);
+		z = z - 2048 * (int)(z / 2048);
+		float r = Vector3::Length(Vector3::Subtract(XMFLOAT3(1024, 0, 1024), XMFLOAT3(x, 0, z)));
+		float time = m_pcbMappedTerrainInfo->m_fTime;
+		if (r < time * 100) {
+			h -= 50 * (time - r) + 9.8f * (time - r) * (time - r);
+		}
+		return(h);
+	}
+}
+
+void CHeightMapTerrain::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	UINT ncbElementBytes = ((sizeof(CB_TERRAIN_INFO) + 255) & ~255); //256ÀÇ ¹è¼ö
+	pd3dcbTerrainInfo = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+
+	pd3dcbTerrainInfo->Map(0, NULL, (void**)&m_pcbMappedTerrainInfo);
+}
+
+void CHeightMapTerrain::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	D3D12_GPU_VIRTUAL_ADDRESS d3dGpuVirtualAddress = pd3dcbTerrainInfo->GetGPUVirtualAddress();
+	pd3dCommandList->SetGraphicsRootConstantBufferView(20, d3dGpuVirtualAddress);
+}
+
+void CHeightMapTerrain::ReleaseShaderVariables()
+{
+	if (pd3dcbTerrainInfo)
+	{
+		pd3dcbTerrainInfo->Unmap(0, NULL);
+		pd3dcbTerrainInfo->Release();
+	}
+}
+
+void CHeightMapTerrain::UpdateTime(float fTimeElapsed)
+{
+	m_pcbMappedTerrainInfo->m_fTime += fTimeElapsed;
+}
+
+void CHeightMapTerrain::Falling()
+{
+	m_pcbMappedTerrainInfo->m_bFalling = true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 
 CSkyBox::CSkyBox(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature) : CGameObject(1)
