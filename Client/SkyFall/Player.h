@@ -126,7 +126,7 @@ public:
 	virtual void Shot(float fTimeElapsed, float fSpeed) {};
 	virtual void Shot(float fTimeElapsed, float fSpeed, XMFLOAT3 Look) {};
 	virtual void DeleteBullet(const int& idx) {};
-	virtual void CheckCollision(CGameObject* pObject);
+	virtual bool CheckCollision(CGameObject* pObject);
 	virtual void CheckMap(CGameObject* pObject);
 	void RotatePlayer(int iYaw);
 
@@ -197,7 +197,7 @@ public:
 	virtual void LButtonDown();
 	virtual void LButtonUp();
 
-	virtual void CheckCollision(CGameObject* pObject);
+	virtual bool CheckCollision(CGameObject* pObject);
 
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 
@@ -229,7 +229,7 @@ public:
 	virtual void LButtonDown();
 	virtual void LButtonUp();
 
-	virtual void CheckCollision(CGameObject* pObject);
+	virtual bool CheckCollision(CGameObject* pObject);
 
 protected:
 	int m_nAttack = 0;

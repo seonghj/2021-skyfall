@@ -144,8 +144,10 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	m_nUIs = 1;
 	m_ppUIObjects = new CUIObject * [m_nUIs];
-	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_Box.dds", 0.1, 0.1, 0.35, 0.35, 0.8);
-	
+	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_Box.dds", 0.1, -1, 0.8, 0.35, 0.8);
+	m_ppUIObjects[0]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	m_ppUIObjects[0]->SetAlpha(0.8f);
+	m_ppUIObjects[0]->SetvPercent(1.f);
 
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
@@ -164,7 +166,7 @@ void CScene::AddWeapon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		m_ppWeapons[i] = new CGameObject();
 		m_ppWeapons[i]->SetScale(0.6f, 0.6f, 0.6f);
 		m_ppWeapons[i]->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 0), XMFLOAT3(80, 60, 40))->Rotate(0, 0, 20.f);
-		m_ppWeapons[i]->SetHpBar(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 60, 0), XMFLOAT2(40, 10))->SetHp(100);
+		m_ppWeapons[i]->SetHpBar(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 60, 0), XMFLOAT2(40, 10))->SetMaxHp(100);
 		m_ppWeapons[i]->FindFrame("HpBar")->m_iHp = 0;
 		m_ppWeapons[i]->SetActive("HpBar", false);
 	}
@@ -607,8 +609,6 @@ void CScene::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsComma
 
 	m_pd3dcbLights->Map(0, NULL, (void **)&m_pcbMappedLights);
 
-	for (int i = 0; i < m_nUIs; ++i)
-		m_ppUIObjects[i]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
 void CScene::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
@@ -699,7 +699,10 @@ void CScene::CheckCollision(CPacket* pPacket)
 	else if (m_iState == INGAME) {
 		for (int i = 0; i < m_nGameObjects; ++i) {
 			if (m_ppGameObjects[i]->GetHp() > 0) {
-				m_pPlayer->CheckCollision(m_ppGameObjects[i]);
+				if (m_pPlayer->CheckCollision(m_ppGameObjects[i])) {
+					m_ppUIObjects[0]->SetvPercent((float)m_pPlayer->m_iHp / (float)m_pPlayer->m_iMaxHp);
+				}
+				//m_ppUIObjects[0]->SetvPercent(m_pPlayer->GetHp() / m_pPlayer->m_iMaxHp);
 				//if (i == 0) {
 				//	if (m_ppGameObjects[i]->GetBehaviorActivate() == true)
 				//		CheckBehavior(m_ppGameObjects[i]);
@@ -958,7 +961,6 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 			//CB_UI_INFO ui;
 			//ui.gfAlpha = m_ppUIObjects[0]->GetAlpha() + 0.1f;
 			//m_ppUIObjects[0]->SetUI(&ui);
-			m_ppUIObjects[0]->SetAlpha(0.8f);
 			//m_ppGameObjects[0]->FindFrame("HpBar")->MoveStrafe(10.f);
 			break;
 		case '0':

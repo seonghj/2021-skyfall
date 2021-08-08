@@ -282,7 +282,7 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 
 
-void CPlayer::CheckCollision(CGameObject* pObject)
+bool CPlayer::CheckCollision(CGameObject* pObject)
 {
 	// Player - pObject
 	if (isCollide(pObject)) {
@@ -296,10 +296,13 @@ void CPlayer::CheckCollision(CGameObject* pObject)
 		XMFLOAT3 d = Vector3::Subtract(m_xmf3Position, pObject->GetPosition());
 		Move(Vector3::ScalarProduct(d, 50.f, true), true);
 
+		return true;
+
 		// 여기는 플레이어가 몬스터한테 맞는 부분
 		//pObject->SetBehaviorActivate(true);
 		//cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
 	}
+	return false;
 }
 
 void CPlayer::CheckMap(CGameObject* pMap)
@@ -749,7 +752,7 @@ void CBowPlayer::LButtonUp()
 }
 
 
-void CBowPlayer::CheckCollision(CGameObject* pObject)
+bool CBowPlayer::CheckCollision(CGameObject* pObject)
 {
 	// Bullet - pObject
 	if (m_ppBullets)
@@ -764,7 +767,7 @@ void CBowPlayer::CheckCollision(CGameObject* pObject)
 		}
 
 	// Player - pObject
-	CPlayer::CheckCollision(pObject);
+	return CPlayer::CheckCollision(pObject);
 }
 
 void CBowPlayer::Shot(float fTimeElapsed, float fSpeed)
@@ -997,10 +1000,8 @@ void C1HswordPlayer::RButtonUp()
 }
 
 
-void C1HswordPlayer::CheckCollision(CGameObject* pObject)
+bool C1HswordPlayer::CheckCollision(CGameObject* pObject)
 {
-	// Player - pObject
-	CPlayer::CheckCollision(pObject);
 
 	if (m_isAttack&& m_bHit) {
 		if (pObject->isCollide(pWeapon)) {
@@ -1013,6 +1014,8 @@ void C1HswordPlayer::CheckCollision(CGameObject* pObject)
 			pObject->FindFrame("HpBar")->m_bActive = true;
 		}
 	}
+	// Player - pObject
+	return CPlayer::CheckCollision(pObject);
 }
 
 C2HswordPlayer::C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext)

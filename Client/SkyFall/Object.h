@@ -410,7 +410,8 @@ public:
 		m_iHp -= iDamage * (100 - m_iDefStat) / 100;
 	};
 
-	void SetHp(int hp) {m_iMaxHp = m_iHp = hp;}
+	void SetHp(int hp) {m_iHp = hp;}
+	void SetMaxHp(int hp){ m_iMaxHp = m_iHp = hp; }
 	void SetAtkStat(float atk) { m_iAtkStat = atk; }
 	void SetDefStat(float def) { m_iDefStat = def; }
 	void SetBehaviorActivate(bool activate) { m_bBehaviorActivate = activate; }
@@ -753,6 +754,8 @@ public:
 	float		 GetAlpha() { return m_pcbMappedUI->gfAlpha; }
 	void		 SetUI(CB_UI_INFO* ui) { memcpy(m_pcbMappedUI, ui, sizeof(CB_UI_INFO)); }
 	void SetAlpha(float a) { m_pcbMappedUI->gfAlpha = a; }
+	void SetvPercent(float p) { m_pcbMappedUI->gfPercentVer = p; }
+	void SethPercent(float p) { m_pcbMappedUI->gfPercentHor = p; }
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void ReleaseShaderVariables();

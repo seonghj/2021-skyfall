@@ -515,7 +515,7 @@ struct VS_HPBAR_INPUT
 
 VS_HPBAR_INPUT VSHPBar(VS_HPBAR_INPUT input)
 {
-	input.center =  mul(float4(input.center,1.f), gmtxGameObject);
+	input.center = (float3)(mul(float4(input.center, 1.f), gmtxGameObject));
 	return(input);
 }
 
@@ -608,7 +608,7 @@ float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 	float4 cColor = gtxtUI.Sample(gssWrap, input.uv);
 	cColor.a = gfAlpha;
 	if (input.uv.y > gfPercentV)
-		cColor = float(0.3, 0.3, 0.3, 0.8);
+		cColor = float4(0.3, 0.3, 0.3, 0.8);
 
 	return cColor;
 }
