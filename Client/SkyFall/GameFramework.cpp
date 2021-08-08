@@ -619,7 +619,7 @@ void CGameFramework::ProcessInput()
 
 			if (pKeysBuffer[VK_SPACE] & 0xF0)
 			{
-				//m_pPlayer->SetJump(true);
+				m_pPlayer->SetJump(true);
 				player_move_packet p;
 				p.key = m_pPacket->Get_clientkey();
 				p.dx = m_DegreeX;
@@ -748,6 +748,25 @@ void CGameFramework::AnimateObjects()
 		}
 		else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
 			m_pPlayer->SetPlace(nPlace + 3);
+		}
+
+		for (int i = 0; i < m_pScene->m_nGameObjects; i++)
+		{
+			pos = m_pScene->m_ppGameObjects[i]->GetPosition();
+			nPlace = m_pScene->m_ppGameObjects[i]->GetPlace();
+			if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+				m_pScene->m_ppGameObjects[i]->SetPlace(nPlace - 1);
+			}
+			else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+				m_pScene->m_ppGameObjects[i]->SetPlace(nPlace + 1);
+			}
+
+			if (pos.z < m_vMapArrange[nPlace][1] * 2048 && nPlace>2) {
+				m_pScene->m_ppGameObjects[i]->SetPlace(nPlace - 3);
+			}
+			else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+				m_pScene->m_ppGameObjects[i]->SetPlace(nPlace + 3);
+			}
 		}
 	}
 	/*if(m_p1HswordPlayer)

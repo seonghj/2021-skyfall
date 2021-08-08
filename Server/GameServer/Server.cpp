@@ -547,6 +547,15 @@ void Server::send_start_packet(int to, int roomID)
     p.weaponType = sessions[roomID][to].using_weapon;
 
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
+
+    if (maps[roomID].game_start == false) {
+        Mapbreak_event e;
+        e.roomid = roomID;
+        e.size = sizeof(e);
+        e.type = EventType::MapBreak;
+        m_pTimer->push_event(roomID, OE_gEvent, MAP_BREAK_TIME, reinterpret_cast<char*>(&e));
+        maps[roomID].game_start = true;
+    }
 }
 
 void Server::game_end(int roomnum)
@@ -713,6 +722,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         start_ok_packet* p = reinterpret_cast<start_ok_packet*>(buf);
         p->size = sizeof(p);
         p->type = SC_start_ok;
+
         break;
     }
     case PacketType::CS_player_info:{
@@ -914,13 +924,6 @@ void Server::WorkerFunc()
                 ep.size = sizeof(ep);
                 ep.type = EventType::game_end;
                 m_pTimer->push_event(key, OE_gEvent, 1000 * (MAP_BREAK_TIME*9), reinterpret_cast<char*>(&ep));
-
-
-                Mapbreak_event e;
-                e.roomid = key;
-                e.size = sizeof(e);
-                e.type = EventType::MapBreak;
-                m_pTimer->push_event(key, OE_gEvent, MAP_BREAK_TIME, reinterpret_cast<char*>(&e));
 
                 break;
             }

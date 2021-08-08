@@ -383,7 +383,9 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	pos.z += 1480;
 	SetPosition(XMFLOAT3(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z));
 
-	SetJump(true);
+	m_pSkinnedAnimationController->SetAllTrackDisable();
+	m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
+	//SetJump(true);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 

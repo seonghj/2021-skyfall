@@ -668,6 +668,7 @@ public:
 	void OnUpdateCallback();
 	void SetUpdatedContext(LPVOID* ppContext) { m_ppUpdatedContext = ppContext; }
 	int	 GetPlace() { return (m_nPlace); }
+	void SetPlace(int n) { m_nPlace = n; }
 	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 
 	float m_fHeight = 0.0f;
