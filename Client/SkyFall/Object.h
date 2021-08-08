@@ -737,7 +737,8 @@ public:
 
 struct CB_UI_INFO {
 	float gfAlpha;
-
+	float gfPercentVer;
+	float gfPercentHor;
 };
 
 class CUIObject : public CGameObject
