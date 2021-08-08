@@ -122,12 +122,15 @@ void CPacket::SendPacket(char* buf)
     }
 }
 
-void CPacket::Send_ready_packet()
+void CPacket::Send_ready_packet(PlayerType t)
 {
     game_ready_packet p;
     p.key = client_key;
+    p.roomid = roomID;
     p.size = sizeof(p);
-    p.type = PacketType::CS_game_ready;
+    p.type = CS_game_ready;
+    p.weaponType = t;
+
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
@@ -369,6 +372,10 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pFramework->m_pCamera = m_pPlayer->GetCamera();
             break;
         }
+        case PT_BASIC: {
+
+            break;
+        }
         }
     }
 }
@@ -465,7 +472,8 @@ void CPacket::ProcessPacket(char* buf)
         roomID = p->roomid;
         printf("recv key from server: %d\n", key);
 
-        m_pPlayer = m_pFramework->m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
+        //m_pPlayer = m_pFramework->m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
+        m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pFramework->m_pPlayer;
         //m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
 
         m_pFramework->m_pCamera = m_pPlayer->GetCamera();
@@ -486,6 +494,7 @@ void CPacket::ProcessPacket(char* buf)
             roomID = p->roomid;
             /* m_pPlayer->SetPosition(p->Position);
              m_pPlayer->Rotate(p->dx, p->dy, 0);*/
+
             printf("Login game\n");
             canmove = TRUE;
         }
@@ -499,6 +508,7 @@ void CPacket::ProcessPacket(char* buf)
             Swap_weapon(p->key, p->WeaponType);
             m_pScene->MovePlayer(key, p->Position);
             m_pScene->m_mPlayer[key]->Rotate(p->dx, p->dy, 0);
+            m_pScene->AnimatePlayer(key, 2);
             m_pScene->AnimatePlayer(key, 0);
         }
         else {
@@ -514,6 +524,9 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_start_ok: {
         //GameConnect();
+        game_start_packet* p = reinterpret_cast<game_start_packet*>(buf);
+        Swap_weapon(p->key, p->weaponType);
+        m_pScene->m_iState = INGAME;
         break;
     }
     case PacketType::SC_game_end: {
@@ -540,6 +553,7 @@ void CPacket::ProcessPacket(char* buf)
         else {
             switch (p->MoveType) {
             case PlayerMove::JUMP: {
+                m_pScene->m_mPlayer[key]->SetJump(true);
                 m_pScene->AnimatePlayer(key, 2);
                 break;
             }
@@ -578,9 +592,6 @@ void CPacket::ProcessPacket(char* buf)
                     m_pScene->AnimatePlayer(key, 7);
                 //m_pScene->AnimatePlayer(key, 4);
                 break;
-            case PlayerMove::JUMP:
-                m_pScene->AnimatePlayer(key, 2);
-                break;
             default:
                 break;
             }
@@ -603,7 +614,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_weapon_swap: {
         Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
         int key = p->key;
-        Swap_weapon(key, (PlayerType)p->weapon);
+        Swap_weapon(key, p->weapon);
         break;
     }
     case PacketType::SC_player_attack: {
@@ -673,6 +684,10 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
         if (p->key != client_key) {
             m_pScene->AnimatePlayer(key, 0);
+            if (m_pScene->m_mPlayer[key]->GetJump() == TRUE) {
+                m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(2, 0);
+                m_pScene->m_mPlayer[key]->SetJump(FALSE);
+            }
             m_pScene->m_mPlayer[key]->SetPosition(p->Position);
         }
         else
@@ -682,7 +697,9 @@ void CPacket::ProcessPacket(char* buf)
 
     case PacketType::SC_map_collapse: {
         map_collapse_packet* p = reinterpret_cast<map_collapse_packet*>(buf);
-        //printf("break map: %d\n", p->block_num);
+        m_pScene->m_ppTerrain[p->block_num]->Falling();
+        
+        printf("break map: %d\n", p->block_num);
         break;
     }
 

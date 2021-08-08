@@ -68,6 +68,7 @@ public:
 
 
 
+
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
 	float						m_DegreeY;

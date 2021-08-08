@@ -58,6 +58,8 @@ public:
 	void BuildDefaultLightsAndMaterials();
 	void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, vector<vector<int>> arrange);
 	void AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	void AddWeapon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	void InitPlayers();
 	void MovePlayer(int player_num, XMFLOAT3 pos);
 	void AnimatePlayer(int id, int animation_num);
 	void ReleaseObjects();
@@ -72,7 +74,7 @@ public:
 	void Set(ID3D12GraphicsCommandList* pd3dCommandList);
 	void ReleaseUploadBuffers();
 
-	void CheckCollision();
+	void CheckCollision(CPacket* pPacket);
 	void CheckBehavior(CMonster * pObject);
 
 	CTerrainPlayer						*m_pPlayer = NULL;
@@ -146,6 +148,8 @@ public:
 	CMap								*m_pMap = NULL;
 	CUIObject							**m_ppUIObjects = NULL;
 	int									m_nUIs = 0;
+
+	CGameObject							** m_ppWeapons = new CGameObject * [4];
 
 	int m_iState;
 

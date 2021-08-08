@@ -335,6 +335,8 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		::ReleaseCapture();
 		m_ChargeTimer.Stop();
 		m_pPlayer->LButtonUp();
+		m_DegreeX = 0;
+		m_DegreeY = 0;
 		break;
 	}
 	case WM_RBUTTONUP: {
@@ -375,9 +377,15 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				case VK_RETURN:
 					break;
 				case VK_F1:
+
+					break;
 				case VK_F2:
+
+					break;
 				case VK_F3:
-					m_pCamera = m_pPlayer->ChangeCamera((DWORD)(wParam - VK_F1 + 1), m_GameTimer.GetTimeElapsed());
+
+					break;
+					/*m_pCamera = m_pPlayer->ChangeCamera((DWORD)(wParam - VK_F1 + 1), m_GameTimer.GetTimeElapsed());*/
 					break;
 				case VK_F4: 
 					m_pPacket->Send_swap_weapon_packet(PT_BOW);
@@ -476,7 +484,7 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 
 void CGameFramework::CheckCollision()
 {
-	m_pScene->CheckCollision();
+	m_pScene->CheckCollision(m_pPacket);
 	//m_pScene->CheckTarget();
 }
 
@@ -519,7 +527,6 @@ void CGameFramework::BuildObjects()
 
 	m_pScene = new CScene();
 
-	//m_vMapArrange = { { -1, -1}, {0, -1}, {1, -1}, {-1, 0}, {0, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1} };
 	m_vMapArrange = { { 0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}, {0, 2}, {1, 2}, {2, 2} };
 	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList, m_vMapArrange);
 
@@ -536,21 +543,19 @@ void CGameFramework::BuildObjects()
 	m_pShadowMap->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
 	m_pShadowMap->CreateShadowMap(m_pd3dDevice);
 
-	//CLoadedModelInfo* pSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_1Hsword.bin", NULL);r
-	//C1HswordPlayer* p1HswordPlayer = new C1HswordPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pSwordModel, (void**)m_pScene->m_ppTerrain);
-	//
-	//m_p1HswordPlayer = p1HswordPlayer;
-	//if (pSwordModel) delete pSwordModel;
 
+	CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Basic.bin", NULL);
+	CTerrainPlayer* pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pModel, (void**)m_pScene->m_ppTerrain);
+	delete pModel;
 
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
-	//for (int i = 0; i < MAX_PLAYER; ++i)
-	//	m_pScene->MovePlayer(i, XMFLOAT3(80.0f, 50.0f, 0.0f));
-	//m_pScene->m_pPlayer = m_p1HswordPlayer;
-	m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[0];
-
+	m_pScene->AddWeapon(m_pd3dDevice, m_pd3dCommandList);
+	m_pPlayer = m_pScene->m_pPlayer = pPlayer;
+	pPlayer->Rotate(60.0f, -90.f, 0);
 	//m_pPlayer->SetPlace(4);
-	m_pCamera = m_pPlayer->GetCamera();
+	
+	m_pCamera = pPlayer->GetCamera();
+
 	m_pPacket->m_pScene = m_pScene;
 	m_pPacket->m_pFramework = this;
 	m_pPacket->m_pPlayer = m_pPlayer;
@@ -725,20 +730,10 @@ void CGameFramework::ProcessInput()
 void CGameFramework::AnimateObjects()
 {
 	float fTimeElapsed = m_GameTimer.GetTimeElapsed();
-
 	if (m_pScene) {
 		m_pScene->AnimateObjects(fTimeElapsed);
 
 		//// 임시방편
-		//if (m_pPlayer->GetPosition().x < 0) {
-		//	m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pForestTerrain);
-		//}
-		//else if (m_pPlayer->GetPosition().x < 2048) {
-		//	m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pTerrain);
-		//}
-		//else {
-		//	m_pPlayer->SetPlayerUpdatedContext(m_pScene->m_pSnowTerrain);
-		//}
 		XMFLOAT3 pos = m_pPlayer->GetPosition();
 		int nPlace = m_pPlayer->GetPlace();
 		if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
@@ -845,7 +840,6 @@ void CGameFramework::FrameAdvance()
 
 	m_pShadowMap->UpdateShaderVariables(m_pd3dCommandList);
 	if (m_pScene) m_pScene->Render(m_pd3dCommandList, m_pCamera);
-	//m_pPlayer->Render(m_pd3dCommandList, NULL);
 
 #ifdef _WITH_PLAYER_TOP
 	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
@@ -932,7 +926,7 @@ void CGameFramework::FrameAdvance()
 		}
 	}
 	else {
-		if (false == m_pPlayer->GetStanding() && false == PressDirButton) {
+		if (m_pPlayer->GetGround() == true && false == m_pPlayer->GetStanding() && false == PressDirButton) {
 			dwDirection = 0;
 			m_pPlayer->SetStanding(true);
 			player_stop_packet sp;

@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "Scene.h"
 #include "protocol.h"
+#include "CPacket.h"
 
 ID3D12DescriptorHeap *CScene::m_pd3dCbvSrvDescriptorHeap = NULL;
 
@@ -117,6 +118,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Snow_0807.raw"), 257, 257, xmf3Scale, xmf4Color, 2);
 		}
 		m_ppTerrain[i]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
+		m_ppTerrain[i]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 		if (i >= 6) m_ppTerrain[i]->MoveUp(125.f);
 	}
 
@@ -142,7 +144,45 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	//m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
-	m_iState =SCENE::LOBBY;
+	m_iState = SCENE::LOBBY;
+}
+
+void CScene::AddWeapon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	CLoadedModelInfo* p1HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
+	CLoadedModelInfo* pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+	CLoadedModelInfo* p2HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2Hsword.bin", NULL);
+	CLoadedModelInfo* p2HSpearModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2HSpear.bin", NULL);
+
+	for (int i = 0; i < 4; ++i) {
+		m_ppWeapons[i] = new CGameObject();
+		m_ppWeapons[i]->SetScale(0.6f, 0.6f, 0.6f);
+		m_ppWeapons[i]->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 0), XMFLOAT3(80, 60, 40))->Rotate(0, 0, 20.f);
+		m_ppWeapons[i]->SetHpBar(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 60, 0), XMFLOAT2(40, 10))->SetHp(100);
+		m_ppWeapons[i]->FindFrame("HpBar")->m_iHp = 0;
+		m_ppWeapons[i]->SetActive("HpBar", false);
+	}
+	m_ppWeapons[0]->SetChild(p1HSwordModel->m_pModelRootObject->FindFrame("Sword_Pivot"));
+	m_ppWeapons[1]->SetChild(pBowModel->m_pModelRootObject->FindFrame("Bow_Pivot"));
+	m_ppWeapons[2]->SetChild(p2HSwordModel->m_pModelRootObject->FindFrame("Long_Sword_Pivot"));
+	m_ppWeapons[3]->SetChild(p2HSpearModel->m_pModelRootObject->FindFrame("Spear_Pivot"));
+
+	XMFLOAT3 pos = m_ppTerrain[2]->GetPosition();
+	m_ppWeapons[0]->SetPosition(Vector3::Add(pos, XMFLOAT3(1135, 190, 1370)));
+	m_ppWeapons[1]->SetPosition(Vector3::Add(pos, XMFLOAT3(1135, 170, 1430)));
+	m_ppWeapons[2]->SetPosition(Vector3::Add(pos, XMFLOAT3(1135, 200, 1490)));
+	m_ppWeapons[3]->SetPosition(Vector3::Add(pos, XMFLOAT3(1135, 200, 1550)));
+	m_ppWeapons[0]->Rotate(0, 0.f, -20.f);
+	m_ppWeapons[1]->Rotate(0, 0.f, -20.f);
+	m_ppWeapons[2]->Rotate(0, 0.f, -20.f);
+	m_ppWeapons[3]->Rotate(0, 0.f, -20.f);
+
+
+	if (p1HSwordModel) delete p1HSwordModel;
+	if (pBowModel) delete pBowModel;
+	if (p2HSwordModel) delete p2HSwordModel;
+	if (p2HSpearModel) delete p2HSpearModel;
+
 }
 
 void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
@@ -152,7 +192,7 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	CLoadedModelInfo* p2HSwordModel;
 	CLoadedModelInfo* p2HSpearModel;
 
-	for (int i = 0; i < 20; ++i) {
+	for (int i = 0; i < MAX_PLAYER; ++i) {
 		p1HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
 		pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
 		p2HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2Hsword.bin", NULL);
@@ -164,11 +204,22 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		m_mPlayer[i] = m_m1HswordPlayer[i];
 		//m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, 124.0f, 650.0f));
 		//MovePlayer(i, XMFLOAT3(80.0f, 0.0f, 0.0f));
-	}
+	}	
+
 	if (p1HSwordModel) delete p1HSwordModel;
 	if (pBowModel) delete pBowModel;
 	if (p2HSwordModel) delete p2HSwordModel;
 	if (p2HSpearModel) delete p2HSpearModel;
+}
+
+void CScene::InitPlayers()
+{
+	//m_m1HswordPlayer[0]->SetPosition(XMFLOAT3(10, 124, 25));
+	//m_mBowPlayer[0]->SetPosition(XMFLOAT3(70, 124, 50));
+	//m_mBowPlayer[0]->SetPlace(0);
+	//m_m2HswordPlayer[0]->SetPosition(XMFLOAT3(130, 124, 50));
+	//m_m2HspearPlayer[0]->SetPosition(XMFLOAT3(190, 124, 25));
+
 }
 
 void CScene::MovePlayer(int player_num, XMFLOAT3 pos)
@@ -250,10 +301,10 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(11, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(11, true);
-		if (!strcmp(m_mPlayer[id]->m_pstrFrameName, "Player_Bow")) {
+		/*if (!strcmp(m_mPlayer[id]->m_pstrFrameName, "Player_Bow")) {
 			m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(0, true);
-		}
+		}*/
 		break;
 	case 12:
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(12, 0);
@@ -376,7 +427,7 @@ ID3D12RootSignature *CScene::CreateGraphicsRootSignature(ID3D12Device *pd3dDevic
 	pd3dDescriptorRanges[10].RegisterSpace = 0;
 	pd3dDescriptorRanges[10].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	D3D12_ROOT_PARAMETER pd3dRootParameters[20];
+	D3D12_ROOT_PARAMETER pd3dRootParameters[21];
 
 	pd3dRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	pd3dRootParameters[0].Descriptor.ShaderRegister = 1; //Camera
@@ -475,9 +526,14 @@ ID3D12RootSignature *CScene::CreateGraphicsRootSignature(ID3D12Device *pd3dDevic
 	pd3dRootParameters[18].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	pd3dRootParameters[19].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	pd3dRootParameters[19].Descriptor.ShaderRegister = 6; //Fog Info
+	pd3dRootParameters[19].Descriptor.ShaderRegister = 6; //UI Info
 	pd3dRootParameters[19].Descriptor.RegisterSpace = 0;
 	pd3dRootParameters[19].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	pd3dRootParameters[20].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	pd3dRootParameters[20].Descriptor.ShaderRegister = 9; //Terrain Info
+	pd3dRootParameters[20].Descriptor.RegisterSpace = 0;
+	pd3dRootParameters[20].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 	D3D12_STATIC_SAMPLER_DESC pd3dSamplerDescs[3];
 
 	pd3dSamplerDescs[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -554,9 +610,6 @@ void CScene::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
 	::memcpy(m_pcbMappedLights->m_pLights, m_pLights, sizeof(LIGHT) * m_nLights);
 	::memcpy(&m_pcbMappedLights->m_xmf4GlobalAmbient, &m_xmf4GlobalAmbient, sizeof(XMFLOAT4));
 	::memcpy(&m_pcbMappedLights->m_nLights, &m_nLights, sizeof(int));
-
-	for (int i = 0; i < m_nUIs; ++i)
-		m_ppUIObjects[i]->UpdateShaderVariables(pd3dCommandList);
 }
 
 void CScene::ReleaseShaderVariables()
@@ -608,20 +661,45 @@ void CScene::ReleaseUploadBuffers()
 }
 
 
-void CScene::CheckCollision()
+void CScene::CheckCollision(CPacket* pPacket)
 {
-	for (int i = 0; i < m_nGameObjects; ++i) {
-		if (m_ppGameObjects[i]->GetHp() > 0) {
-			m_pPlayer->CheckCollision(m_ppGameObjects[i]);
-			//if (i == 0) {
-			//	if (m_ppGameObjects[i]->GetBehaviorActivate() == true)
-			//		CheckBehavior(m_ppGameObjects[i]);
-			//	//CheckBehavior(m_ppGameObjects[i]);
-			//}
+	if (m_iState == LOBBY) {
+		for (int i = 0; i < 4; ++i) {
+			CGameObject* pHpBar = m_ppWeapons[i]->FindFrame("HpBar");
+			if (m_ppWeapons[i]->isCollide(m_pPlayer)) {
+				if (pHpBar->m_iMaxHp < ++pHpBar->m_iHp) {
+					// i = PlayerType
+					/* state 변경후 서버와 통신 알아서*/
+					// m_iState = INGAME;
+					//for (int i = 0; i < 4; ++i)
+					//	m_ppWeapons[i]->Release();
+					pPacket->Set_StartWeapon((PlayerType)i);
+					pPacket->Send_ready_packet((PlayerType)i);
+				}
+				pHpBar->m_bActive = true;
+			}
+			else {
+				if (--pHpBar->m_iHp < 0) {
+					pHpBar->m_iHp = 0;
+					pHpBar->m_bActive = false;
+				}
+			}
 		}
 	}
-	if(m_pMap)
-		m_pMap->CheckCollision(m_pPlayer);
+	else if (m_iState == INGAME) {
+		for (int i = 0; i < m_nGameObjects; ++i) {
+			if (m_ppGameObjects[i]->GetHp() > 0) {
+				m_pPlayer->CheckCollision(m_ppGameObjects[i]);
+				//if (i == 0) {
+				//	if (m_ppGameObjects[i]->GetBehaviorActivate() == true)
+				//		CheckBehavior(m_ppGameObjects[i]);
+				//	//CheckBehavior(m_ppGameObjects[i]);
+				//}
+			}
+		}
+		if (m_pMap)
+			m_pMap->CheckCollision(m_pPlayer);
+	}
 }
 
 void CScene::CheckBehavior(CMonster *pMonster)
@@ -907,19 +985,38 @@ bool CScene::ProcessInput(UCHAR *pKeysBuffer)
 void CScene::AnimateObjects(float fTimeElapsed)
 {
 	m_fElapsedTime = fTimeElapsed;
+	if (m_iState == LOBBY) {
+		m_pPlayer->Animate(fTimeElapsed);
+		/*m_mBowPlayer[0]->Update(fTimeElapsed);
 
-	for (int i = 0; i < MAX_PLAYER; ++i) {
-		if (m_mPlayer[i]) {
-			m_mPlayer[i]->Animate(fTimeElapsed);
-			m_mPlayer[i]->UpdateTransform();
-		}
+		m_m1HswordPlayer[0]->Animate(fTimeElapsed);
+		m_mBowPlayer[0]->Animate(fTimeElapsed);
+		m_m2HswordPlayer[0]->Animate(fTimeElapsed);
+		m_m2HspearPlayer[0]->Animate(fTimeElapsed);*/
+		//m_m1HswordPlayer[0]->UpdateTransform();
+		//m_mBowPlayer[0]->UpdateTransform();
+		//m_m2HswordPlayer[0]->UpdateTransform();
+		//m_m2HspearPlayer[0]->UpdateTransform();
+		
 	}
+	else if (m_iState == INGAME) {
+		for (int i = 0; i < MAX_PLAYER; ++i) {
+			if (m_mPlayer[i]) {
+				m_mPlayer[i]->Animate(fTimeElapsed);
+				m_mPlayer[i]->UpdateTransform();
+			}
+		}
 
-	for (int i = 0; i < m_nGameObjects; i++)
-	{
-		if (m_ppGameObjects[i])
+		for (int i = 0; i < m_nGameObjects; i++)
 		{
-			m_ppGameObjects[i]->Update(fTimeElapsed);
+			if (m_ppGameObjects[i])
+			{
+				m_ppGameObjects[i]->Update(fTimeElapsed);
+			}
+		}
+		for (int i = 0; i < 9; ++i) {
+			if (m_ppTerrain[i]->IsFalling())
+				m_ppTerrain[i]->UpdateTime(fTimeElapsed);
 		}
 	}
 
@@ -933,7 +1030,7 @@ void CScene::AnimateObjects(float fTimeElapsed)
 void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
 {
 	if (m_pd3dGraphicsRootSignature) pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);
-	if (m_pd3dCbvSrvDescriptorHeap) pd3dCommandList->SetDescriptorHeaps(1, &m_pd3dCbvSrvDescriptorHeap);	
+	if (m_pd3dCbvSrvDescriptorHeap) pd3dCommandList->SetDescriptorHeaps(1, &m_pd3dCbvSrvDescriptorHeap);
 
 	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
 	pCamera->UpdateShaderVariables(pd3dCommandList);
@@ -944,40 +1041,56 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	pd3dCommandList->SetGraphicsRootConstantBufferView(2, d3dcbLightsGpuVirtualAddress); //Lights
 
 	if (m_pSkyBox) m_pSkyBox->Render(pd3dCommandList, pCamera);
-	if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
-	if (m_pForestTerrain) m_pForestTerrain->Render(pd3dCommandList, pCamera);
-	if (m_pSnowTerrain) m_pSnowTerrain->Render(pd3dCommandList, pCamera);
-	for (int i = 0; i < 9; i++)
-		if (m_ppTerrain[i]) m_ppTerrain[i]->Render(pd3dCommandList, pCamera);
 
-	if(m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
-
-	for (int i = 0; i < m_nGameObjects; i++)
-	{
-		if (m_ppGameObjects[i])
-		{
-			m_ppGameObjects[i]->Animate(m_fElapsedTime);
-			m_ppGameObjects[i]->UpdateTransform(NULL);
-			m_ppGameObjects[i]->Render(pd3dCommandList, pCamera);
+	//if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
+	//if (m_pForestTerrain) m_pForestTerrain->Render(pd3dCommandList, pCamera);
+	//if (m_pSnowTerrain) m_pSnowTerrain->Render(pd3dCommandList, pCamera);
+	for (int i = 0; i < 9; i++) {
+		if (m_ppTerrain[i]) {
+			m_ppTerrain[i]->UpdateShaderVariables(pd3dCommandList);
+			m_ppTerrain[i]->Render(pd3dCommandList, pCamera);
 		}
 	}
+	if (m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
+	
+	if (m_iState == SCENE::LOBBY) {
+		m_pPlayer->Render(pd3dCommandList, NULL);
+		for(int i=0;i<4;++i)
+			m_ppWeapons[i]->Render(pd3dCommandList, pCamera);
+	}
+	else if (m_iState == SCENE::INGAME) {
 
-	for (int i = 0; i < MAX_PLAYER; ++i)
-		if (m_mPlayer[i]) m_mPlayer[i]->Render(pd3dCommandList, pCamera);
-	//for (auto p : m_mPlayer)
-	//{
-	//	if (p.second)
-	//	{
-	//		p.second->Animate(m_fElapsedTime);
-	//		if (!p.second->m_pSkinnedAnimationController) p.second->UpdateTransform(NULL);
-	//		p.second->Render(pd3dCommandList, pCamera);
-	//	}
-	//}
+		for (int i = 0; i < m_nGameObjects; i++)
+		{
+			if (m_ppGameObjects[i])
+			{
+				m_ppGameObjects[i]->Animate(m_fElapsedTime);
+				m_ppGameObjects[i]->UpdateTransform(NULL);
+				m_ppGameObjects[i]->Render(pd3dCommandList, pCamera);
+			}
+		}
 
-	for (int i = 0; i < m_nShaders; i++) if (m_ppShaders[i]) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
+		for (int i = 0; i < MAX_PLAYER; ++i)
+			if (m_mPlayer[i]) m_mPlayer[i]->Render(pd3dCommandList, pCamera);
+		//for (auto p : m_mPlayer)
+		//{
+		//	if (p.second)
+		//	{
+		//		p.second->Animate(m_fElapsedTime);
+		//		if (!p.second->m_pSkinnedAnimationController) p.second->UpdateTransform(NULL);
+		//		p.second->Render(pd3dCommandList, pCamera);
+		//	}
+		//}
 
-	for (int i = 0; i < m_nUIs; ++i)
-		if(m_ppUIObjects[i]) m_ppUIObjects[i]->Render(pd3dCommandList, pCamera);
+		for (int i = 0; i < m_nShaders; i++) if (m_ppShaders[i]) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
+
+		for (int i = 0; i < m_nUIs; ++i) {
+			if (m_ppUIObjects[i]) {
+				m_ppUIObjects[i]->UpdateShaderVariables(pd3dCommandList);
+				m_ppUIObjects[i]->Render(pd3dCommandList, pCamera);
+			}
+		}
+	}
 }
 
 void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
@@ -993,27 +1106,34 @@ void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* p
 	D3D12_GPU_VIRTUAL_ADDRESS d3dcbLightsGpuVirtualAddress = m_pd3dcbLights->GetGPUVirtualAddress();
 	pd3dCommandList->SetGraphicsRootConstantBufferView(2, d3dcbLightsGpuVirtualAddress); //Lights
 
-	//if (m_pSkyBox) m_pSkyBox->RenderShadow(pd3dCommandList, pCamera);
 	if (m_pTerrain) m_pTerrain->RenderShadow(pd3dCommandList, pCamera);
 	if (m_pForestTerrain) m_pForestTerrain->RenderShadow(pd3dCommandList, pCamera);
 	if (m_pSnowTerrain) m_pSnowTerrain->RenderShadow(pd3dCommandList, pCamera);
 	for (int i = 0; i < 9; i++)
-		if (m_ppTerrain[i]) m_ppTerrain[i]->Render(pd3dCommandList, pCamera);
+		if (m_ppTerrain[i]) m_ppTerrain[i]->RenderShadow(pd3dCommandList, pCamera);
 
 	if (m_pMap) m_pMap->RenderShadow(pd3dCommandList, pCamera);
 
-	for (int i = 0; i < m_nGameObjects; i++)
-	{
-		if (m_ppGameObjects[i])
-		{
-			m_ppGameObjects[i]->Animate(m_fElapsedTime);
-			m_ppGameObjects[i]->UpdateTransform(NULL);
-			m_ppGameObjects[i]->RenderShadow(pd3dCommandList, pCamera);
-		}
+	if (m_iState == SCENE::LOBBY) {
+		for (int i = 0; i < 4; ++i)
+			m_ppWeapons[i]->RenderShadow(pd3dCommandList, pCamera);
 	}
+	else if (m_iState == SCENE::INGAME) {
+		//if (m_pSkyBox) m_pSkyBox->RenderShadow(pd3dCommandList, pCamera);
 
-	for (int i = 0; i < MAX_PLAYER; ++i)
-		if (m_mPlayer[i]) m_mPlayer[i]->RenderShadow(pd3dCommandList, pCamera);
+		for (int i = 0; i < m_nGameObjects; i++)
+		{
+			if (m_ppGameObjects[i])
+			{
+				m_ppGameObjects[i]->Animate(m_fElapsedTime);
+				m_ppGameObjects[i]->UpdateTransform(NULL);
+				m_ppGameObjects[i]->RenderShadow(pd3dCommandList, pCamera);
+			}
+		}
+
+		for (int i = 0; i < MAX_PLAYER; ++i)
+			if (m_mPlayer[i]) m_mPlayer[i]->RenderShadow(pd3dCommandList, pCamera);
+	}
 }
 
 void CScene::Set(ID3D12GraphicsCommandList* pd3dCommandList)

@@ -48,6 +48,7 @@ enum terrain {
 	Snowy_field
 };
 
+
 enum PacketType {
 	SC_NONE,
 	SC_player_key,
@@ -111,7 +112,8 @@ enum EventType {
 	Cloud_move,
 	game_end,
 	Mon_move_to_player,
-	Mon_attack_cooltime
+	Mon_attack_cooltime,
+	MapBreak
 };
 
 enum PlayerState {
@@ -134,11 +136,11 @@ enum PlayerAttackType {
 };
 
 enum PlayerType {
-	PT_BASIC,
 	PT_SWORD1H,
 	PT_BOW,
 	PT_SWORD2H,
-	PT_SPEAR2H
+	PT_SPEAR2H,
+	PT_BASIC,
 };
 
 enum MonsterType {
@@ -190,9 +192,11 @@ struct player_add_packet : public Packet {
 };
 
 struct game_ready_packet :public Packet {
+	PlayerType weaponType;
 };
 
 struct game_start_packet :public Packet {
+	PlayerType weaponType;
 };
 
 struct start_ok_packet :public Packet {
@@ -294,6 +298,7 @@ struct map_block_set : public Packet {
 
 struct map_collapse_packet : public Packet {
 	char block_num;
+	short index[2];
 };
 
 struct cloud_move_packet : public Packet {
@@ -345,6 +350,10 @@ struct mon_move_to_player_event : public Packet {
 };
 
 struct mon_attack_cooltime_event : public Packet {
+
+};
+
+struct Mapbreak_event : public Packet {
 
 };
 #pragma pack(pop)

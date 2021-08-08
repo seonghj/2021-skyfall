@@ -200,10 +200,10 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 
 	//float fDepth = shadowPosition.z;
 	//float fPercentLit = gtxtShadowMap.SampleCmpLevelZero(gssShadowMap, shadowPosition.xy, fDepth).r;
-	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //그림자가 아님
+	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //not shadow
 
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
-	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //그림자가 아님
+	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //not shadow
 
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
 
@@ -216,7 +216,7 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 	{
 		float3 normalW = input.normalW;
 		float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] → [-1, 1]
+		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
 		normalW = normalize(mul(vNormal, TBN));
 		cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
 		cColor = lerp(cColor, cIllumination, 0.5f);
@@ -298,10 +298,10 @@ float4 PSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_OUTPUT input) : SV_TARGE
 
 	//float fDepth = shadowPosition.z;
 	//float fPercentLit = gtxtShadowMap.SampleCmpLevelZero(gssShadowMap, shadowPosition.xy, fDepth).r;
-	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //그림자가 아님
+	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //not shadow
 
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
-	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //그림자가 아님
+	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //not shadow
 	
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
 
@@ -313,7 +313,7 @@ float4 PSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_OUTPUT input) : SV_TARGE
 	{
 		float3 normalW = input.normalW;
 		float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] → [-1, 1]
+		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
 		normalW = normalize(mul(vNormal, TBN));
 		cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
 		cColor = lerp(cColor, cIllumination, 0.5f);
@@ -329,6 +329,11 @@ Texture2D gtxtTerrainDetailTexture : register(t2);
 Texture2D gtxtWater : register(t8);
 Texture2D gtxtWaterNormal : register(t9);
 
+cbuffer cbTerrainInfo : register(b9)
+{
+	float		gfTime : packoffset(c0.x);
+	bool		gbFalling : packoffset(c0.y);
+};
 
 struct VS_TERRAIN_INPUT
 {
@@ -346,20 +351,42 @@ struct VS_TERRAIN_OUTPUT
 	float2 uv0 : TEXCOORD0;
 	float2 uv1 : TEXCOORD1;
 	float4 shadowPosition: TEXCOORD2;
+	int nState : STATE;
 };
+
+static const int GROUND = 1;
+static const int WATER = 2;
+
 
 VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 {
 	VS_TERRAIN_OUTPUT output;
 
 	output.positionW = (float3)mul(float4(input.position, 1.0f), gmtxGameObject);
-	if (output.positionW.y <= 100.f) {
+	if (output.positionW.y <= 87.f) {
 		output.positionW.y = 85.f + 2 * cos(output.positionW.x /3 + output.positionW.z /2 + gfCurrentTime * 2);
+		output.nState = WATER;
 	}
+	else
+		output.nState = GROUND;
+
+
+	//const int2 arrange[10] = { int2(0,0),int2(1,0),int2(2,0),int2(0,1),int2(1,1),int2(2,1),int2(0,2),int2(1,2),int2(2,2),int2(-1,-1) };
+	float2 pos = float2(output.positionW.x, output.positionW.z) % 2048;
+	
+	if (gbFalling) {		
+		//output.nState |= STATE::FALL;
+		float r = length(float2(1024, 1024) - pos);
+		if (r < gfTime * 100) {
+			output.positionW.y -= 50 * (gfTime - r) + 9.8f * (gfTime - r) * (gfTime - r);
+		}
+	}
+
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
 	output.color = input.color;
 	output.uv0 = input.uv0;
 	output.uv1 = input.uv1;
+
 	
 
 
@@ -372,26 +399,28 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 	return(output);
 }
 
+
 float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 {
+
 	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
 	float fShadowFactor = 0.0f, fBias = 0.046f;
 
 	//float fDepth = shadowPosition.z;
 	//float fPercentLit = gtxtShadowMap.SampleCmpLevelZero(gssShadowMap, shadowPosition.xy, fDepth).r;
-	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //그림자가 아님
+	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //not shadow
 
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
 
 	float4 cColor;
-	if (input.positionW.y <= 90.f) {
+	if (input.nState == WATER&& input.positionW.y <= 87.f) {
 		float2 uv = input.positionW.xz/50;
 		uv.x += gfCurrentTime / 10;
 		uv.y -= gfCurrentTime / 10;
 		float4 cWater = gtxtWater.Sample(gssWrap, uv);
 		float4 cWaterNormal = gtxtWaterNormal.Sample(gssWrap, input.uv1);
 		cColor = cWater;
-		if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //그림자가 아님
+		if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //not shadow
 		else fShadowFactor = 0.3f;
 	}
 	else {
@@ -399,7 +428,7 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 		float4 cDetailTexColor = gtxtTerrainDetailTexture.Sample(gssWrap, input.uv1);
 		cColor = saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
 		//float4 cColor = input.color * saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
-		if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //그림자가 아님
+		if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; // not shadow
 	}
 
 	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -409,7 +438,7 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 	{
 		//float3 normalW = normalize(float3(0,1,0));
 		//float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] → [-1, 1]
+		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
 		//normalW = normalize(mul(vNormal, TBN));
 		//cIllumination = Lighting(input.positionW, normalW,fShadowFactor);
 		if(fShadowFactor==0.f)

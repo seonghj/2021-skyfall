@@ -36,11 +36,12 @@ public:
 
 	void RecvPacket();
 	void SendPacket(char* buf);
-	void Send_ready_packet();
+	void Send_ready_packet(PlayerType t);
 	void Send_attack_packet(int type);
 	void Send_stop_packet();
 	void Send_login_packet(char* id);
 	void Send_swap_weapon_packet(PlayerType weapon);
+
 	void Swap_weapon(int key, PlayerType weapon);
 	void Map_set(map_block_set* p);
 	void CheckCollision(CMonster* mon);
@@ -52,6 +53,10 @@ public:
 
 	void Set_clientkey(int n);
 	int Get_clientkey();
+
+	void Set_StartWeapon(PlayerType t) { start_weapon = t; }
+	PlayerType Get_StartWeapon() { return start_weapon; }
+
 	void Set_currentfps(unsigned long FrameRate);
 
 	void LobbyConnect();
@@ -79,6 +84,7 @@ private:
 	HANDLE                         hcp;
 	std::vector <std::thread>      working_threads;
 
+	PlayerType start_weapon;
 
 	//static DWORD WINAPI ServerConnect(LPVOID arg);
 };

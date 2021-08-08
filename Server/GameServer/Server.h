@@ -125,6 +125,8 @@ public:
     void send_disconnect_player_packet(int key,int roomID);
     void send_packet_to_players(int key, char* buf, int roomID);
     void send_packet_to_allplayers(int roomnum, char* buf);
+    void send_start_packet(int to, int roomID);
+
     void send_map_collapse_packet(int num, int roomID);
     void send_cloud_move_packet(float x, float z, int roomID);
 

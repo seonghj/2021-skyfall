@@ -503,7 +503,7 @@ public:
 
 	static void PrintFrameInfo(CGameObject *pGameObject, CGameObject *pParent);
 
-protected:
+public:
 		int							m_iHp;
 		int							m_iMaxHp;
 		int							m_iAtkStat;
@@ -513,6 +513,11 @@ protected:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+struct CB_TERRAIN_INFO {
+	float m_fTime = 0;
+	bool m_bFalling = false;
+};
+
 class CHeightMapTerrain : public CGameObject
 {
 public:
@@ -527,8 +532,11 @@ private:
 
 	XMFLOAT3					m_xmf3Scale;
 
+	CB_TERRAIN_INFO				*m_pcbMappedTerrainInfo = NULL;
+	ID3D12Resource				*pd3dcbTerrainInfo = NULL;
+
 public:
-	float GetHeight(float x, float z, bool bReverseQuad = false) { return(m_pHeightMapImage->GetHeight(x, z, bReverseQuad) * m_xmf3Scale.y); } //World
+	float GetHeight(float x, float z, bool bReverseQuad = false);
 	XMFLOAT3 GetNormal(float x, float z) { return(m_pHeightMapImage->GetHeightMapNormal(int(x / m_xmf3Scale.x), int(z / m_xmf3Scale.z))); }
 
 	int GetHeightMapWidth() { return(m_pHeightMapImage->GetHeightMapWidth()); }
@@ -537,6 +545,14 @@ public:
 	XMFLOAT3 GetScale() { return(m_xmf3Scale); }
 	float GetWidth() { return(m_nWidth * m_xmf3Scale.x); }
 	float GetLength() { return(m_nLength * m_xmf3Scale.z); }
+
+	void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	void ReleaseShaderVariables();
+
+	void UpdateTime(float fTimeElapsed);
+	void Falling();
+	bool IsFalling() { return m_pcbMappedTerrainInfo->m_bFalling; }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
