@@ -2241,21 +2241,19 @@ void CMap::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCa
 void CMap::CheckCollision(CPlayer* pPlayer)
 {
 	CGameObject* pObject;
-	for (int i = 0; i < 9; ++i) {
-		pObject = m_ppMaps[3 * i]->FindFrame("RootNode")->m_pChild->m_pChild;
-		while (true) {
-			if (pPlayer->isCollide(pObject)) {
-				XMFLOAT3 d = Vector3::Subtract(pPlayer->GetPosition(), pObject->GetPosition());
-				pPlayer->Move(Vector3::ScalarProduct(d, 50.25f, true), true);
+	pObject = m_ppMaps[3 * pPlayer->GetPlace()]->FindFrame("RootNode")->m_pChild->m_pChild;
+	while (true) {
+		if (pPlayer->isCollide(pObject)) {
+			XMFLOAT3 d = Vector3::Subtract(pPlayer->GetPosition(), pObject->GetPosition());
+			pPlayer->Move(Vector3::ScalarProduct(d, 50.25f, true), true);
 
-				cout << "Map Collision - " << pObject->m_pstrFrameName << endl;
-				return;
-			}
-			if (pObject->m_pSibling)
-				pObject = pObject->m_pSibling;
-			else
-				return;
+			cout << "Map Collision - " << pObject->m_pstrFrameName << endl;
+			return;
 		}
+		if (pObject->m_pSibling)
+			pObject = pObject->m_pSibling;
+		else
+			return;
 	}
 }
 
@@ -2313,6 +2311,8 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	while (bCollide) {
 		BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
+		bb.Extents.x *= 0.7f;
+		bb.Extents.y *= 0.7f;
 		pObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 0), bb.Extents);
 		//pObject->UpdateTransform();
 		if (pObject->m_pSibling)
