@@ -782,7 +782,7 @@ void Server::process_packet(int key, char* buf, int roomID)
             // �浹ó��
             break;
         }
-        case SWORD1HL: {
+        case SWORD1HL1: {
             // �浹ó��
 
             break;

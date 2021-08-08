@@ -15,7 +15,7 @@ constexpr int AI_ID = 5000;
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 6144;
 constexpr int MAP_BLOCK_SIZE = 2048;
-constexpr int MAP_BREAK_TIME = 30;
+constexpr int MAP_BREAK_TIME = 100000;
 
 constexpr float VIEWING_DISTANCE = 1000.f;
 
@@ -129,7 +129,8 @@ enum PlayerMove {
 };
 
 enum PlayerAttackType {
-	SWORD1HL,
+	SWORD1HL1,
+	SWORD1HL2,
 	SWORD1HR,
 	BOWL,
 	BOWR,

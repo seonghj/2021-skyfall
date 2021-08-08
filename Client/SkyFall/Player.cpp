@@ -930,6 +930,8 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 					m_pSkinnedAnimationController->SetTrackPosition(nAttack1 + m_nAttack, 0);
 				}
 			}
+			m_pPacket->Send_attack_packet(m_nAttack);
+
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nAttack1 + m_nAttack, true);
 		}

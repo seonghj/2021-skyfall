@@ -622,7 +622,7 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
         if (p->key == client_key) {
             switch (p->attack_type) {
-            case SWORD1HL: {
+            case SWORD1HL1: {
                 m_pPlayer->LButtonDown();
                 break;
             }
@@ -642,8 +642,12 @@ void CPacket::ProcessPacket(char* buf)
         }
         else {
             switch (p->attack_type) {
-            case SWORD1HL: {
+            case SWORD1HL1: {
                 m_pScene->AnimatePlayer(key, 9);
+                break;
+            }
+            case SWORD1HL2: {
+                m_pScene->AnimatePlayer(key, 10);
                 break;
             }
             case SWORD1HR: {

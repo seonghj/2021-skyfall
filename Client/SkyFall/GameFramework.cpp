@@ -305,7 +305,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
 			m_pPacket->Send_attack_packet(PlayerAttackType::BOWL);
 		else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
-			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL);
+			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL1);
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		if (!m_bRotateEnable) {
@@ -551,6 +551,7 @@ void CGameFramework::BuildObjects()
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
 	m_pScene->AddWeapon(m_pd3dDevice, m_pd3dCommandList);
 	m_pPlayer = m_pScene->m_pPlayer = pPlayer;
+	m_pPlayer->m_pPacket = m_pPacket;
 	pPlayer->Rotate(60.0f, -90.f, 0);
 	//m_pPlayer->SetPlace(4);
 	

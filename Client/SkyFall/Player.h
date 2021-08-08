@@ -9,6 +9,7 @@
 
 #include "Object.h"
 #include "Camera.h"
+#include "CPacket.h"
 
 class CPacket;
 
@@ -129,6 +130,8 @@ public:
 	virtual void CheckCollision(CGameObject* pObject);
 	virtual void CheckMap(CGameObject* pObject);
 	void RotatePlayer(int iYaw);
+
+	CPacket* m_pPacket = NULL;
 
 protected:
 public:
