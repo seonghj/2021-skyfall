@@ -747,11 +747,21 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_add: {
         mon_add_packet* p = reinterpret_cast<mon_add_packet*>(buf);
         int key = p->key;
-
+        p->Position.y = 0;
         m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
         m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->dz);
+        CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
+        XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
+        XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
+        XMFLOAT3 xmf3Scale = pTerrain->GetScale();
+        int z = (int)(xmf3MonsterPosition.z / xmf3Scale.z);
+        bool bReverseQuad = ((z % 2) != 0);
+        float fHeight = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
+        m_pScene->m_ppGameObjects[key]->Move(XMFLOAT3(0, 
+            (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight) + 124, 0), 1.0f);
 
         m_pScene->m_ppGameObjects[key]->m_iReady = TRUE;
+        printf("key: %d y : %f\n", key, m_pScene->m_ppGameObjects[key]->GetPosition().y);
 
         break;
     }

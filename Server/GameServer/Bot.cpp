@@ -56,13 +56,104 @@ DirectX::XMFLOAT3 Monster::GetUp()
 
 void Bot::Init(int roomID)
 {
-	std::random_device rd;
-	std::mt19937_64 gen(rd());
-	std::uniform_int_distribution<int> dis1(0, 99999);
+	for (int i = 0; i < 15; i++)
+		monsters[roomID][i].init();
 
-	/*for (auto& mon : monsters[roomID]) {
-		mon.f3Position()
-	}*/
+	// dragon
+	monsters[roomID][0].type = MonsterType::Dragon;
+	monsters[roomID][0].SpawnPos = XMFLOAT3{ 2000, 125, 5400 };
+	monsters[roomID][0].f3Position = monsters[roomID][0].SpawnPos.load();
+	monsters[roomID][0].Rotate(-90.0f, 20.0f, 0.0f);
+	monsters[roomID][0].state = 1;
+
+	// wolf
+	monsters[roomID][1].type = MonsterType::Wolf;
+	monsters[roomID][1].SpawnPos = XMFLOAT3{ 3116, 124, 2216 };
+	monsters[roomID][1].f3Position = monsters[roomID][1].SpawnPos.load();
+	monsters[roomID][1].Rotate(-90.0f, -40.0f, 0.0f);
+	monsters[roomID][1].state = 1;
+
+	monsters[roomID][2].type = MonsterType::Wolf;
+	monsters[roomID][2].SpawnPos = XMFLOAT3{ 2461, 124, 2398 };
+	monsters[roomID][2].f3Position = monsters[roomID][2].SpawnPos.load();
+	monsters[roomID][2].Rotate(-90.0f, -40.0f, 0.0f);
+	monsters[roomID][2].state = 1;
+
+	monsters[roomID][3].type = MonsterType::Wolf;
+	monsters[roomID][3].SpawnPos = XMFLOAT3{ 2228, 124, 2882 };
+	monsters[roomID][3].f3Position = monsters[roomID][3].SpawnPos.load();
+	monsters[roomID][3].Rotate(-90.0f, -40.0f, 0.0f);
+	monsters[roomID][3].state = 1;
+
+	monsters[roomID][4].type = MonsterType::Wolf;
+	monsters[roomID][4].SpawnPos = XMFLOAT3{ 2148, 124, 3888 };
+	monsters[roomID][4].f3Position = monsters[roomID][4].SpawnPos.load();
+	monsters[roomID][4].Rotate(-90.0f, -40.0f, 0.0f);
+	monsters[roomID][4].state = 1;
+
+	monsters[roomID][5].type = MonsterType::Wolf;
+	monsters[roomID][5].SpawnPos = XMFLOAT3{ 3116, 124, 3828 };
+	monsters[roomID][5].f3Position = monsters[roomID][5].SpawnPos.load();
+	monsters[roomID][5].Rotate(-90.0f, -40.0f, 0.0f);
+	monsters[roomID][5].state = 1;
+
+	monsters[roomID][6].type = MonsterType::Wolf;
+	monsters[roomID][6].SpawnPos = XMFLOAT3{ 3548, 124, 3668 };
+	monsters[roomID][6].f3Position = monsters[roomID][6].SpawnPos.load();
+	monsters[roomID][6].Rotate(-90.0f, -40.0f, 0.0f);
+	monsters[roomID][6].state = 1;
+
+	monsters[roomID][7].type = MonsterType::Wolf;
+	monsters[roomID][7].SpawnPos = XMFLOAT3{ 3868, 124, 2763 };
+	monsters[roomID][7].f3Position = monsters[roomID][7].SpawnPos.load();
+	monsters[roomID][7].Rotate(-90.0f, -40.0f, 0.0f);
+	monsters[roomID][7].state = 1;
+
+	//Metalon
+	monsters[roomID][8].type = MonsterType::Metalon;
+	monsters[roomID][8].SpawnPos = XMFLOAT3{ 2307, 124, 2208 };
+	monsters[roomID][8].f3Position = monsters[roomID][8].SpawnPos.load();
+	monsters[roomID][8].Rotate(-90.0f, 0.0f, 0.0f);
+	monsters[roomID][8].state = 1;
+
+	monsters[roomID][9].type = MonsterType::Metalon;
+	monsters[roomID][9].SpawnPos = XMFLOAT3{ 3798, 124, 2883 };
+	monsters[roomID][9].f3Position = monsters[roomID][9].SpawnPos.load();
+	monsters[roomID][9].Rotate(-90.0f, 0.0f, 0.0f);
+	monsters[roomID][9].state = 1;
+
+	monsters[roomID][10].type = MonsterType::Metalon;
+	monsters[roomID][10].SpawnPos = XMFLOAT3{ 3188, 128, 3308 };
+	monsters[roomID][10].f3Position = monsters[roomID][10].SpawnPos.load();
+	monsters[roomID][10].Rotate(-90.0f, 0.0f, 0.0f);
+	monsters[roomID][10].state = 1;
+
+
+	monsters[roomID][11].type = MonsterType::Metalon;
+	monsters[roomID][11].SpawnPos = XMFLOAT3{ 2508, 240, 2538 };
+	monsters[roomID][11].f3Position = monsters[roomID][11].SpawnPos.load();
+	monsters[roomID][11].Rotate(-90.0f, 0.0f, 0.0f);
+	monsters[roomID][11].state = 1;
+
+
+	monsters[roomID][12].type = MonsterType::Metalon;
+	monsters[roomID][12].SpawnPos = XMFLOAT3{ 2708, 124, 3973 };
+	monsters[roomID][12].f3Position = monsters[roomID][12].SpawnPos.load();
+	monsters[roomID][12].Rotate(-90.0f, 0.0f, 0.0f);
+	monsters[roomID][12].state = 1;
+
+
+	monsters[roomID][13].type = MonsterType::Metalon;
+	monsters[roomID][13].SpawnPos = XMFLOAT3{ 2288, 124, 3973 };
+	monsters[roomID][13].f3Position = monsters[roomID][13].SpawnPos.load();
+	monsters[roomID][13].Rotate(-90.0f, 0.0f, 0.0f);
+	monsters[roomID][13].state = 1;
+
+	monsters[roomID][14].type = MonsterType::Metalon;
+	monsters[roomID][14].SpawnPos = XMFLOAT3{ 3058, 124, 2123 };
+	monsters[roomID][14].f3Position = monsters[roomID][14].SpawnPos.load();
+	monsters[roomID][14].Rotate(-90.0f, 0.0f, 0.0f);
+	monsters[roomID][014].state = 1;
 }
 
 void Bot::CheckTarget(int roomID)
@@ -169,7 +260,7 @@ void Bot::CheckBehavior(int roomID)
 						player.s_lock.lock();
 						player.TakeDamage(mon.att);
 						player.s_lock.unlock();
-						m_pServer->send_monster_attack(mon, cross, rotate_degree, player.key);
+						//m_pServer->send_monster_attack(mon, cross, rotate_degree, player.key);
 						mon.CanAttack = false;
 
 						mon_attack_cooltime_event e;
@@ -177,11 +268,11 @@ void Bot::CheckBehavior(int roomID)
 						e.type = EventType::Mon_attack_cooltime;
 						e.key = mon.key;
 						e.roomid = roomID;
-						m_pTimer->push_event(roomID, OE_gEvent, 1000, reinterpret_cast<char*>(&e));
+						//m_pTimer->push_event(roomID, OE_gEvent, 1000, reinterpret_cast<char*>(&e));
 					}
 				}
 				else if (range > distance) {
-					m_pServer->send_monster_pos(mon, subtract, cross, rotate_degree);
+					//m_pServer->send_monster_pos(mon, subtract, cross, rotate_degree);
 				}
 			}
 		}

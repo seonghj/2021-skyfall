@@ -120,24 +120,18 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 		if (i >= 6) m_ppTerrain[i]->MoveUp(125.f);
 	}
 
-	m_nGameObjects = 4;
+	m_nGameObjects = 15;
 	m_ppGameObjects = new CMonster * [m_nGameObjects];
 
-
-	CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
 	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 9, (void**)m_ppTerrain,4);
-	if (pDragonModel)delete pDragonModel;
-	//printf(" x : %f / y : %f / z : %f\n", m_ppGameObjects[0]->GetUp().x, m_ppGameObjects[0]->GetUp().y, m_ppGameObjects[0]->GetUp().z);
-
-	CLoadedModelInfo* pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
-	m_ppGameObjects[1] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, (void**)m_ppTerrain, 4);
-	m_ppGameObjects[2] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, (void**)m_ppTerrain, 4);
-	m_ppGameObjects[2]->Move(XMFLOAT3(200, 0, 0), 1);
-	if (pWolfModel)delete pWolfModel;
-
-	CLoadedModelInfo* pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
-	m_ppGameObjects[3] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, (void**)m_ppTerrain,4);
-	if (pMetalonModel)delete pMetalonModel;
+	
+	for (int i = 1; i < 8; ++i) {
+		m_ppGameObjects[i] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, (void**)m_ppTerrain, 4);
+	}
+	
+	for (int i = 8; i < m_nGameObjects; ++i) {
+		m_ppGameObjects[i] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, (void**)m_ppTerrain, 4);
+	}
 
 
 	/*m_nUIs = 1;
@@ -145,7 +139,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Water.dds", 0.1, 0.1, 0.5, 0.5, 0.8);
 	*/
 
-	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
+	//m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	m_iState =SCENE::LOBBY;

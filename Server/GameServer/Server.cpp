@@ -84,14 +84,6 @@ int Server::SetroomID()
             //std::array<SESSION, 20> s{};
             sessions.emplace(cnt, std::array<SESSION, 20>{});
             sessions_lock.unlock();
-            
-            int i = 0;
-            for (auto& m : m_pBot->monsters[cnt]) {
-                m.f3Position.store(DirectX::XMFLOAT3(0, 0, 0));
-                m.key = i;
-                m.roomID = cnt;
-                ++i;
-            }
 
             maps_lock.lock();
             maps.emplace(cnt, Map(cnt));
@@ -99,17 +91,9 @@ int Server::SetroomID()
             maps[cnt].init_Map(this, m_pTimer);
             maps_lock.unlock();
 
-            m_pBot->monsters.emplace(cnt, std::array<Monster, 50>{});
+            m_pBot->monsters.emplace(cnt, std::array<Monster, 20>{});
             m_pBot->monsterRun = TRUE;
-            m_pBot->monsters[cnt][0].SetPosition(300, 197.757935, 300);
-            m_pBot->monsters[cnt][0].state = 1;
-            m_pBot->monsters[cnt][0].type = MonsterType::Dragon;
-            m_pBot->monsters[cnt][0].Rotate(-90.0f, 20.0f, 0.0f);
-
-            /*m_pBot->monsters[cnt][1].SetPosition(400, 197.757935, 400);
-            m_pBot->monsters[cnt][1].state = 1;
-            m_pBot->monsters[cnt][1].type = MonsterType::Wolf;
-            m_pBot->monsters[cnt][1].Rotate(-90.0f, -40.0f, 0.0f);*/
+            m_pBot->Init(cnt);
 
             m_pBot->RunBot(cnt);
 
@@ -682,16 +666,17 @@ void Server::process_packet(int key, char* buf, int roomID)
             if ((TRUE == s.connected) && (s.key.load() != client_key))
                 send_add_player_packet(client_key, s.key.load(), roomID);
         }
-        for (auto& m : m_pBot->monsters[roomID]) {
-            if (m.state == 1)
-                send_add_monster(m.key.load(), roomID, client_key);
-        }
 
         sessions[roomID][client_key].state = 1;
 
-        send_map_packet(client_key, roomID);
+        //send_map_packet(client_key, roomID);
 
-        //m_pBot->monsters[roomID][0].SetPosition()
+        for (int i = 0; i < 15; ++i) {
+            if (m_pBot->monsters[roomID][i].state == 1) {
+                printf("send monster %d\n", i);
+                send_add_monster(i, roomID, client_key);
+            }
+        }
 
         break;
     }
