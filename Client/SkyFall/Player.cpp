@@ -920,7 +920,7 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 		}
 		else if (m_isAttack) {
 			float d = m_pSkinnedAnimationController->GetTrackPosition(nAttack1 + m_nAttack);
-			
+
 			if (abs(d-0.2f)<=fTimeElapsed) {
 				m_bHit = true;
 			}
@@ -930,8 +930,9 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 					m_nAttack = m_nAttack == 0 ? 1 : 0;
 					m_pSkinnedAnimationController->SetTrackPosition(nAttack1 + m_nAttack, 0);
 				}
+				if (m_pSkinnedAnimationController->GetTrackPosition(nAttack1 + m_nAttack) == 0)
+					m_pPacket->Send_attack_packet(m_nAttack);
 			}
-			m_pPacket->Send_attack_packet(m_nAttack);
 
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nAttack1 + m_nAttack, true);

@@ -132,6 +132,7 @@ enum PlayerAttackType {
 	SWORD1HL1,
 	SWORD1HL2,
 	SWORD1HR,
+	SWORD1HR2,
 	BOWL,
 	BOWR,
 };

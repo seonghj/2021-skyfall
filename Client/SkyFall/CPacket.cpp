@@ -296,6 +296,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
+            m_pPlayer->m_pPacket = this;
 
             m_pPlayer->SetPosition(beforepos);
             m_pPlayer->SetPlace(beforplace);
@@ -318,6 +319,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
+            m_pPlayer->m_pPacket = this;
 
             m_pPlayer->SetPosition(beforepos);
             m_pPlayer->SetPlace(beforplace);
@@ -340,6 +342,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
+            m_pPlayer->m_pPacket = this;
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
 
@@ -362,6 +365,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
+            m_pPlayer->m_pPacket = this;
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
 
@@ -498,6 +502,7 @@ void CPacket::ProcessPacket(char* buf)
 
             printf("Login game\n");
             canmove = TRUE;
+            m_pPlayer->m_pPacket = this;
         }
         break;
     }

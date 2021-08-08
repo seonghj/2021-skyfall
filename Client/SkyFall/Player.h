@@ -130,8 +130,6 @@ public:
 	virtual void CheckMap(CGameObject* pObject);
 	void RotatePlayer(int iYaw);
 
-	CPacket* m_pPacket = NULL;
-
 protected:
 public:
 };
@@ -164,6 +162,9 @@ public:
 #ifdef _WITH_SOUND_CALLBACK
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
+
+	CPacket* m_pPacket = NULL;
+
 protected:
 	CGameObject* pWeapon;
 
