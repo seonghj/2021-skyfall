@@ -2387,7 +2387,7 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 
 	SetHpBar(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, 0, 100),
-		XMFLOAT2(80, 20))->SetHp(100);
+		XMFLOAT2(80, 20))->SetMaxHp(100);
 	SetActive("HpBar", false);
 
 
@@ -2488,7 +2488,7 @@ CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 
 	SetHpBar(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, 30, zExtents / 2),
-		XMFLOAT2(80, 20))->SetHp(100);
+		XMFLOAT2(80, 20))->SetMaxHp(100);
 	SetActive("HpBar", false);
 
 	SetUpdatedContext(ppContext);
@@ -2585,7 +2585,7 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 
 	SetHpBar(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, 0, 100),
-		XMFLOAT2(80, 20))->SetHp(100);
+		XMFLOAT2(80, 20))->SetMaxHp(100);
 	SetActive("HpBar", false);
 
 	SetUpdatedContext(ppContext);
@@ -2665,7 +2665,7 @@ void CMetalon::Move(const XMFLOAT3& vDirection, float fSpeed)
 CMonster::CMonster()
 {
 	m_nAnimations = 3;
-	SetHp(100);
+	SetMaxHp(100);
 	m_iAtkStat = 10;
 	m_iDefStat = 0;
 	m_iState = Idle;
@@ -2784,9 +2784,9 @@ void CUIObject::ReleaseShaderVariables()
 	}
 }
 
-CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName, float l, float t, float r, float b, float a)
+CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName, float l, float b, float r, float t, float a)
 {
-	CUIMesh* pMesh = new CUIMesh(pd3dDevice, pd3dCommandList, l, t, r, b, a);
+	CUIMesh* pMesh = new CUIMesh(pd3dDevice, pd3dCommandList, l, b, r, t, a);
 	SetMesh(pMesh);
 
 	CTexture* pUITexture = new CTexture(1, RESOURCE_TEXTURE2D, 0);

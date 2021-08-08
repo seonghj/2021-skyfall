@@ -29,12 +29,6 @@ cbuffer cbFrameworkInfo : register(b3)
 	float		gfElapsedTime : packoffset(c0.y);
 };
 
-cbuffer cbUIInfo : register(b6)
-{
-	float		gfAlpha : packoffset(c0);
-	float		gfasdasd : packoffset(c4);
-
-};
 #include "Light.hlsl"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -521,7 +515,7 @@ struct VS_HPBAR_INPUT
 
 VS_HPBAR_INPUT VSHPBar(VS_HPBAR_INPUT input)
 {
-	input.center =  mul(float4(input.center,1.f), gmtxGameObject);
+	input.center = (float3)(mul(float4(input.center, 1.f), gmtxGameObject));
 	return(input);
 }
 
@@ -572,6 +566,18 @@ float4 PSHPBar(GS_HPBAR_GEOMETRY_OUTPUT input) : SV_TARGET
 	return(cColor);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+
+cbuffer cbUIInfo : register(b6)
+{
+	float		gfAlpha : packoffset(c0.x);
+	float		gfPercentV : packoffset(c0.y);
+	float		gfPercentH : packoffset(c0.z);
+
+};
+
 Texture2D gtxtUI : register(t3);
 
 struct VS_UI_INPUT
@@ -601,6 +607,8 @@ float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 {
 	float4 cColor = gtxtUI.Sample(gssWrap, input.uv);
 	cColor.a = gfAlpha;
+	if (input.uv.y > gfPercentV)
+		cColor = float4(0.3, 0.3, 0.3, 0.8);
 
 	return cColor;
 }
