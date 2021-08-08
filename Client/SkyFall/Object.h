@@ -503,7 +503,7 @@ public:
 
 	static void PrintFrameInfo(CGameObject *pGameObject, CGameObject *pParent);
 
-protected:
+public:
 		int							m_iHp;
 		int							m_iMaxHp;
 		int							m_iAtkStat;
@@ -719,12 +719,22 @@ public:
 	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 };
 
+struct CB_UI_INFO {
+	float gfAlpha;
+
+};
 
 class CUIObject : public CGameObject
 {
+protected:
+	ID3D12Resource* m_pd3dcbUI = NULL;
+	CB_UI_INFO *m_pcbMappedUI = NULL;
 public:
 	CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName, float l, float t, float r, float b, float a);
 	~CUIObject();
 
+	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void ReleaseShaderVariables();
 	//virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 };

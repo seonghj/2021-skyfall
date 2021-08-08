@@ -2095,9 +2095,9 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 
 	for (int i = 0; i < 3; i++)
 	{
-		CLoadedModelInfo* pDesert_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Collision.bin", NULL);
-		CLoadedModelInfo* pDesert_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
-		CLoadedModelInfo* pDesert_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Desert_Passable.bin", NULL);
+		CLoadedModelInfo* pDesert_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Collision_0807.bin", NULL);
+		CLoadedModelInfo* pDesert_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Passable_0807.bin", NULL);
+		CLoadedModelInfo* pDesert_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Passable_0807.bin", NULL);
 
 		m_ppMaps[0 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
 		m_ppMaps[1 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
@@ -2125,9 +2125,9 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 
 	for (int i = 6; i < 9; i++)
 	{
-		CLoadedModelInfo* pSnow_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Collision.bin", NULL);
-		CLoadedModelInfo* pSnow_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
-		CLoadedModelInfo* pSnow_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Probuilder_Snow_Passable.bin", NULL);
+		CLoadedModelInfo* pSnow_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Collision_0807.bin", NULL);
+		CLoadedModelInfo* pSnow_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Passable_Probuilder_0807.bin", NULL);
+		CLoadedModelInfo* pSnow_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Passable_Probuilder_0807.bin", NULL);
 
 		m_ppMaps[0 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Collision, true);
 		m_ppMaps[1 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Steppable);
@@ -2712,6 +2712,28 @@ void CMonster::OnUpdateCallback()
 //void CUIObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 //{
 //}
+
+void CUIObject::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	UINT ncbElementBytes = ((sizeof(CB_UI_INFO) + 255) & ~255);
+	m_pd3dcbUI = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbElementBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+	m_pd3dcbUI->Map(0, NULL, (void**)&m_pcbMappedUI);
+}
+
+void CUIObject::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	D3D12_GPU_VIRTUAL_ADDRESS d3dcbFogGpuVirtualAddress = m_pd3dcbUI->GetGPUVirtualAddress();
+	pd3dCommandList->SetGraphicsRootConstantBufferView(19, d3dcbFogGpuVirtualAddress); //UI
+}
+
+void CUIObject::ReleaseShaderVariables()
+{
+	if (m_pd3dcbUI)
+	{
+		m_pd3dcbUI->Unmap(0, NULL);
+		m_pd3dcbUI->Release();
+	}
+}
 
 CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName, float l, float t, float r, float b, float a)
 {

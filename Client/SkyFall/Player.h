@@ -162,6 +162,9 @@ public:
 #ifdef _WITH_SOUND_CALLBACK
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
+protected:
+	CGameObject* pWeapon;
+
 #endif
 	const int nBasic_Idle = 0;
 	const int nBasic_Death = 1;
@@ -208,6 +211,7 @@ protected:
 	CBullet** m_ppBullets = 0;
 
 	const int MAX_BULLET = 1000;
+	bool		m_isRelease;
 };
 
 class C1HswordPlayer : public CTerrainPlayer
@@ -229,7 +233,6 @@ public:
 
 protected:
 	int m_nAttack = 0;
-	CGameObject* pWeapon;
 	
 	const int nAttack1 = 9;
 	const int nAttack2 = 10;

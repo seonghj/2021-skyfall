@@ -54,8 +54,8 @@ public:
     std::atomic<float>      m_fPitch = 0;
     std::atomic<float>      m_fYaw = 0;
     
-    std::atomic<short>      weapon1 = PlayerType::PT_BASIC;
-    std::atomic<short>      weapon2 = PlayerType::PT_BASIC;
+    std::atomic<PlayerType>      weapon1 = PlayerType::PT_BASIC;
+    std::atomic<PlayerType>      weapon2 = PlayerType::PT_BASIC;
     std::atomic<short>      helmet = 0;
     std::atomic<short>      shoes = 0;
     std::atomic<short>      armor = 0;
@@ -65,6 +65,8 @@ public:
     std::atomic<float>      lv = 0;
     std::atomic<float>      att = 10;
     std::atomic<float>      speed = 20;
+
+    std::atomic<PlayerType>      using_weapon = PlayerType::PT_BASIC;
 
     std::atomic<short>      inventory[INVENTORY_MAX]{};
 

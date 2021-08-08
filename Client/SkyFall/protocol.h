@@ -13,11 +13,11 @@ constexpr int GAMESERVER_ID = 0;
 constexpr int AI_ID = 5000;
 
 constexpr int MAX_MAP_BLOCK = 9;
-constexpr int MAP_SIZE = 99999;
-constexpr int MAP_BLOCK_SIZE = 33333;
+constexpr int MAP_SIZE = 6144;
+constexpr int MAP_BLOCK_SIZE = 2048;
 constexpr int MAP_BREAK_TIME = 30;
 
-constexpr float VIEWING_DISTANCE = 16666.f;
+constexpr float VIEWING_DISTANCE = 1000.f;
 
 constexpr int INVENTORY_MAX = 20;
 
@@ -48,6 +48,7 @@ enum terrain {
 	Snowy_field
 };
 
+
 enum PacketType {
 	SC_NONE,
 	SC_player_key,
@@ -62,6 +63,7 @@ enum PacketType {
 	SC_weapon_swap,
 	SC_player_pos,
 	SC_player_move,
+	SC_player_rotate,
 	SC_start_pos,
 	SC_player_attack,
 	SC_allow_shot,
@@ -133,9 +135,11 @@ enum PlayerAttackType {
 };
 
 enum PlayerType {
-	PT_BASIC,
 	PT_SWORD1H,
-	PT_BOW
+	PT_BOW,
+	PT_SWORD2H,
+	PT_SPEAR2H,
+	PT_BASIC,
 };
 
 enum MonsterType {
@@ -183,7 +187,7 @@ struct player_loginFail_packet :public Packet {
 struct player_add_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
 	float dx, dy;
-	short PlayerType;
+	PlayerType WeaponType;
 };
 
 struct game_ready_packet :public Packet {
@@ -223,6 +227,7 @@ struct player_pos_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
 	float dx, dy;
 	DWORD MoveType;
+	DWORD dir;
 };
 
 struct player_start_pos : public Packet {
@@ -232,6 +237,11 @@ struct player_start_pos : public Packet {
 struct player_move_packet : public Packet {
 	char state;
 	DWORD MoveType;
+	DWORD direction;
+	float dx, dy;
+};
+
+struct player_rotate_packet : public Packet {
 	float dx, dy;
 };
 
@@ -246,7 +256,7 @@ struct player_stat_packet : public Packet {
 };
 
 struct Weapon_swap_packet : public Packet {
-	char weapon;
+	PlayerType weapon;
 };
 
 struct player_equipment_packet : public Packet {

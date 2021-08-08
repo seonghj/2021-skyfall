@@ -31,6 +31,12 @@ cbuffer cbFrameworkInfo : register(b3)
 	float		gfTime : packoffset(c0.w);
 };
 
+cbuffer cbUIInfo : register(b6)
+{
+	float		gfAlpha : packoffset(c0);
+	float		gfasdasd : packoffset(c4);
+
+};
 #include "Light.hlsl"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -196,13 +202,14 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 
 	//float fDepth = shadowPosition.z;
 	//float fPercentLit = gtxtShadowMap.SampleCmpLevelZero(gssShadowMap, shadowPosition.xy, fDepth).r;
-	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //그림자가 아님
+	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //not shadow
 
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
-	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //그림자가 아님
+	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //not shadow
 
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
-	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	float4 cNormalColor = float4(0.f,0.f,1.f, 1.f);
 
 
 	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -211,7 +218,7 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 	{
 		float3 normalW = input.normalW;
 		float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] → [-1, 1]
+		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
 		normalW = normalize(mul(vNormal, TBN));
 		cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
 		cColor = lerp(cColor, cIllumination, 0.5f);
@@ -293,14 +300,14 @@ float4 PSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_OUTPUT input) : SV_TARGE
 
 	//float fDepth = shadowPosition.z;
 	//float fPercentLit = gtxtShadowMap.SampleCmpLevelZero(gssShadowMap, shadowPosition.xy, fDepth).r;
-	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //그림자가 아님
+	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //not shadow
 
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
-	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //그림자가 아님
+	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //not shadow
 	
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
 
-	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	float4 cNormalColor = float4(0.f,0.f, 0.f, 1.0f);
 
 	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -308,7 +315,7 @@ float4 PSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_OUTPUT input) : SV_TARGE
 	{
 		float3 normalW = input.normalW;
 		float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] → [-1, 1]
+		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
 		normalW = normalize(mul(vNormal, TBN));
 		cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
 		cColor = lerp(cColor, cIllumination, 0.5f);
@@ -400,7 +407,7 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 
 	//float fDepth = shadowPosition.z;
 	//float fPercentLit = gtxtShadowMap.SampleCmpLevelZero(gssShadowMap, shadowPosition.xy, fDepth).r;
-	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //그림자가 아님
+	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //not shadow
 
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
 
@@ -412,7 +419,7 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 		float4 cWater = gtxtWater.Sample(gssWrap, uv);
 		float4 cWaterNormal = gtxtWaterNormal.Sample(gssWrap, input.uv1);
 		cColor = cWater;
-		if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //그림자가 아님
+		if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //not shadow
 		else fShadowFactor = 0.3f;
 	}
 	else {
@@ -420,7 +427,7 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 		float4 cDetailTexColor = gtxtTerrainDetailTexture.Sample(gssWrap, input.uv1);
 		cColor = saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
 		//float4 cColor = input.color * saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
-		if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //그림자가 아님
+		if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; // not shadow
 	}
 
 	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -430,7 +437,7 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 	{
 		//float3 normalW = normalize(float3(0,1,0));
 		//float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] → [-1, 1]
+		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
 		//normalW = normalize(mul(vNormal, TBN));
 		//cIllumination = Lighting(input.positionW, normalW,fShadowFactor);
 		if(fShadowFactor==0.f)
@@ -585,14 +592,14 @@ VS_UI_OUTPUT VSUI(VS_UI_INPUT input)
 	VS_UI_OUTPUT output;
 	output.position = float4(input.position, 1.f);
 	output.uv = input.uv;
-	output.alpha = input.alpha;
+	//output.alpha = input.alpha;
 	return output;
 }
 
 float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 {
 	float4 cColor = gtxtUI.Sample(gssWrap, input.uv);
-	cColor.a = 0.1f;
+	cColor.a = gfAlpha;
 
 	return cColor;
 }

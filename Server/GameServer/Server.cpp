@@ -352,6 +352,7 @@ void Server::send_add_player_packet(int key, int to, int roomID)
     p.Position = sessions[roomID][key].f3Position.load();
     p.dx = sessions[roomID][key].m_fPitch.load();
     p.dy = sessions[roomID][key].m_fYaw.load();
+    p.WeaponType = sessions[roomID][key].using_weapon;
 
     //printf("%d send login to %d\n",key, to);
 
@@ -611,7 +612,7 @@ void Server::player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, f
     else
         sessions[roomID][client_key].f3Position = pos;
 
-    std::lock_guard <std::mutex> lg(sessions[roomID][client_key].nm_lock);
+    /*std::lock_guard <std::mutex> lg(sessions[roomID][client_key].nm_lock);
     std::unordered_set<int> old_nm;
     std::unordered_set<int> new_nm;
 
@@ -638,7 +639,7 @@ void Server::player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, f
             sessions[roomID][client_key].near_monster.erase(m);
             send_remove_monster(m, roomID, client_key);
         }
-    }
+    }*/
 }
 
 void Server::process_packet(int key, char* buf, int roomID)
@@ -725,6 +726,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         packet.dx = p->dx;
         packet.dy = p->dy;
         packet.MoveType = p->MoveType;
+        packet.dir = p->dir;
         send_packet_to_players(key, reinterpret_cast<char*>(&packet), roomID);
         break;
     }
@@ -737,6 +739,7 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_weapon_swap :{
          Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
          p->type = SC_weapon_swap;
+         sessions[roomID][p->key].using_weapon = p->weapon;
          send_packet_to_players(p->key, reinterpret_cast<char*>(p), roomID);
          break;
     }
@@ -877,9 +880,6 @@ void Server::WorkerFunc()
             }
             else {
                 delete over_ex;
-                over_ex = NULL;
-                if (_heapchk() != _HEAPOK)
-                    DebugBreak();
             }
             break;
         }
