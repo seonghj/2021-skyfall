@@ -508,6 +508,7 @@ void CPacket::ProcessPacket(char* buf)
             Swap_weapon(p->key, p->WeaponType);
             m_pScene->MovePlayer(key, p->Position);
             m_pScene->m_mPlayer[key]->Rotate(p->dx, p->dy, 0);
+            m_pScene->AnimatePlayer(key, 2);
             m_pScene->AnimatePlayer(key, 0);
         }
         else {
@@ -552,6 +553,7 @@ void CPacket::ProcessPacket(char* buf)
         else {
             switch (p->MoveType) {
             case PlayerMove::JUMP: {
+                m_pScene->m_mPlayer[key]->SetJump(true);
                 m_pScene->AnimatePlayer(key, 2);
                 break;
             }
@@ -589,9 +591,6 @@ void CPacket::ProcessPacket(char* buf)
                 else if (p->dir & DIR_LEFT)
                     m_pScene->AnimatePlayer(key, 7);
                 //m_pScene->AnimatePlayer(key, 4);
-                break;
-            case PlayerMove::JUMP:
-                m_pScene->AnimatePlayer(key, 2);
                 break;
             default:
                 break;
@@ -685,7 +684,10 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
         if (p->key != client_key) {
             m_pScene->AnimatePlayer(key, 0);
-            m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(2, 0);
+            if (m_pScene->m_mPlayer[key]->GetJump() == TRUE) {
+                m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(2, 0);
+                m_pScene->m_mPlayer[key]->SetJump(FALSE);
+            }
             m_pScene->m_mPlayer[key]->SetPosition(p->Position);
         }
         else

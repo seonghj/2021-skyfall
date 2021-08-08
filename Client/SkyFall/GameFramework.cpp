@@ -929,7 +929,7 @@ void CGameFramework::FrameAdvance()
 		}
 	}
 	else {
-		if (false == m_pPlayer->GetStanding() && false == PressDirButton) {
+		if (m_pPlayer->GetGround() == true && false == m_pPlayer->GetStanding() && false == PressDirButton) {
 			dwDirection = 0;
 			m_pPlayer->SetStanding(true);
 			player_stop_packet sp;
