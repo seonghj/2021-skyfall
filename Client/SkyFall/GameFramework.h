@@ -12,8 +12,6 @@ struct CB_FRAMEWORK_INFO
 {
 	float					m_fCurrentTime;
 	float					m_fElapsedTime;
-	int						m_nIndexFall;
-	float					m_fTime;
 };
 
 struct CB_FOG_INFO
@@ -67,6 +65,7 @@ public:
 	void Set_m_pPacket(CPacket* t) { m_pPacket = t; };
 	void CheckCollision();
 	void SetCloud(float x, float z) { m_pcbMappedFog->gvFogPos = XMFLOAT2(x, z); }
+
 
 
 

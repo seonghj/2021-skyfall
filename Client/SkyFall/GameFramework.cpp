@@ -377,16 +377,13 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				case VK_RETURN:
 					break;
 				case VK_F1:
-					m_pcbMappedFrameworkInfo->m_nIndexFall = 0;
-					m_pcbMappedFrameworkInfo->m_fTime = 0;
+
 					break;
 				case VK_F2:
-					m_pcbMappedFrameworkInfo->m_nIndexFall++;
-					m_pcbMappedFrameworkInfo->m_fTime = 0;
+
 					break;
 				case VK_F3:
-					m_pcbMappedFrameworkInfo->m_nIndexFall--;
-					m_pcbMappedFrameworkInfo->m_fTime = 0;
+
 					break;
 					/*m_pCamera = m_pPlayer->ChangeCamera((DWORD)(wParam - VK_F1 + 1), m_GameTimer.GetTimeElapsed());*/
 					break;
@@ -964,15 +961,12 @@ void CGameFramework::CreateShaderVariables()
 
 	m_pcbMappedFog->gcFogColor = XMFLOAT4(0.7f, 0.7f, 0.7f, 0.2f);
 	m_pcbMappedFog->gvFogParameter = XMFLOAT4(EXP_FOG, 1.f, 300.f, 0.001f);
-	m_pcbMappedFrameworkInfo->m_nIndexFall = 9;
-	m_pcbMappedFrameworkInfo->m_fTime = 0;
 }
 
 void CGameFramework::UpdateShaderVariables()
 {
 	m_pcbMappedFrameworkInfo->m_fCurrentTime = m_GameTimer.GetTotalTime();
 	m_pcbMappedFrameworkInfo->m_fElapsedTime = m_GameTimer.GetTimeElapsed();
-	m_pcbMappedFrameworkInfo->m_fTime += m_GameTimer.GetTimeElapsed();
 
 	D3D12_GPU_VIRTUAL_ADDRESS d3dGpuVirtualAddress = m_pd3dcbFrameworkInfo->GetGPUVirtualAddress();
 	m_pd3dCommandList->SetGraphicsRootConstantBufferView(17, d3dGpuVirtualAddress);

@@ -973,6 +973,12 @@ void Server::WorkerFunc()
                 e.type = EventType::MapBreak;
                 m_pTimer->push_event(key, OE_gEvent, MAP_BREAK_TIME, reinterpret_cast<char*>(&e));
                 delete over_ex;
+
+                Mapbreak_event e;
+                e.roomid = key;
+                e.size = sizeof(e);
+                e.type = EventType::MapBreak;
+                m_pTimer->push_event(key, OE_gEvent, MAP_BREAK_TIME, reinterpret_cast<char*>(&e));
                 break;
             }
             }

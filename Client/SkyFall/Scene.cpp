@@ -118,6 +118,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Snow_0807.raw"), 257, 257, xmf3Scale, xmf4Color, 2);
 		}
 		m_ppTerrain[i]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
+		m_ppTerrain[i]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 		if (i >= 6) m_ppTerrain[i]->MoveUp(125.f);
 	}
 
@@ -432,7 +433,7 @@ ID3D12RootSignature *CScene::CreateGraphicsRootSignature(ID3D12Device *pd3dDevic
 	pd3dDescriptorRanges[10].RegisterSpace = 0;
 	pd3dDescriptorRanges[10].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	D3D12_ROOT_PARAMETER pd3dRootParameters[20];
+	D3D12_ROOT_PARAMETER pd3dRootParameters[21];
 
 	pd3dRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	pd3dRootParameters[0].Descriptor.ShaderRegister = 1; //Camera
@@ -531,9 +532,14 @@ ID3D12RootSignature *CScene::CreateGraphicsRootSignature(ID3D12Device *pd3dDevic
 	pd3dRootParameters[18].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	pd3dRootParameters[19].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	pd3dRootParameters[19].Descriptor.ShaderRegister = 6; //Fog Info
+	pd3dRootParameters[19].Descriptor.ShaderRegister = 6; //UI Info
 	pd3dRootParameters[19].Descriptor.RegisterSpace = 0;
 	pd3dRootParameters[19].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	pd3dRootParameters[20].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	pd3dRootParameters[20].Descriptor.ShaderRegister = 9; //Terrain Info
+	pd3dRootParameters[20].Descriptor.RegisterSpace = 0;
+	pd3dRootParameters[20].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 	D3D12_STATIC_SAMPLER_DESC pd3dSamplerDescs[3];
 
 	pd3dSamplerDescs[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -610,9 +616,6 @@ void CScene::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
 	::memcpy(m_pcbMappedLights->m_pLights, m_pLights, sizeof(LIGHT) * m_nLights);
 	::memcpy(&m_pcbMappedLights->m_xmf4GlobalAmbient, &m_xmf4GlobalAmbient, sizeof(XMFLOAT4));
 	::memcpy(&m_pcbMappedLights->m_nLights, &m_nLights, sizeof(int));
-
-	for (int i = 0; i < m_nUIs; ++i)
-		m_ppUIObjects[i]->UpdateShaderVariables(pd3dCommandList);
 }
 
 void CScene::ReleaseShaderVariables()
@@ -1017,6 +1020,10 @@ void CScene::AnimateObjects(float fTimeElapsed)
 				m_ppGameObjects[i]->Update(fTimeElapsed);
 			}
 		}
+		for (int i = 0; i < 9; ++i) {
+			if (m_ppTerrain[i]->IsFalling())
+				m_ppTerrain[i]->UpdateTime(fTimeElapsed);
+		}
 	}
 
 	if (m_pLights)
@@ -1041,11 +1048,15 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 
 	if (m_pSkyBox) m_pSkyBox->Render(pd3dCommandList, pCamera);
 
-	if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
-	if (m_pForestTerrain) m_pForestTerrain->Render(pd3dCommandList, pCamera);
-	if (m_pSnowTerrain) m_pSnowTerrain->Render(pd3dCommandList, pCamera);
-	for (int i = 0; i < 9; i++)
-		if (m_ppTerrain[i]) m_ppTerrain[i]->Render(pd3dCommandList, pCamera);
+	//if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
+	//if (m_pForestTerrain) m_pForestTerrain->Render(pd3dCommandList, pCamera);
+	//if (m_pSnowTerrain) m_pSnowTerrain->Render(pd3dCommandList, pCamera);
+	for (int i = 0; i < 9; i++) {
+		if (m_ppTerrain[i]) {
+			m_ppTerrain[i]->UpdateShaderVariables(pd3dCommandList);
+			m_ppTerrain[i]->Render(pd3dCommandList, pCamera);
+		}
+	}
 	if (m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
 	
 	if (m_iState == SCENE::LOBBY) {
@@ -1079,8 +1090,12 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 
 		for (int i = 0; i < m_nShaders; i++) if (m_ppShaders[i]) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
 
-		for (int i = 0; i < m_nUIs; ++i)
-			if (m_ppUIObjects[i]) m_ppUIObjects[i]->Render(pd3dCommandList, pCamera);
+		for (int i = 0; i < m_nUIs; ++i) {
+			if (m_ppUIObjects[i]) {
+				m_ppUIObjects[i]->UpdateShaderVariables(pd3dCommandList);
+				m_ppUIObjects[i]->Render(pd3dCommandList, pCamera);
+			}
+		}
 	}
 }
 
