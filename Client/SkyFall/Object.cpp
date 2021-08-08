@@ -2053,8 +2053,8 @@ float CHeightMapTerrain::GetHeight(float x, float z, bool bReverseQuad)
 		if (r < time * 100) {
 			h -= 50 * (time - r) + 9.8f * (time - r) * (time - r);
 		}
-		return(h);
 	}
+	return(h);
 }
 
 void CHeightMapTerrain::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
