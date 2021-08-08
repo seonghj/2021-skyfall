@@ -561,8 +561,6 @@ void CScene::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
 	::memcpy(&m_pcbMappedLights->m_xmf4GlobalAmbient, &m_xmf4GlobalAmbient, sizeof(XMFLOAT4));
 	::memcpy(&m_pcbMappedLights->m_nLights, &m_nLights, sizeof(int));
 
-	for (int i = 0; i < m_nUIs; ++i)
-		m_ppUIObjects[i]->UpdateShaderVariables(pd3dCommandList);
 }
 
 void CScene::ReleaseShaderVariables()
@@ -875,9 +873,10 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 			gbShowBoundingBox = !gbShowBoundingBox;
 			break;
 		case '9':
-			CB_UI_INFO ui;
-			ui.gfAlpha = m_ppUIObjects[0]->GetAlpha() + 0.1f;
-			m_ppUIObjects[0]->SetUI(&ui);
+			//CB_UI_INFO ui;
+			//ui.gfAlpha = m_ppUIObjects[0]->GetAlpha() + 0.1f;
+			//m_ppUIObjects[0]->SetUI(&ui);
+			m_ppUIObjects[0]->SetAlpha(0.8f);
 			//m_ppGameObjects[0]->FindFrame("HpBar")->MoveStrafe(10.f);
 			break;
 		case '0':
@@ -985,8 +984,12 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 
 	for (int i = 0; i < m_nShaders; i++) if (m_ppShaders[i]) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
 
-	for (int i = 0; i < m_nUIs; ++i)
-		if(m_ppUIObjects[i]) m_ppUIObjects[i]->Render(pd3dCommandList, pCamera);
+	for (int i = 0; i < m_nUIs; ++i) {
+		if (m_ppUIObjects[i]) {
+			m_ppUIObjects[i]->UpdateShaderVariables(pd3dCommandList);
+			m_ppUIObjects[i]->Render(pd3dCommandList, pCamera);
+		}
+	}
 }
 
 void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
