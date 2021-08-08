@@ -733,6 +733,8 @@ public:
 	CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName, float l, float t, float r, float b, float a);
 	~CUIObject();
 
+	float		 GetAlpha() { return m_pcbMappedUI->gfAlpha; }
+	void		 SetUI(CB_UI_INFO* ui) { memcpy(m_pcbMappedUI, ui, sizeof(CB_UI_INFO)); }
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void ReleaseShaderVariables();
