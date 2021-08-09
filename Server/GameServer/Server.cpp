@@ -473,6 +473,7 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction, float degr
     p.degree = degree;
     p.MoveType = 0;
     p.state = 0;
+    p.MonsterType = mon.type.load();
 
     //printf("%d\n", mon.key);
 

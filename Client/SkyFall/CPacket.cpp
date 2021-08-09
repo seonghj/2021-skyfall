@@ -441,8 +441,8 @@ void CPacket::CheckCollision(CMonster * mon)
         if (mon->isCollide(pObject)) {
 
             XMFLOAT3 d = Vector3::Subtract(mon->GetPosition(), pObject->GetPosition());
-            mon->Move(Vector3::ScalarProduct(d, 50.25f, true), true);
-            cout << "monster Map Collision - " << pObject->m_pstrFrameName << endl;
+            mon->Move(Vector3::ScalarProduct(d, 20.f, true), true);
+            //cout << "monster Map Collision - " << pObject->m_pstrFrameName << endl;
 
             return;
         }
@@ -744,9 +744,13 @@ void CPacket::ProcessPacket(char* buf)
         bool bReverseQuad = ((z % 2) != 0);
         float fHeight = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
         
-        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
         p->Position.y = (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight);
+        if (p->MonsterType == MonsterType::Wolf)
+            p->Position.y = p->Position.y + 50;
+        else if (p->MonsterType == MonsterType::Metalon)
+            p->Position.y = p->Position.y + 20;
         m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
+        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
 
         XMFLOAT3 pos = m_pScene->m_ppGameObjects[key]->GetPosition();
         int nPlace = m_pScene->m_ppGameObjects[key]->GetPlace();
@@ -795,17 +799,39 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_add: {
         mon_add_packet* p = reinterpret_cast<mon_add_packet*>(buf);
         int key = p->key;
-        m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
-        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->dz);
-        /*CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
+        CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
         XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
         XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
         XMFLOAT3 xmf3Scale = pTerrain->GetScale();
         int z = (int)(xmf3MonsterPosition.z / xmf3Scale.z);
         bool bReverseQuad = ((z % 2) != 0);
         float fHeight = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
-        m_pScene->m_ppGameObjects[key]->Move(XMFLOAT3(0, 
-            (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight), 0), 1.0f);*/
+
+        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->dz);
+        p->Position.y = (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight);
+        if (p->MonsterType == MonsterType::Wolf)
+            p->Position.y = p->Position.y + 50;
+        else if (p->MonsterType == MonsterType::Metalon)
+            p->Position.y = p->Position.y + 20;
+        m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
+
+        XMFLOAT3 pos = m_pScene->m_ppGameObjects[key]->GetPosition();
+        int nPlace = m_pScene->m_ppGameObjects[key]->GetPlace();
+        if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+            m_pScene->m_ppGameObjects[key]->SetPlace(nPlace - 1);
+        }
+        else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+            m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 1);
+        }
+
+        if (pos.z < m_vMapArrange[nPlace][1] * 2048 && nPlace>2) {
+            m_pScene->m_ppGameObjects[key]->SetPlace(nPlace - 3);
+        }
+        else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+            m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 3);
+        }
+
+        CheckCollision(m_pScene->m_ppGameObjects[key]);
 
         m_pScene->m_ppGameObjects[key]->m_iReady = TRUE;
         //printf("key: %d y : %f\n", key, m_pScene->m_ppGameObjects[key]->GetPosition().y);

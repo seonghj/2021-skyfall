@@ -322,6 +322,7 @@ struct mon_pos_packet : public Packet {
 	DirectX::XMFLOAT3 direction;
 	float degree;
 	DWORD MoveType;
+	short MonsterType;
 };
 
 struct mon_attack_packet : public Packet {
