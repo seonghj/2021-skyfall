@@ -72,7 +72,7 @@ public:
 
     void RunBot(int roomID);
 
-    std::unordered_map <int, std::array<Monster, 20>> monsters;
+    std::unordered_map <int, std::array<Monster, 15>> monsters;
 
     bool monsterRun = false;
 

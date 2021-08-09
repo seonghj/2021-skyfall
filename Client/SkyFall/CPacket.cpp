@@ -250,11 +250,13 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             float beforeyaw = m_pScene->m_mPlayer[key]->GetYaw();
             float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
             XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
+            int beforplace = m_pScene->m_mPlayer[key]->GetPlace();
 
             m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
             m_pScene->m_mPlayer[key] = m_pScene->m_m2HswordPlayer[key];
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
+            m_pScene->m_mPlayer[key]->SetPlace(beforplace);
 
             float tpitch = m_pScene->m_mPlayer[key]->GetPitch();
             float tyaw = m_pScene->m_mPlayer[key]->GetYaw();
@@ -268,11 +270,13 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             float beforeyaw = m_pScene->m_mPlayer[key]->GetYaw();
             float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
             XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
+            int beforplace = m_pScene->m_mPlayer[key]->GetPlace();
 
             m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
             m_pScene->m_mPlayer[key] = m_pScene->m_m2HspearPlayer[key];
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
+            m_pScene->m_mPlayer[key]->SetPlace(beforplace);
 
             float tpitch = m_pScene->m_mPlayer[key]->GetPitch();
             float tyaw = m_pScene->m_mPlayer[key]->GetYaw();
@@ -431,24 +435,21 @@ void CPacket::Map_set(map_block_set* p)
 
 void CPacket::CheckCollision(CMonster * mon)
 {
-    CGameObject* pObject;
-    for (int i = 0; i < 3; ++i) {
-        pObject = m_pMap->GetMap(3 * i)->FindFrame("RootNode")->m_pChild->m_pChild;
-        while (true) {
+    CGameObject* pObject = pObject = m_pMap->GetMap(3 * mon->GetPlace())->FindFrame("RootNode")->m_pChild->m_pChild;
+    while (true) {
 
-            if (mon->isCollide(pObject)) {
-              
-                XMFLOAT3 d = Vector3::Subtract(mon->GetPosition(), pObject->GetPosition());
-                mon->Move(Vector3::ScalarProduct(d, 50.25f, true), true);
-                cout << "monster Map Collision - " << pObject->m_pstrFrameName << endl;
-                
-                return;
-            }
-            if (pObject->m_pSibling)
-                pObject = pObject->m_pSibling;
-            else
-                return;
+        if (mon->isCollide(pObject)) {
+
+            XMFLOAT3 d = Vector3::Subtract(mon->GetPosition(), pObject->GetPosition());
+            mon->Move(Vector3::ScalarProduct(d, 50.25f, true), true);
+            cout << "monster Map Collision - " << pObject->m_pstrFrameName << endl;
+
+            return;
         }
+        if (pObject->m_pSibling)
+            pObject = pObject->m_pSibling;
+        else
+            return;
     }
 }
 
@@ -744,8 +745,25 @@ void CPacket::ProcessPacket(char* buf)
         float fHeight = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
         
         m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
-        p->Position.y = (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight) - m_pScene->m_ppGameObjects[key]->GetPosition().y;
-        m_pScene->m_ppGameObjects[key]->Move(p->Position, 1.0f);
+        p->Position.y = (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight);
+        m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
+
+        XMFLOAT3 pos = m_pScene->m_ppGameObjects[key]->GetPosition();
+        int nPlace = m_pScene->m_ppGameObjects[key]->GetPlace();
+        if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+            m_pScene->m_ppGameObjects[key]->SetPlace(nPlace - 1);
+        }
+        else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+            m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 1);
+        }
+
+        if (pos.z < m_vMapArrange[nPlace][1] * 2048 && nPlace>2) {
+            m_pScene->m_ppGameObjects[key]->SetPlace(nPlace - 3);
+        }
+        else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+            m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 3);
+        }
+
         CheckCollision(m_pScene->m_ppGameObjects[key]);
 
         p->type = CS_monster_pos;
@@ -768,7 +786,7 @@ void CPacket::ProcessPacket(char* buf)
 
         if (p->target == client_key) {
             m_pPlayer->SetHp(p->PlayerLeftHp);
-            m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp);
+            //m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
         }
 

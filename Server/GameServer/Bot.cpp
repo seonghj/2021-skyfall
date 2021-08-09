@@ -59,6 +59,7 @@ void Bot::Init(int roomID)
 	for (int i = 0; i < 15; i++) {
 		monsters[roomID][i].init();
 		monsters[roomID][i].key = i;
+		monsters[roomID][i].roomID = roomID;
 	}
 
 	// dragon
@@ -155,7 +156,7 @@ void Bot::Init(int roomID)
 	monsters[roomID][14].SpawnPos = XMFLOAT3{ 3058, 124, 2123 };
 	monsters[roomID][14].f3Position = monsters[roomID][14].SpawnPos.load();
 	monsters[roomID][14].Rotate(-90.0f, 0.0f, 0.0f);
-	monsters[roomID][014].state = 1;
+	monsters[roomID][14].state = 1;
 }
 
 void Bot::CheckTarget(int roomID)
@@ -197,7 +198,7 @@ void Bot::CheckTarget(int roomID)
 					}
 				}*/
 
-				m_pServer->send_monster_pos(mon, XMFLOAT3(0, 0, 0), XMFLOAT3(0, 0, 0), 0);
+				//m_pServer->send_monster_pos(mon, XMFLOAT3(0, 0, 0), XMFLOAT3(0, 0, 0), 0);
 			}
 		}
 	}
@@ -206,6 +207,7 @@ void Bot::CheckTarget(int roomID)
 void Bot::CheckBehavior(int roomID)
 {
 	for (SESSION& player : m_pServer->sessions[roomID]) {
+		if (player.connected.load() == false) continue;
 		if (player.state.load() == false) continue;
 		for (Monster& mon : monsters[roomID]) {
 			if (mon.state.load() == 0) continue;
@@ -239,6 +241,9 @@ void Bot::CheckBehavior(int roomID)
 			if (range < 300.0f)
 			{
 				subtract = Vector3::Normalize(subtract);
+				mon.Move(subtract, 1.0f);
+				/*mon.SetPosition(floor(mon.GetPosition().x)
+					, floor(mon.GetPosition().y), floor(mon.GetPosition().z));*/
 
 				// 실제 몬스터의 look 벡터
 				XMFLOAT3 look = Vector3::ScalarProduct((XMFLOAT3&)mon.GetUp(), -1);
@@ -274,7 +279,7 @@ void Bot::CheckBehavior(int roomID)
 					}
 				}
 				else if (range > distance) {
-					m_pServer->send_monster_pos(mon, subtract, cross, rotate_degree);
+					m_pServer->send_monster_pos(mon, cross, rotate_degree);
 				}
 			}
 		}
@@ -289,7 +294,7 @@ void Bot::RunBot(int roomID)
 		e.type = EventType::Mon_move_to_player;
 		e.key = 0;
 		e.roomid = roomID;
-		m_pTimer->push_event(roomID, OE_gEvent, 20, reinterpret_cast<char*>(&e));
+		m_pTimer->push_event(roomID, OE_gEvent, 30, reinterpret_cast<char*>(&e));
 	}
 }
 

@@ -86,5 +86,7 @@ private:
 
 	PlayerType start_weapon;
 
+	vector<vector<int>> m_vMapArrange = { { 0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}, {0, 2}, {1, 2}, {2, 2} };
+
 	//static DWORD WINAPI ServerConnect(LPVOID arg);
 };

@@ -694,7 +694,7 @@ void CScene::CheckCollision(CPacket* pPacket)
 		for (int i = 0; i < m_nGameObjects; ++i) {
 			if (m_ppGameObjects[i]->GetHp() > 0) {
 				if (m_pPlayer->CheckCollision(m_ppGameObjects[i])) {
-					m_ppUIObjects[0]->SetvPercent((float)m_pPlayer->m_iHp / (float)m_pPlayer->m_iMaxHp);
+					//m_ppUIObjects[0]->SetvPercent((float)m_pPlayer->m_iHp / (float)m_pPlayer->m_iMaxHp);
 				}
 				//m_ppUIObjects[0]->SetvPercent(m_pPlayer->GetHp() / m_pPlayer->m_iMaxHp);
 				//if (i == 0) {

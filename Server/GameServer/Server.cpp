@@ -91,15 +91,15 @@ int Server::SetroomID()
             maps[cnt].init_Map(this, m_pTimer);
             maps_lock.unlock();
 
-            m_pBot->monsters.emplace(cnt, std::array<Monster, 20>{});
+            m_pBot->monsters.emplace(cnt, std::array<Monster, 15>{});
             m_pBot->monsterRun = TRUE;
-            //m_pBot->Init(cnt);
+            m_pBot->Init(cnt);
 
-            m_pBot->monsters[cnt][0].SetPosition(2000, 197.757935, 5000);
+            /*m_pBot->monsters[cnt][0].SetPosition(2000, 197.757935, 5000);
             m_pBot->monsters[cnt][0].state = 1;
             m_pBot->monsters[cnt][0].type = MonsterType::Dragon;
             m_pBot->monsters[cnt][0].Rotate(-90.0f, 20.0f, 0.0f);
-            m_pBot->monsters[cnt][0].key = 0;
+            m_pBot->monsters[cnt][0].key = 0;*/
 
             m_pBot->RunBot(cnt);
 
@@ -398,8 +398,7 @@ void Server::send_packet_to_allplayers(int roomID, char* buf)
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (sessions[roomID][i].connected == FALSE) continue;
         if (sessions[roomID][i].playing == FALSE) continue;
-        if (sessions[roomID][i].connected.load(std::memory_order_seq_cst))
-            send_packet(i, buf, roomID);
+        send_packet(i, buf, roomID);
     }
    //sessions_lock.unlock();
 }
@@ -460,7 +459,7 @@ void Server::send_remove_monster(int key, int roomID, int to)
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
-void Server::send_monster_pos(const Monster& mon, XMFLOAT3 pos, XMFLOAT3 direction, float degree)
+void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction, float degree)
 {
     int roomID = mon.roomID;
 
@@ -469,7 +468,7 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 pos, XMFLOAT3 directi
     p.type = PacketType::SC_monster_pos;
     p.key = mon.key;
     p.roomid = mon.roomID.load();
-    p.Position = pos;
+    p.Position = mon.f3Position.load();
     p.direction = direction;
     p.degree = degree;
     p.MoveType = 0;
@@ -482,6 +481,7 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 pos, XMFLOAT3 directi
         if (sessions[roomID][i].playing == FALSE) continue;
         if (true == in_VisualField(mon, sessions[roomID][i], roomID)) {
             send_packet(i, reinterpret_cast<char*>(&p), roomID);
+            //printf("%d\n", mon.key);
             //printf("send to %d \n", sessions[roomID][i].key.load());
         }
     }
