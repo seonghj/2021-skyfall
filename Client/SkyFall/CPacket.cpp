@@ -576,7 +576,8 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
         if (p->key == client_key) {
             //m_pPlayer->SetPosition(p->Position);
-            m_pPlayer->Rotate(p->dx, p->dy, 0);
+            m_pPlayer->Rotate(p->dx - m_pPlayer->GetPitch()
+                , p->dy - m_pPlayer->GetYaw(), 0);
             switch (p->MoveType) {
             case PlayerMove::RUNNING:
                 //m_pPlayer->SetRunning(true);
@@ -603,7 +604,8 @@ void CPacket::ProcessPacket(char* buf)
                 break;
             }
             m_pScene->MovePlayer(key, p->Position);
-            m_pScene->m_mPlayer[key]->Rotate(p->dx, p->dy, 0);
+            m_pScene->m_mPlayer[key]->Rotate(p->dx - m_pScene->m_mPlayer[key]->GetPitch()
+                , p->dy - m_pScene->m_mPlayer[key]->GetYaw(), 0);
         }
         break;
     }
@@ -750,7 +752,8 @@ void CPacket::ProcessPacket(char* buf)
         else if (p->MonsterType == MonsterType::Metalon)
             p->Position.y = p->Position.y + 20;
         m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
-        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
+        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree - m_pScene->m_ppGameObjects[key]->m_fRotateDegree);
+        m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->degree;
 
         XMFLOAT3 pos = m_pScene->m_ppGameObjects[key]->GetPosition();
         int nPlace = m_pScene->m_ppGameObjects[key]->GetPlace();
@@ -783,7 +786,8 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
 
         if (m_pScene->m_ppGameObjects[key]->m_iReady == FALSE) break;
-
+        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree - m_pScene->m_ppGameObjects[key]->m_fRotateDegree);
+        m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->degree;
         m_pScene->m_ppGameObjects[key]->Attack();
 
         m_pScene->AnimatePlayer(p->target, 8);

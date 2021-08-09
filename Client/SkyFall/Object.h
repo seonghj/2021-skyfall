@@ -674,6 +674,8 @@ public:
 
 	float m_fHeight = 0.0f;
 	bool m_iReady = false;
+
+	float m_fRotateDegree = 0.0f;
 };
 
 

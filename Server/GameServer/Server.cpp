@@ -459,7 +459,7 @@ void Server::send_remove_monster(int key, int roomID, int to)
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
-void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction, float degree)
+void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction)
 {
     int roomID = mon.roomID;
 
@@ -470,7 +470,7 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction, float degr
     p.roomid = mon.roomID.load();
     p.Position = mon.f3Position.load();
     p.direction = direction;
-    p.degree = degree;
+    p.degree = mon.m_fRoll.load();
     p.MoveType = 0;
     p.state = 0;
     p.MonsterType = mon.type.load();
@@ -488,7 +488,7 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction, float degr
     }
 }
 
-void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, float degree, int target)
+void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int target)
 {
     int roomID = mon.roomID;
 
@@ -498,7 +498,7 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, float d
     p.key = mon.key;
     p.roomid = mon.roomID.load();
     p.direction = direction;
-    p.degree = degree;
+    p.degree = mon.m_fRoll.load();
     p.target = target;
     p.PlayerLeftHp = sessions[roomID][target].hp;
 
@@ -751,8 +751,8 @@ void Server::process_packet(int key, char* buf, int roomID)
         packet.state = p->state;
         packet.size = sizeof(player_pos_packet);
         packet.Position = sessions[roomID][p->key].f3Position;
-        packet.dx = p->dx;
-        packet.dy = p->dy;
+        packet.dx = sessions[roomID][p->key].m_fPitch;
+        packet.dy = sessions[roomID][p->key].m_fYaw;
         packet.MoveType = p->MoveType;
         packet.dir = p->dir;
 
