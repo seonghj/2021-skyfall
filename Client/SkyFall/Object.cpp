@@ -2311,8 +2311,8 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	while (bCollide) {
 		BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
-		bb.Extents.x *= 0.7f;
-		bb.Extents.y *= 0.7f;
+		bb.Extents.x *= 0.5f;
+		bb.Extents.z *= 0.5f;
 		pObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 0), bb.Extents);
 		//pObject->UpdateTransform();
 		if (pObject->m_pSibling)

@@ -694,6 +694,16 @@ void CScene::CheckCollision(CPacket* pPacket)
 		}
 	}
 	else if (m_iState == INGAME) {
+		for (auto& a : m_mPlayer) {
+			for (auto& b : m_mPlayer) {
+				XMFLOAT3 d = Vector3::Subtract(a->GetPosition(), b->GetPosition());
+				if (a != b && Vector3::Length(d)<100){
+					if (a->isCollide(b)) {
+						a->CPlayer::Move(Vector3::ScalarProduct(d, 50.f, true), true);
+					}
+				}
+			}
+		}
 		for (int i = 0; i < m_nGameObjects; ++i) {
 			if (m_ppGameObjects[i]->GetHp() > 0) {
 				if (m_pPlayer->CheckCollision(m_ppGameObjects[i])) {
