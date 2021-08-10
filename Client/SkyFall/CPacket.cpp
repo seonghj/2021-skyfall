@@ -201,7 +201,7 @@ void CPacket::Send_swap_weapon_packet(PlayerType weapon)
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
-void CPacket::Send_damage_to_player_packet(int target)
+void CPacket::Send_damage_to_player_packet(int target, int nAttack)
 {
     player_damage_packet p;
     p.key = client_key;
@@ -210,11 +210,12 @@ void CPacket::Send_damage_to_player_packet(int target)
     p.type = sizeof(p);
     p.damage = 0;
     p.target = target;
+    p.nAttack = nAttack;
 
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
-void CPacket::Send_mon_damaged_packet(int target)
+void CPacket::Send_mon_damaged_packet(int target, int nAttack)
 {
     mon_damaged_packet p;
     p.key = client_key;
@@ -223,6 +224,7 @@ void CPacket::Send_mon_damaged_packet(int target)
     p.type = sizeof(p);
     p.damage = 0;
     p.target = target;
+    p.nAttack = nAttack;
 
     SendPacket(reinterpret_cast<char*>(&p));
 }

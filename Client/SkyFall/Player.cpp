@@ -1009,8 +1009,9 @@ bool C1HswordPlayer::CheckCollision(CGameObject* pObject)
 
 	if (m_isAttack&& m_bHit) {
 		if (pObject->isCollide(pWeapon)) {
-			pObject->TakeDamage(m_iAtkStat * (1.f + m_nAttack / 4.f));
-			cout << "Sword Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
+			//pObject->TakeDamage(m_iAtkStat * (1.f + m_nAttack / 4.f));
+			//cout << "Sword Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
+			m_pPacket->Send_mon_damaged_packet(pObject->m_nkey, m_nAttack);
 			m_bHit = false;
 
 			pObject->SetBehaviorActivate(true);

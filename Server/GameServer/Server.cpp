@@ -863,8 +863,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (m_pBot->monsters[roomID][target].state == 0) break;
 
         p->type = SC_monster_damaged;
-        p->damage = sessions[roomID][key].att * (100 
-            - m_pBot->monsters[roomID][target].def) / 100;
+        p->damage = sessions[roomID][key].att * (1.f + p->nAttack / 4.f);
 
         m_pBot->monsters[roomID][target].hp = m_pBot->monsters[roomID][target].hp - p->damage;
 
@@ -888,8 +887,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         int target = p->target;
 
         p->type = SC_monster_damaged;
-        p->damage = sessions[roomID][key].att * (100
-            - sessions[roomID][target].def) / 100;
+        p->damage = sessions[roomID][key].att * (1.f + p->nAttack / 4.f);
 
         sessions[roomID][target].hp = sessions[roomID][target].hp - p->damage;
 

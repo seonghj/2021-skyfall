@@ -126,13 +126,15 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_ppGameObjects = new CMonster * [m_nGameObjects];
 
 	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 9, (void**)m_ppTerrain,4);
-	
+	m_ppGameObjects[0]->m_nkey = 0;
 	for (int i = 1; i < 8; ++i) {
 		m_ppGameObjects[i] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, (void**)m_ppTerrain, 4);
+		m_ppGameObjects[i]->m_nkey = i;
 	}
 	
 	for (int i = 8; i < m_nGameObjects; ++i) {
 		m_ppGameObjects[i] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, (void**)m_ppTerrain, 4);
+		m_ppGameObjects[i]->m_nkey = i;
 	}
 
 
@@ -204,6 +206,7 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		m_m2HswordPlayer[i] = new C2HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p2HSwordModel, (void**)m_ppTerrain);
 		m_m2HspearPlayer[i] = new C2HspearPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p2HSpearModel, (void**)m_ppTerrain);
 		m_mPlayer[i] = m_m1HswordPlayer[i];
+		m_mPlayer[i]->m_nkey = i;
 		//m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, 124.0f, 650.0f));
 		//MovePlayer(i, XMFLOAT3(80.0f, 0.0f, 0.0f));
 	}	
