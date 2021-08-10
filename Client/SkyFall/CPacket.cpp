@@ -207,7 +207,7 @@ void CPacket::Send_damage_to_player_packet(int target, int nAttack)
     p.key = client_key;
     p.type = CS_player_damage;
     p.roomid = roomID;
-    p.type = sizeof(p);
+    p.size = sizeof(p);
     p.damage = 0;
     p.target = target;
     p.nAttack = nAttack;
@@ -221,7 +221,7 @@ void CPacket::Send_mon_damaged_packet(int target, int nAttack)
     p.key = client_key;
     p.type = CS_monster_damaged;
     p.roomid = roomID;
-    p.type = sizeof(p);
+    p.size = sizeof(p);
     p.damage = 0;
     p.target = target;
     p.nAttack = nAttack;
@@ -813,15 +813,15 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_attack: {
         mon_attack_packet* p = reinterpret_cast<mon_attack_packet*>(buf);
         int key = p->key;
-
-        if (m_pScene->m_ppGameObjects[key]->m_iReady == FALSE) break;
+        //if (m_pScene->m_ppGameObjects[key]->m_iReady == FALSE) break;
         m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree - m_pScene->m_ppGameObjects[key]->m_fRotateDegree);
         m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->degree;
         m_pScene->m_ppGameObjects[key]->Attack();
 
         m_pScene->AnimatePlayer(p->target, 8);
-
+        printf("%d\n", client_key);
         if (p->target == client_key) {
+            //printf("%d\n", p->target);
             m_pPlayer->SetHp(p->PlayerLeftHp);
             //m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
@@ -877,6 +877,8 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_damaged:{
         mon_damaged_packet* p = reinterpret_cast<mon_damaged_packet*>(buf);
         m_pScene->m_ppGameObjects[p->target]->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp() - p->damage);
+
+        cout << "Monster: " << p->target << " hp: " << m_pScene->m_ppGameObjects[p->target]->GetHp() << endl;
         break;
     }
     case PacketType::SC_monster_respawn: {

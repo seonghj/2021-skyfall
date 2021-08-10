@@ -17,6 +17,8 @@ void Monster::init()
 	lv = 0;
 	att = 10;
 	speed = 20;
+
+	CanAttack = TRUE;
 }
 
 void Monster::SetPosition(float x, float y, float z)
@@ -264,10 +266,11 @@ void Bot::CheckBehavior(int roomID)
 				// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
 				if (range <= distance && rotation <= 5) {
 					if (mon.CanAttack == TRUE) {
+						//printf("%d -> %d\n", mon.key, player.key.load());
 						//player.s_lock.lock();
-						player.TakeDamage(mon.att);
+						player.TakeDamage(mon.att.load());
 						//player.s_lock.unlock();
-						m_pServer->send_monster_attack(mon, cross, player.key);
+						m_pServer->send_monster_attack(mon, cross, player.key.load());
 						mon.CanAttack = false;
 
 						mon_attack_cooltime_event e;
