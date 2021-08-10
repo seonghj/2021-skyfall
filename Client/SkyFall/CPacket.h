@@ -41,6 +41,8 @@ public:
 	void Send_stop_packet();
 	void Send_login_packet(char* id);
 	void Send_swap_weapon_packet(PlayerType weapon);
+	void Send_damage_to_player_packet(int target);
+	void Send_mon_damaged_packet(int target);
 
 	void Swap_weapon(int key, PlayerType weapon);
 	void Map_set(map_block_set* p);

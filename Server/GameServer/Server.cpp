@@ -856,6 +856,45 @@ void Server::process_packet(int key, char* buf, int roomID)
         //std::cout << "target: " << p->target << " key: " << p->key << std::endl;
         break;
     }
+    case PacketType::CS_monster_damaged: {
+        mon_damaged_packet* p = reinterpret_cast<mon_damaged_packet*>(buf);
+        int key = p->key;
+        int target = p->target;
+        if (m_pBot->monsters[roomID][target].state == 0) break;
+
+        p->type = SC_monster_damaged;
+        p->damage = sessions[roomID][key].att * (100 
+            - m_pBot->monsters[roomID][target].def) / 100;
+
+        m_pBot->monsters[roomID][target].hp = m_pBot->monsters[roomID][target].hp - p->damage;
+
+        if (m_pBot->monsters[roomID][target].hp <= 0) {
+            m_pBot->monsters[roomID][target].state = 0;
+
+            mon_respawn_event e;
+            e.key = target;
+            e.roomid = roomID;
+            e.size = sizeof(e);
+            e.type = EventType::Mon_respawn;
+            m_pTimer->push_event(roomID, OE_gEvent, MON_SPAWN_TIME, reinterpret_cast<char*>(&e));
+        }
+
+        break;
+    }
+    case PacketType::CS_player_damage: {
+        mon_damaged_packet* p = reinterpret_cast<mon_damaged_packet*>(buf);
+
+        int key = p->key;
+        int target = p->target;
+
+        p->type = SC_monster_damaged;
+        p->damage = sessions[roomID][key].att * (100
+            - sessions[roomID][target].def) / 100;
+
+        sessions[roomID][target].hp = sessions[roomID][target].hp - p->damage;
+
+        break;
+    }
     }
 }
 
@@ -875,6 +914,7 @@ void Server::WorkerFunc()
         int roomID = over_ex->roomID;
         switch (over_ex->type) {
         case OE_session: {
+            // key = 유저번호
             if (FALSE == retval)
             {
                 //printf("error = %d\n", WSAGetLastError());
@@ -921,6 +961,7 @@ void Server::WorkerFunc()
             break;
         }
         case OE_gEvent: {
+            // key = 방번호
             if (FALSE == retval)
                 continue;
             switch (over_ex->messageBuffer[1]) {
@@ -955,7 +996,7 @@ void Server::WorkerFunc()
             }
             case EventType::Mon_attack_cooltime: {
                 mon_attack_cooltime_event* e = reinterpret_cast<mon_attack_cooltime_event*>(over_ex->messageBuffer);
-                m_pBot->monsters[roomID][e->key].CanAttack = TRUE;
+                m_pBot->monsters[e->roomid][e->key].CanAttack = TRUE;
                 delete over_ex;
                 break;
             }
@@ -969,6 +1010,27 @@ void Server::WorkerFunc()
                 e.type = EventType::MapBreak;
                 m_pTimer->push_event(key, OE_gEvent, MAP_BREAK_TIME, reinterpret_cast<char*>(&e));
                 delete over_ex;
+                break;
+            }
+            case EventType::Mon_respawn: {
+                mon_respawn_event* e = reinterpret_cast<mon_respawn_event*>(over_ex->messageBuffer);
+                m_pBot->monsters[e->roomid][e->key].hp = 100;
+                m_pBot->monsters[e->roomid][e->key].f3Position = m_pBot->monsters[e->roomid][e->key].SpawnPos.load();
+                
+                mon_respawn_packet p;
+                p.key = e->key;
+                p.roomid = e->roomid;
+                p.type = SC_monster_respawn;
+                p.size = sizeof(p);
+                p.Position = m_pBot->monsters[e->roomid][e->key].SpawnPos.load();
+                p.dx = 0;
+                p.dy = 0;
+                p.dz = 0;
+                p.MonsterType = m_pBot->monsters[e->roomid][e->key].type;
+
+                send_packet_to_allplayers(e->roomid, reinterpret_cast<char*>(&p));
+
+                m_pBot->monsters[e->roomid][e->key].state = 1;
                 break;
             }
             }
