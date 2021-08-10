@@ -761,7 +761,8 @@ bool CBowPlayer::CheckCollision(CGameObject* pObject)
 			if (m_ppBullets[i]->isCollide(pObject)) {
 				cout << "Bullet Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
 				DeleteBullet(i);
-				pObject->TakeDamage(m_iAtkStat);
+				//pObject->TakeDamage(m_iAtkStat);
+				m_pPacket->Send_mon_damaged_packet(pObject->m_nkey, 3);
 			}
 			if(m_ppBullets[i]->GetPosition().y<=0)
 				DeleteBullet(i--);

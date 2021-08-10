@@ -699,7 +699,8 @@ void CScene::CheckCollision(CPacket* pPacket)
 				XMFLOAT3 d = Vector3::Subtract(a->GetPosition(), b->GetPosition());
 				if (a != b && Vector3::Length(d)<100){
 					if (a->isCollide(b)) {
-						a->CPlayer::Move(Vector3::ScalarProduct(d, 50.f, true), true);
+						//if (a->m_nkey == pPacket->Get_clientkey())
+							a->CPlayer::Move(Vector3::ScalarProduct(d, 50.f, true), true);
 					}
 				}
 			}
