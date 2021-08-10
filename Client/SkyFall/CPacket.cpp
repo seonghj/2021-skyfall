@@ -819,9 +819,7 @@ void CPacket::ProcessPacket(char* buf)
         m_pScene->m_ppGameObjects[key]->Attack();
 
         m_pScene->AnimatePlayer(p->target, 8);
-        printf("%d\n", client_key);
         if (p->target == client_key) {
-            //printf("%d\n", p->target);
             m_pPlayer->SetHp(p->PlayerLeftHp);
             //m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
