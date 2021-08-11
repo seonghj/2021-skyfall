@@ -360,6 +360,7 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunLeft, nBasic_RunLeft);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunRight, nBasic_RunRight);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_TakeDamage, nBasic_TakeDamage);
+	m_pSkinnedAnimationController->SetTrackType(nBasic_TakeDamage, ANIMATION_TYPE_ONCE);
 
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Jump, nBasic_Jump);
@@ -583,13 +584,12 @@ void CTerrainPlayer::Update(float fTimeElapsed)
 	if (m_pSkinnedAnimationController)
 	{
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
-
 		if (m_isJump) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackPosition(nBasic_Jump, 0);
 			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Jump, true);
 		}
-		else if (::IsZero(fLength)&&m_isGround)
+		else if (::IsZero(fLength)&&m_isGround&&m_isDamaged == false)
 		{
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
@@ -624,6 +624,7 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunLeft, nBasic_RunLeft);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunRight, nBasic_RunRight);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_TakeDamage, nBasic_TakeDamage);
+	m_pSkinnedAnimationController->SetTrackType(nBasic_TakeDamage, ANIMATION_TYPE_ONCE);
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nShotHold, nShotHold);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nShotRelease, nShotRelease);
@@ -695,6 +696,8 @@ void CBowPlayer::Update(float fTimeElapsed)
 		if (m_isRelease&&m_pSkinnedAnimationController->IsTrackFinish(nShotRelease)) {
 			m_isRelease = false;
 		}
+		if (m_isDamaged && m_pSkinnedAnimationController->IsTrackFinish(nBasic_TakeDamage))
+			m_isDamaged = false;
 		if (m_isJump) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackPosition(nBasic_Jump, 0);
@@ -704,7 +707,7 @@ void CBowPlayer::Update(float fTimeElapsed)
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nShotReady, true);
 		}
-		else if (::IsZero(fLength) && m_isGround && !m_isRelease)
+		else if (::IsZero(fLength) && m_isGround && !m_isRelease && !m_isDamaged)
 		{
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
@@ -869,6 +872,7 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunLeft, nBasic_RunLeft);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunRight, nBasic_RunRight);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_TakeDamage, nBasic_TakeDamage);
+	m_pSkinnedAnimationController->SetTrackType(nBasic_TakeDamage, ANIMATION_TYPE_ONCE);
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack1, nAttack1);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack2, nAttack2);
@@ -922,6 +926,9 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 	{
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
 
+		if (m_isDamaged && m_pSkinnedAnimationController->IsTrackFinish(nBasic_TakeDamage))
+			m_isDamaged = false;
+
 		if (m_isJump) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackPosition(nBasic_Jump, 0);
@@ -946,7 +953,7 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nAttack1 + m_nAttack, true);
 		}
-		else if (::IsZero(fLength) && m_isGround)
+		else if (::IsZero(fLength) && m_isGround && !m_isDamaged)
 		{
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nBasic_Idle, true);
@@ -1052,6 +1059,7 @@ C2HswordPlayer::C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunLeft, nBasic_RunLeft);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunRight, nBasic_RunRight);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_TakeDamage, nBasic_TakeDamage);
+	m_pSkinnedAnimationController->SetTrackType(nBasic_TakeDamage, ANIMATION_TYPE_ONCE);
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack1, nAttack1);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack2, nAttack2);
@@ -1112,6 +1120,7 @@ C2HspearPlayer::C2HspearPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunLeft, nBasic_RunLeft);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunRight, nBasic_RunRight);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_TakeDamage, nBasic_TakeDamage);
+	m_pSkinnedAnimationController->SetTrackType(nBasic_TakeDamage, ANIMATION_TYPE_ONCE);
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack1, nAttack1);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack2, nAttack2);

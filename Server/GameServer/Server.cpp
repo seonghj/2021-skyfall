@@ -887,7 +887,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         break;
     }
     case PacketType::CS_player_damage: {
-        mon_damaged_packet* p = reinterpret_cast<mon_damaged_packet*>(buf);
+        player_damage_packet* p = reinterpret_cast<player_damage_packet*>(buf);
 
         int key = p->key;
         int target = p->target;

@@ -640,6 +640,9 @@ void CPacket::ProcessPacket(char* buf)
                     m_pScene->AnimatePlayer(key, 7);
                 //m_pScene->AnimatePlayer(key, 4);
                 break;
+            case PlayerMove::STAND:
+                m_pScene->AnimatePlayer(key, 0);
+                break;
             default:
                 break;
             }
@@ -745,6 +748,7 @@ void CPacket::ProcessPacket(char* buf)
         }
         else
             m_pPlayer->SetPosition(p->Position);
+        m_pScene->m_mPlayer[key]->SetGround(true);
         break;
     }
 
@@ -964,12 +968,18 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::SC_player_damage: {
-        mon_damaged_packet* p = reinterpret_cast<mon_damaged_packet*>(buf);
-        m_pScene->m_ppGameObjects[p->target]->SetHp(p->leftHp);
-        cout << "player: " << p->target << " hp: " << m_pScene->m_ppGameObjects[p->target]->GetHp() << endl;
+        player_damage_packet* p = reinterpret_cast<player_damage_packet*>(buf);
+        m_pScene->m_mPlayer[p->target]->SetHp(p->leftHp);
+        cout << "player: " << p->target << " hp: " << m_pScene->m_mPlayer[p->target]->GetHp() << endl;
         //m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
 
-        m_pScene->AnimatePlayer(p->target, 8);
+        if (p->target == client_key) {
+            m_pPlayer->SetDamaged(true);
+            m_pScene->AnimatePlayer(client_key, 8);
+        }
+        else
+            m_pScene->AnimatePlayer(p->target, 8);
+
         break;
     }
     }

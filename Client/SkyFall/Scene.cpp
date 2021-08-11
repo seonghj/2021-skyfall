@@ -287,7 +287,7 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		//cout << "3" << endl;
 		break;
 	case 8:
-		//m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(8, 0);
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(8, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(8, true);
 		//cout << "6" << endl;

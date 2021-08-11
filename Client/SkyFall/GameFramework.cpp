@@ -910,6 +910,11 @@ void CGameFramework::FrameAdvance()
 
 	//	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
 	MoveToNextFrame();
+	
+	for (auto& p : m_pScene->m_mPlayer) {
+		if (p->m_pSkinnedAnimationController->IsTrackFinish(8))
+			m_pScene->AnimatePlayer(p->m_nkey, 0);
+	}
 
 	float fLength = sqrtf(m_pPlayer->GetVelocity().x * m_pPlayer->GetVelocity().x + m_pPlayer->GetVelocity().z * m_pPlayer->GetVelocity().z);
 	if (::IsZero(fLength) && m_pPlayer->GetGround())
@@ -929,7 +934,6 @@ void CGameFramework::FrameAdvance()
 			p.Position.z = floor(NowPosition.z);
 			p.dx = floor(m_DegreeX);
 			p.dy = floor(m_DegreeY);
-
 			p.dir = dwDirection;
 			p.size = sizeof(p);
 			p.state = 1;
@@ -938,10 +942,9 @@ void CGameFramework::FrameAdvance()
 				m_pPlayer->SetStanding(true);
 			}
 			else {
+				p.MoveType = m_pPlayer->GetRunning();
 				if (m_pPlayer->GetJump() == true || m_pPlayer->GetGround() == false)
 					p.MoveType = PlayerMove::JUMP;
-				else
-					p.MoveType = m_pPlayer->GetRunning();
 				m_pPlayer->SetStanding(false);
 			}
 			p.type = CS_player_pos;
