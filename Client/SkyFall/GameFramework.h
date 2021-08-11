@@ -164,5 +164,7 @@ private:
 
 	//imgui
 	void CreateFontAndGui();
+	char m_bufID[11];
+	char m_bufPW[21];
 };
 
