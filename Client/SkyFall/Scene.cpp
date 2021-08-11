@@ -138,12 +138,12 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	}
 
 
-	/*m_nUIs = 1;
+	m_nUIs = 1;
 	m_ppUIObjects = new CUIObject * [m_nUIs];
 	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_Box.dds", -0.98, -0.9, -0.9, 0.9, 0.8);
 	m_ppUIObjects[0]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	m_ppUIObjects[0]->SetAlpha(0.8f);
-	m_ppUIObjects[0]->SetvPercent(1.f);*/
+	m_ppUIObjects[0]->SetvPercent(1.f);
 
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
