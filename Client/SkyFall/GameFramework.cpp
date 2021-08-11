@@ -359,7 +359,20 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 
 void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
-	if (m_pScene) m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
+	if (m_pScene) {
+		if (m_pScene->m_iState == SCENE::LOBBY) {
+			switch (nMessageID)
+			{
+			case WM_CHAR:
+				UCHAR ch = static_cast<unsigned char>(wParam);
+				m_charBuffer.push(ch);
+				break;
+			}
+			return;
+		}
+		else
+			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
+	}
 	switch (nMessageID)
 	{
 		case WM_KEYUP:

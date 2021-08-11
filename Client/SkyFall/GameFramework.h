@@ -7,6 +7,7 @@
 #include "Player.h"
 #include "Scene.h"
 #include "CPacket.h"
+#include <queue>
 
 struct CB_FRAMEWORK_INFO
 {
@@ -146,5 +147,6 @@ private:
 
 	DWORD						dwDirection = 0;
 	BOOL						PressDirButton = false;
+	queue<unsigned char>		m_charBuffer;
 };
 
