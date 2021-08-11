@@ -1015,15 +1015,16 @@ bool C1HswordPlayer::CheckCollision(CGameObject* pObject, bool isMonster)
 		if (pObject->isCollide(pWeapon)) {
 			//pObject->TakeDamage(m_iAtkStat * (1.f + m_nAttack / 4.f));
 			//cout << "Sword Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
-			if (isMonster)
+			m_bHit = false;
+			if (isMonster) {
 				m_pPacket->Send_mon_damaged_packet(pObject->m_nkey, m_nAttack);
+				pObject->SetBehaviorActivate(true);
+				//cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
+				pObject->FindFrame("HpBar")->m_bActive = true;
+			}
 			else
 				m_pPacket->Send_damage_to_player_packet(pObject->m_nkey, m_nAttack);
-			m_bHit = false;
 
-			pObject->SetBehaviorActivate(true);
-			//cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
-			pObject->FindFrame("HpBar")->m_bActive = true;
 		}
 	}
 	// Player - pObject
