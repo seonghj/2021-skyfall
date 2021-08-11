@@ -881,7 +881,7 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         send_packet_to_allplayers(p->roomid, reinterpret_cast<char*>(p));
 
-        printf("%f\n", m_pBot->monsters[p->roomid][target].hp.load());
+        //printf("%f\n", m_pBot->monsters[p->roomid][target].hp.load());
 
         break;
     }

@@ -333,7 +333,8 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
             m_pPlayer->m_pPacket = this;
-            m_pScene->m_mPlayer[key]->m_nkey = key;
+            m_pScene->m_mPlayer[client_key]->m_nkey = client_key;
+            m_pScene->m_mPlayer[client_key]->m_pPacket = this;
 
             m_pPlayer->SetPosition(beforepos);
             m_pPlayer->SetPlace(beforplace);
@@ -357,7 +358,8 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
             m_pPlayer->m_pPacket = this;
-            m_pScene->m_mPlayer[key]->m_nkey = key;
+            m_pScene->m_mPlayer[client_key]->m_nkey = client_key;
+            m_pScene->m_mPlayer[client_key]->m_pPacket = this;
 
             m_pPlayer->SetPosition(beforepos);
             m_pPlayer->SetPlace(beforplace);
@@ -381,7 +383,8 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
             m_pPlayer->m_pPacket = this;
-            m_pScene->m_mPlayer[key]->m_nkey = key;
+            m_pScene->m_mPlayer[client_key]->m_nkey = client_key;
+            m_pScene->m_mPlayer[client_key]->m_pPacket = this;
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
 
@@ -405,7 +408,8 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
             m_pPlayer->m_pPacket = this;
-            m_pScene->m_mPlayer[key]->m_nkey = key;
+            m_pScene->m_mPlayer[client_key]->m_nkey = client_key;
+            m_pScene->m_mPlayer[client_key]->m_pPacket = this;
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
 
@@ -907,6 +911,8 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_ppGameObjects[key]->GetState(), 0);
         m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->SetTrackEnable(
             m_pScene->m_ppGameObjects[key]->GetState(), true);
+        m_pScene->m_ppGameObjects[key]->SetIdle();
+        m_pScene->m_ppGameObjects[key]->m_iHp = m_pScene->m_ppGameObjects[key]->m_iMaxHp;
         switch (p->MonsterType) {
         case MonsterType::Dragon:
             m_pScene->m_ppGameObjects[key]->SetActive("Polygonal_Dragon", true);
@@ -918,8 +924,8 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_ppGameObjects[key]->SetActive("Polygonal_Metalon", true);
             break;
         }
-        m_pScene->m_ppGameObjects[key]->SetActive("BoundingBox", false);
-        m_pScene->m_ppGameObjects[key]->SetBehaviorActivate(false);
+        m_pScene->m_ppGameObjects[key]->SetActive("BoundingBox", true);
+        //m_pScene->m_ppGameObjects[key]->SetBehaviorActivate(true);
         {
             CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
             XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();

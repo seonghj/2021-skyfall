@@ -116,46 +116,46 @@ void Bot::Init(int roomID)
 
 		//Metalon
 		monsters[roomID][8].type = MonsterType::Metalon;
-		monsters[roomID][8].SpawnPos = XMFLOAT3{ 2307, 124, 2208 };
+		monsters[roomID][8].SpawnPos = XMFLOAT3{ 2307, 124, 160 };
 		monsters[roomID][8].f3Position = monsters[roomID][8].SpawnPos.load();
 		monsters[roomID][8].Rotate(-90.0f, 0.0f, 0.0f);
 		monsters[roomID][8].state = 1;
 
 		monsters[roomID][9].type = MonsterType::Metalon;
-		monsters[roomID][9].SpawnPos = XMFLOAT3{ 3798, 124, 2883 };
+		monsters[roomID][9].SpawnPos = XMFLOAT3{ 3798, 124, 835 };
 		monsters[roomID][9].f3Position = monsters[roomID][9].SpawnPos.load();
 		monsters[roomID][9].Rotate(-90.0f, 0.0f, 0.0f);
 		monsters[roomID][9].state = 1;
 
 		monsters[roomID][10].type = MonsterType::Metalon;
-		monsters[roomID][10].SpawnPos = XMFLOAT3{ 3188, 128, 3308 };
+		monsters[roomID][10].SpawnPos = XMFLOAT3{ 3188, 128, 1260 };
 		monsters[roomID][10].f3Position = monsters[roomID][10].SpawnPos.load();
 		monsters[roomID][10].Rotate(-90.0f, 0.0f, 0.0f);
 		monsters[roomID][10].state = 1;
 
 
 		monsters[roomID][11].type = MonsterType::Metalon;
-		monsters[roomID][11].SpawnPos = XMFLOAT3{ 2508, 240, 2538 };
+		monsters[roomID][11].SpawnPos = XMFLOAT3{ 2508, 240,  490};
 		monsters[roomID][11].f3Position = monsters[roomID][11].SpawnPos.load();
 		monsters[roomID][11].Rotate(-90.0f, 0.0f, 0.0f);
 		monsters[roomID][11].state = 1;
 
 
 		monsters[roomID][12].type = MonsterType::Metalon;
-		monsters[roomID][12].SpawnPos = XMFLOAT3{ 2708, 124, 3973 };
+		monsters[roomID][12].SpawnPos = XMFLOAT3{ 2708, 124, 1925 };
 		monsters[roomID][12].f3Position = monsters[roomID][12].SpawnPos.load();
 		monsters[roomID][12].Rotate(-90.0f, 0.0f, 0.0f);
 		monsters[roomID][12].state = 1;
 
 
 		monsters[roomID][13].type = MonsterType::Metalon;
-		monsters[roomID][13].SpawnPos = XMFLOAT3{ 2288, 124, 3973 };
+		monsters[roomID][13].SpawnPos = XMFLOAT3{ 2288, 124, 1925 };
 		monsters[roomID][13].f3Position = monsters[roomID][13].SpawnPos.load();
 		monsters[roomID][13].Rotate(-90.0f, 0.0f, 0.0f);
 		monsters[roomID][13].state = 1;
 
 		monsters[roomID][14].type = MonsterType::Metalon;
-		monsters[roomID][14].SpawnPos = XMFLOAT3{ 3058, 124, 2123 };
+		monsters[roomID][14].SpawnPos = XMFLOAT3{ 3058, 124, 75 };
 		monsters[roomID][14].f3Position = monsters[roomID][14].SpawnPos.load();
 		monsters[roomID][14].Rotate(-90.0f, 0.0f, 0.0f);
 		monsters[roomID][14].state = 1;
