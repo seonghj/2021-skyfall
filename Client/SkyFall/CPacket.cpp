@@ -969,11 +969,7 @@ void CPacket::ProcessPacket(char* buf)
         cout << "player: " << p->target << " hp: " << m_pScene->m_ppGameObjects[p->target]->GetHp() << endl;
         //m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
 
-        m_pScene->m_ppGameObjects[p->target]->m_pSkinnedAnimationController->SetAllTrackDisable();
-        m_pScene->m_ppGameObjects[p->target]->m_pSkinnedAnimationController->SetTrackPosition(
-            8, 0);
-        m_pScene->m_ppGameObjects[p->target]->m_pSkinnedAnimationController->SetTrackEnable(
-           8, true);
+        m_pScene->AnimatePlayer(p->target, 8);
         break;
     }
     }
