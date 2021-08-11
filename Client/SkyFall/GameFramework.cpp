@@ -979,7 +979,10 @@ void CGameFramework::CreateShaderVariables()
 	m_pd3dcbFog->Map(0, NULL, (void**)&m_pcbMappedFog);
 
 	m_pcbMappedFog->gcFogColor = XMFLOAT4(0.7f, 0.7f, 0.7f, 0.2f);
-	m_pcbMappedFog->gvFogParameter = XMFLOAT4(EXP_FOG, 1.f, 300.f, 0.001f);
+	m_pcbMappedFog->gvFogParameter = XMFLOAT4(LINEAR_FOG, 5.f, 200.f, 0.1f);
+
+	// 임시
+	m_pcbMappedFog->gvFogPos = XMFLOAT2(5000, 1000);
 }
 
 void CGameFramework::UpdateShaderVariables()

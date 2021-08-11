@@ -705,7 +705,8 @@ void CPacket::ProcessPacket(char* buf)
 
     case PacketType::SC_cloud_move: {
         cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(buf);
-        m_pFramework->SetCloud(p->x, p->z);
+        //m_pFramework->SetCloud(p->x, p->z);
+        m_pFramework->SetCloud(5000,1000);
         //printf("key: %d cloud move x = %f, z = %f\n",p->roomid, p->x, p->z);
         break;
     }

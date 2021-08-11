@@ -945,9 +945,13 @@ void CGameObject::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pC
 void CGameObject::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	if (!strcmp(m_pstrFrameName, "BoundingBox")) {
+		if (m_pSibling) m_pSibling->RenderShadow(pd3dCommandList, pCamera);
+		if (m_pChild) m_pChild->RenderShadow(pd3dCommandList, pCamera);
 		return;
 	}
-	if (!strcmp(m_pstrFrameName, "HpBar")) {
+	else if (!strcmp(m_pstrFrameName, "HpBar")) {
+		if (m_pSibling) m_pSibling->RenderShadow(pd3dCommandList, pCamera);
+		if (m_pChild) m_pChild->RenderShadow(pd3dCommandList, pCamera);
 		return;
 	}
 

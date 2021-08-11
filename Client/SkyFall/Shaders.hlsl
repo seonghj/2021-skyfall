@@ -53,10 +53,10 @@ float4 Fog(float4 cColor, float3 vPosition)
 	float fFogFactor = 0.f;
 	float fDistanceToFog = length(float2(vCameraPosition.x, vCameraPosition.z) - gvFogPos);
 	if (gvFogParameter.x == LINEAR_FOG) {
-		fFogFactor = (fDistanceToCamera - gvFogParameter.y) / gvFogParameter.z - 1.f;
+		fFogFactor = (fDistanceToCamera - gvFogParameter.y - fDistanceToFog / 3) / (gvFogParameter.z + fDistanceToFog);
 	}
 	else if (gvFogParameter.x == EXP_FOG) {
-		fFogFactor = 1.f - (1 / exp((fDistanceToCamera - fDistanceToFog) * gvFogParameter.w));
+		fFogFactor = 1.f - (1 / exp(fDistanceToCamera * gvFogParameter.w / fDistanceToFog));
 	}
 	else if (gvFogParameter.x == EXP2_FOG) {
 		fFogFactor = 1.f - (1 / exp2(fDistanceToCamera * gvFogParameter.w));
@@ -470,7 +470,7 @@ TextureCube gtxtSkyCubeTexture : register(t13);
 float4 PSSkyBox(VS_SKYBOX_CUBEMAP_OUTPUT input) : SV_TARGET
 {
 	float4 cColor = gtxtSkyCubeTexture.Sample(gssClamp, input.positionL);
-	cColor = Fog(cColor, float3(2000.f, 2000.f, 2000.f));
+	cColor = Fog(cColor, float3(1200.f, 1200.f, 1200.f));
 	return(cColor);
 }
 
