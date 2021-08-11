@@ -757,7 +757,7 @@ void CPacket::ProcessPacket(char* buf)
 
         if (p->target == client_key) {
             m_pPlayer->SetHp(p->PlayerLeftHp);
-            m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp);
+            m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
         }
 

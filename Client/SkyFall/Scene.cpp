@@ -142,12 +142,12 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	if (pMetalonModel)delete pMetalonModel;
 
 
-	m_nUIs = 0;
-	//m_ppUIObjects = new CUIObject * [m_nUIs];
-	//m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_Box.dds", 0.1, -1, 0.8, 0.35, 0.8);
-	//m_ppUIObjects[0]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
-	//m_ppUIObjects[0]->SetAlpha(0.8f);
-	//m_ppUIObjects[0]->SetvPercent(1.f);
+	m_nUIs = 1;
+	m_ppUIObjects = new CUIObject * [m_nUIs];
+	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_Box.dds", -0.98, -0.9, -0.9, 0.9, 0.8);
+	m_ppUIObjects[0]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	m_ppUIObjects[0]->SetAlpha(0.8f);
+	m_ppUIObjects[0]->SetvPercent(1.f);
 
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
@@ -698,19 +698,17 @@ void CScene::CheckCollision(CPacket* pPacket)
 	}
 	else if (m_iState == INGAME) {
 		for (auto& a : m_mPlayer) {
-			for (auto& b : m_mPlayer) {
-				XMFLOAT3 d = Vector3::Subtract(a->GetPosition(), b->GetPosition());
-				if (a != b && Vector3::Length(d)<100){
-					if (a->isCollide(b)) {
-						a->CPlayer::Move(Vector3::ScalarProduct(d, 50.f, true), true);
-					}
-				}
+			XMFLOAT3 d = Vector3::Subtract(m_pPlayer->GetPosition(), a->GetPosition());
+			if (m_pPlayer != a && Vector3::Length(d) < 100) {
+				// check attack& collision: m_pPlayer -> a
+				m_pPlayer->CheckCollision(a, false);
 			}
 		}
+
 		for (int i = 0; i < m_nGameObjects; ++i) {
 			if (m_ppGameObjects[i]->GetHp() > 0) {
 				if (m_pPlayer->CheckCollision(m_ppGameObjects[i])) {
-					m_ppUIObjects[0]->SetvPercent((float)m_pPlayer->m_iHp / (float)m_pPlayer->m_iMaxHp);
+					//m_ppUIObjects[0]->SetvPercent((float)m_pPlayer->m_iHp / (float)m_pPlayer->m_iMaxHp);
 				}
 				//m_ppUIObjects[0]->SetvPercent(m_pPlayer->GetHp() / m_pPlayer->m_iMaxHp);
 				//if (i == 0) {

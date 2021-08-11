@@ -598,7 +598,8 @@ VS_UI_OUTPUT VSUI(VS_UI_INPUT input)
 {
 	VS_UI_OUTPUT output;
 	output.position = float4(input.position, 1.f);
-	output.uv = input.uv;
+	output.uv = float2(input.uv.x, 1 - input.uv.y);
+	
 	//output.alpha = input.alpha;
 	return output;
 }
@@ -607,8 +608,8 @@ float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 {
 	float4 cColor = gtxtUI.Sample(gssWrap, input.uv);
 	cColor.a = gfAlpha;
-	if (input.uv.y > gfPercentV)
-		cColor = float4(0.3, 0.3, 0.3, 0.8);
+	if (1 - input.uv.y > gfPercentV)
+		cColor = float4(0.3, 0.3, 0.3, 0.5);
 
 	return cColor;
 }
