@@ -328,7 +328,7 @@ public:
 class CUIMesh : public CMesh
 {
 public:
-	CUIMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float left, float top, float right, float bottom,float alpha );
+	CUIMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float left, float bottom, float right, float top,float alpha );
 	virtual ~CUIMesh();
 
 };

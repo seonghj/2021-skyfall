@@ -36,7 +36,8 @@ CPlayer::CPlayer()
 	m_isStanding = true;
 	m_isAttack = false;
 
-	m_iHp = 100;
+	SetMaxHp(100);
+
 	m_iAtkStat = 10;
 	m_iDefStat = 0;
 	m_fHitCool = 1.f;
@@ -283,12 +284,11 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 
 
-bool CPlayer::CheckCollision(CGameObject* pObject)
+bool CPlayer::CheckCollision(CGameObject* pObject, bool isMonster)
 {
 	// Player - pObject
 	if (isCollide(pObject)) {
-
-		if (m_fHitCool <= 0) {
+		if (m_fHitCool <= 0 && isMonster) {
 			m_fHitCool = 1.f;
 			TakeDamage(pObject->GetAtkStat());
 			cout << "damage : "  << pObject->GetAtkStat() << endl;
@@ -753,7 +753,7 @@ void CBowPlayer::LButtonUp()
 }
 
 
-bool CBowPlayer::CheckCollision(CGameObject* pObject)
+bool CBowPlayer::CheckCollision(CGameObject* pObject, bool isMonster)
 {
 	// Bullet - pObject
 	if (m_ppBullets)
@@ -769,7 +769,7 @@ bool CBowPlayer::CheckCollision(CGameObject* pObject)
 		}
 
 	// Player - pObject
-	return CPlayer::CheckCollision(pObject);
+	return CPlayer::CheckCollision(pObject,isMonster);
 }
 
 void CBowPlayer::Shot(float fTimeElapsed, float fSpeed)
@@ -1005,7 +1005,7 @@ void C1HswordPlayer::RButtonUp()
 }
 
 
-bool C1HswordPlayer::CheckCollision(CGameObject* pObject)
+bool C1HswordPlayer::CheckCollision(CGameObject* pObject, bool isMonster)
 {
 
 	if (m_isAttack&& m_bHit) {
@@ -1021,7 +1021,7 @@ bool C1HswordPlayer::CheckCollision(CGameObject* pObject)
 		}
 	}
 	// Player - pObject
-	return CPlayer::CheckCollision(pObject);
+	return CPlayer::CheckCollision(pObject, isMonster);
 }
 
 C2HswordPlayer::C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext)

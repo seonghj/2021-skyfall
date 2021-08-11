@@ -754,7 +754,7 @@ protected:
 	ID3D12Resource* m_pd3dcbUI = NULL;
 	CB_UI_INFO *m_pcbMappedUI = NULL;
 public:
-	CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName, float l, float t, float r, float b, float a);
+	CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName, float l, float b, float r, float t, float a);
 	~CUIObject();
 
 	float		 GetAlpha() { return m_pcbMappedUI->gfAlpha; }
