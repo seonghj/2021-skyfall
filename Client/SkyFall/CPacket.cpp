@@ -834,7 +834,7 @@ void CPacket::ProcessPacket(char* buf)
         m_pScene->AnimatePlayer(p->target, 8);
         if (p->target == client_key) {
             m_pPlayer->SetHp(p->PlayerLeftHp);
-            //m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp);
+            //m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
         }
 
@@ -887,8 +887,7 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_monster_damaged:{
         mon_damaged_packet* p = reinterpret_cast<mon_damaged_packet*>(buf);
-        m_pScene->m_ppGameObjects[p->target]->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp() - p->damage);
-
+        m_pScene->m_ppGameObjects[p->target]->SetHp(p->leftHp);
         cout << "Monster: " << p->target << " hp: " << m_pScene->m_ppGameObjects[p->target]->GetHp() << endl;
         m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
         if (m_pScene->m_ppGameObjects[p->target]->m_iHp > 0)
@@ -962,6 +961,13 @@ void CPacket::ProcessPacket(char* buf)
             }
         }
         CheckCollision(m_pScene->m_ppGameObjects[key]);
+        break;
+    }
+    case PacketType::SC_player_damage: {
+        mon_damaged_packet* p = reinterpret_cast<mon_damaged_packet*>(buf);
+        m_pScene->m_ppGameObjects[p->target]->SetHp(p->leftHp);
+        cout << "player: " << p->target << " hp: " << m_pScene->m_ppGameObjects[p->target]->GetHp() << endl;
+        m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
         break;
     }
     }

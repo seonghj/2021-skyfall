@@ -295,6 +295,7 @@ struct player_damage_packet : public Packet {
 	unsigned short damage;
 	short target;
 	short nAttack;
+	float leftHp;
 };
 
 struct player_stop_packet : public Packet {
@@ -345,6 +346,7 @@ struct mon_damaged_packet : public Packet {
 	unsigned short damage;
 	short target;
 	short nAttack;
+	float leftHp;
 };
 
 struct mon_respawn_packet : public Packet {

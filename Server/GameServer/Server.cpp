@@ -867,6 +867,7 @@ void Server::process_packet(int key, char* buf, int roomID)
             * (100 - m_pBot->monsters[p->roomid][target].def) / 100;
 
         m_pBot->monsters[p->roomid][target].hp = m_pBot->monsters[p->roomid][target].hp - p->damage;
+        p->leftHp = m_pBot->monsters[p->roomid][target].hp;
 
         if (m_pBot->monsters[p->roomid][target].hp <= 0) {
             m_pBot->monsters[p->roomid][target].state = 0;
@@ -879,7 +880,7 @@ void Server::process_packet(int key, char* buf, int roomID)
             m_pTimer->push_event(roomID, OE_gEvent, MON_SPAWN_TIME, reinterpret_cast<char*>(&e));
         }
 
-        send_packet_to_allplayers(p->roomid, reinterpret_cast<char*>(p));
+        send_packet_to_players(key, reinterpret_cast<char*>(p), p->roomid);
 
         //printf("%f\n", m_pBot->monsters[p->roomid][target].hp.load());
 
@@ -894,9 +895,14 @@ void Server::process_packet(int key, char* buf, int roomID)
         p->type = SC_player_damage;
         p->damage = (sessions[roomID][key].att * (1.f + p->nAttack / 4.f))
             * (100 - sessions[roomID][target].def) / 100;
-
         sessions[roomID][target].hp = sessions[roomID][target].hp - p->damage;
+        p->leftHp = sessions[roomID][target].hp;
 
+        if (sessions[roomID][key].hp <= 0) {
+            sessions[roomID][key].state = 0;
+        }
+
+        send_packet_to_players(key, reinterpret_cast<char*>(p), p->roomid);
         break;
     }
     }

@@ -762,7 +762,10 @@ bool CBowPlayer::CheckCollision(CGameObject* pObject, bool isMonster)
 				cout << "Bullet Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
 				DeleteBullet(i);
 				//pObject->TakeDamage(m_iAtkStat);
-				m_pPacket->Send_mon_damaged_packet(pObject->m_nkey, 3);
+				if (isMonster)
+					m_pPacket->Send_mon_damaged_packet(pObject->m_nkey, 3);
+				else
+					m_pPacket->Send_damage_to_player_packet(pObject->m_nkey, 3);
 			}
 			if(m_ppBullets[i]->GetPosition().y<=0)
 				DeleteBullet(i--);
@@ -1012,7 +1015,10 @@ bool C1HswordPlayer::CheckCollision(CGameObject* pObject, bool isMonster)
 		if (pObject->isCollide(pWeapon)) {
 			//pObject->TakeDamage(m_iAtkStat * (1.f + m_nAttack / 4.f));
 			//cout << "Sword Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
-			m_pPacket->Send_mon_damaged_packet(pObject->m_nkey, m_nAttack);
+			if (isMonster)
+				m_pPacket->Send_mon_damaged_packet(pObject->m_nkey, m_nAttack);
+			else
+				m_pPacket->Send_damage_to_player_packet(pObject->m_nkey, m_nAttack);
 			m_bHit = false;
 
 			pObject->SetBehaviorActivate(true);

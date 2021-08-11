@@ -17,7 +17,7 @@ constexpr int MAP_SIZE = 6144;
 constexpr int MAP_BLOCK_SIZE = 2048;
 constexpr int MAP_BREAK_TIME = 100000;
 
-constexpr int MON_SPAWN_TIME = 30000;
+constexpr int MON_SPAWN_TIME = 10000;
 
 constexpr float VIEWING_DISTANCE = 1000.f;
 
@@ -295,6 +295,7 @@ struct player_damage_packet : public Packet {
 	unsigned short damage;
 	short target;
 	short nAttack;
+	float leftHp;
 };
 
 struct player_stop_packet : public Packet {
@@ -345,6 +346,7 @@ struct mon_damaged_packet : public Packet {
 	unsigned short damage;
 	short target;
 	short nAttack;
+	float leftHp;
 };
 
 struct mon_respawn_packet : public Packet {
