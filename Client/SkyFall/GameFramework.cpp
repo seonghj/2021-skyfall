@@ -54,7 +54,6 @@ bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 	m_hInstance = hInstance;
 	m_hWnd = hMainWnd;
 
-
 	CreateDirect3DDevice();
 	CreateCommandQueueAndList();
 	CreateRtvAndDsvDescriptorHeaps();
@@ -64,6 +63,7 @@ bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 	CoInitialize(NULL);
 
 	BuildObjects();
+	CreateFontAndGui();
 
 	return(true);
 }
@@ -502,6 +502,43 @@ void CGameFramework::CheckCollision()
 	//m_pScene->CheckTarget();
 }
 
+void CGameFramework::CreateFontAndGui()
+{
+	{
+		m_graphicsMemory = make_unique<GraphicsMemory>(m_pd3dDevice);
+		m_resourceDescriptors = make_unique<DescriptorHeap>(m_pd3dDevice, Descriptors::Count);
+
+		ResourceUploadBatch resourceUpload(m_pd3dDevice);
+		resourceUpload.Begin();
+
+		DXGI_SWAP_CHAIN_DESC dxgiSwapChainDesc;
+		m_pdxgiSwapChain->GetDesc(&dxgiSwapChainDesc);
+
+		RenderTargetState rtState(&dxgiSwapChainDesc, dxgiSwapChainDesc.BufferDesc.Format);
+		{
+			SpriteBatchPipelineStateDescription pd(rtState);
+			D3D12_VIEWPORT vp = m_pCamera->GetViewport();
+			m_pSprite = make_unique<SpriteBatch>(m_pd3dDevice, resourceUpload, pd, &vp);
+		}
+		m_pFont = make_unique<SpriteFont>(m_pd3dDevice, resourceUpload,
+			L"Fonts\\SegoeUI_18.spritefont",
+			m_resourceDescriptors->GetCpuHandle(Descriptors::ImGui),
+			m_resourceDescriptors->GetGpuHandle(Descriptors::ImGui));
+		auto uploadResourcesFinished = resourceUpload.End(m_pd3dCommandQueue);
+		WaitForGpuComplete();
+		uploadResourcesFinished.wait();
+	}
+
+	//Setup ImGui
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::StyleColorsDark();
+	ImGui_ImplWin32_Init(m_hWnd);
+	ImGui_ImplDX12_Init(m_pd3dDevice, 2, DXGI_FORMAT_R8G8B8A8_UNORM, m_resourceDescriptors->Heap(),
+		m_resourceDescriptors->GetCpuHandle(Descriptors::SegoeFont), m_resourceDescriptors->GetGpuHandle(Descriptors::SegoeFont));
+}
+
 void CGameFramework::OnDestroy()
 {
 	ReleaseObjects();
@@ -575,30 +612,8 @@ void CGameFramework::BuildObjects()
 	m_pPacket->m_pPlayer = m_pPlayer;
 	m_pPacket->m_pMap = m_pScene->m_pMap;
 
-	{
-		m_graphicsMemory = make_unique<GraphicsMemory>(m_pd3dDevice);
-		m_resourceDescriptors = make_unique<DescriptorHeap>(m_pd3dDevice, Descriptors::Count);
 
-		ResourceUploadBatch resourceUpload(m_pd3dDevice);
-		resourceUpload.Begin();
-
-		DXGI_SWAP_CHAIN_DESC dxgiSwapChainDesc;
-		m_pdxgiSwapChain->GetDesc(&dxgiSwapChainDesc);
-
-		RenderTargetState rtState(&dxgiSwapChainDesc,dxgiSwapChainDesc.BufferDesc.Format);
-		{
-			SpriteBatchPipelineStateDescription pd(rtState);
-			D3D12_VIEWPORT vp = m_pCamera->GetViewport();
-			m_pSpriteBatch = make_unique<SpriteBatch>(m_pd3dDevice, resourceUpload, pd, &vp);
-		}
-		m_pSpriteFont = make_unique<SpriteFont>(m_pd3dDevice,resourceUpload,
-			L"Fonts\\SegoeUI_18.spritefont",
-			m_resourceDescriptors->GetCpuHandle(Descriptors::SegoeFont),
-			m_resourceDescriptors->GetGpuHandle(Descriptors::SegoeFont));
-		auto uploadResourcesFinished = resourceUpload.End(m_pd3dCommandQueue);
-		WaitForGpuComplete();
-		uploadResourcesFinished.wait();
-	}
+	
 
 
 	m_pd3dCommandList->Close();
@@ -904,10 +919,21 @@ void CGameFramework::FrameAdvance()
 	m_pd3dCommandList->SetDescriptorHeaps(1, &heaps);
 	
 	PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
-	m_pSpriteBatch->Begin(m_pd3dCommandList);
-	m_pSpriteFont->DrawString(m_pSpriteBatch.get(), L"Sample String", XMFLOAT2(100, 10));
-	m_pSpriteBatch->End();
+	m_pSprite->Begin(m_pd3dCommandList);
+	m_pFont->DrawString(m_pSprite.get(), L"Sample String", XMFLOAT2(100, 10));
+	m_pSprite->End();
 	PIXEndEvent(m_pd3dCommandQueue);
+
+	// Start the Dear ImGui frame
+	ImGui_ImplDX12_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	ImGui::Begin("Test");
+	ImGui::End();
+	ImGui::Render();
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_pd3dCommandList);
+
 
 #ifdef _WITH_PLAYER_TOP
 	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);

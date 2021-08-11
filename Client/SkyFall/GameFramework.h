@@ -148,16 +148,21 @@ private:
 	DWORD						dwDirection = 0;
 	BOOL						PressDirButton = false;
 
+	//Font
 	queue<unsigned char>		m_charBuffer;
-	unique_ptr<SpriteBatch>		m_pSpriteBatch;
-	unique_ptr<SpriteFont>		m_pSpriteFont;
+	unique_ptr<SpriteBatch>		m_pSprite;
+	unique_ptr<SpriteFont>		m_pFont;
 	unique_ptr<DescriptorHeap> m_resourceDescriptors;
 	unique_ptr<GraphicsMemory> m_graphicsMemory;
 
 	enum Descriptors
 	{
 		SegoeFont,
+		ImGui,
 		Count = 256
 	};
+
+	//imgui
+	void CreateFontAndGui();
 };
 
