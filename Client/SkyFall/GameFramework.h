@@ -147,6 +147,17 @@ private:
 
 	DWORD						dwDirection = 0;
 	BOOL						PressDirButton = false;
+
 	queue<unsigned char>		m_charBuffer;
+	unique_ptr<SpriteBatch>		m_pSpriteBatch;
+	unique_ptr<SpriteFont>		m_pSpriteFont;
+	unique_ptr<DescriptorHeap> m_resourceDescriptors;
+	unique_ptr<GraphicsMemory> m_graphicsMemory;
+
+	enum Descriptors
+	{
+		SegoeFont,
+		Count = 256
+	};
 };
 

@@ -54,6 +54,7 @@ bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 	m_hInstance = hInstance;
 	m_hWnd = hMainWnd;
 
+
 	CreateDirect3DDevice();
 	CreateCommandQueueAndList();
 	CreateRtvAndDsvDescriptorHeaps();
@@ -574,6 +575,32 @@ void CGameFramework::BuildObjects()
 	m_pPacket->m_pPlayer = m_pPlayer;
 	m_pPacket->m_pMap = m_pScene->m_pMap;
 
+	{
+		m_graphicsMemory = make_unique<GraphicsMemory>(m_pd3dDevice);
+		m_resourceDescriptors = make_unique<DescriptorHeap>(m_pd3dDevice, Descriptors::Count);
+
+		ResourceUploadBatch resourceUpload(m_pd3dDevice);
+		resourceUpload.Begin();
+
+		DXGI_SWAP_CHAIN_DESC dxgiSwapChainDesc;
+		m_pdxgiSwapChain->GetDesc(&dxgiSwapChainDesc);
+
+		RenderTargetState rtState(&dxgiSwapChainDesc,dxgiSwapChainDesc.BufferDesc.Format);
+		{
+			SpriteBatchPipelineStateDescription pd(rtState);
+			D3D12_VIEWPORT vp = m_pCamera->GetViewport();
+			m_pSpriteBatch = make_unique<SpriteBatch>(m_pd3dDevice, resourceUpload, pd, &vp);
+		}
+		m_pSpriteFont = make_unique<SpriteFont>(m_pd3dDevice,resourceUpload,
+			L"Fonts\\SegoeUI_18.spritefont",
+			m_resourceDescriptors->GetCpuHandle(Descriptors::SegoeFont),
+			m_resourceDescriptors->GetGpuHandle(Descriptors::SegoeFont));
+		auto uploadResourcesFinished = resourceUpload.End(m_pd3dCommandQueue);
+		WaitForGpuComplete();
+		uploadResourcesFinished.wait();
+	}
+
+
 	m_pd3dCommandList->Close();
 	ID3D12CommandList* ppd3dCommandLists[] = { m_pd3dCommandList };
 	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
@@ -873,6 +900,15 @@ void CGameFramework::FrameAdvance()
 	m_pShadowMap->UpdateShaderVariables(m_pd3dCommandList);
 	if (m_pScene) m_pScene->Render(m_pd3dCommandList, m_pCamera);
 
+	ID3D12DescriptorHeap* heaps = m_resourceDescriptors->Heap();
+	m_pd3dCommandList->SetDescriptorHeaps(1, &heaps);
+	
+	PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
+	m_pSpriteBatch->Begin(m_pd3dCommandList);
+	m_pSpriteFont->DrawString(m_pSpriteBatch.get(), L"Sample String", XMFLOAT2(100, 10));
+	m_pSpriteBatch->End();
+	PIXEndEvent(m_pd3dCommandQueue);
+
 #ifdef _WITH_PLAYER_TOP
 	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
 #endif
@@ -904,7 +940,10 @@ void CGameFramework::FrameAdvance()
 #ifdef _WITH_SYNCH_SWAPCHAIN
 	m_pdxgiSwapChain->Present(1, 0);
 #else
+	PIXBeginEvent(m_pd3dCommandQueue, PIX_COLOR_DEFAULT, L"Present");
 	m_pdxgiSwapChain->Present(0, 0);
+	m_graphicsMemory->Commit(m_pd3dCommandQueue);
+	PIXEndEvent(m_pd3dCommandQueue);
 #endif
 #endif
 

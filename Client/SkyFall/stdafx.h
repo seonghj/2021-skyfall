@@ -43,6 +43,10 @@ using namespace std;
 #include <DirectXCollision.h>
 #include <SpriteBatch.h>
 #include <SpriteFont.h>
+#include <ResourceUploadBatch.h>
+#include <DescriptorHeap.h>
+#include <pix.h>
+//#include <pix_win.h>
 #include <Mmsystem.h>
 
 #ifdef _DEBUG
