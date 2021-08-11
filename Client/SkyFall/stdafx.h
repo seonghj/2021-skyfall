@@ -41,7 +41,8 @@ using namespace std;
 #include <DirectXPackedVector.h>
 #include <DirectXColors.h>
 #include <DirectXCollision.h>
-
+#include <SpriteBatch.h>
+#include <SpriteFont.h>
 #include <Mmsystem.h>
 
 #ifdef _DEBUG
@@ -78,7 +79,7 @@ extern bool								gbShowBoundingBox;
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
-
+#pragma comment(lib,"DirectXTK12.lib")
 #pragma comment(lib, "dxguid.lib")
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
