@@ -1009,9 +1009,11 @@ bool C1HswordPlayer::CheckCollision(CGameObject* pObject, bool isMonster)
 			cout << "Sword Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
 			m_bHit = false;
 
-			pObject->SetBehaviorActivate(true);
-			cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
-			pObject->FindFrame("HpBar")->m_bActive = true;
+			if (isMonster) {
+				pObject->SetBehaviorActivate(true);
+				cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
+				pObject->FindFrame("HpBar")->m_bActive = true;
+			}
 		}
 	}
 	// Player - pObject
