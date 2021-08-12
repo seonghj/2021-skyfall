@@ -976,9 +976,8 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
      // Lobby
     case PacketType::SC_select_room: {
-        printf("tlqkf\n");
         room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
-        CreateRoom(p->room);
+        CreateRoom(p->roomid);
         break;
     }
     }
