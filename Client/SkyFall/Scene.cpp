@@ -1128,8 +1128,6 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	}
 	else if (m_iState == SCENE::END)
 	{
-		printf("렌더까지는 들어왔다.\n");
-		m_ppUIObjects[2]->SetAlpha(1.0f);
 		m_ppUIObjects[2]->Render(pd3dCommandList, pCamera);
 	}
 }
