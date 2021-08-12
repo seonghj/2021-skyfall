@@ -470,6 +470,7 @@ TextureCube gtxtSkyCubeTexture : register(t13);
 float4 PSSkyBox(VS_SKYBOX_CUBEMAP_OUTPUT input) : SV_TARGET
 {
 	float4 cColor = gtxtSkyCubeTexture.Sample(gssClamp, input.positionL);
+	gvFogPos;
 	cColor = Fog(cColor, float3(1200.f, 1200.f, 1200.f));
 	return(cColor);
 }

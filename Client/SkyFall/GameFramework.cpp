@@ -120,7 +120,7 @@ void CGameFramework::CreateSwapChain()
 #endif
 	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
 
-	hResult = m_pdxgiFactory->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER);
+	hResult = m_pdxgiFactory->MakeWindowAssociation(m_hWnd,NULL /*DXGI_MWA_NO_ALT_ENTER*/);
 
 #ifndef _WITH_SWAPCHAIN_FULLSCREEN_STATE
 	CreateRenderTargetViews();
@@ -272,7 +272,7 @@ void CGameFramework::ChangeSwapChainState()
 {
 	WaitForGpuComplete();
 
-	BOOL bFullScreenState = FALSE;
+	BOOL bFullScreenState = TRUE;
 	m_pdxgiSwapChain->GetFullscreenState(&bFullScreenState, NULL);
 	m_pdxgiSwapChain->SetFullscreenState(!bFullScreenState, NULL);
 
@@ -361,7 +361,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
 	if (m_pScene) {
-		if (m_pScene->m_iState == SCENE::LOBBY) {
+		/*if (m_pScene->m_iState == SCENE::LOBBY) {
 			switch (nMessageID)
 			{
 			case WM_CHAR:
@@ -371,8 +371,8 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			}
 			return;
 		}
-		else
-			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
+		else*/
+		m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
 	}
 	switch (nMessageID)
 	{
@@ -929,8 +929,36 @@ void CGameFramework::FrameAdvance()
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
+	ImGui::Begin("Login", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+	ImGui::SetWindowSize(ImVec2(400, 90));
+	ImGui::SetWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2 - 200, FRAME_BUFFER_HEIGHT/2 - 45));
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+			{
+				ImGui::Text("Login for playing SkyFall");
+			}
 
-	ImGui::Begin("Test");
+			{
+				ImGui::SetCursorPosY(ImGui::GetTextLineHeight() + 20);
+				ImGui::Text("	  ID");
+				ImGui::SameLine();
+				ImGui::InputTextWithHint(" ", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank); //ImGuiInputTextFlags_::
+				ImGui::Text("Password");
+				ImGui::SameLine();
+				ImGui::InputTextWithHint("  ", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
+			}
+
+			ImGui::SameLine(0, 0);
+			if (ImGui::Button("Login")) {
+				// 여기서 서버에 로그인
+			}
+			ImGui::PopStyleVar();
+		}
+		ImGui::PopStyleVar();
+	}
+
 	ImGui::End();
 	ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_pd3dCommandList);
