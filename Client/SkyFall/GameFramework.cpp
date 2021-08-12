@@ -506,6 +506,126 @@ void CGameFramework::CheckCollision()
 	//m_pScene->CheckTarget();
 }
 
+void CGameFramework::ShowLoginWindow()
+{
+	ImGui::Begin("Login", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
+
+	{
+		ImGui::SetWindowSize(ImVec2(400, 100));
+		ImGui::SetWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2 - 200, FRAME_BUFFER_HEIGHT / 2 - 50));
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+			{
+				ImGui::Text("Login for playing SkyFall");
+			}
+
+			{
+				ImGui::SetCursorPosY(ImGui::GetTextLineHeight() + 20);
+				ImGui::Text("	  ID");
+				ImGui::SameLine();
+				ImGui::InputTextWithHint(" ", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank); //ImGuiInputTextFlags_::
+				ImGui::Text("Password");
+				ImGui::SameLine();
+				ImGui::InputTextWithHint("  ", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
+			}
+
+			ImGui::SetCursorPosX(80);
+			if (ImGui::Button("Login")) {
+				// 여기서 서버에 로그인
+				m_pPacket->Send_login_packet(m_bufID, m_bufPW);
+			}
+			ImGui::SameLine(0, 50);
+			if (ImGui::Button("Create Account")) {
+				// 여기서 회원가입 창 띄워서 거기서 아이디 비번 넣고 보내고 할거임
+			}
+			ImGui::PopStyleVar();
+		}
+		ImGui::PopStyleVar();
+	}
+
+	ImGui::End();
+}
+
+void CGameFramework::ShowLobbyWindow()
+{
+	ImGui::Begin("Lobby", false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+
+	{
+		ImGui::SetWindowSize(ImVec2(FRAME_BUFFER_WIDTH/2-10, FRAME_BUFFER_HEIGHT-100));
+		ImGui::SetWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2, 10));
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+
+			{
+				const char* rooms[] = { "Room1","Room2", "Room3" };
+				static int room_current_idx = 0;
+				ImGui::Text("Rooms");
+				if (ImGui::BeginListBox("##Room List", ImVec2(FRAME_BUFFER_WIDTH / 2 - 30, FRAME_BUFFER_HEIGHT / 2))) {
+					for (int n = 0; n < IM_ARRAYSIZE(rooms); n++)
+					{
+						const bool is_selected = (room_current_idx == n);
+						if (ImGui::Selectable(rooms[n], is_selected))
+							room_current_idx = n;
+
+						// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+						if (is_selected)
+							ImGui::SetItemDefaultFocus();
+					}
+
+					ImGui::EndListBox();
+				}
+			}
+
+			ImGui::SetCursorPosX(80);
+			if (ImGui::Button("Join")) {
+				// 여기서 방에 입장
+				// 임시로 state 변경해놓음
+				m_pScene->SetState(SCENE::INROOM);
+
+			}
+			ImGui::SameLine(0, 50);
+			if (ImGui::Button("Create Room")) {
+				// 여기서 새로운 방을 만듦
+			}
+			ImGui::PopStyleVar();
+		}
+		ImGui::PopStyleVar();
+	}
+
+	ImGui::End();
+}
+
+void CGameFramework::ShowRoomWindow()
+{
+	ImGui::Begin("Room", false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+
+			ImGui::SetCursorPosX(80);
+			if (ImGui::Button("Start")) {
+				// 여기서 게임 시작
+				// 모든 플레이어가 무기를 골랐다면, 시작 버튼을 누르면 게임 시작
+				// 임시로 state 변경해놓음
+				m_pScene->SetState(SCENE::INGAME);
+			}
+			ImGui::SameLine(0, 50);
+			if (ImGui::Button("Exit")) {
+				// 여기서 방을 나감
+				// 임시로 state 변경
+				m_pScene->SetState(SCENE::LOBBY);
+			}
+			ImGui::PopStyleVar();
+		}
+		ImGui::PopStyleVar();
+	}
+	ImGui::End();
+}
+
 void CGameFramework::CreateFontAndGui()
 {
 	{
@@ -928,7 +1048,7 @@ void CGameFramework::FrameAdvance()
 	
 	PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
 	m_pSprite->Begin(m_pd3dCommandList);
-	m_pFont->DrawString(m_pSprite.get(), L"Sample String", XMFLOAT2(100, 10));
+	m_pFont->DrawString(m_pSprite.get(), L"SKYFALL", XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 20));
 	m_pSprite->End();
 	PIXEndEvent(m_pd3dCommandQueue);
 
@@ -936,38 +1056,14 @@ void CGameFramework::FrameAdvance()
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-	ImGui::Begin("Login", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-	ImGui::SetWindowSize(ImVec2(400, 90));
-	ImGui::SetWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2 - 200, FRAME_BUFFER_HEIGHT/2 - 45));
-	{
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
-		{
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
-			{
-				ImGui::Text("Login for playing SkyFall");
-			}
-
-			{
-				ImGui::SetCursorPosY(ImGui::GetTextLineHeight() + 20);
-				ImGui::Text("	  ID");
-				ImGui::SameLine();
-				ImGui::InputTextWithHint(" ", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank); //ImGuiInputTextFlags_::
-				ImGui::Text("Password");
-				ImGui::SameLine();
-				ImGui::InputTextWithHint("  ", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
-			}
-
-			ImGui::SameLine(0, 0);
-			if (ImGui::Button("Login")) {
-				// 여기서 서버에 로그인
-				m_pPacket->Send_login_packet(m_bufID, m_bufPW);
-			}
-			ImGui::PopStyleVar();
-		}
-		ImGui::PopStyleVar();
-	}
-
-	ImGui::End();
+	
+	if (m_pScene->GetState() == SCENE::LOGIN)
+		ShowLoginWindow();
+	else if (m_pScene->GetState() == SCENE::LOBBY)
+		ShowLobbyWindow();
+	else if (m_pScene->GetState() == SCENE::INROOM)
+		ShowRoomWindow();
+	
 	ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_pd3dCommandList);
 
