@@ -127,19 +127,15 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 
 	CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
-	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 9, (void**)m_ppTerrain,4);
+	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 15, (void**)m_ppTerrain, 4);
 	if (pDragonModel)delete pDragonModel;
 	//printf(" x : %f / y : %f / z : %f\n", m_ppGameObjects[0]->GetUp().x, m_ppGameObjects[0]->GetUp().y, m_ppGameObjects[0]->GetUp().z);
 
-	CLoadedModelInfo* pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
 	m_ppGameObjects[1] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, (void**)m_ppTerrain, 4);
 	m_ppGameObjects[2] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, (void**)m_ppTerrain, 4);
 	m_ppGameObjects[2]->Move(XMFLOAT3(200, 0, 0), 1);
-	if (pWolfModel)delete pWolfModel;
 
-	CLoadedModelInfo* pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
 	m_ppGameObjects[3] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, (void**)m_ppTerrain,4);
-	if (pMetalonModel)delete pMetalonModel;
 
 
 	m_nUIs = 3;
@@ -159,7 +155,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_ppUIObjects[2]->SetAlpha(0.0f);
 	m_ppUIObjects[2]->SetvPercent(1.f); 
 
-	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
+	//m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	m_iState = SCENE::LOBBY;
