@@ -65,7 +65,7 @@ public:
 	void Set_m_pPacket(CPacket* t) { m_pPacket = t; };
 	void CheckCollision();
 	void SetCloud(float x, float z) { m_pcbMappedFog->gvFogPos = XMFLOAT2(x, z); }
-
+	void Restart();
 	void MouseHold(bool b) { m_bMouseHold = b; }
 	void ShowLoginWindow();
 	void ShowLobbyWindow();
