@@ -38,7 +38,7 @@ struct LIGHTS
 };
 
 enum SCENE {
-	LOBBY,INGAME,
+	LOBBY,INGAME,END
 };
 
 

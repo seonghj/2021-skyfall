@@ -760,7 +760,11 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
         }
-
+        if (m_pPlayer->GetHp() <= 0){
+            m_pScene->m_iState = SCENE::END;
+            m_pPlayer->SetPosition(XMFLOAT3(-3000.f, 0.f, -3000.f));
+            m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
+        }
         break;
     }
     case PacketType::SC_monster_add: {
