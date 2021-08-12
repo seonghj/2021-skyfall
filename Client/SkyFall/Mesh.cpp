@@ -781,6 +781,11 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 				m_d3dTangentBufferView.StrideInBytes = sizeof(XMFLOAT3);
 				m_d3dTangentBufferView.SizeInBytes = sizeof(XMFLOAT3) * nTangents;
 			}
+			else {
+				m_d3dTangentBufferView.BufferLocation = NULL;
+				m_d3dTangentBufferView.StrideInBytes = sizeof(XMFLOAT3);
+				m_d3dTangentBufferView.SizeInBytes = 0;
+			}
 		}
 		else if (!strcmp(pstrToken, "<BiTangents>:"))
 		{
@@ -798,6 +803,11 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 				m_d3dBiTangentBufferView.BufferLocation = m_pd3dBiTangentBuffer->GetGPUVirtualAddress();
 				m_d3dBiTangentBufferView.StrideInBytes = sizeof(XMFLOAT3);
 				m_d3dBiTangentBufferView.SizeInBytes = sizeof(XMFLOAT3) * nBiTangents;
+			}
+			else {
+				m_d3dBiTangentBufferView.BufferLocation = NULL;
+				m_d3dBiTangentBufferView.StrideInBytes = sizeof(XMFLOAT3);
+				m_d3dBiTangentBufferView.SizeInBytes = 0;
 			}
 		}
 		else if (!strcmp(pstrToken, "<Polygons>:"))

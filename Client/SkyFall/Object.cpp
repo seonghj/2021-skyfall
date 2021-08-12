@@ -1180,7 +1180,8 @@ CGameObject *CGameObject::LoadFrameHierarchyFromFile(ID3D12Device *pd3dDevice, I
 			::ZeroMemory(pstrToken, 64);
 			memcpy(pstrToken, str.c_str(), str.length());
 		}
-		memcpy(pGameObject->m_pstrFrameName, pstrToken, strlen(pstrToken));
+		
+		memcpy(pGameObject->m_pstrFrameName, pstrToken, sizeof(pstrToken));
 		TCHAR pstrDebug[256] = { 0 };
 		_stprintf_s(pstrDebug, 256, _T("FrameName: %hs\n"), pGameObject->m_pstrFrameName);
 		OutputDebugString(pstrDebug);
@@ -2375,8 +2376,8 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 
 	SetChild(pDragonModel->m_pModelRootObject, true);
 
-	m_nAnimations = nAnimationTracks;
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pDragonModel);
+	m_nAnimations = DragonState::AnimationCount;
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, m_nAnimations, pDragonModel);
 
 	strcpy_s(m_pstrFrameName, "Dragon");
 
@@ -2477,8 +2478,8 @@ CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 	
 	SetChild(pWolfModel->m_pModelRootObject, true);
 
-	m_nAnimations = nAnimationTracks;
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pWolfModel);
+	m_nAnimations = WolfState::AnimationCount;
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, m_nAnimations, pWolfModel);
 	strcpy_s(m_pstrFrameName, "Wolf");
 
 
@@ -2574,8 +2575,8 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 
 	SetChild(pMetalonModel->m_pModelRootObject, false);
 
-	m_nAnimations = nAnimationTracks;
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, nAnimationTracks, pMetalonModel);
+	m_nAnimations = MetalonState::AnimationCount;
+	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, m_nAnimations, pMetalonModel);
 
 	strcpy_s(m_pstrFrameName, "Metalon");
 

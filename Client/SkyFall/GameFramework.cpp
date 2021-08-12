@@ -40,6 +40,8 @@ CGameFramework::CGameFramework()
 	m_pPlayer = NULL;
 	m_pPacket = NULL;
 
+	m_bMouseHold = true;
+
 	m_ptOldCursorPos.x = FRAME_BUFFER_WIDTH / 2;
 	m_ptOldCursorPos.y = FRAME_BUFFER_HEIGHT / 2;
 	_tcscpy_s(m_pszFrameRate, _T("SkyFall ("));
@@ -468,6 +470,7 @@ void CGameFramework::OnProcessingKeyboardMessageForLogIn(HWND hWnd, UINT nMessag
 
 LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
+	if (m_pScene->GetState() == SCENE::LOGIN || m_pScene->GetState() == SCENE::ENDGAME) return(0);
 	switch (nMessageID)
 	{
 	case WM_ACTIVATE:
@@ -497,8 +500,48 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 
 void CGameFramework::CheckCollision()
 {
-	m_pScene->CheckCollision(m_pPacket);
+	if (m_pScene->GetState() != SCENE::LOGIN)
+		m_pScene->CheckCollision(m_pPacket);
 	//m_pScene->CheckTarget();
+}
+
+void CGameFramework::CreateFontAndGui()
+{
+	{
+		m_graphicsMemory = make_unique<GraphicsMemory>(m_pd3dDevice);
+		m_resourceDescriptors = make_unique<DescriptorHeap>(m_pd3dDevice, Descriptors::Count);
+
+		ResourceUploadBatch resourceUpload(m_pd3dDevice);
+		resourceUpload.Begin();
+
+		DXGI_SWAP_CHAIN_DESC dxgiSwapChainDesc;
+		m_pdxgiSwapChain->GetDesc(&dxgiSwapChainDesc);
+
+		RenderTargetState rtState(&dxgiSwapChainDesc, dxgiSwapChainDesc.BufferDesc.Format);
+		{
+			SpriteBatchPipelineStateDescription pd(rtState);
+			D3D12_VIEWPORT vp = m_pCamera->GetViewport();
+			m_pSprite = make_unique<SpriteBatch>(m_pd3dDevice, resourceUpload, pd, &vp);
+		}
+		m_pFont = make_unique<SpriteFont>(m_pd3dDevice, resourceUpload,
+			L"Fonts\\SegoeUI_18.spritefont",
+			m_resourceDescriptors->GetCpuHandle(Descriptors::SegoeFont),
+			m_resourceDescriptors->GetGpuHandle(Descriptors::SegoeFont));
+		auto uploadResourcesFinished = resourceUpload.End(m_pd3dCommandQueue);
+		WaitForGpuComplete();
+		uploadResourcesFinished.wait();
+	}
+
+	//Setup ImGui
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::StyleColorsDark();
+	ImGui_ImplWin32_Init(m_hWnd);
+	ImGui_ImplDX12_Init(m_pd3dDevice, 2, DXGI_FORMAT_R8G8B8A8_UNORM, m_resourceDescriptors->Heap(),
+		m_resourceDescriptors->GetCpuHandle(Descriptors::ImGui), m_resourceDescriptors->GetGpuHandle(Descriptors::ImGui));
+
+	m_pScene->SetState(SCENE::LOGIN);
 }
 
 void CGameFramework::OnDestroy()
@@ -605,6 +648,8 @@ void CGameFramework::ReleaseObjects()
 
 void CGameFramework::ProcessInput()
 {
+	if (m_pScene->GetState() == SCENE::LOGIN || m_pScene->GetState() == SCENE::ENDGAME) return;
+
 	float fTimeElapsed = m_GameTimer.GetTimeElapsed();
 	static UCHAR pKeysBuffer[256];
 	bool bProcessedByScene = true;
@@ -872,6 +917,54 @@ void CGameFramework::FrameAdvance()
 
 	m_pShadowMap->UpdateShaderVariables(m_pd3dCommandList);
 	if (m_pScene) m_pScene->Render(m_pd3dCommandList, m_pCamera);
+
+	ID3D12DescriptorHeap* heaps = m_resourceDescriptors->Heap();
+	m_pd3dCommandList->SetDescriptorHeaps(1, &heaps);
+	
+	PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
+	m_pSprite->Begin(m_pd3dCommandList);
+	m_pFont->DrawString(m_pSprite.get(), L"Sample String", XMFLOAT2(100, 10));
+	m_pSprite->End();
+	PIXEndEvent(m_pd3dCommandQueue);
+
+	// Start the Dear ImGui frame
+	ImGui_ImplDX12_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+	ImGui::Begin("Login", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+	ImGui::SetWindowSize(ImVec2(400, 90));
+	ImGui::SetWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2 - 200, FRAME_BUFFER_HEIGHT/2 - 45));
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+			{
+				ImGui::Text("Login for playing SkyFall");
+			}
+
+			{
+				ImGui::SetCursorPosY(ImGui::GetTextLineHeight() + 20);
+				ImGui::Text("	  ID");
+				ImGui::SameLine();
+				ImGui::InputTextWithHint(" ", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank); //ImGuiInputTextFlags_::
+				ImGui::Text("Password");
+				ImGui::SameLine();
+				ImGui::InputTextWithHint("  ", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
+			}
+
+			ImGui::SameLine(0, 0);
+			if (ImGui::Button("Login")) {
+				// 여기서 서버에 로그인
+				m_pPacket->Send_login_packet(m_bufID, m_bufPW);
+			}
+			ImGui::PopStyleVar();
+		}
+		ImGui::PopStyleVar();
+	}
+
+	ImGui::End();
+	ImGui::Render();
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_pd3dCommandList);
 
 
 #ifdef _WITH_PLAYER_TOP
