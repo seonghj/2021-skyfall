@@ -643,17 +643,19 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-enum MonsterState {
-	Idle, Die, TakeDamage, Move = 0
-};
+
 class CMonster : public CGameObject
 {
 protected:
 	int m_nAnimations;
 
-	const int nMonster_Idle = 0;
-	const int nMonster_Die = 1;
-	const int nMonster_TakeDamage = 2;
+	enum MonsterState {
+		Idle,
+		Die,
+		Take_Damage,
+		Walk,
+		Run,
+	};
 
 	int m_iState;
 	LPVOID* m_ppUpdatedContext = NULL;

@@ -41,8 +41,17 @@ using namespace std;
 #include <DirectXPackedVector.h>
 #include <DirectXColors.h>
 #include <DirectXCollision.h>
+
 #include <SpriteBatch.h>
 #include <SpriteFont.h>
+#include <ResourceUploadBatch.h>
+#include <DescriptorHeap.h>
+#include <pix.h>
+
+#include "imgui.h"
+#include "imgui_impl_dx12.h"
+#include "imgui_impl_win32.h"
+
 #include <Mmsystem.h>
 
 #ifdef _DEBUG

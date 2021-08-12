@@ -172,15 +172,17 @@ protected:
 	CGameObject* pWeapon;
 
 #endif
-	const int nBasic_Idle = 0;
-	const int nBasic_Death = 1;
-	const int nBasic_Jump = 2;
-	const int nBasic_Walk = 3;
-	const int nBasic_Run = 4;
-	const int nBasic_RunBack = 5;
-	const int nBasic_RunLeft = 7;
-	const int nBasic_RunRight = 6;
-	const int nBasic_TakeDamage = 8;
+	enum PlayerState {
+		Idle = 0,
+		Death,
+		Jump,
+		Walk,
+		Run,
+		RunBack,
+		RunLeft,
+		RunRight,
+		Take_Damage,
+	};
 };
 
 

@@ -20,7 +20,7 @@ TCHAR							szWindowClass[MAX_LOADSTRING];
 CGameFramework					gGameFramework;
 CPacket*						gCPacket = new CPacket;
 
-wchar_t id[10], address[20];
+wchar_t address[20];
 
 std::thread						Connect_thread;
 
@@ -63,9 +63,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	str[size] = '\0';
 	gCPacket->Set_IP(str);
 
-	wcstombs_s(&size, str, sizeof(str), id, sizeof(id));
+	/*wcstombs_s(&size, str, sizeof(str), id, sizeof(id));
 	str[size] = '\0';
-	gCPacket->Set_UserID(str);
+	gCPacket->Set_UserID(str);*/
 
 	while (1)
 	{
@@ -136,8 +136,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	return(TRUE);
 }
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+		return true;
+
 	int wmId, wmEvent;
 	PAINTSTRUCT ps;
 	HDC hdc;
@@ -193,7 +197,6 @@ INT_PTR CALLBACK Login(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
 		{
-			GetDlgItemText(hDlg, IDC_EDIT_ID,id,10);
 			GetDlgItemText(hDlg, IDC_EDIT_ADDRESS,address,20);
 			::EndDialog(hDlg, LOWORD(wParam));
 			return((INT_PTR)TRUE);

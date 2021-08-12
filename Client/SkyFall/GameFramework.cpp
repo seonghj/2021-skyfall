@@ -65,6 +65,7 @@ bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 	CoInitialize(NULL);
 
 	BuildObjects();
+	CreateFontAndGui();
 
 	return(true);
 }
@@ -121,7 +122,7 @@ void CGameFramework::CreateSwapChain()
 #endif
 	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
 
-	hResult = m_pdxgiFactory->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER);
+	hResult = m_pdxgiFactory->MakeWindowAssociation(m_hWnd,NULL /*DXGI_MWA_NO_ALT_ENTER*/);
 
 #ifndef _WITH_SWAPCHAIN_FULLSCREEN_STATE
 	CreateRenderTargetViews();
@@ -273,7 +274,7 @@ void CGameFramework::ChangeSwapChainState()
 {
 	WaitForGpuComplete();
 
-	BOOL bFullScreenState = FALSE;
+	BOOL bFullScreenState = TRUE;
 	m_pdxgiSwapChain->GetFullscreenState(&bFullScreenState, NULL);
 	m_pdxgiSwapChain->SetFullscreenState(!bFullScreenState, NULL);
 
@@ -362,7 +363,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
 	if (m_pScene) {
-		if (m_pScene->m_iState == SCENE::LOBBY) {
+		/*if (m_pScene->m_iState == SCENE::LOBBY) {
 			switch (nMessageID)
 			{
 			case WM_CHAR:
@@ -372,8 +373,8 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			}
 			return;
 		}
-		else
-			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
+		else*/
+		m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
 	}
 	switch (nMessageID)
 	{
@@ -616,6 +617,10 @@ void CGameFramework::BuildObjects()
 	m_pPacket->m_pFramework = this;
 	m_pPacket->m_pPlayer = m_pPlayer;
 	m_pPacket->m_pMap = m_pScene->m_pMap;
+
+
+	
+
 
 	m_pd3dCommandList->Close();
 	ID3D12CommandList* ppd3dCommandLists[] = { m_pd3dCommandList };
@@ -998,7 +1003,10 @@ void CGameFramework::FrameAdvance()
 #ifdef _WITH_SYNCH_SWAPCHAIN
 	m_pdxgiSwapChain->Present(1, 0);
 #else
+	PIXBeginEvent(m_pd3dCommandQueue, PIX_COLOR_DEFAULT, L"Present");
 	m_pdxgiSwapChain->Present(0, 0);
+	m_graphicsMemory->Commit(m_pd3dCommandQueue);
+	PIXEndEvent(m_pd3dCommandQueue);
 #endif
 #endif
 
