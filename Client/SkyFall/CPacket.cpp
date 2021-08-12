@@ -178,7 +178,7 @@ void CPacket::Send_stop_packet()
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
-void CPacket::Send_login_packet(char* id)
+void CPacket::Send_login_packet(char* id, char* pw)
 {
     player_login_packet p;
     p.key = client_key;
@@ -186,6 +186,7 @@ void CPacket::Send_login_packet(char* id)
     p.type = PacketType::CS_player_login;
     p.roomid = roomID;
     strcpy_s(p.id, id);
+    strcpy_s(p.pw, pw);
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
@@ -523,8 +524,6 @@ void CPacket::ProcessPacket(char* buf)
         //m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
 
         m_pFramework->m_pCamera = m_pPlayer->GetCamera();
-
-        Send_login_packet(userID);
         break;
     }
     case PacketType::SC_player_loginFail: {
@@ -544,6 +543,8 @@ void CPacket::ProcessPacket(char* buf)
             printf("Login game\n");
             canmove = TRUE;
             m_pPlayer->m_pPacket = this;
+            m_pScene->m_iState = SCENE::LOBBY;
+            m_pFramework->MouseHold(true);
         }
         break;
     }

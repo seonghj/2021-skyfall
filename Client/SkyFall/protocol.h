@@ -181,6 +181,7 @@ struct player_key_packet :public Packet {
 
 struct player_login_packet :public Packet {
 	char id[50];
+	char pw[50];
 };
 
 struct player_loginOK_packet :public Packet {

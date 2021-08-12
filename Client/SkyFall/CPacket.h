@@ -39,7 +39,7 @@ public:
 	void Send_ready_packet(PlayerType t);
 	void Send_attack_packet(int type);
 	void Send_stop_packet();
-	void Send_login_packet(char* id);
+	void Send_login_packet(char* id, char* pw);
 	void Send_swap_weapon_packet(PlayerType weapon);
 	void Send_damage_to_player_packet(int target, int nAttack);
 	void Send_mon_damaged_packet(int target, int nAttack);

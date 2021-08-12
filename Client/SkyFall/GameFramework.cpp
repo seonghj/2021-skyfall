@@ -953,6 +953,7 @@ void CGameFramework::FrameAdvance()
 	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 100);
 	if (ImGui::Button("Login")) {
 		// 여기서 서버에 로그인
+		m_pPacket->Send_login_packet(m_bufID, m_bufPW);
 	}
 	ImGui::End();
 	ImGui::Render();

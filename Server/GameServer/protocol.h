@@ -9,13 +9,13 @@ constexpr int MAX_CLIENT = 3000;
 constexpr int MAX_PLAYER = 20;
 constexpr int INVALIDID = -1;
 constexpr int LOBBY_ID = 0;
-constexpr int GAMESERVER_ID = 0; 
+constexpr int GAMESERVER_ID = 0;
 constexpr int AI_ID = 5000;
 
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 6144;
 constexpr int MAP_BLOCK_SIZE = 2048;
-constexpr int MAP_BREAK_TIME = 900000;
+constexpr int MAP_BREAK_TIME = 100000;
 
 constexpr int MON_SPAWN_TIME = 10000;
 
@@ -181,6 +181,7 @@ struct player_key_packet :public Packet {
 
 struct player_login_packet :public Packet {
 	char id[50];
+	char pw[50];
 };
 
 struct player_loginOK_packet :public Packet {
