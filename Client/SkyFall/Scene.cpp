@@ -4,7 +4,7 @@
 
 #include "stdafx.h"
 #include "Scene.h"
-#include "protocol.h"
+//#include "protocol.h"
 #include "CPacket.h"
 
 ID3D12DescriptorHeap *CScene::m_pd3dCbvSrvDescriptorHeap = NULL;
@@ -94,6 +94,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	XMFLOAT3 xmf3Scale(8.0f, 4.0f, 8.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.3f, 0.0f, 0.0f);
+
 	//m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Desert.raw"), 257, 257, xmf3Scale, xmf4Color, 0);
 	//m_pForestTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Forest.raw"), 257, 257, xmf3Scale, xmf4Color, 1);
 	//m_pSnowTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Snow.raw"), 257, 257, xmf3Scale, xmf4Color, 2);
@@ -111,7 +112,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 		}
 		else if (i >= 3 && i < 6)
 		{
-			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Forest_0807.raw"), 257, 257, xmf3Scale, xmf4Color, 1);
+			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Forest.raw"), 257, 257, xmf3Scale, xmf4Color, 1);
 		}
 		else if (i >= 6)
 		{
@@ -122,43 +123,32 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 		if (i >= 6) m_ppTerrain[i]->MoveUp(125.f);
 	}
 
-	m_nGameObjects = 4;
+	m_nGameObjects = 15;
 	m_ppGameObjects = new CMonster * [m_nGameObjects];
 
+	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 9, (void**)m_ppTerrain,4);
+	m_ppGameObjects[0]->m_nkey = 0;
+	for (int i = 1; i < 8; ++i) {
+		m_ppGameObjects[i] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, (void**)m_ppTerrain, 4);
+		m_ppGameObjects[i]->m_nkey = i;
+	}
+	
+	for (int i = 8; i < m_nGameObjects; ++i) {
+		m_ppGameObjects[i] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, (void**)m_ppTerrain, 4);
+		m_ppGameObjects[i]->m_nkey = i;
+	}
 
-	CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
-	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 15, (void**)m_ppTerrain, 4);
-	if (pDragonModel)delete pDragonModel;
-	//printf(" x : %f / y : %f / z : %f\n", m_ppGameObjects[0]->GetUp().x, m_ppGameObjects[0]->GetUp().y, m_ppGameObjects[0]->GetUp().z);
 
-	m_ppGameObjects[1] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, (void**)m_ppTerrain, 4);
-	m_ppGameObjects[2] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, (void**)m_ppTerrain, 4);
-	m_ppGameObjects[2]->Move(XMFLOAT3(200, 0, 0), 1);
-
-	m_ppGameObjects[3] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, (void**)m_ppTerrain,4);
-
-
-	m_nUIs = 3;
+	m_nUIs = 1;
 	m_ppUIObjects = new CUIObject * [m_nUIs];
-	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_FILL.dds", -0.93, -0.8, -0.85, 0.9, 0.8);
+	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_Box.dds", -0.98, -0.9, -0.9, 0.9, 0.8);
 	m_ppUIObjects[0]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	m_ppUIObjects[0]->SetAlpha(0.8f);
 	m_ppUIObjects[0]->SetvPercent(1.f);
 
-	m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_BOX.dds", -0.98, -0.95, -0.80, -0.8, 0.8);
-	m_ppUIObjects[1]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
-	m_ppUIObjects[1]->SetAlpha(0.8f);
-	m_ppUIObjects[1]->SetvPercent(1.f);
-
-	m_ppUIObjects[2] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
-	m_ppUIObjects[2]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
-	m_ppUIObjects[2]->SetAlpha(0.0f);
-	m_ppUIObjects[2]->SetvPercent(1.f); 
-
-	//m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
+	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
-	m_iState = SCENE::LOBBY;
 }
 
 void CScene::AddWeapon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
@@ -216,6 +206,7 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		m_m2HswordPlayer[i] = new C2HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p2HSwordModel, (void**)m_ppTerrain);
 		m_m2HspearPlayer[i] = new C2HspearPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p2HSpearModel, (void**)m_ppTerrain);
 		m_mPlayer[i] = m_m1HswordPlayer[i];
+		m_mPlayer[i]->m_nkey = i;
 		//m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, 124.0f, 650.0f));
 		//MovePlayer(i, XMFLOAT3(80.0f, 0.0f, 0.0f));
 	}	
@@ -296,6 +287,7 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		//cout << "3" << endl;
 		break;
 	case 8:
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(8, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(8, true);
 		//cout << "6" << endl;
@@ -679,10 +671,7 @@ void CScene::CheckCollision(CPacket* pPacket)
 	if (m_pMap)
 		m_pMap->CheckCollision(m_pPlayer);
 
-	m_ppGameObjects[1]->SetPosition(5048, 200, 1300);
-	m_ppGameObjects[2]->SetPosition(5248, 200, 1300);
-
-	if (m_iState == LOBBY) {
+	if (m_iState == INROOM) {
 		for (int i = 0; i < 4; ++i) {
 			CGameObject* pHpBar = m_ppWeapons[i]->FindFrame("HpBar");
 			if (m_ppWeapons[i]->isCollide(m_pPlayer)) {
@@ -1016,7 +1005,7 @@ bool CScene::ProcessInput(UCHAR *pKeysBuffer)
 void CScene::AnimateObjects(float fTimeElapsed)
 {
 	m_fElapsedTime = fTimeElapsed;
-	if (m_iState == LOBBY) {
+	if (m_iState == INROOM) {
 		m_pPlayer->Animate(fTimeElapsed);
 		/*m_mBowPlayer[0]->Update(fTimeElapsed);
 
@@ -1084,7 +1073,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	}
 	if (m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
 	
-	if (m_iState == SCENE::LOBBY) {
+	if (m_iState == SCENE::INROOM) {
 		m_pPlayer->Render(pd3dCommandList, NULL);
 		for(int i=0;i<4;++i)
 			m_ppWeapons[i]->Render(pd3dCommandList, pCamera);
@@ -1122,10 +1111,6 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 			}
 		}
 	}
-	else if (m_iState == SCENE::END)
-	{
-		m_ppUIObjects[2]->Render(pd3dCommandList, pCamera);
-	}
 }
 
 void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
@@ -1149,7 +1134,7 @@ void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* p
 
 	if (m_pMap) m_pMap->RenderShadow(pd3dCommandList, pCamera);
 
-	if (m_iState == SCENE::LOBBY) {
+	if (m_iState == SCENE::INROOM) {
 		for (int i = 0; i < 4; ++i)
 			m_ppWeapons[i]->RenderShadow(pd3dCommandList, pCamera);
 	}

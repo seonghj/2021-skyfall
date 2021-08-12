@@ -1,11 +1,11 @@
 #pragma once
 #include "stdafx.h"
-#include "player.h"
 #include "Scene.h"
 #include "protocol.h"
 #include "GameFramework.h"
 
 class CGameFramework;
+class player;
 
 class CPacket {
 public:
@@ -39,8 +39,10 @@ public:
 	void Send_ready_packet(PlayerType t);
 	void Send_attack_packet(int type);
 	void Send_stop_packet();
-	void Send_login_packet(char* id);
+	void Send_login_packet(char* id, char* pw);
 	void Send_swap_weapon_packet(PlayerType weapon);
+	void Send_damage_to_player_packet(int target, int nAttack);
+	void Send_mon_damaged_packet(int target, int nAttack);
 
 	void Swap_weapon(int key, PlayerType weapon);
 	void Map_set(map_block_set* p);
@@ -85,6 +87,8 @@ private:
 	std::vector <std::thread>      working_threads;
 
 	PlayerType start_weapon;
+
+	vector<vector<int>> m_vMapArrange = { { 0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}, {0, 2}, {1, 2}, {2, 2} };
 
 	//static DWORD WINAPI ServerConnect(LPVOID arg);
 };

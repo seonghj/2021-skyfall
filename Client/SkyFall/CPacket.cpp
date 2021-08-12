@@ -2,6 +2,7 @@
 #include "CPacket.h"
 #include <iostream>
 #include <random>
+#include "player.h"
 #pragma warning(disable : 4996)
 
 CPacket::CPacket()
@@ -177,7 +178,7 @@ void CPacket::Send_stop_packet()
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
-void CPacket::Send_login_packet(char* id)
+void CPacket::Send_login_packet(char* id, char* pw)
 {
     player_login_packet p;
     p.key = client_key;
@@ -185,6 +186,7 @@ void CPacket::Send_login_packet(char* id)
     p.type = PacketType::CS_player_login;
     p.roomid = roomID;
     strcpy_s(p.id, id);
+    strcpy_s(p.pw, pw);
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
@@ -196,6 +198,34 @@ void CPacket::Send_swap_weapon_packet(PlayerType weapon)
     p.type = CS_weapon_swap;
     p.weapon = weapon;
     p.roomid = roomID;
+
+    SendPacket(reinterpret_cast<char*>(&p));
+}
+
+void CPacket::Send_damage_to_player_packet(int target, int nAttack)
+{
+    player_damage_packet p;
+    p.key = client_key;
+    p.type = CS_player_damage;
+    p.roomid = roomID;
+    p.size = sizeof(p);
+    p.damage = 0;
+    p.target = target;
+    p.nAttack = nAttack;
+
+    SendPacket(reinterpret_cast<char*>(&p));
+}
+
+void CPacket::Send_mon_damaged_packet(int target, int nAttack)
+{
+    mon_damaged_packet p;
+    p.key = client_key;
+    p.type = CS_monster_damaged;
+    p.roomid = roomID;
+    p.size = sizeof(p);
+    p.damage = 0;
+    p.target = target;
+    p.nAttack = nAttack;
 
     SendPacket(reinterpret_cast<char*>(&p));
 }
@@ -213,6 +243,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
 
             //m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
             m_pScene->m_mPlayer[key] = m_pScene->m_mBowPlayer[key];
+            m_pScene->m_mPlayer[key]->m_nkey = key;
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
             m_pScene->m_mPlayer[key]->SetPlace(beforplace);
@@ -233,6 +264,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
 
             //m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
             m_pScene->m_mPlayer[key] = m_pScene->m_m1HswordPlayer[key];
+            m_pScene->m_mPlayer[key]->m_nkey = key;
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
             m_pScene->m_mPlayer[key]->SetPlace(beforplace);
@@ -249,11 +281,14 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             float beforeyaw = m_pScene->m_mPlayer[key]->GetYaw();
             float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
             XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
+            int beforplace = m_pScene->m_mPlayer[key]->GetPlace();
 
             m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
             m_pScene->m_mPlayer[key] = m_pScene->m_m2HswordPlayer[key];
+            m_pScene->m_mPlayer[key]->m_nkey = key;
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
+            m_pScene->m_mPlayer[key]->SetPlace(beforplace);
 
             float tpitch = m_pScene->m_mPlayer[key]->GetPitch();
             float tyaw = m_pScene->m_mPlayer[key]->GetYaw();
@@ -267,11 +302,14 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             float beforeyaw = m_pScene->m_mPlayer[key]->GetYaw();
             float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
             XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
+            int beforplace = m_pScene->m_mPlayer[key]->GetPlace();
 
             m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
             m_pScene->m_mPlayer[key] = m_pScene->m_m2HspearPlayer[key];
+            m_pScene->m_mPlayer[key]->m_nkey = key;
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
+            m_pScene->m_mPlayer[key]->SetPlace(beforplace);
 
             float tpitch = m_pScene->m_mPlayer[key]->GetPitch();
             float tyaw = m_pScene->m_mPlayer[key]->GetYaw();
@@ -295,6 +333,9 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
+            m_pPlayer->m_pPacket = this;
+            m_pScene->m_mPlayer[client_key]->m_nkey = client_key;
+            m_pScene->m_mPlayer[client_key]->m_pPacket = this;
 
             m_pPlayer->SetPosition(beforepos);
             m_pPlayer->SetPlace(beforplace);
@@ -317,6 +358,9 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
+            m_pPlayer->m_pPacket = this;
+            m_pScene->m_mPlayer[client_key]->m_nkey = client_key;
+            m_pScene->m_mPlayer[client_key]->m_pPacket = this;
 
             m_pPlayer->SetPosition(beforepos);
             m_pPlayer->SetPlace(beforplace);
@@ -339,6 +383,9 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
+            m_pPlayer->m_pPacket = this;
+            m_pScene->m_mPlayer[client_key]->m_nkey = client_key;
+            m_pScene->m_mPlayer[client_key]->m_pPacket = this;
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
 
@@ -361,6 +408,9 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
+            m_pPlayer->m_pPacket = this;
+            m_pScene->m_mPlayer[client_key]->m_nkey = client_key;
+            m_pScene->m_mPlayer[client_key]->m_pPacket = this;
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
 
@@ -426,24 +476,21 @@ void CPacket::Map_set(map_block_set* p)
 
 void CPacket::CheckCollision(CMonster * mon)
 {
-    CGameObject* pObject;
-    for (int i = 0; i < 3; ++i) {
-        pObject = m_pMap->GetMap(3 * i)->FindFrame("RootNode")->m_pChild->m_pChild;
-        while (true) {
+    CGameObject* pObject = pObject = m_pMap->GetMap(3 * mon->GetPlace())->FindFrame("RootNode")->m_pChild->m_pChild;
+    while (true) {
 
-            if (mon->isCollide(pObject)) {
-              
-                XMFLOAT3 d = Vector3::Subtract(mon->GetPosition(), pObject->GetPosition());
-                mon->Move(Vector3::ScalarProduct(d, 50.25f, true), true);
-                cout << "monster Map Collision - " << pObject->m_pstrFrameName << endl;
-                
-                return;
-            }
-            if (pObject->m_pSibling)
-                pObject = pObject->m_pSibling;
-            else
-                return;
+        if (mon->isCollide(pObject)) {
+
+            XMFLOAT3 d = Vector3::Subtract(mon->GetPosition(), pObject->GetPosition());
+            mon->Move(Vector3::ScalarProduct(d, 20.f, true), true);
+            //cout << "monster Map Collision - " << pObject->m_pstrFrameName << endl;
+
+            return;
         }
+        if (pObject->m_pSibling)
+            pObject = pObject->m_pSibling;
+        else
+            return;
     }
 }
 
@@ -478,7 +525,8 @@ void CPacket::ProcessPacket(char* buf)
 
         m_pFramework->m_pCamera = m_pPlayer->GetCamera();
 
-        Send_login_packet(userID);
+        //Send_login_packet("test", "test");
+
         break;
     }
     case PacketType::SC_player_loginFail: {
@@ -497,6 +545,9 @@ void CPacket::ProcessPacket(char* buf)
 
             printf("Login game\n");
             canmove = TRUE;
+            m_pPlayer->m_pPacket = this;
+            //m_pScene->m_iState = SCENE::LOBBY;
+            m_pScene->SetState(SCENE::LOBBY);
         }
         break;
     }
@@ -527,6 +578,7 @@ void CPacket::ProcessPacket(char* buf)
         game_start_packet* p = reinterpret_cast<game_start_packet*>(buf);
         Swap_weapon(p->key, p->weaponType);
         m_pScene->m_iState = INGAME;
+        m_pFramework->MouseHold(false);
         break;
     }
     case PacketType::SC_game_end: {
@@ -569,7 +621,8 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
         if (p->key == client_key) {
             //m_pPlayer->SetPosition(p->Position);
-            m_pPlayer->Rotate(p->dx, p->dy, 0);
+            m_pPlayer->Rotate(p->dx - m_pPlayer->GetPitch()
+                , p->dy - m_pPlayer->GetYaw(), 0);
             switch (p->MoveType) {
             case PlayerMove::RUNNING:
                 //m_pPlayer->SetRunning(true);
@@ -592,11 +645,15 @@ void CPacket::ProcessPacket(char* buf)
                     m_pScene->AnimatePlayer(key, 7);
                 //m_pScene->AnimatePlayer(key, 4);
                 break;
+            case PlayerMove::STAND:
+                m_pScene->AnimatePlayer(key, 0);
+                break;
             default:
                 break;
             }
             m_pScene->MovePlayer(key, p->Position);
-            m_pScene->m_mPlayer[key]->Rotate(p->dx, p->dy, 0);
+            m_pScene->m_mPlayer[key]->Rotate(p->dx - m_pScene->m_mPlayer[key]->GetPitch()
+                , p->dy - m_pScene->m_mPlayer[key]->GetYaw(), 0);
         }
         break;
     }
@@ -622,7 +679,7 @@ void CPacket::ProcessPacket(char* buf)
         int key = p->key;
         if (p->key == client_key) {
             switch (p->attack_type) {
-            case SWORD1HL: {
+            case SWORD1HL1: {
                 m_pPlayer->LButtonDown();
                 break;
             }
@@ -642,8 +699,12 @@ void CPacket::ProcessPacket(char* buf)
         }
         else {
             switch (p->attack_type) {
-            case SWORD1HL: {
+            case SWORD1HL1: {
                 m_pScene->AnimatePlayer(key, 9);
+                break;
+            }
+            case SWORD1HL2: {
+                m_pScene->AnimatePlayer(key, 10);
                 break;
             }
             case SWORD1HR: {
@@ -690,17 +751,9 @@ void CPacket::ProcessPacket(char* buf)
             }
             m_pScene->m_mPlayer[key]->SetPosition(p->Position);
         }
-        else {
+        else
             m_pPlayer->SetPosition(p->Position);
-            printf("pPlayer.y : %f\n", m_pPlayer->GetPosition().y);
-            if (m_pPlayer->GetPosition().y <= 5)
-            {
-                m_pScene->m_iState = SCENE::END;
-                m_pPlayer->SetPosition(XMFLOAT3(5048, 200, 1300));
-                m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
-                m_pFramework->Restart();
-            }
-        }
+        m_pScene->m_mPlayer[key]->SetGround(true);
         break;
     }
 
@@ -734,22 +787,47 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_pos: {
         mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
         int key = p->key;
+        {
+            CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
+            XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
+            XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
+            XMFLOAT3 xmf3Scale = pTerrain->GetScale();
+            int z = (int)(xmf3MonsterPosition.z / xmf3Scale.z);
+            bool bReverseQuad = ((z % 2) != 0);
+            float fHeight = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
 
-        CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
-        XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
-        XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
-        XMFLOAT3 xmf3Scale = pTerrain->GetScale();
-        int z = (int)(xmf3MonsterPosition.z / xmf3Scale.z);
-        bool bReverseQuad = ((z % 2) != 0);
-        float fHeight = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
-        
-        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree);
-        p->Position.y = (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight) - m_pScene->m_ppGameObjects[key]->GetPosition().y;
-        m_pScene->m_ppGameObjects[key]->Move(p->Position, 1.0f);
-        //CheckCollision(m_pScene->m_ppGameObjects[key]);
+            p->Position.y = (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight);
+            if (p->MonsterType == MonsterType::Wolf)
+                p->Position.y = p->Position.y + 50;
+            else if (p->MonsterType == MonsterType::Metalon)
+                p->Position.y = p->Position.y + 20;
+            m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
+            m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree - m_pScene->m_ppGameObjects[key]->m_fRotateDegree);
+            m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->degree;
+
+            XMFLOAT3 pos = m_pScene->m_ppGameObjects[key]->GetPosition();
+            int nPlace = m_pScene->m_ppGameObjects[key]->GetPlace();
+            if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+                m_pScene->m_ppGameObjects[key]->SetPlace(nPlace - 1);
+            }
+            else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+                m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 1);
+            }
+
+            if (pos.z < m_vMapArrange[nPlace][1] * 2048 && nPlace>2) {
+                m_pScene->m_ppGameObjects[key]->SetPlace(nPlace - 3);
+            }
+            else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+                m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 3);
+            }
+        }
+
+        CheckCollision(m_pScene->m_ppGameObjects[key]);
 
         p->type = CS_monster_pos;
         p->Position = m_pScene->m_ppGameObjects[key]->GetPosition();
+
+        //printf("%f, %f, %f\n", p->Position.x, p->Position.y, p->Position.z);
 
         SendPacket(reinterpret_cast<char*>(p));
         break;
@@ -757,34 +835,155 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_attack: {
         mon_attack_packet* p = reinterpret_cast<mon_attack_packet*>(buf);
         int key = p->key;
-
-        if (m_pScene->m_ppGameObjects[key]->m_iReady == FALSE) break;
-
+        //if (m_pScene->m_ppGameObjects[key]->m_iReady == FALSE) break;
+        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree - m_pScene->m_ppGameObjects[key]->m_fRotateDegree);
+        m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->degree;
         m_pScene->m_ppGameObjects[key]->Attack();
 
         m_pScene->AnimatePlayer(p->target, 8);
-
         if (p->target == client_key) {
             m_pPlayer->SetHp(p->PlayerLeftHp);
-            m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
+            //m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
         }
-        if (m_pPlayer->GetHp() <= 0){
-            m_pScene->m_iState = SCENE::END;
-            m_pPlayer->SetPosition(XMFLOAT3(0.0f, -500.0f, 0.0f));
-            m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
-            m_pFramework->Restart();
-        }
+
         break;
     }
     case PacketType::SC_monster_add: {
         mon_add_packet* p = reinterpret_cast<mon_add_packet*>(buf);
         int key = p->key;
+        {
+            CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
+            XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
+            XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
+            XMFLOAT3 xmf3Scale = pTerrain->GetScale();
+            int z = (int)(xmf3MonsterPosition.z / xmf3Scale.z);
+            bool bReverseQuad = ((z % 2) != 0);
+            float fHeight = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
 
-        m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
-        m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->dz);
+            p->Position.y = (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight);
+            if (p->MonsterType == MonsterType::Wolf)
+                p->Position.y = p->Position.y + 50;
+            else if (p->MonsterType == MonsterType::Metalon)
+                p->Position.y = p->Position.y + 20;
+            m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
+            m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->dz - m_pScene->m_ppGameObjects[key]->m_fRotateDegree);
+            m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->dz;
+
+            XMFLOAT3 pos = m_pScene->m_ppGameObjects[key]->GetPosition();
+            int nPlace = m_pScene->m_ppGameObjects[key]->GetPlace();
+            if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+                m_pScene->m_ppGameObjects[key]->SetPlace(nPlace - 1);
+            }
+            else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+                m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 1);
+            }
+
+            if (pos.z < m_vMapArrange[nPlace][1] * 2048 && nPlace>2) {
+                m_pScene->m_ppGameObjects[key]->SetPlace(nPlace - 3);
+            }
+            else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+                m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 3);
+            }
+        }
+
+        CheckCollision(m_pScene->m_ppGameObjects[key]);
 
         m_pScene->m_ppGameObjects[key]->m_iReady = TRUE;
+        //printf("key: %d y : %f\n", key, m_pScene->m_ppGameObjects[key]->GetPosition().y);
+
+        break;
+    }
+    case PacketType::SC_monster_damaged:{
+        mon_damaged_packet* p = reinterpret_cast<mon_damaged_packet*>(buf);
+        m_pScene->m_ppGameObjects[p->target]->SetHp(p->leftHp);
+        cout << "Monster: " << p->target << " hp: " << m_pScene->m_ppGameObjects[p->target]->GetHp() << endl;
+        m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
+        if (m_pScene->m_ppGameObjects[p->target]->m_iHp > 0)
+            m_pScene->m_ppGameObjects[p->target]->ChangeState(2);
+        else {
+            m_pScene->m_ppGameObjects[p->target]->ChangeState(1);
+        }
+        m_pScene->m_ppGameObjects[p->target]->m_pSkinnedAnimationController->SetAllTrackDisable();
+        m_pScene->m_ppGameObjects[p->target]->m_pSkinnedAnimationController->SetTrackPosition(
+            m_pScene->m_ppGameObjects[p->target]->GetState(), 0);
+        m_pScene->m_ppGameObjects[p->target]->m_pSkinnedAnimationController->SetTrackEnable(
+            m_pScene->m_ppGameObjects[p->target]->GetState(), true);
+        break;
+    }
+    case PacketType::SC_monster_respawn: {
+        mon_respawn_packet* p = reinterpret_cast<mon_respawn_packet*>(buf);
+        int key = p->key;
+        m_pScene->m_ppGameObjects[key]->ChangeState(0);
+        m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->SetAllTrackDisable();
+        m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->SetTrackPosition(
+            m_pScene->m_ppGameObjects[key]->GetState(), 0);
+        m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->SetTrackEnable(
+            m_pScene->m_ppGameObjects[key]->GetState(), true);
+        m_pScene->m_ppGameObjects[key]->SetIdle();
+        m_pScene->m_ppGameObjects[key]->m_iHp = m_pScene->m_ppGameObjects[key]->m_iMaxHp;
+        switch (p->MonsterType) {
+        case MonsterType::Dragon:
+            m_pScene->m_ppGameObjects[key]->SetActive("Polygonal_Dragon", true);
+            break;
+        case MonsterType::Wolf:
+            m_pScene->m_ppGameObjects[key]->SetActive("Polygonal_Wolf", true);
+            break;
+        case MonsterType::Metalon:
+            m_pScene->m_ppGameObjects[key]->SetActive("Polygonal_Metalon", true);
+            break;
+        }
+        m_pScene->m_ppGameObjects[key]->SetActive("BoundingBox", true);
+        //m_pScene->m_ppGameObjects[key]->SetBehaviorActivate(true);
+        {
+            CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
+            XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
+            XMFLOAT3 xmf3TerrainPosition = pTerrain->GetPosition();
+            XMFLOAT3 xmf3Scale = pTerrain->GetScale();
+            int z = (int)(xmf3MonsterPosition.z / xmf3Scale.z);
+            bool bReverseQuad = ((z % 2) != 0);
+            float fHeight = pTerrain->GetHeight(xmf3MonsterPosition.x - xmf3TerrainPosition.x, xmf3MonsterPosition.z - xmf3TerrainPosition.z, bReverseQuad) + xmf3TerrainPosition.y;
+
+            p->Position.y = (fHeight + m_pScene->m_ppGameObjects[key]->m_fHeight);
+            if (p->MonsterType == MonsterType::Wolf)
+                p->Position.y = p->Position.y + 50;
+            else if (p->MonsterType == MonsterType::Metalon)
+                p->Position.y = p->Position.y + 20;
+            m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
+            m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->dz - m_pScene->m_ppGameObjects[key]->m_fRotateDegree);
+            m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->dz;
+
+            XMFLOAT3 pos = m_pScene->m_ppGameObjects[key]->GetPosition();
+            int nPlace = m_pScene->m_ppGameObjects[key]->GetPlace();
+            if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+                m_pScene->m_ppGameObjects[key]->SetPlace(nPlace - 1);
+            }
+            else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+                m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 1);
+            }
+
+            if (pos.z < m_vMapArrange[nPlace][1] * 2048 && nPlace>2) {
+                m_pScene->m_ppGameObjects[key]->SetPlace(nPlace - 3);
+            }
+            else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+                m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 3);
+            }
+        }
+        CheckCollision(m_pScene->m_ppGameObjects[key]);
+        break;
+    }
+    case PacketType::SC_player_damage: {
+        player_damage_packet* p = reinterpret_cast<player_damage_packet*>(buf);
+        m_pScene->m_mPlayer[p->target]->SetHp(p->leftHp);
+        cout << "player: " << p->target << " hp: " << m_pScene->m_mPlayer[p->target]->GetHp() << endl;
+        //m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
+
+        if (p->target == client_key) {
+            m_pPlayer->SetDamaged(true);
+            m_pScene->AnimatePlayer(client_key, 8);
+        }
+        else
+            m_pScene->AnimatePlayer(p->target, 8);
 
         break;
     }

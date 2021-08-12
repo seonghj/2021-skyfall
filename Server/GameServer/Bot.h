@@ -24,7 +24,7 @@ public:
 
     std::mutex               Mon_lock;
 
-    std::atomic<int>         key = -1;
+    int                     key = -1;
     std::atomic<int>         roomID = -1;
     char                     id[50];
 
@@ -32,6 +32,7 @@ public:
     std::atomic<bool>       state = 0;
     std::atomic<int>        type = 0;
     std::atomic<DirectX::XMFLOAT3>       f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+    std::atomic<DirectX::XMFLOAT3>       SpawnPos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<float>      m_fPitch = 0;
     std::atomic<float>      m_fYaw = 0;
     std::atomic<float>      m_fRoll = 0;
@@ -42,7 +43,7 @@ public:
     std::atomic<float>      att = 10;
     std::atomic<float>      speed = 20;
 
-    std::atomic<bool>       CanAttack = TRUE;
+    bool                    CanAttack = TRUE;
 
     void init();
     void SetPosition(float x, float y, float z);
@@ -71,7 +72,7 @@ public:
 
     void RunBot(int roomID);
 
-    std::unordered_map <int, std::array<Monster, 50>> monsters;
+    std::unordered_map <int, std::array<Monster, 15>> monsters;
 
     bool monsterRun = false;
 
