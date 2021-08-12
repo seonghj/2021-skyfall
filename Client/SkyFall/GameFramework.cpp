@@ -873,6 +873,52 @@ void CGameFramework::FrameAdvance()
 	m_pShadowMap->UpdateShaderVariables(m_pd3dCommandList);
 	if (m_pScene) m_pScene->Render(m_pd3dCommandList, m_pCamera);
 
+<<<<<<< HEAD
+=======
+	ID3D12DescriptorHeap* heaps = m_resourceDescriptors->Heap();
+	m_pd3dCommandList->SetDescriptorHeaps(1, &heaps);
+	
+	PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
+	m_pSprite->Begin(m_pd3dCommandList);
+	m_pFont->DrawString(m_pSprite.get(), L"Sample String", XMFLOAT2(100, 10));
+	m_pSprite->End();
+	PIXEndEvent(m_pd3dCommandQueue);
+
+	// Start the Dear ImGui frame
+	ImGui_ImplDX12_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+	ImGui::Begin("Login", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+	ImGui::SetWindowSize(ImVec2(400, 90));
+	ImGui::SetWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2 - 200, FRAME_BUFFER_HEIGHT/2 - 45));
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+
+	{
+		ImGui::Text("Login for playing SkyFall");
+	}
+
+	{
+		ImGui::SetCursorPosY(ImGui::GetTextLineHeight() + 20);
+		ImGui::Text("	  ID");
+		ImGui::SameLine();
+		ImGui::InputTextWithHint(" ", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank); //ImGuiInputTextFlags_::
+		ImGui::Text("Password");
+		ImGui::SameLine();
+		ImGui::InputTextWithHint("  ", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
+	}
+
+	ImGui::SameLine(0,0);
+	if (ImGui::Button("Login")) {
+		// 여기서 서버에 로그인
+		m_pPacket->Send_login_packet(m_bufID, m_bufPW);
+	}
+	ImGui::End();
+	ImGui::Render();
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_pd3dCommandList);
+
+
+>>>>>>> parent of f7963f0 (dd)
 #ifdef _WITH_PLAYER_TOP
 	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
 #endif
