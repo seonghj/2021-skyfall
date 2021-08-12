@@ -115,7 +115,9 @@ void Server::Connect_Game_Server()
     sessions[GAMESERVER_ID].sock = gameserver_sock;
     sessions[GAMESERVER_ID].clientaddr = gameserveraddr;
 
-    printf("gameserver connect\n");
+    printf("GameServer_connected: IP =%s, port=%d \n",
+             inet_ntoa(sessions[GAMESERVER_ID].clientaddr.sin_addr)
+             , ntohs(sessions[GAMESERVER_ID].clientaddr.sin_port));
 
     sessions[GAMESERVER_ID].over.dataBuffer.len = BUFSIZE;
     sessions[GAMESERVER_ID].over.dataBuffer.buf =
@@ -350,12 +352,15 @@ void Server::process_packet(char id, char* buf)
         sessions[p->key].roomID = p->room;
 
         room_select_packet p1;
-        p1.key = p->key;
+        p1.key = 0;
         p1.room = p->room;
-        p1.roomid = p->room;
+        p1.roomid = 0;
         p1.size = sizeof(p);
         p1.type = SC_select_room;
         send_packet(GAMESERVER_ID, reinterpret_cast<char*>(&p1));
+
+        p1.key = p->key;
+        p1.roomid = p->room;
 
         send_packet(p->key, reinterpret_cast<char*>(&p1));
     }

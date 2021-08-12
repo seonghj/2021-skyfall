@@ -1130,7 +1130,7 @@ void CPacket::LobbyConnect()
 void CPacket::GameConnect()
 {
     // disconnect
-    //shutdown(sock, SD_RECEIVE);
+    shutdown(sock, SD_RECEIVE);
     Recv_thread.join();
     closesocket(sock);
     cout << "lobby diconnect" << endl;
@@ -1155,5 +1155,5 @@ void CPacket::GameConnect()
 
     Recv_thread = std::thread(&CPacket::RecvPacket, this);
 
-    Recv_thread.join();
+    //Recv_thread.join();
 }
