@@ -99,8 +99,11 @@ private:
 
     std::unordered_map <int, SESSION> sessions;
 
+    std::unordered_map <int, int> room_player_cnt;
+
     std::vector <std::thread> working_threads;
     std::thread accept_thread;
 
     std::mutex                     sessions_lock;
+    std::mutex                     room_player_cnt_lock;
 };

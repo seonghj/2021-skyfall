@@ -53,6 +53,10 @@ enum terrain {
 
 enum PacketType {
 	SC_NONE,
+	SC_player_Lobbykey,
+	SC_player_LobbyloginOK,
+	SC_player_LobbyloginFail,
+	SC_select_room,
 	SC_player_key,
 	SC_player_loginOK,
 	SC_player_loginFail,
@@ -93,6 +97,7 @@ enum PacketType {
 	SC_player_getitem,
 
 
+	CS_room_select,
 	CS_player_login,
 	CS_game_ready,
 	CS_game_start,
@@ -188,6 +193,9 @@ struct player_loginOK_packet :public Packet {
 struct player_loginFail_packet :public Packet {
 };
 
+struct room_select_packet :public Packet {
+	short room;
+};
 
 struct player_add_packet : public Packet {
 	DirectX::XMFLOAT3 Position;

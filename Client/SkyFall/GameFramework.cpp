@@ -533,6 +533,7 @@ void CGameFramework::ShowLoginWindow()
 			ImGui::SetCursorPosX(80);
 			if (ImGui::Button("Login")) {
 				// 여기서 서버에 로그인
+				m_pPacket->Set_UserID(m_bufID);
 				m_pPacket->Send_login_packet(m_bufID, m_bufPW);
 			}
 			ImGui::SameLine(0, 50);
@@ -557,10 +558,9 @@ void CGameFramework::ShowLobbyWindow()
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
-
+			static int room_current_idx = 0;
 			{
 				const char* rooms[] = { "Room1","Room2", "Room3" };
-				static int room_current_idx = 0;
 				ImGui::Text("Rooms");
 				if (ImGui::BeginListBox("##Room List", ImVec2(FRAME_BUFFER_WIDTH / 2 - 30, FRAME_BUFFER_HEIGHT / 2))) {
 					for (int n = 0; n < IM_ARRAYSIZE(rooms); n++)
@@ -582,7 +582,8 @@ void CGameFramework::ShowLobbyWindow()
 			if (ImGui::Button("Join")) {
 				// 여기서 방에 입장
 				// 임시로 state 변경해놓음
-				m_pScene->SetState(SCENE::INROOM);
+				m_pPacket->Send_room_packet(room_current_idx);
+				//m_pScene->SetState(SCENE::INROOM);
 
 			}
 			ImGui::SameLine(0, 50);
@@ -611,7 +612,8 @@ void CGameFramework::ShowRoomWindow()
 				// 여기서 게임 시작
 				// 모든 플레이어가 무기를 골랐다면, 시작 버튼을 누르면 게임 시작
 				// 임시로 state 변경해놓음
-				m_pScene->SetState(SCENE::INGAME);
+				// m_pScene->SetState(SCENE::INGAME);
+				m_pPacket->Send_ready_packet(m_pPacket->Get_StartWeapon());
 			}
 			ImGui::SameLine(0, 50);
 			if (ImGui::Button("Exit")) {
