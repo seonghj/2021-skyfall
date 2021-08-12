@@ -643,19 +643,17 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-
+enum MonsterState {
+	Idle, Die, TakeDamage, Move = 0
+};
 class CMonster : public CGameObject
 {
 protected:
 	int m_nAnimations;
 
-	enum MonsterState {
-		Idle,
-		Die,
-		Take_Damage,
-		Walk,
-		Run,
-	};
+	const int nMonster_Idle = 0;
+	const int nMonster_Die = 1;
+	const int nMonster_TakeDamage = 2;
 
 	int m_iState;
 	LPVOID* m_ppUpdatedContext = NULL;
@@ -690,19 +688,9 @@ public:
 class CDragon : public CMonster
 {
 private:
-	enum DragonState {
-		BiteAttack = 5,
-		ProjectileAttack,
-		BreathAttack,
-		CastSpell,
-		FlyIdle,
-		FlyDie,
-		FlyTakeDamage,
-		FlyProjectileAttack,
-		FlyBreathAttack,
-		FlyDown,
-		FlyUp,
-	};
+	const int nDragon_BiteAttack = 3;
+	const int nDragon_ProjectileAttack = 4;
+	const int nDragon_BreathAttack = 5;
 
 public:
 	CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext = 0, int nPlace=0);
@@ -722,15 +710,9 @@ public:
 class CWolf : public CMonster
 {
 private:
-	enum WolfState {
-		BiteAttack=5,
-		PoundAttack,
-		Resting,
-		Howl,
-		Eating,
-		LookAround,
-	};
-
+	const int nWolf_BiteAttack = 3;
+	const int nWolf_PoundAttack = 4;
+	const int nWolf_Howl = 8;
 public:
 	CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext = 0, int nPlace = 0);
 	virtual ~CWolf();
@@ -747,14 +729,9 @@ public:
 class CMetalon : public CMonster
 {
 private:
-	enum MetalonState {
-		StabAttack=6,
-		SmashAttack,
-		CastSpell,
-		Defend,
-		JumpInPlace,
-	};
-
+	const int nMetalon_CastSpell = 3;
+	const int nMetalon_Defend = 4;
+	const int nMetalon_Jump = 5;
 public:
 	CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext = 0, int nPlace = 0);
 	virtual ~CMetalon();
