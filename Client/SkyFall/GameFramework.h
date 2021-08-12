@@ -7,7 +7,6 @@
 #include "Player.h"
 #include "Scene.h"
 #include "CPacket.h"
-#include <queue>
 
 struct CB_FRAMEWORK_INFO
 {
@@ -149,7 +148,6 @@ private:
 	BOOL						PressDirButton = false;
 
 	//Font
-	queue<unsigned char>		m_charBuffer;
 	unique_ptr<SpriteBatch>		m_pSprite;
 	unique_ptr<SpriteFont>		m_pFont;
 	unique_ptr<DescriptorHeap> m_resourceDescriptors;

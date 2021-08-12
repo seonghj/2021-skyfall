@@ -697,6 +697,7 @@ private:
 		FlyBreathAttack,
 		FlyDown,
 		FlyUp,
+		AnimationCount
 	};
 
 public:
@@ -724,6 +725,7 @@ private:
 		Howl,
 		Eating,
 		LookAround,
+		AnimationCount
 	};
 
 public:
@@ -748,6 +750,7 @@ private:
 		CastSpell,
 		Defend,
 		JumpInPlace,
+		AnimationCount
 	};
 
 public:

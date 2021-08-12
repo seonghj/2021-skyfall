@@ -114,7 +114,7 @@ void CGameFramework::CreateSwapChain()
 	dxgiSwapChainDesc.SampleDesc.Count = (m_bMsaa4xEnable) ? 4 : 1;
 	dxgiSwapChainDesc.SampleDesc.Quality = (m_bMsaa4xEnable) ? (m_nMsaa4xQualityLevels - 1) : 0;
 	dxgiSwapChainDesc.Windowed = TRUE;
-	dxgiSwapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_FULLSCREEN_VIDEO;
+	dxgiSwapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 	HRESULT hResult = m_pdxgiFactory->CreateSwapChain(m_pd3dCommandQueue, &dxgiSwapChainDesc, (IDXGISwapChain**)&m_pdxgiSwapChain);
 #endif
@@ -931,27 +931,33 @@ void CGameFramework::FrameAdvance()
 	ImGui::Begin("Login", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 	ImGui::SetWindowSize(ImVec2(400, 90));
 	ImGui::SetWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2 - 200, FRAME_BUFFER_HEIGHT/2 - 45));
-	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
-
 	{
-		ImGui::Text("Login for playing SkyFall");
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+			{
+				ImGui::Text("Login for playing SkyFall");
+			}
+
+			{
+				ImGui::SetCursorPosY(ImGui::GetTextLineHeight() + 20);
+				ImGui::Text("	  ID");
+				ImGui::SameLine();
+				ImGui::InputTextWithHint(" ", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank); //ImGuiInputTextFlags_::
+				ImGui::Text("Password");
+				ImGui::SameLine();
+				ImGui::InputTextWithHint("  ", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
+			}
+
+			ImGui::SameLine(0, 0);
+			if (ImGui::Button("Login")) {
+				// 여기서 서버에 로그인
+			}
+			ImGui::PopStyleVar();
+		}
+		ImGui::PopStyleVar();
 	}
 
-	{
-		ImGui::SetCursorPosY(ImGui::GetTextLineHeight() + 20);
-		ImGui::Text("	  ID");
-		ImGui::SameLine();
-		ImGui::InputTextWithHint(" ", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank); //ImGuiInputTextFlags_::
-		ImGui::Text("Password");
-		ImGui::SameLine();
-		ImGui::InputTextWithHint("  ", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
-	}
-
-	ImGui::SameLine(0,0);
-	if (ImGui::Button("Login")) {
-		// 여기서 서버에 로그인
-	}
 	ImGui::End();
 	ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_pd3dCommandList);
