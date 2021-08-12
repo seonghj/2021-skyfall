@@ -67,7 +67,8 @@ public:
 	void SetCloud(float x, float z) { m_pcbMappedFog->gvFogPos = XMFLOAT2(x, z); }
 
 	void MouseHold(bool b) { m_bMouseHold = b; }
-
+	void ShowLoginWindow();
+	void ShowLobbyWindow();
 
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
