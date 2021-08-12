@@ -6,7 +6,7 @@ constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
 constexpr int BUFSIZE = 128;
 constexpr int MAX_CLIENT = 3000;
-constexpr int MAX_PLAYER = 2;
+constexpr int MAX_PLAYER = 20;
 constexpr int INVALIDID = -1;
 constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
@@ -120,6 +120,11 @@ enum EventType {
 	Mon_attack_cooltime,
 	Mon_respawn,
 	MapBreak
+};
+
+enum PlayerState {
+	DEAD,
+	ALIVE,
 };
 
 enum PlayerMove {

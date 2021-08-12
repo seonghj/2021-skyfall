@@ -353,7 +353,6 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,30), XMFLOAT3(7,7,30));
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 9, pPlayerModel);
-
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Idle, nBasic_Idle);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Walk, nBasic_Walk);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Run, nBasic_Run);
@@ -361,7 +360,11 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunLeft, nBasic_RunLeft);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_RunRight, nBasic_RunRight);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_TakeDamage, nBasic_TakeDamage);
+	m_pSkinnedAnimationController->SetTrackType(nBasic_TakeDamage, ANIMATION_TYPE_ONCE);
 
+
+	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Jump, PlayerState::Jump);
+	m_pSkinnedAnimationController->SetTrackType(PlayerState::Jump, ANIMATION_TYPE_ONCE);
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Jump, nBasic_Jump);
 	m_pSkinnedAnimationController->SetTrackType(nBasic_Jump, ANIMATION_TYPE_ONCE);
@@ -696,7 +699,7 @@ void CBowPlayer::Update(float fTimeElapsed)
 		if (m_isRelease&&m_pSkinnedAnimationController->IsTrackFinish(nShotRelease)) {
 			m_isRelease = false;
 		}
-		if (m_isDamaged && m_pSkinnedAnimationController->IsTrackFinish(8))
+		if (m_isDamaged && m_pSkinnedAnimationController->IsTrackFinish(nBasic_TakeDamage))
 			m_isDamaged = false;
 		if (m_isJump) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
@@ -861,7 +864,6 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 13, pPlayerModel);
-
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Idle, nBasic_Idle);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nBasic_Death, nBasic_Death);
 	m_pSkinnedAnimationController->SetTrackType(nBasic_Death, ANIMATION_TYPE_ONCE);
@@ -927,7 +929,7 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 	{
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
 
-		if (m_isDamaged && m_pSkinnedAnimationController->IsTrackFinish(8))
+		if (m_isDamaged && m_pSkinnedAnimationController->IsTrackFinish(nBasic_TakeDamage))
 			m_isDamaged = false;
 
 		if (m_isJump) {
