@@ -524,6 +524,9 @@ void CPacket::ProcessPacket(char* buf)
         //m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
 
         m_pFramework->m_pCamera = m_pPlayer->GetCamera();
+
+        Send_login_packet("test", "test");
+
         break;
     }
     case PacketType::SC_player_loginFail: {
@@ -543,7 +546,7 @@ void CPacket::ProcessPacket(char* buf)
             printf("Login game\n");
             canmove = TRUE;
             m_pPlayer->m_pPacket = this;
-            m_pScene->m_iState = SCENE::LOBBY;
+            //m_pScene->m_iState = SCENE::LOBBY;
             m_pFramework->MouseHold(true);
         }
         break;
@@ -896,9 +899,9 @@ void CPacket::ProcessPacket(char* buf)
         cout << "Monster: " << p->target << " hp: " << m_pScene->m_ppGameObjects[p->target]->GetHp() << endl;
         m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
         if (m_pScene->m_ppGameObjects[p->target]->m_iHp > 0)
-            m_pScene->m_ppGameObjects[p->target]->ChangeState(MonsterState::TakeDamage);
+            m_pScene->m_ppGameObjects[p->target]->ChangeState(2);
         else {
-            m_pScene->m_ppGameObjects[p->target]->ChangeState(MonsterState::Die);
+            m_pScene->m_ppGameObjects[p->target]->ChangeState(1);
         }
         m_pScene->m_ppGameObjects[p->target]->m_pSkinnedAnimationController->SetAllTrackDisable();
         m_pScene->m_ppGameObjects[p->target]->m_pSkinnedAnimationController->SetTrackPosition(
@@ -910,7 +913,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_respawn: {
         mon_respawn_packet* p = reinterpret_cast<mon_respawn_packet*>(buf);
         int key = p->key;
-        m_pScene->m_ppGameObjects[key]->ChangeState(MonsterState::Idle);
+        m_pScene->m_ppGameObjects[key]->ChangeState(0);
         m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->SetAllTrackDisable();
         m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->SetTrackPosition(
             m_pScene->m_ppGameObjects[key]->GetState(), 0);
