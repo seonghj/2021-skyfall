@@ -2,6 +2,8 @@
 #pragma warning(disable : 4996)
 #include "Server.h"
 
+//#define Run_DB
+
 Server::Server()
 {
 
@@ -308,15 +310,19 @@ void Server::process_packet(char id, char* buf)
         bool is_Login = false;
 
         bool b;
-       /* b = m_pDB->Search_ID(p->id, &is_Login);
+#ifdef Run_DB
+        if (strcmp(p->id, "test") != 0) {
+            b = m_pDB->Search_ID(p->id, &is_Login);
 
-        if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
+            if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
 
-        if (is_Login) {
-            send_player_loginFail_packet(client_key);
-            Disconnected(client_key);
-            break;
-        }*/
+            if (is_Login) {
+                send_player_loginFail_packet(client_key);
+                Disconnected(client_key);
+                break;
+            }
+        }
+#endif
 
         strcpy_s(sessions[client_key].id, p->id);
 
@@ -334,21 +340,9 @@ void Server::process_packet(char id, char* buf)
         break;
     }
     case PacketType::CS_game_start: {
-        start_ok_packet* sop = new start_ok_packet;
-        sop->size = sizeof(sop);
-        sop->type = SC_start_ok;
-        for (auto i = sessions.begin(); i != sessions.end(); ++i) {
-            if (!i->second.isready) {
-                sop->value = false;
-                break;
-            }
-            else
-                sop->value = true;
-        }
-        for (auto& iter : sessions) {
-            if (iter.second.connected)
-                send_packet(iter.first, reinterpret_cast<char*>(&sop));
-        }
+        start_ok_packet* p = reinterpret_cast<start_ok_packet*>(buf);
+        p->size = sizeof(p);
+        p->type = SC_start_ok;
         break;
     }
     }

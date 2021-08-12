@@ -1012,10 +1012,6 @@ void CPacket::Login()
 {
     int retval = 0;
 
-    std::random_device rd;
-    std::mt19937_64 gen(rd());
-    std::uniform_int_distribution<int> dis(0, 5000);
-
     // connect()
     SOCKADDR_IN serveraddr;
     ZeroMemory(&serveraddr, sizeof(serveraddr));
@@ -1053,19 +1049,14 @@ void CPacket::LobbyConnect()
     SOCKADDR_IN serveraddr;
     ZeroMemory(&serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
-    serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
+    serveraddr.sin_addr.s_addr = inet_addr(ipaddr);
     serveraddr.sin_port = htons(LOBBYPORT);
     retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
     if (retval == SOCKET_ERROR) err_quit("connect()");
 
     memset(&overlapped, 0, sizeof(overlapped));
 
-    //gCPacket[num]->Set_clientkey(num);
-
     Recv_thread = std::thread(&CPacket::RecvPacket, this);
-    //std::thread test_Send_thread = std::thread(&CPacket::testSendPacket, gCPacket[num]);
-    //test_Send_thread.join();
-    Recv_thread.join();
 
 }
 
@@ -1085,11 +1076,17 @@ void CPacket::GameConnect()
     sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
     if (sock == INVALID_SOCKET)err_quit("socket()");
 
-    //cout << "game connect" << endl;
-    //std::thread test_Send_thread = std::thread(&CPacket::testSendPacket, this);
-    //test_Send_thread.join();
-   
-    //InsertID();
+    SOCKADDR_IN serveraddr;
+    ZeroMemory(&serveraddr, sizeof(serveraddr));
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_addr.s_addr = inet_addr(ipaddr);
+    serveraddr.sin_port = htons(GAMESERVERPORT);
+    retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
+    if (retval == SOCKET_ERROR) err_quit("connect()");
 
-    Login();
+    memset(&overlapped, 0, sizeof(overlapped));
+
+    Recv_thread = std::thread(&CPacket::RecvPacket, this);
+
+    Recv_thread.join();
 }

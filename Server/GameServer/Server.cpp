@@ -3,7 +3,7 @@
 #include "Server.h"
 
 //#define Run_DB
-//#define Run_Lobby
+#define Run_Lobby
 
 void SESSION::init() 
 {
