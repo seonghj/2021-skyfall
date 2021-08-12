@@ -1091,3 +1091,21 @@ void CGameFramework::ReleaseShaderVariables()
 		m_pd3dcbFog->Release();
 	}
 }
+
+void CGameFramework::Restart() 
+{
+	m_pScene->m_iState = SCENE::INGAME;
+	m_pScene->m_ppUIObjects[0]->SetvPercent(1.0f);
+	m_GameTimer.Reset();
+	m_ChargeTimer.Reset();
+	m_pPlayer->SetHp(m_pPlayer->m_iMaxHp);
+	m_pPlayer->SetPosition(XMFLOAT3(5048, 200, 1300));
+	for (int i = 0; i < m_pScene->m_nGameObjects; i++)
+	{
+		m_pScene->m_ppGameObjects[i]->SetHp(m_pScene->m_ppGameObjects[i]->m_iMaxHp);
+		CGameObject* pHpBar = m_pScene->m_ppGameObjects[i]->FindFrame("HpBar");
+		pHpBar->m_iHp = m_pScene->m_ppGameObjects[i]->m_iMaxHp;
+		pHpBar->m_bActive = false;
+	}
+	m_pScene->m_ppUIObjects[2]->SetAlpha(0.0f);
+}

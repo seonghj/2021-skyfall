@@ -696,8 +696,9 @@ void CPacket::ProcessPacket(char* buf)
             if (m_pPlayer->GetPosition().y <= 5)
             {
                 m_pScene->m_iState = SCENE::END;
-                m_pPlayer->SetPosition(XMFLOAT3(-3000.f, 0.f, -3000.f));
+                m_pPlayer->SetPosition(XMFLOAT3(5048, 200, 1300));
                 m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
+                m_pFramework->Restart();
             }
         }
         break;
@@ -772,6 +773,7 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_iState = SCENE::END;
             m_pPlayer->SetPosition(XMFLOAT3(0.0f, -500.0f, 0.0f));
             m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
+            m_pFramework->Restart();
         }
         break;
     }
