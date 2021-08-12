@@ -34,7 +34,7 @@ public:
 	bool Connection_ODBC();
 	void Disconnection_ODBC();
 
-	bool Search_ID(char* id, char* pw, bool* isLogin);
+	bool Search_ID(char* id, bool* isLogin);
 	bool Insert_ID(char* id);
 	bool Logout_player(char* id);
 	bool Send_player_record(const SESSION& player, int survival_time, int rank);

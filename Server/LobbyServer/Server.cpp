@@ -99,7 +99,6 @@ bool Server::MatchMaking(int id)
 
 void Server::Connect_Game_Server()
 {
-    printf("ready\n");
     SOCKET gameserver_sock;
     SOCKADDR_IN gameserveraddr;
     int addrlen = sizeof(SOCKADDR_IN);
@@ -137,6 +136,7 @@ void Server::Accept()
     int addrlen = sizeof(SOCKADDR_IN);
     DWORD flags = 0;
 
+    printf("ready\n");
 
     while (1) {
         client_sock = accept(listen_sock, (struct sockaddr*)&clientaddr, &addrlen);
@@ -156,9 +156,9 @@ void Server::Accept()
         getpeername(client_sock, (SOCKADDR*)&sessions[client_key].clientaddr
             , &sessions[client_key].addrlen);
 
-        /*printf("client_connected: IP =%s, port=%d key = %d\n",
+        printf("client_connected: IP =%s, port=%d key = %d\n",
             inet_ntoa(sessions[client_key].clientaddr.sin_addr)
-            , ntohs(sessions[client_key].clientaddr.sin_port), client_key);*/
+            , ntohs(sessions[client_key].clientaddr.sin_port), client_key);
 
         sessions[client_key].over.dataBuffer.len = BUFSIZE;
         sessions[client_key].over.dataBuffer.buf =
@@ -208,10 +208,10 @@ void Server::do_recv(char id)
     if (WSARecv(client_s, &over->dataBuffer, 1, (LPDWORD)sessions[id].prev_size,
         &flags, &(over->overlapped), NULL)){
         int err_no = WSAGetLastError();
-        /*if (err_no != WSA_IO_PENDING){
+        if (err_no != WSA_IO_PENDING){
             printf("id: %d ", id);
             display_error("recv error: ", err_no);
-        }*/
+        }
     }
     //printf("Recv id: %d: type:%d / size: %d\n", id, over->dataBuffer.buf[1], over->dataBuffer.buf[0]);
     //memcpy(sessions[id].packet_buf, over->dataBuffer.buf, over->dataBuffer.buf[0]);
@@ -246,7 +246,7 @@ void Server::send_key_player_packet(char key)
 
     p.key = key;
     p.size = sizeof(player_key_packet);
-    p.type = PacketType::SC_player_Lobbykey;
+    p.type = PacketType::SC_player_key;
     send_packet(key, reinterpret_cast<char*>(&p));
 }
 
@@ -256,9 +256,9 @@ void Server::send_player_loginOK_packet(char key)
 
     p.key = key;
     p.size = sizeof(player_login_packet);
-    p.type = PacketType::SC_player_LobbyloginOK;
+    p.type = PacketType::SC_player_loginOK;
 
-    printf("%d: login\n",key);
+    //printf("%d: login\n",id);
 
     send_packet(key, reinterpret_cast<char*>(&p));
 }
@@ -269,7 +269,7 @@ void Server::send_player_loginFail_packet(char key)
 
     p.key = key;
     p.size = sizeof(player_loginFail_packet);
-    p.type = PacketType::SC_player_LobbyloginFail;
+    p.type = PacketType::SC_player_loginFail;
 
     //printf("%d: login\n",id);
 
@@ -305,13 +305,14 @@ void Server::process_packet(char id, char* buf)
     switch (buf[1]) {
     case PacketType::CS_player_login: {
         player_login_packet* p = reinterpret_cast<player_login_packet*>(buf);
+
         int client_key = p->key;
         bool is_Login = false;
 
         bool b;
 #ifdef Run_DB
         if (strcmp(p->id, "test") != 0) {
-            b = m_pDB->Search_ID(p->id, p->pw,  &is_Login);
+            b = m_pDB->Search_ID(p->id, &is_Login);
 
             if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
 
@@ -334,30 +335,15 @@ void Server::process_packet(char id, char* buf)
         break;
     }
     case PacketType::CS_game_ready: {
-        game_ready_packet* p = reinterpret_cast<game_ready_packet*>(buf);
-        send_game_start_packet(p->key);
-        Disconnected(p->key);
+        sessions[buf[2]].isready = true;
+        MatchMaking(buf[2]);
         break;
     }
-    case PacketType::CS_room_select: {
-        room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
-        std::lock_guard <std::mutex> lg{ room_player_cnt_lock };
-        if (room_player_cnt.find(p->room) == room_player_cnt.end()) {
-            room_player_cnt.emplace(p->room, 1);
-        }
-        if (room_player_cnt[p->room] == MAX_PLAYER) break;
-        room_player_cnt[p->room] = room_player_cnt[p->room] + 1;
-        sessions[p->key].roomID = p->room;
-
-        room_select_packet p1;
-        p1.key = p->key;
-        p1.room = p->room;
-        p1.roomid = p->room;
-        p1.size = sizeof(p);
-        p1.type = SC_select_room;
-        send_packet(GAMESERVER_ID, reinterpret_cast<char*>(&p1));
-
-        send_packet(p->key, reinterpret_cast<char*>(&p1));
+    case PacketType::CS_game_start: {
+        start_ok_packet* p = reinterpret_cast<start_ok_packet*>(buf);
+        p->size = sizeof(p);
+        p->type = SC_start_ok;
+        break;
     }
     }
 }

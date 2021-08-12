@@ -11,7 +11,6 @@ void Map::init_Map(Server* s, Timer* t)
 	over.dataBuffer.buf = over.messageBuffer;
 	over.type = 1;
 	over.roomID = roomnum;
-	game_start = true;
 
 	std::random_device rd;
 	std::mt19937_64 gen(rd());

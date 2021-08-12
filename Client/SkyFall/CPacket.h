@@ -40,11 +40,9 @@ public:
 	void Send_attack_packet(int type);
 	void Send_stop_packet();
 	void Send_login_packet(char* id, char* pw);
-	void Login_to_GameServer(char* id);
 	void Send_swap_weapon_packet(PlayerType weapon);
 	void Send_damage_to_player_packet(int target, int nAttack);
 	void Send_mon_damaged_packet(int target, int nAttack);
-	void Send_room_packet(int room);
 
 	void Swap_weapon(int key, PlayerType weapon);
 	void Map_set(map_block_set* p);
@@ -71,10 +69,10 @@ public:
 	bool canmove = false;
 
 	void Set_UserID(char* ID) { strcpy_s(userID, ID); 
-	//cout << "ID: " << userID << endl;
+	cout << "ID: " << userID << endl;
 	}
 	void Set_IP(char* IP) { strcpy_s(ipaddr, IP); 
-	//cout << "IP: " << ipaddr << endl;
+	cout << "IP: " << ipaddr << endl;
 	}
 
 private:

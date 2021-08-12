@@ -75,18 +75,6 @@ int Server::SetClientKey(int roomID)
     }
 }
 
-int Server::SetClientKey_beforeIngame()
-{
-    int cnt = 0;
-    while (true) {
-        if (FALSE == session_beforeIngame[cnt].connected) {
-            return cnt;
-        }
-        else
-            ++cnt;
-    }
-}
-
 int Server::SetroomID()
 {
     int cnt = 1;
@@ -100,11 +88,11 @@ int Server::SetroomID()
             maps_lock.lock();
             maps.emplace(cnt, Map(cnt));
             maps[cnt].SetNum(cnt);
-            //maps[cnt].init_Map(this, m_pTimer);
+            maps[cnt].init_Map(this, m_pTimer);
             maps_lock.unlock();
 
             m_pBot->monsters.emplace(cnt, std::array<Monster, 15>{});
-            //m_pBot->monsterRun = TRUE;
+            m_pBot->monsterRun = TRUE;
             m_pBot->Init(cnt);
 
             /*m_pBot->monsters[cnt][0].SetPosition(2000, 197.757935, 5000);
@@ -124,32 +112,6 @@ int Server::SetroomID()
            ++cnt;
         }
     }
-}
-
-bool Server::CreateRoom(int key)
-{
-    if (sessions.find(key) == sessions.end()) {
-        sessions_lock.lock();
-        //std::array<SESSION, 20> s{};
-        sessions.emplace(key, std::array<SESSION, 20>{});
-        sessions_lock.unlock();
-
-        maps_lock.lock();
-        maps.emplace(key, Map(key));
-        maps[key].SetNum(key);
-        //maps[key].init_Map(this, m_pTimer);
-        maps_lock.unlock();
-
-        m_pBot->monsters.emplace(key, std::array<Monster, 15>{});
-        //m_pBot->monsterRun = TRUE;
-        m_pBot->Init(key);
-        //m_pBot->RunBot(key);
-
-        printf("create game room - %d\n", key);
-        return true;
-    }
-    else
-        return false;
 }
 
 void Server::ConnectLobby()
@@ -226,25 +188,26 @@ void Server::Accept()
             break;
         }
 
-        session_beforeIngame[client_key].init();
-        session_beforeIngame[client_key].connected = TRUE;
-        session_beforeIngame[client_key].key = client_key;
-        session_beforeIngame[client_key].roomID = -1;
-        session_beforeIngame[client_key].sock = client_sock;
-        session_beforeIngame[client_key].clientaddr = clientaddr;
-        getpeername(client_sock, (SOCKADDR*)&session_beforeIngame[client_key].clientaddr
-            , &session_beforeIngame[client_key].addrlen);
+        sessions[roomID][client_key].init();
+        sessions[roomID][client_key].connected = TRUE;
+        sessions[roomID][client_key].key = client_key;
+        sessions[roomID][client_key].roomID = roomID;
+        sessions[roomID][client_key].sock = client_sock;
+        sessions[roomID][client_key].clientaddr = clientaddr;
+        getpeername(client_sock, (SOCKADDR*)&sessions[roomID][client_key].clientaddr
+            , &sessions[roomID][client_key].addrlen);
 
-        session_beforeIngame[client_key].over.type = 0;
-        session_beforeIngame[client_key].over.dataBuffer.len = BUFSIZE;
-        session_beforeIngame[client_key].over.dataBuffer.buf =
-            session_beforeIngame[client_key].over.messageBuffer;
-        session_beforeIngame[client_key].over.is_recv = true;
-        session_beforeIngame[client_key].over.roomID = -1;
+        sessions[roomID][client_key].over.type = 0;
+        sessions[roomID][client_key].over.dataBuffer.len = BUFSIZE;
+        sessions[roomID][client_key].over.dataBuffer.buf =
+            sessions[roomID][client_key].over.messageBuffer;
+        sessions[roomID][client_key].over.is_recv = true;
+        sessions[roomID][client_key].over.roomID = roomID;
 
+        sessions[roomID][client_key].near_monster;
 
         /*for (int i = 0; i < 20; i++)
-            session_beforeIngame[client_key].near_monster.insert(i);*/
+            sessions[roomID][client_key].near_monster.insert(i);*/
 
         accept_lock.unlock();
         // ���ϰ� ����� �Ϸ� ��Ʈ ����
@@ -252,9 +215,9 @@ void Server::Accept()
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_key, 0);
 
         //printf("client_key: %d\n", client_key);
-        send_Before_Ingamekey_packet(client_key);
+        send_player_key_packet(client_key, roomID);
 
-        do_recv(client_key, -1);
+        do_recv(client_key, roomID);
     }
 
     // closesocket()
@@ -291,16 +254,8 @@ void Server::Disconnected(int key, int roomID)
 void Server::do_recv(int key, int roomID)
 {
     DWORD flags = 0;
-    SOCKET client_s;
-    OVER_EX* over;
-    if (roomID == -1) {
-        client_s = session_beforeIngame[key].sock;
-        over = &session_beforeIngame[key].over;
-    }
-    else {
-        client_s = sessions[roomID][key].sock;
-        over = &sessions[roomID][key].over;
-    }
+    SOCKET client_s = sessions[roomID][key].sock;
+    OVER_EX* over = &sessions[roomID][key].over;
 
     over->dataBuffer.len = BUFSIZE;
     over->dataBuffer.buf = over->messageBuffer;
@@ -319,11 +274,8 @@ void Server::do_recv(int key, int roomID)
 void Server::send_packet(int to, char* packet, int roomID)
 {
     if (SC_NONE >= packet[1] || packet[1] >= CS_NONE) return;
-    SOCKET client_s;
-    if (roomID == -1)
-        client_s = session_beforeIngame[to].sock;
-    else
-        client_s = sessions[roomID][to].sock;
+
+    SOCKET client_s = sessions[roomID][to].sock;
     OVER_EX* over = new OVER_EX;
     ZeroMemory(over, sizeof(OVER_EX));
     over->dataBuffer.buf = packet;
@@ -353,17 +305,6 @@ void Server::send_player_key_packet(int key, int roomID)
     p.type = PacketType::SC_player_key;
     p.roomid = roomID;
     send_packet(key, reinterpret_cast<char*>(&p), roomID);
-}
-
-void Server::send_Before_Ingamekey_packet(int key)
-{
-    player_key_packet p;
-
-    p.key = key;
-    p.size = sizeof(player_key_packet);
-    p.type = PacketType::SC_player_key;
-    p.roomid = -1;
-    send_packet(key, reinterpret_cast<char*>(&p),-1);
 }
 
 void Server::send_player_loginOK_packet(int key, int roomID)
@@ -731,68 +672,58 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         int client_key = p->key;
         bool is_Login = false;
+        bool b;
 
-        int nkey = SetClientKey(p->roomid);
+#ifdef Run_DB
+        if (strcmp(p->id, "test") != 0) {
+            b = m_pDB->Search_ID(p->id, &is_Login);
 
-        if (nkey == -1) break;
+            if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
 
-        sessions[p->roomid][nkey].init();
-
-        session_beforeIngame[client_key].connected = TRUE;
-        session_beforeIngame[client_key].key = nkey;
-        session_beforeIngame[client_key].roomID = p->roomid;
-        sessions[p->roomid][nkey].sock = session_beforeIngame[client_key].sock;
-        sessions[p->roomid][nkey].clientaddr = session_beforeIngame[client_key].clientaddr;
-
-        sessions[p->roomid][nkey].over.type = 0;
-        sessions[p->roomid][nkey].over.dataBuffer.len = BUFSIZE;
-        sessions[p->roomid][nkey].over.dataBuffer.buf =
-            sessions[p->roomid][nkey].over.messageBuffer;
-        sessions[p->roomid][nkey].over.is_recv = true;
-        sessions[p->roomid][nkey].over.roomID = p->roomid;
-
-        strcpy_s(sessions[p->roomid][client_key].id, p->id);
+            if (is_Login) {
+                send_player_loginFail_packet(client_key, sessions[roomID][client_key].roomID);
+                Disconnected(client_key, sessions[roomID][client_key].roomID);
+                break;
+            }
+        }
+#endif
+        strcpy_s(sessions[roomID][client_key].id, p->id);
         send_player_loginOK_packet(client_key, sessions[roomID][client_key].roomID);
 
         printf("client_connected: IP =%s, port=%d key = %d Room = %d\n",
-            inet_ntoa(sessions[p->roomid][client_key].clientaddr.sin_addr)
-            , ntohs(sessions[p->roomid][client_key].clientaddr.sin_port), client_key, p->roomid);
+            inet_ntoa(sessions[roomID][client_key].clientaddr.sin_addr)
+            , ntohs(sessions[roomID][client_key].clientaddr.sin_port), client_key, roomID);
 
-        sessions[p->roomid][client_key].state = 1;
+        sessions[roomID][client_key].state = 1;
 
         //send_map_packet(client_key, roomID);
 
-        sessions[p->roomid][p->key].isready = true;
-        sessions[p->roomid][p->key].playing = true;
-
-        if (m_pBot->monsterRun == false) {
-            m_pBot->monsterRun = true;
-            m_pBot->RunBot(p->key);
-        }
-        if (maps[p->roomid].game_start == false) {
-            maps[p->roomid].init_Map(this, m_pTimer);
-        }
-
-        for (auto& s : sessions[p->roomid]) {
+        break;
+    }
+    case PacketType::CS_game_ready: {
+        game_ready_packet* p = reinterpret_cast<game_ready_packet*>(buf);
+        sessions[roomID][p->key].using_weapon = p->weaponType;
+        sessions[roomID][p->key].isready = true;
+        sessions[roomID][p->key].playing = true;
+        // 임시
+        send_start_packet(p->key, roomID);
+        
+        for (auto& s : sessions[roomID]) {
             if ((TRUE == s.connected) && (s.key.load() != p->key)) {
-                send_add_player_packet(s.key.load(), p->key, p->roomid);
+                send_add_player_packet(s.key.load(), p->key, roomID);
             }
         }
-        for (auto& s : sessions[p->roomid]) {
+        for (auto& s : sessions[roomID]) {
             if ((TRUE == s.connected) && (s.key.load() != p->key))
-                send_add_player_packet(p->key, s.key.load(), p->roomid);
+                send_add_player_packet(p->key, s.key.load(), roomID);
         }
 
         for (int i = 0; i < 15; ++i) {
-            if (m_pBot->monsters[p->roomid][i].state == 1) {
+            if (m_pBot->monsters[roomID][i].state == 1) {
                 //printf("send monster %d\n", i);
-                send_add_monster(i, p->roomid, p->key);
+                send_add_monster(i, roomID, p->key);
             }
         }
-
-        session_beforeIngame_lock.lock();
-        session_beforeIngame.erase(client_key);
-        session_beforeIngame_lock.unlock();
 
         break;
     }
@@ -972,12 +903,6 @@ void Server::process_packet(int key, char* buf, int roomID)
         }
 
         send_packet_to_players(key, reinterpret_cast<char*>(p), p->roomid);
-        break;
-    }
-     // Lobby
-    case PacketType::SC_select_room: {
-        room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
-        CreateRoom(p->roomid);
         break;
     }
     }

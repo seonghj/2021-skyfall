@@ -682,7 +682,7 @@ void CScene::CheckCollision(CPacket* pPacket)
 					//for (int i = 0; i < 4; ++i)
 					//	m_ppWeapons[i]->Release();
 					pPacket->Set_StartWeapon((PlayerType)i);
-					//pPacket->Send_ready_packet((PlayerType)i);
+					pPacket->Send_ready_packet((PlayerType)i);
 				}
 				pHpBar->m_bActive = true;
 			}

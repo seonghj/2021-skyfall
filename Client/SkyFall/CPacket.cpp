@@ -190,17 +190,6 @@ void CPacket::Send_login_packet(char* id, char* pw)
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
-void CPacket::Login_to_GameServer(char* id)
-{
-    player_login_packet p;
-    p.key = client_key;
-    p.size = sizeof(p);
-    p.type = PacketType::CS_player_login;
-    p.roomid = roomID;
-    strcpy_s(p.id, id);
-    SendPacket(reinterpret_cast<char*>(&p));
-}
-
 void CPacket::Send_swap_weapon_packet(PlayerType weapon)
 {
     Weapon_swap_packet p;
@@ -237,18 +226,6 @@ void CPacket::Send_mon_damaged_packet(int target, int nAttack)
     p.damage = 0;
     p.target = target;
     p.nAttack = nAttack;
-
-    SendPacket(reinterpret_cast<char*>(&p));
-}
-
-void CPacket::Send_room_packet(int room)
-{
-    room_select_packet p;
-    p.key = client_key;
-    p.room = room;
-    p.roomid = -1;
-    p.size = sizeof(p);
-    p.type = CS_room_select;
 
     SendPacket(reinterpret_cast<char*>(&p));
 }
@@ -532,53 +509,23 @@ void CPacket::ProcessPacket(char* buf)
 {
     switch (buf[1])
     {
-    case PacketType::SC_player_Lobbykey: {
+    case PacketType::SC_player_key: {
         player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
         int key = p->key;
 
+        if (key < 0 || key > 20) break;
+
         client_key = key;
-        roomID = -1;
-        printf("recv key from Lobby server: %d\n", key);
+        roomID = p->roomid;
+        printf("recv key from server: %d\n", key);
 
         //m_pPlayer = m_pFramework->m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
-        m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[0] = m_pFramework->m_pPlayer;
+        m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pFramework->m_pPlayer;
         //m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
 
         m_pFramework->m_pCamera = m_pPlayer->GetCamera();
 
-        break;
-    }
-    case PacketType::SC_player_LobbyloginFail: {
-        printf("Lobby Login fail\n");
-        break;
-    }
-    case PacketType::SC_player_LobbyloginOK: {
-        player_loginOK_packet* p = reinterpret_cast<player_loginOK_packet*>(buf);
-        int key = p->key;
-        if (isLogin == TRUE) break;
-        if (key != -1) {
-            client_key = key;
-            roomID = -1;
-            /* m_pPlayer->SetPosition(p->Position);
-             m_pPlayer->Rotate(p->dx, p->dy, 0);*/
-            
-            printf("Login Lobby\n");
-            canmove = TRUE;
-            m_pPlayer->m_pPacket = this;
-            //m_pScene->m_iState = SCENE::LOBBY;
-            m_pScene->SetState(SCENE::LOBBY);
-        }
-        break;
-    }
-    case PacketType::SC_player_key: {
-        player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
-        int key = p->key;
-        if (p->roomid == -1) {
-            client_key = p->key;
-            printf("recv key from Game server: %d\n", key);
-            Login_to_GameServer(userID);
-            break;
-        }
+        //Send_login_packet("test", "test");
 
         break;
     }
@@ -593,11 +540,6 @@ void CPacket::ProcessPacket(char* buf)
         if (key != -1) {
             client_key = key;
             roomID = p->roomid;
-            //m_pPlayer = m_pFramework->m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
-            m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pFramework->m_pPlayer;
-            //m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
-
-            m_pFramework->m_pCamera = m_pPlayer->GetCamera();
             /* m_pPlayer->SetPosition(p->Position);
              m_pPlayer->Rotate(p->dx, p->dy, 0);*/
 
@@ -605,17 +547,8 @@ void CPacket::ProcessPacket(char* buf)
             canmove = TRUE;
             m_pPlayer->m_pPacket = this;
             //m_pScene->m_iState = SCENE::LOBBY;
-
-            Send_swap_weapon_packet(start_weapon);
-
-            m_pScene->SetState(SCENE::INGAME);
+            m_pScene->SetState(SCENE::LOBBY);
         }
-        break;
-    }
-    case PacketType::SC_select_room: {
-        room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
-        roomID = p->room;
-        m_pScene->SetState(SCENE::INROOM);
         break;
     }
     case PacketType::SC_player_add: {
@@ -641,9 +574,9 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::SC_start_ok: {
+        //GameConnect();
         game_start_packet* p = reinterpret_cast<game_start_packet*>(buf);
-        //Swap_weapon(p->key, p->weaponType);
-        GameConnect();
+        Swap_weapon(p->key, p->weaponType);
         m_pScene->m_iState = INGAME;
         m_pFramework->MouseHold(false);
         break;
@@ -1129,11 +1062,11 @@ void CPacket::LobbyConnect()
 
 void CPacket::GameConnect()
 {
-    // disconnect
+    //// disconnect
     //shutdown(sock, SD_RECEIVE);
-    Recv_thread.join();
-    closesocket(sock);
-    cout << "lobby diconnect" << endl;
+    //closesocket(sock);
+    ////cout << "lobby diconnect" << endl;
+
     int retval = 0;
 
     WSADATA wsa;
