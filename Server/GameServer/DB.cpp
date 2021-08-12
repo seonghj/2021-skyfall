@@ -80,26 +80,31 @@ void DB::Disconnection_ODBC()
         SQLFreeHandle(SQL_HANDLE_STMT, hStmt);
 }
 
-bool DB::Search_ID(char* id, bool* isLogin)
+bool DB::Search_ID(char* id, char* pw, bool* isLogin)
 {
-    wchar_t query[512] = L"SELECT isLogin FROM skyfall.UserInfo WHERE ID = '";
+    wchar_t query1[512] = L"SELECT isLogin FROM skyfall.UserInfo WHERE ID = '";
+    wchar_t query2[512] = L"SELECT PassWord FROM skyfall.UserInfo WHERE ID = '";
     wchar_t wcID[20];
+    wchar_t wcPW[20];
+
+    char PW[20];
     SQLLEN len = 0;
 
     MultiByteToWideChar(CP_ACP, 0, id, -1, wcID, sizeof(id));
 
-    wcscat_s(query, wcID);
-    wcscat_s(query, L"'");
+    wcscat_s(query1, wcID);
+    wcscat_s(query1, L"'");
 
 #ifdef Test_DB 
     wprintf(L"%s\n", query);
 #endif
 
+    // ID 검색
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
         != SQL_SUCCESS)
         return false;
 
-    if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query1, SQL_NTS)
         != SQL_SUCCESS) {
         printf("Query invaild\n");
         return false;
@@ -107,6 +112,25 @@ bool DB::Search_ID(char* id, bool* isLogin)
     SQLBindCol(hStmt, 1, SQL_C_TINYINT, isLogin, sizeof(bool), &len);
     if (SQLFetch(hStmt) == SQL_NO_DATA) return false;
     if (hStmt) SQLCloseCursor(hStmt);
+
+    wcscat_s(query2, wcID);
+    wcscat_s(query2, L"'");
+
+    // PW 일치 검사
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
+
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query2, SQL_NTS)
+        != SQL_SUCCESS) {
+        printf("Query invaild\n");
+        return false;
+    }
+    SQLBindCol(hStmt, 1, SQL_C_CHAR, PW, sizeof(PW), &len);
+    if (SQLFetch(hStmt) == SQL_NO_DATA) return false;
+    if (hStmt) SQLCloseCursor(hStmt);
+
+    if (strcmp(PW, pw) == 0) return false;
 
     return true;
 }

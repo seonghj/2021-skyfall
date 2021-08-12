@@ -42,6 +42,7 @@ protected:
 	bool						m_isAttack;
 	bool						m_isStanding;
 	bool						m_isCharging;
+	bool						m_isDamaged = false;
 
 	int							m_nPlace;
 	bool						m_bHit = false;
@@ -74,6 +75,7 @@ public:
 	virtual void SetAttack(bool shoot) { m_isAttack = shoot; }
 	void SetCharging(bool charge) { m_isCharging = charge; }
 	void SetPlace(int nPlace) { m_nPlace = nPlace; }
+	void SetDamaged(bool damaged) { m_isDamaged = damaged; }
 
 	virtual void RButtonDown() {};
 	virtual void RButtonUp() {};
@@ -91,6 +93,7 @@ public:
 	bool  GetStanding() const { return(m_isStanding); }
 	bool  GetCharging() const { return(m_isCharging); }
 	int GetPlace() const { return(m_nPlace); }
+	bool  GetDamaged() const { return(m_isDamaged); }
 
 	void SetScale(XMFLOAT3& xmf3Scale) { m_xmf3Scale = xmf3Scale; }
 
@@ -162,6 +165,9 @@ public:
 #ifdef _WITH_SOUND_CALLBACK
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
+
+	CPacket* m_pPacket = NULL;
+
 protected:
 	CGameObject* pWeapon;
 

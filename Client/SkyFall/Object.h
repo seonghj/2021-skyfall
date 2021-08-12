@@ -510,6 +510,8 @@ public:
 		int							m_iAtkStat;
 		int							m_iDefStat;
 		int							m_nTrackOffSet;
+
+		int							m_nkey;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -671,11 +673,14 @@ public:
 	void OnUpdateCallback();
 	void SetUpdatedContext(LPVOID* ppContext) { m_ppUpdatedContext = ppContext; }
 	int	 GetPlace() { return (m_nPlace); }
+	int GetState() { return (m_iState); }
 	void SetPlace(int n) { m_nPlace = n; }
 	virtual void Move(const XMFLOAT3& vDirection, float fSpeed);
 
 	float m_fHeight = 0.0f;
 	bool m_iReady = false;
+
+	float m_fRotateDegree = 0.0f;
 };
 
 

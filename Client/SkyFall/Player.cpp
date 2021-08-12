@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "Player.h"
 #include "Shader.h"
+#include "CPacket.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CPlayer
@@ -359,6 +360,7 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunLeft, PlayerState::RunLeft);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunRight, PlayerState::RunRight);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Take_Damage, PlayerState::Take_Damage);
+	m_pSkinnedAnimationController->SetTrackType(PlayerState::Take_Damage, ANIMATION_TYPE_ONCE);
 
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Jump, PlayerState::Jump);
@@ -582,13 +584,12 @@ void CTerrainPlayer::Update(float fTimeElapsed)
 	if (m_pSkinnedAnimationController)
 	{
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
-
 		if (m_isJump) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackPosition(PlayerState::Jump, 0);
 			m_pSkinnedAnimationController->SetTrackEnable(PlayerState::Jump, true);
 		}
-		else if (::IsZero(fLength)&&m_isGround)
+		else if (::IsZero(fLength)&&m_isGround&&m_isDamaged == false)
 		{
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(PlayerState::Idle, true);
@@ -695,6 +696,8 @@ void CBowPlayer::Update(float fTimeElapsed)
 		if (m_isRelease&&m_pSkinnedAnimationController->IsTrackFinish(nShotRelease)) {
 			m_isRelease = false;
 		}
+		if (m_isDamaged && m_pSkinnedAnimationController->IsTrackFinish(PlayerState::Take_Damage))
+			m_isDamaged = false;
 		if (m_isJump) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackPosition(PlayerState::Jump, 0);
@@ -704,7 +707,7 @@ void CBowPlayer::Update(float fTimeElapsed)
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nShotReady, true);
 		}
-		else if (::IsZero(fLength) && m_isGround && !m_isRelease)
+		else if (::IsZero(fLength) && m_isGround && !m_isRelease && !m_isDamaged)
 		{
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(PlayerState::Idle, true);
@@ -761,7 +764,11 @@ bool CBowPlayer::CheckCollision(CGameObject* pObject, bool isMonster)
 			if (m_ppBullets[i]->isCollide(pObject)) {
 				cout << "Bullet Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
 				DeleteBullet(i);
-				pObject->TakeDamage(m_iAtkStat);
+				//pObject->TakeDamage(m_iAtkStat);
+				if (isMonster)
+					m_pPacket->Send_mon_damaged_packet(pObject->m_nkey, 3);
+				else
+					m_pPacket->Send_damage_to_player_packet(pObject->m_nkey, 3);
 			}
 			if(m_ppBullets[i]->GetPosition().y<=0)
 				DeleteBullet(i--);
@@ -865,6 +872,7 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunLeft, PlayerState::RunLeft);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunRight, PlayerState::RunRight);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Take_Damage, PlayerState::Take_Damage);
+	m_pSkinnedAnimationController->SetTrackType(PlayerState::Take_Damage, ANIMATION_TYPE_ONCE);
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack1, nAttack1);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack2, nAttack2);
@@ -918,6 +926,9 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 	{
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
 
+		if (m_isDamaged && m_pSkinnedAnimationController->IsTrackFinish(PlayerState::Take_Damage))
+			m_isDamaged = false;
+
 		if (m_isJump) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackPosition(PlayerState::Jump, 0);
@@ -925,7 +936,7 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 		}
 		else if (m_isAttack) {
 			float d = m_pSkinnedAnimationController->GetTrackPosition(nAttack1 + m_nAttack);
-			
+
 			if (abs(d-0.2f)<=fTimeElapsed) {
 				m_bHit = true;
 			}
@@ -935,11 +946,14 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 					m_nAttack = m_nAttack == 0 ? 1 : 0;
 					m_pSkinnedAnimationController->SetTrackPosition(nAttack1 + m_nAttack, 0);
 				}
+				if (m_pSkinnedAnimationController->GetTrackPosition(nAttack1 + m_nAttack) == 0)
+					m_pPacket->Send_attack_packet(m_nAttack);
 			}
+
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nAttack1 + m_nAttack, true);
 		}
-		else if (::IsZero(fLength) && m_isGround)
+		else if (::IsZero(fLength) && m_isGround && !m_isDamaged)
 		{
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(PlayerState::Idle, true);
@@ -1006,15 +1020,18 @@ bool C1HswordPlayer::CheckCollision(CGameObject* pObject, bool isMonster)
 
 	if (m_isAttack&& m_bHit) {
 		if (pObject->isCollide(pWeapon)) {
-			pObject->TakeDamage(m_iAtkStat * (1.f + m_nAttack / 4.f));
-			cout << "Sword Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
+			//pObject->TakeDamage(m_iAtkStat * (1.f + m_nAttack / 4.f));
+			//cout << "Sword Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
 			m_bHit = false;
-
 			if (isMonster) {
+				m_pPacket->Send_mon_damaged_packet(pObject->m_nkey, m_nAttack);
 				pObject->SetBehaviorActivate(true);
-				cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
+				//cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
 				pObject->FindFrame("HpBar")->m_bActive = true;
 			}
+			else
+				m_pPacket->Send_damage_to_player_packet(pObject->m_nkey, m_nAttack);
+
 		}
 	}
 	// Player - pObject
@@ -1042,6 +1059,7 @@ C2HswordPlayer::C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunLeft, PlayerState::RunLeft);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunRight, PlayerState::RunRight);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Take_Damage, PlayerState::Take_Damage);
+	m_pSkinnedAnimationController->SetTrackType(PlayerState::Take_Damage, ANIMATION_TYPE_ONCE);
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack1, nAttack1);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack2, nAttack2);
@@ -1102,6 +1120,7 @@ C2HspearPlayer::C2HspearPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunLeft, PlayerState::RunLeft);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunRight, PlayerState::RunRight);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Take_Damage, PlayerState::Take_Damage);
+	m_pSkinnedAnimationController->SetTrackType(PlayerState::Take_Damage, ANIMATION_TYPE_ONCE);
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack1, nAttack1);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack2, nAttack2);

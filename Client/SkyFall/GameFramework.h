@@ -66,7 +66,7 @@ public:
 	void CheckCollision();
 	void SetCloud(float x, float z) { m_pcbMappedFog->gvFogPos = XMFLOAT2(x, z); }
 
-
+	void MouseHold(bool b) { m_bMouseHold = b; }
 
 
 	XMFLOAT3					m_BeforePosition;

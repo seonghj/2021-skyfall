@@ -15,7 +15,9 @@ constexpr int AI_ID = 5000;
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 6144;
 constexpr int MAP_BLOCK_SIZE = 2048;
-constexpr int MAP_BREAK_TIME = 30;
+constexpr int MAP_BREAK_TIME = 100000;
+
+constexpr int MON_SPAWN_TIME = 10000;
 
 constexpr float VIEWING_DISTANCE = 1000.f;
 
@@ -86,6 +88,7 @@ enum PacketType {
 	SC_monster_pos,
 	SC_monster_attack,
 	SC_monster_damaged,
+	SC_monster_respawn,
 	SC_player_record,
 	SC_player_getitem,
 
@@ -99,11 +102,13 @@ enum PacketType {
 	CS_player_pos,
 	CS_start_pos,
 	CS_player_attack,
+	CS_player_damage,
 	CS_player_stop,
 	CS_allow_shot,
 	CS_player_getitem,
 	CS_monster_pos,
 	CS_monster_attack,
+	CS_monster_damaged,
 	CS_NONE,
 };
 
@@ -113,12 +118,8 @@ enum EventType {
 	game_end,
 	Mon_move_to_player,
 	Mon_attack_cooltime,
+	Mon_respawn,
 	MapBreak
-};
-
-enum PlayerState {
-	DEAD,
-	ALIVE,
 };
 
 enum PlayerMove {
@@ -129,8 +130,10 @@ enum PlayerMove {
 };
 
 enum PlayerAttackType {
-	SWORD1HL,
+	SWORD1HL1,
+	SWORD1HL2,
 	SWORD1HR,
+	SWORD1HR2,
 	BOWL,
 	BOWR,
 };
@@ -173,6 +176,7 @@ struct player_key_packet :public Packet {
 
 struct player_login_packet :public Packet {
 	char id[50];
+	char pw[50];
 };
 
 struct player_loginOK_packet :public Packet {
@@ -285,6 +289,9 @@ struct player_arrow_packet : public Packet {
 
 struct player_damage_packet : public Packet {
 	unsigned short damage;
+	short target;
+	short nAttack;
+	float leftHp;
 };
 
 struct player_stop_packet : public Packet {
@@ -320,6 +327,7 @@ struct mon_pos_packet : public Packet {
 	DirectX::XMFLOAT3 direction;
 	float degree;
 	DWORD MoveType;
+	short MonsterType;
 };
 
 struct mon_attack_packet : public Packet {
@@ -328,6 +336,19 @@ struct mon_attack_packet : public Packet {
 	DWORD MoveType;
 	int target;
 	float PlayerLeftHp;
+};
+
+struct mon_damaged_packet : public Packet {
+	unsigned short damage;
+	short target;
+	short nAttack;
+	float leftHp;
+};
+
+struct mon_respawn_packet : public Packet {
+	DirectX::XMFLOAT3 Position;
+	float dx, dy, dz;
+	short MonsterType;
 };
 
 struct player_record_packet : public Packet {
@@ -350,6 +371,10 @@ struct mon_move_to_player_event : public Packet {
 };
 
 struct mon_attack_cooltime_event : public Packet {
+
+};
+
+struct mon_respawn_event : public Packet {
 
 };
 
