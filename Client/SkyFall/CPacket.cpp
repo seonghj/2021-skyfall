@@ -524,6 +524,7 @@ void CPacket::ProcessPacket(char* buf)
         //m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
 
         m_pFramework->m_pCamera = m_pPlayer->GetCamera();
+        Send_login_packet("test", "test");
         break;
     }
     case PacketType::SC_player_loginFail: {
@@ -544,7 +545,7 @@ void CPacket::ProcessPacket(char* buf)
             canmove = TRUE;
             m_pPlayer->m_pPacket = this;
             m_pScene->m_iState = SCENE::LOBBY;
-            m_pFramework->MouseHold(true);
+            //m_pFramework->MouseHold(true);
         }
         break;
     }
