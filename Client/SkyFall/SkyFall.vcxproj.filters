@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="소스 파일\imgui">
-      <UniqueIdentifier>{7bcacc9c-e228-45e9-b92f-152ce0f063f0}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -112,24 +109,6 @@
     </ClCompile>
     <ClCompile Include="Monster.cpp">
       <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="includes\imgui\imgui.cpp">
-      <Filter>소스 파일\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="includes\imgui\imgui_impl_dx12.cpp">
-      <Filter>소스 파일\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="includes\imgui\imgui_impl_win32.cpp">
-      <Filter>소스 파일\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="includes\imgui\imgui_draw.cpp">
-      <Filter>소스 파일\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="includes\imgui\imgui_tables.cpp">
-      <Filter>소스 파일\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="includes\imgui\imgui_widgets.cpp">
-      <Filter>소스 파일\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
