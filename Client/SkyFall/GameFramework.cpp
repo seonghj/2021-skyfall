@@ -40,6 +40,8 @@ CGameFramework::CGameFramework()
 	m_pPlayer = NULL;
 	m_pPacket = NULL;
 
+	m_bMouseHold = true;
+
 	m_ptOldCursorPos.x = FRAME_BUFFER_WIDTH / 2;
 	m_ptOldCursorPos.y = FRAME_BUFFER_HEIGHT / 2;
 	_tcscpy_s(m_pszFrameRate, _T("SkyFall ("));
@@ -469,6 +471,7 @@ void CGameFramework::OnProcessingKeyboardMessageForLogIn(HWND hWnd, UINT nMessag
 
 LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
+	if (m_pScene->GetState() == SCENE::LOGIN || m_pScene->GetState() == SCENE::ENDGAME) return(0);
 	switch (nMessageID)
 	{
 	case WM_ACTIVATE:
@@ -498,7 +501,8 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 
 void CGameFramework::CheckCollision()
 {
-	m_pScene->CheckCollision(m_pPacket);
+	if (m_pScene->GetState() != SCENE::LOGIN)
+		m_pScene->CheckCollision(m_pPacket);
 	//m_pScene->CheckTarget();
 }
 
@@ -522,8 +526,8 @@ void CGameFramework::CreateFontAndGui()
 		}
 		m_pFont = make_unique<SpriteFont>(m_pd3dDevice, resourceUpload,
 			L"Fonts\\SegoeUI_18.spritefont",
-			m_resourceDescriptors->GetCpuHandle(Descriptors::ImGui),
-			m_resourceDescriptors->GetGpuHandle(Descriptors::ImGui));
+			m_resourceDescriptors->GetCpuHandle(Descriptors::SegoeFont),
+			m_resourceDescriptors->GetGpuHandle(Descriptors::SegoeFont));
 		auto uploadResourcesFinished = resourceUpload.End(m_pd3dCommandQueue);
 		WaitForGpuComplete();
 		uploadResourcesFinished.wait();
@@ -536,7 +540,9 @@ void CGameFramework::CreateFontAndGui()
 	ImGui::StyleColorsDark();
 	ImGui_ImplWin32_Init(m_hWnd);
 	ImGui_ImplDX12_Init(m_pd3dDevice, 2, DXGI_FORMAT_R8G8B8A8_UNORM, m_resourceDescriptors->Heap(),
-		m_resourceDescriptors->GetCpuHandle(Descriptors::SegoeFont), m_resourceDescriptors->GetGpuHandle(Descriptors::SegoeFont));
+		m_resourceDescriptors->GetCpuHandle(Descriptors::ImGui), m_resourceDescriptors->GetGpuHandle(Descriptors::ImGui));
+
+	m_pScene->SetState(SCENE::LOGIN);
 }
 
 void CGameFramework::OnDestroy()
@@ -647,6 +653,8 @@ void CGameFramework::ReleaseObjects()
 
 void CGameFramework::ProcessInput()
 {
+	if (m_pScene->GetState() == SCENE::LOGIN || m_pScene->GetState() == SCENE::ENDGAME) return;
+
 	float fTimeElapsed = m_GameTimer.GetTimeElapsed();
 	static UCHAR pKeysBuffer[256];
 	bool bProcessedByScene = true;
@@ -952,6 +960,7 @@ void CGameFramework::FrameAdvance()
 			ImGui::SameLine(0, 0);
 			if (ImGui::Button("Login")) {
 				// 여기서 서버에 로그인
+				m_pPacket->Send_login_packet(m_bufID, m_bufPW);
 			}
 			ImGui::PopStyleVar();
 		}

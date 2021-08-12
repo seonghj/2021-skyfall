@@ -6,6 +6,7 @@
 
 #include "Shader.h"
 #include "Player.h"
+#include "protocol.h"
 
 #define MAX_LIGHTS						16 
 
@@ -38,7 +39,7 @@ struct LIGHTS
 };
 
 enum SCENE {
-	LOBBY,INGAME,
+	LOGIN, LOBBY, INGAME, ENDGAME
 };
 
 
@@ -80,6 +81,8 @@ public:
 	CTerrainPlayer						*m_pPlayer = NULL;
 
 	CHeightMapTerrain* GetTerrain(int i) { return m_ppTerrain[i]; }
+	void SetState(int state) { m_iState = state; }
+	int GetState() const { return m_iState; }
 
 protected:
 	ID3D12RootSignature					*m_pd3dGraphicsRootSignature = NULL;
@@ -120,11 +123,11 @@ public:
 
 	int									m_nGameObjects = 0;
 	CMonster							**m_ppGameObjects = NULL;
-	array<CTerrainPlayer*, 20>			m_mPlayer;
-	array<C1HswordPlayer*, 20>			m_m1HswordPlayer;
-	array<CBowPlayer*, 20>				m_mBowPlayer;
-	array<C2HswordPlayer*, 20>			m_m2HswordPlayer;
-	array<C2HspearPlayer*, 20>			m_m2HspearPlayer;
+	array<CTerrainPlayer*, MAX_PLAYER>			m_mPlayer;
+	array<C1HswordPlayer*, MAX_PLAYER>			m_m1HswordPlayer;
+	array<CBowPlayer*, MAX_PLAYER>				m_mBowPlayer;
+	array<C2HswordPlayer*, MAX_PLAYER>			m_m2HswordPlayer;
+	array<C2HspearPlayer*, MAX_PLAYER>			m_m2HspearPlayer;
 
 	float								m_fElapsedTime = 0.0f;
 

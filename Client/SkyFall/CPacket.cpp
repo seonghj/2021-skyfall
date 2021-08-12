@@ -525,7 +525,7 @@ void CPacket::ProcessPacket(char* buf)
 
         m_pFramework->m_pCamera = m_pPlayer->GetCamera();
 
-        Send_login_packet("test", "test");
+        //Send_login_packet("test", "test");
 
         break;
     }
@@ -547,7 +547,7 @@ void CPacket::ProcessPacket(char* buf)
             canmove = TRUE;
             m_pPlayer->m_pPacket = this;
             //m_pScene->m_iState = SCENE::LOBBY;
-            m_pFramework->MouseHold(true);
+            m_pScene->SetState(SCENE::LOBBY);
         }
         break;
     }
@@ -578,6 +578,7 @@ void CPacket::ProcessPacket(char* buf)
         game_start_packet* p = reinterpret_cast<game_start_packet*>(buf);
         Swap_weapon(p->key, p->weaponType);
         m_pScene->m_iState = INGAME;
+        m_pFramework->MouseHold(false);
         break;
     }
     case PacketType::SC_game_end: {
