@@ -752,7 +752,15 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_mPlayer[key]->SetPosition(p->Position);
         }
         else
+        {
             m_pPlayer->SetPosition(p->Position);
+            if (m_pPlayer->GetPosition().y <= 5)
+            {
+                m_pScene->m_iState = SCENE::ENDGAME;
+                m_pPlayer->SetPosition(XMFLOAT3(5048, 200, 1300));
+                m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
+            }
+        }
         m_pScene->m_mPlayer[key]->SetGround(true);
         break;
     }
@@ -846,7 +854,11 @@ void CPacket::ProcessPacket(char* buf)
             //m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
         }
-
+        if (m_pPlayer->GetHp() <= 0) {
+            m_pScene->m_iState = SCENE::ENDGAME;
+            m_pPlayer->SetPosition(XMFLOAT3(0.0f, -500.0f, 0.0f));
+            m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
+        }
         break;
     }
     case PacketType::SC_monster_add: {
