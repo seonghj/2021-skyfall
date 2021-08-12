@@ -508,11 +508,11 @@ void CGameFramework::CheckCollision()
 
 void CGameFramework::ShowLoginWindow()
 {
-	ImGui::Begin("Login", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+	ImGui::Begin("Login", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 
 	{
 		ImGui::SetWindowSize(ImVec2(400, 100));
-		ImGui::SetWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2 - 200, FRAME_BUFFER_HEIGHT / 2 - 45));
+		ImGui::SetWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2 - 200, FRAME_BUFFER_HEIGHT / 2 - 50));
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
@@ -549,6 +549,52 @@ void CGameFramework::ShowLoginWindow()
 
 void CGameFramework::ShowLobbyWindow()
 {
+	ImGui::Begin("Lobby", false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+
+	{
+		ImGui::SetWindowSize(ImVec2(FRAME_BUFFER_WIDTH/2-10, FRAME_BUFFER_HEIGHT-100));
+		ImGui::SetWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2, 10));
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+
+			{
+				const char* rooms[] = { "Room1","Room2", "Room3" };
+				static int room_current_idx = 0;
+				ImGui::Text("Rooms");
+				if (ImGui::BeginListBox("##Room List", ImVec2(FRAME_BUFFER_WIDTH / 2 - 30, FRAME_BUFFER_HEIGHT / 2))) {
+					for (int n = 0; n < IM_ARRAYSIZE(rooms); n++)
+					{
+						const bool is_selected = (room_current_idx == n);
+						if (ImGui::Selectable(rooms[n], is_selected))
+							room_current_idx = n;
+
+						// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+						if (is_selected)
+							ImGui::SetItemDefaultFocus();
+					}
+
+					ImGui::EndListBox();
+				}
+			}
+
+			ImGui::SetCursorPosX(80);
+			if (ImGui::Button("Join")) {
+				// 여기서 방에 입장
+				// 임시로 state 변경해놓음
+				m_pScene->SetState(SCENE::INROOM);
+
+			}
+			ImGui::SameLine(0, 50);
+			if (ImGui::Button("Create Room")) {
+				// 여기서 새로운 방을 만듦
+			}
+			ImGui::PopStyleVar();
+		}
+		ImGui::PopStyleVar();
+	}
+
+	ImGui::End();
 }
 
 void CGameFramework::CreateFontAndGui()
@@ -973,7 +1019,7 @@ void CGameFramework::FrameAdvance()
 	
 	PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
 	m_pSprite->Begin(m_pd3dCommandList);
-	m_pFont->DrawString(m_pSprite.get(), L"Sample String", XMFLOAT2(100, 10));
+	m_pFont->DrawString(m_pSprite.get(), L"SKYFALL", XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 20));
 	m_pSprite->End();
 	PIXEndEvent(m_pd3dCommandQueue);
 

@@ -671,7 +671,7 @@ void CScene::CheckCollision(CPacket* pPacket)
 	if (m_pMap)
 		m_pMap->CheckCollision(m_pPlayer);
 
-	if (m_iState == LOBBY) {
+	if (m_iState == INROOM) {
 		for (int i = 0; i < 4; ++i) {
 			CGameObject* pHpBar = m_ppWeapons[i]->FindFrame("HpBar");
 			if (m_ppWeapons[i]->isCollide(m_pPlayer)) {
@@ -1005,7 +1005,7 @@ bool CScene::ProcessInput(UCHAR *pKeysBuffer)
 void CScene::AnimateObjects(float fTimeElapsed)
 {
 	m_fElapsedTime = fTimeElapsed;
-	if (m_iState == LOBBY) {
+	if (m_iState == INROOM) {
 		m_pPlayer->Animate(fTimeElapsed);
 		/*m_mBowPlayer[0]->Update(fTimeElapsed);
 
@@ -1073,7 +1073,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	}
 	if (m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
 	
-	if (m_iState == SCENE::LOBBY) {
+	if (m_iState == SCENE::INROOM) {
 		m_pPlayer->Render(pd3dCommandList, NULL);
 		for(int i=0;i<4;++i)
 			m_ppWeapons[i]->Render(pd3dCommandList, pCamera);
@@ -1134,7 +1134,7 @@ void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* p
 
 	if (m_pMap) m_pMap->RenderShadow(pd3dCommandList, pCamera);
 
-	if (m_iState == SCENE::LOBBY) {
+	if (m_iState == SCENE::INROOM) {
 		for (int i = 0; i < 4; ++i)
 			m_ppWeapons[i]->RenderShadow(pd3dCommandList, pCamera);
 	}
