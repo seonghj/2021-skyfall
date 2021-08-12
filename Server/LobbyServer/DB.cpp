@@ -1,5 +1,7 @@
 #include "DB.h"
 
+//#define Test_DB
+
 bool DB::Connection()
 {
     printf("MySQL Ver. %s\n", mysql_get_client_info());
@@ -78,24 +80,31 @@ void DB::Disconnection_ODBC()
         SQLFreeHandle(SQL_HANDLE_STMT, hStmt);
 }
 
-bool DB::Search_ID(char* id, bool* isLogin)
+bool DB::Search_ID(char* id, char* pw, bool* isLogin)
 {
-    wchar_t query[512] = L"SELECT isLogin FROM skyfall.UserInfo WHERE ID = '";
+    wchar_t query1[512] = L"SELECT isLogin FROM skyfall.UserInfo WHERE ID = '";
+    wchar_t query2[512] = L"SELECT PassWord FROM skyfall.UserInfo WHERE ID = '";
     wchar_t wcID[20];
+    wchar_t wcPW[20];
+
+    char PW[20];
     SQLLEN len = 0;
 
     MultiByteToWideChar(CP_ACP, 0, id, -1, wcID, sizeof(id));
 
-    wcscat_s(query, wcID);
-    wcscat_s(query, L"'");
+    wcscat_s(query1, wcID);
+    wcscat_s(query1, L"'");
 
-    //wprintf(L"%s\n", query);
+#ifdef Test_DB 
+    wprintf(L"%s\n", query);
+#endif
 
+    // ID 검색
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
         != SQL_SUCCESS)
         return false;
 
-    if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query1, SQL_NTS)
         != SQL_SUCCESS) {
         printf("Query invaild\n");
         return false;
@@ -103,6 +112,25 @@ bool DB::Search_ID(char* id, bool* isLogin)
     SQLBindCol(hStmt, 1, SQL_C_TINYINT, isLogin, sizeof(bool), &len);
     if (SQLFetch(hStmt) == SQL_NO_DATA) return false;
     if (hStmt) SQLCloseCursor(hStmt);
+
+    wcscat_s(query2, wcID);
+    wcscat_s(query2, L"'");
+
+    // PW 일치 검사
+    if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
+        != SQL_SUCCESS)
+        return false;
+
+    if (SQLExecDirect(hStmt, (SQLWCHAR*)query2, SQL_NTS)
+        != SQL_SUCCESS) {
+        printf("Query invaild\n");
+        return false;
+    }
+    SQLBindCol(hStmt, 1, SQL_C_CHAR, PW, sizeof(PW), &len);
+    if (SQLFetch(hStmt) == SQL_NO_DATA) return false;
+    if (hStmt) SQLCloseCursor(hStmt);
+
+    if (strcmp(PW, pw) == 0) return false;
 
     return true;
 }
@@ -117,7 +145,9 @@ bool DB::Insert_ID(char* id)
     wcscat_s(query, wcID);
     wcscat_s(query, L"', 1)");
 
-    //wprintf(L"%s\n", query);
+#ifdef Test_DB 
+    wprintf(L"%s\n", query);
+#endif
 
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
         != SQL_SUCCESS)
@@ -143,7 +173,9 @@ bool DB::Logout_player(char* id)
     wcscat_s(query, wcID);
     wcscat_s(query, L"'");
 
-    //wprintf(L"%s\n", query);
+#ifdef Test_DB 
+    wprintf(L"%s\n", query);
+#endif
 
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
         != SQL_SUCCESS)
@@ -173,7 +205,9 @@ bool DB::Send_player_record(const SESSION& player, int survival_time, int rank)
     MultiByteToWideChar(CP_ACP, 0, player_info, -1, wc_player_info, sizeof(player_info));
     wcscat_s(query, wc_player_info);
 
-    //wprintf(L"%s\n", query);
+#ifdef Test_DB 
+    wprintf(L"%s\n", query);
+#endif
 
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
         != SQL_SUCCESS)
@@ -199,7 +233,9 @@ bool DB::Get_player_record(char* ID, SESSION& session, int* survival_time, int* 
     wcscat_s(query, wcID);
     wcscat_s(query, L"'");
 
-    //wprintf(L"%s\n", query);
+#ifdef Test_DB 
+    wprintf(L"%s\n", query);
+#endif
 
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
         != SQL_SUCCESS)
@@ -221,9 +257,11 @@ bool DB::Get_player_record(char* ID, SESSION& session, int* survival_time, int* 
     if (SQLFetch(hStmt) == SQL_NO_DATA) return false;
     if (hStmt) SQLCloseCursor(hStmt);
 
-    /* printf("%s, %d, %d, %d, %d, %d, %d, %d\n", session.id, *survival_time, *rank
-         , session.weapon1.load(), session.weapon2.load(), session.helmet.load()
-         , session.shoes.load(), session.armor.load());*/
+#ifdef Test_DB 
+    printf("%s, %d, %d, %d, %d, %d, %d, %d\n", session.id, *survival_time, *rank
+        , session.weapon1.load(), session.weapon2.load(), session.helmet.load()
+        , session.shoes.load(), session.armor.load());
+#endif
 
     return true;
 }
