@@ -69,6 +69,7 @@ public:
 	void MouseHold(bool b) { m_bMouseHold = b; }
 	void ShowLoginWindow();
 	void ShowLobbyWindow();
+	void ShowRoomWindow();
 
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;

@@ -597,6 +597,35 @@ void CGameFramework::ShowLobbyWindow()
 	ImGui::End();
 }
 
+void CGameFramework::ShowRoomWindow()
+{
+	ImGui::Begin("Room", false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+
+			ImGui::SetCursorPosX(80);
+			if (ImGui::Button("Start")) {
+				// 여기서 게임 시작
+				// 모든 플레이어가 무기를 골랐다면, 시작 버튼을 누르면 게임 시작
+				// 임시로 state 변경해놓음
+				m_pScene->SetState(SCENE::INGAME);
+			}
+			ImGui::SameLine(0, 50);
+			if (ImGui::Button("Exit")) {
+				// 여기서 방을 나감
+				// 임시로 state 변경
+				m_pScene->SetState(SCENE::LOBBY);
+			}
+			ImGui::PopStyleVar();
+		}
+		ImGui::PopStyleVar();
+	}
+	ImGui::End();
+}
+
 void CGameFramework::CreateFontAndGui()
 {
 	{
@@ -1032,6 +1061,8 @@ void CGameFramework::FrameAdvance()
 		ShowLoginWindow();
 	else if (m_pScene->GetState() == SCENE::LOBBY)
 		ShowLobbyWindow();
+	else if (m_pScene->GetState() == SCENE::INROOM)
+		ShowRoomWindow();
 	
 	ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_pd3dCommandList);
