@@ -111,7 +111,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 		}
 		else if (i >= 3 && i < 6)
 		{
-			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Forest.raw"), 257, 257, xmf3Scale, xmf4Color, 1);
+			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Forest_0807.raw"), 257, 257, xmf3Scale, xmf4Color, 1);
 		}
 		else if (i >= 6)
 		{
@@ -672,6 +672,9 @@ void CScene::CheckCollision(CPacket* pPacket)
 {
 	if (m_pMap)
 		m_pMap->CheckCollision(m_pPlayer);
+
+	m_ppGameObjects[1]->SetPosition(5048, 200, 1300);
+	m_ppGameObjects[2]->SetPosition(5248, 200, 1300);
 
 	if (m_iState == LOBBY) {
 		for (int i = 0; i < 4; ++i) {

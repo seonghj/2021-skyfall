@@ -790,6 +790,7 @@ void CGameFramework::AnimateObjects()
 
 		//// 임시방편
 		XMFLOAT3 pos = m_pPlayer->GetPosition();
+		
 		int nPlace = m_pPlayer->GetPlace();
 		if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
 			m_pPlayer->SetPlace(nPlace - 1);

@@ -34,7 +34,7 @@ protected:
 	float           			m_fMaxVelocityY = 0.0f;
 	float           			m_fFriction = 0.0f;
 
-
+	float						m_fProficiency = 0.0f;
 	int							m_iSpeedJump;
 	bool						m_isJump;
 	bool						m_isGround;
@@ -74,6 +74,7 @@ public:
 	virtual void SetAttack(bool shoot) { m_isAttack = shoot; }
 	void SetCharging(bool charge) { m_isCharging = charge; }
 	void SetPlace(int nPlace) { m_nPlace = nPlace; }
+	void AddProficiency() { m_fProficiency += 0.06; }
 
 	virtual void RButtonDown() {};
 	virtual void RButtonUp() {};
@@ -91,6 +92,8 @@ public:
 	bool  GetStanding() const { return(m_isStanding); }
 	bool  GetCharging() const { return(m_isCharging); }
 	int GetPlace() const { return(m_nPlace); }
+	float GetProficiency() const { return(m_fProficiency); }
+	float GetAtkDamage() const { return(m_iAtkStat + m_iAtkStat * (m_fProficiency * m_fProficiency)); }
 
 	void SetScale(XMFLOAT3& xmf3Scale) { m_xmf3Scale = xmf3Scale; }
 
@@ -100,7 +103,7 @@ public:
 	void SetCamera(CCamera *pCamera) { m_pCamera = pCamera; }
 
 	void Move(ULONG nDirection, float fDistance, bool bVelocity = false);
-	virtual void Move(const XMFLOAT3& xmf3Shift, bool bVelocity = false);
+	virtual void Move(const XMFLOAT3& xmf3Shift, bool bVelocity = false); 
 	void Move(float fxOffset = 0.0f, float fyOffset = 0.0f, float fzOffset = 0.0f);
 	void Rotate(float x, float y, float z);
 
