@@ -53,7 +53,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 	hAccelTable = ::LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SKYFALL));
 
-	Connect_thread = std::thread(&CPacket::LobbyConnect, gCPacket);
+	Connect_thread = std::thread(&CPacket::GameConnect, gCPacket);
 	gGameFramework.Set_m_pPacket(gCPacket);
 
 	size_t size = 0;

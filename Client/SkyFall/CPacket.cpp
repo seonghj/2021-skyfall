@@ -183,7 +183,7 @@ void CPacket::Send_login_packet(char* id, char* pw)
     player_login_packet p;
     p.key = client_key;
     p.size = sizeof(p);
-    p.type = PacketType::CS_player_login;
+    p.type = PacketType::CS_player_Lobbylogin;
     p.roomid = roomID;
     strcpy_s(p.id, id);
     strcpy_s(p.pw, pw);
@@ -226,6 +226,19 @@ void CPacket::Send_mon_damaged_packet(int target, int nAttack)
     p.damage = 0;
     p.target = target;
     p.nAttack = nAttack;
+
+    SendPacket(reinterpret_cast<char*>(&p));
+}
+
+void CPacket::Send_room_packet(int room)
+{
+    room_select_packet p;
+
+    p.key = client_key;
+    p.room = room;
+    p.roomid = -1;
+    p.size = sizeof(p);
+    p.type = CS_room_select;
 
     SendPacket(reinterpret_cast<char*>(&p));
 }
@@ -509,6 +522,15 @@ void CPacket::ProcessPacket(char* buf)
 {
     switch (buf[1])
     {
+    case PacketType::SC_player_Lobbykey: {
+        player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
+        int key = p->key;
+
+        client_key = key;
+        roomID = -1;
+        printf("recv Lobby key from server: %d\n", key);
+        break;
+    }
     case PacketType::SC_player_key: {
         player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
         int key = p->key;
@@ -524,7 +546,8 @@ void CPacket::ProcessPacket(char* buf)
         //m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
 
         m_pFramework->m_pCamera = m_pPlayer->GetCamera();
-
+        canmove = TRUE;
+        m_pPlayer->m_pPacket = this;
         //Send_login_packet("test", "test");
 
         break;
@@ -543,7 +566,7 @@ void CPacket::ProcessPacket(char* buf)
             /* m_pPlayer->SetPosition(p->Position);
              m_pPlayer->Rotate(p->dx, p->dy, 0);*/
 
-            printf("Login game\n");
+            printf("Login Lobby\n");
             canmove = TRUE;
             m_pPlayer->m_pPacket = this;
             //m_pScene->m_iState = SCENE::LOBBY;
@@ -655,6 +678,12 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_mPlayer[key]->Rotate(p->dx - m_pScene->m_mPlayer[key]->GetPitch()
                 , p->dy - m_pScene->m_mPlayer[key]->GetYaw(), 0);
         }
+        break;
+    }
+    case PacketType::SC_select_room: {
+        room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
+        roomID = p->room;
+        m_pScene->SetState(SCENE::INROOM);
         break;
     }
     case PacketType::SC_start_pos: {

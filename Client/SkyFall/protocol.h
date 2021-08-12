@@ -98,6 +98,7 @@ enum PacketType {
 
 
 	CS_room_select,
+	CS_player_Lobbylogin,
 	CS_player_login,
 	CS_game_ready,
 	CS_game_start,

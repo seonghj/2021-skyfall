@@ -100,7 +100,7 @@ public:
 
     int SetClientKey(int roomID);
     int SetroomID();
-    int SetClientKey_beforeIngame();
+    int SetLobbyKey();
     bool CreateRoom(int key);
     void Set_pTimer(Timer* t) { m_pTimer = t; }
     void Set_pBot(Bot* b) { m_pBot = b; }
@@ -119,7 +119,8 @@ public:
     void send_packet(int to, char* packet, int roomID);
     void process_packet(int key, char* buf, int roomID);
 
-    void send_Before_Ingamekey_packet(int key);
+    void send_Lobby_key_packet(int key);
+    void send_Lobby_loginOK_packet(int key);
     void send_player_key_packet(int key, int roomID);
     void send_player_loginOK_packet(int key, int roomID);
     void send_player_loginFail_packet(int key, int roomID);
@@ -149,7 +150,7 @@ public:
 
     void player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy);
 
-    std::unordered_map <int, SESSION> session_beforeIngame;
+    std::unordered_map <int, SESSION> Lobby_sessions;
     std::unordered_map <int, std::array<SESSION, 20>> sessions; // ¹æID, Player¹è¿­
 
 private:
@@ -168,6 +169,6 @@ private:
 
     std::mutex                     accept_lock;
     std::mutex                     sessions_lock;
-    std::mutex                     session_beforeIngame_lock;
+    std::mutex                     Lobby_sessions_lock;
     std::mutex                     maps_lock;
 };

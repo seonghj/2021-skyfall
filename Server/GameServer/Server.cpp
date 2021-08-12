@@ -3,7 +3,7 @@
 #include "Server.h"
 
 //#define Run_DB
-#define Run_Lobby
+//#define Run_Lobby
 
 void SESSION::init() 
 {
@@ -75,11 +75,11 @@ int Server::SetClientKey(int roomID)
     }
 }
 
-int Server::SetClientKey_beforeIngame()
+int Server::SetLobbyKey()
 {
-    int cnt = 0;
+    int cnt = 100;
     while (true) {
-        if (FALSE == session_beforeIngame[cnt].connected) {
+        if (FALSE == Lobby_sessions[cnt].connected) {
             return cnt;
         }
         else
@@ -219,32 +219,31 @@ void Server::Accept()
             break;
         }
 
-        int roomID = SetroomID();
-        int client_key = SetClientKey(roomID);
+        int client_key = SetLobbyKey();
         if (client_key == -1) {
             closesocket(client_sock);
             break;
         }
 
-        session_beforeIngame[client_key].init();
-        session_beforeIngame[client_key].connected = TRUE;
-        session_beforeIngame[client_key].key = client_key;
-        session_beforeIngame[client_key].roomID = -1;
-        session_beforeIngame[client_key].sock = client_sock;
-        session_beforeIngame[client_key].clientaddr = clientaddr;
-        getpeername(client_sock, (SOCKADDR*)&session_beforeIngame[client_key].clientaddr
-            , &session_beforeIngame[client_key].addrlen);
+        Lobby_sessions[client_key].init();
+        Lobby_sessions[client_key].connected = TRUE;
+        Lobby_sessions[client_key].key = client_key;
+        Lobby_sessions[client_key].roomID = -1;
+        Lobby_sessions[client_key].sock = client_sock;
+        Lobby_sessions[client_key].clientaddr = clientaddr;
+        getpeername(client_sock, (SOCKADDR*)&Lobby_sessions[client_key].clientaddr
+            , &Lobby_sessions[client_key].addrlen);
 
-        session_beforeIngame[client_key].over.type = 0;
-        session_beforeIngame[client_key].over.dataBuffer.len = BUFSIZE;
-        session_beforeIngame[client_key].over.dataBuffer.buf =
-            session_beforeIngame[client_key].over.messageBuffer;
-        session_beforeIngame[client_key].over.is_recv = true;
-        session_beforeIngame[client_key].over.roomID = -1;
+        Lobby_sessions[client_key].over.type = 0;
+        Lobby_sessions[client_key].over.dataBuffer.len = BUFSIZE;
+        Lobby_sessions[client_key].over.dataBuffer.buf =
+            Lobby_sessions[client_key].over.messageBuffer;
+        Lobby_sessions[client_key].over.is_recv = true;
+        Lobby_sessions[client_key].over.roomID = -1;
 
 
         /*for (int i = 0; i < 20; i++)
-            session_beforeIngame[client_key].near_monster.insert(i);*/
+            Lobby_sessions[client_key].near_monster.insert(i);*/
 
         accept_lock.unlock();
         // ���ϰ� ����� �Ϸ� ��Ʈ ����
@@ -252,7 +251,7 @@ void Server::Accept()
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_key, 0);
 
         //printf("client_key: %d\n", client_key);
-        send_Before_Ingamekey_packet(client_key);
+        send_Lobby_key_packet(client_key);
 
         do_recv(client_key, -1);
     }
@@ -294,24 +293,37 @@ void Server::do_recv(int key, int roomID)
     SOCKET client_s;
     OVER_EX* over;
     if (roomID == -1) {
-        client_s = session_beforeIngame[key].sock;
-        over = &session_beforeIngame[key].over;
+        client_s = Lobby_sessions[key].sock;
+        over = &Lobby_sessions[key].over;
+
+        over->dataBuffer.len = BUFSIZE;
+        over->dataBuffer.buf = over->messageBuffer;
+        ZeroMemory(&over->overlapped, sizeof(over->overlapped));
+
+        if (WSARecv(client_s, &over->dataBuffer, 1, (LPDWORD)Lobby_sessions[key].prev_size,
+            &flags, &(over->overlapped), NULL)) {
+            int err_no = WSAGetLastError();
+            if (err_no != WSA_IO_PENDING) {
+                printf("key: %d recv error: %d\n", key, err_no);
+                Disconnected(key, sessions[roomID][key].over.roomID);
+            }
+        }
     }
     else {
         client_s = sessions[roomID][key].sock;
         over = &sessions[roomID][key].over;
-    }
 
-    over->dataBuffer.len = BUFSIZE;
-    over->dataBuffer.buf = over->messageBuffer;
-    ZeroMemory(&over->overlapped, sizeof(over->overlapped));
+        over->dataBuffer.len = BUFSIZE;
+        over->dataBuffer.buf = over->messageBuffer;
+        ZeroMemory(&over->overlapped, sizeof(over->overlapped));
 
-    if (WSARecv(client_s, &over->dataBuffer, 1, (LPDWORD)sessions[roomID][key].prev_size,
-        &flags, &(over->overlapped), NULL)){
-        int err_no = WSAGetLastError();
-        if (err_no != WSA_IO_PENDING){
-            printf("key: %d recv error: %d\n", key, err_no);
-            Disconnected(key, sessions[roomID][key].over.roomID);
+        if (WSARecv(client_s, &over->dataBuffer, 1, (LPDWORD)sessions[roomID][key].prev_size,
+            &flags, &(over->overlapped), NULL)) {
+            int err_no = WSAGetLastError();
+            if (err_no != WSA_IO_PENDING) {
+                printf("key: %d recv error: %d\n", key, err_no);
+                Disconnected(key, sessions[roomID][key].over.roomID);
+            }
         }
     }
 }
@@ -321,9 +333,10 @@ void Server::send_packet(int to, char* packet, int roomID)
     if (SC_NONE >= packet[1] || packet[1] >= CS_NONE) return;
     SOCKET client_s;
     if (roomID == -1)
-        client_s = session_beforeIngame[to].sock;
+        client_s = Lobby_sessions[to].sock;
     else
         client_s = sessions[roomID][to].sock;
+
     OVER_EX* over = new OVER_EX;
     ZeroMemory(over, sizeof(OVER_EX));
     over->dataBuffer.buf = packet;
@@ -355,15 +368,29 @@ void Server::send_player_key_packet(int key, int roomID)
     send_packet(key, reinterpret_cast<char*>(&p), roomID);
 }
 
-void Server::send_Before_Ingamekey_packet(int key)
+void Server::send_Lobby_key_packet(int key)
 {
     player_key_packet p;
 
     p.key = key;
     p.size = sizeof(player_key_packet);
-    p.type = PacketType::SC_player_key;
+    p.type = PacketType::SC_player_Lobbykey;
     p.roomid = -1;
     send_packet(key, reinterpret_cast<char*>(&p),-1);
+}
+
+void Server::send_Lobby_loginOK_packet(int key)
+{
+    player_loginOK_packet p;
+
+    p.key = key;
+    p.size = sizeof(player_loginOK_packet);
+    p.type = PacketType::SC_player_loginOK;
+    p.roomid = -1;
+    p.Position = Lobby_sessions[key].f3Position.load();
+    p.dx = Lobby_sessions[key].m_fPitch.load();
+    p.dy = Lobby_sessions[key].m_fYaw.load();
+    send_packet(key, reinterpret_cast<char*>(&p), -1);
 }
 
 void Server::send_player_loginOK_packet(int key, int roomID)
@@ -726,8 +753,38 @@ void Server::process_packet(int key, char* buf, int roomID)
 {
     // Ŭ���̾�Ʈ���� ���� ��Ŷ ó��
     switch (buf[1]) {
-    case PacketType::CS_player_login: {
+    case PacketType::CS_player_Lobbylogin: {
         player_login_packet* p = reinterpret_cast<player_login_packet*>(buf);
+        int client_key = p->key;
+        bool is_Login = false;
+
+        bool b;
+#ifdef Run_DB
+        if (strcmp(p->id, "test") != 0) {
+            b = m_pDB->Search_ID(p->id, p->pw, &is_Login);
+
+            if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
+
+            if (is_Login) {
+                send_player_loginFail_packet(client_key);
+                Disconnected(client_key);
+                break;
+            }
+        }
+#endif
+
+        strcpy_s(Lobby_sessions[client_key].id, p->id);
+
+        send_Lobby_loginOK_packet(client_key);
+
+        printf("client_connected to Lobby: IP =%s, port=%d key = %d\n",
+            inet_ntoa(Lobby_sessions[client_key].clientaddr.sin_addr)
+            , ntohs(Lobby_sessions[client_key].clientaddr.sin_port), client_key);
+
+        break;
+    }
+    case PacketType::CS_game_ready: {
+        game_ready_packet* p = reinterpret_cast<game_ready_packet*>(buf);
 
         int client_key = p->key;
         bool is_Login = false;
@@ -738,11 +795,11 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         sessions[p->roomid][nkey].init();
 
-        session_beforeIngame[client_key].connected = TRUE;
-        session_beforeIngame[client_key].key = nkey;
-        session_beforeIngame[client_key].roomID = p->roomid;
-        sessions[p->roomid][nkey].sock = session_beforeIngame[client_key].sock;
-        sessions[p->roomid][nkey].clientaddr = session_beforeIngame[client_key].clientaddr;
+        Lobby_sessions[client_key].connected = TRUE;
+        Lobby_sessions[client_key].key = nkey;
+        Lobby_sessions[client_key].roomID = p->roomid;
+        sessions[p->roomid][nkey].sock = Lobby_sessions[client_key].sock;
+        sessions[p->roomid][nkey].clientaddr = Lobby_sessions[client_key].clientaddr;
 
         sessions[p->roomid][nkey].over.type = 0;
         sessions[p->roomid][nkey].over.dataBuffer.len = BUFSIZE;
@@ -750,24 +807,26 @@ void Server::process_packet(int key, char* buf, int roomID)
             sessions[p->roomid][nkey].over.messageBuffer;
         sessions[p->roomid][nkey].over.is_recv = true;
         sessions[p->roomid][nkey].over.roomID = p->roomid;
+        sessions[p->roomid][nkey].using_weapon = p->weaponType;
+        sessions[p->roomid][nkey].weapon1 = p->weaponType;
 
-        strcpy_s(sessions[p->roomid][client_key].id, p->id);
-        send_player_loginOK_packet(client_key, sessions[roomID][client_key].roomID);
+        strcpy_s(sessions[p->roomid][nkey].id, Lobby_sessions[client_key].id);
+        send_player_key_packet(nkey, sessions[p->roomid][nkey].roomID);
 
-        printf("client_connected: IP =%s, port=%d key = %d Room = %d\n",
-            inet_ntoa(sessions[p->roomid][client_key].clientaddr.sin_addr)
-            , ntohs(sessions[p->roomid][client_key].clientaddr.sin_port), client_key, p->roomid);
+        printf("client_connected to Game: IP =%s, port=%d key = %d Room = %d\n",
+            inet_ntoa(sessions[p->roomid][nkey].clientaddr.sin_addr)
+            , ntohs(sessions[p->roomid][nkey].clientaddr.sin_port), nkey, p->roomid);
 
-        sessions[p->roomid][client_key].state = 1;
+        sessions[p->roomid][nkey].state = 1;
 
         //send_map_packet(client_key, roomID);
 
-        sessions[p->roomid][p->key].isready = true;
-        sessions[p->roomid][p->key].playing = true;
+        sessions[p->roomid][nkey].isready = true;
+        sessions[p->roomid][nkey].playing = true;
 
         if (m_pBot->monsterRun == false) {
             m_pBot->monsterRun = true;
-            m_pBot->RunBot(p->key);
+            m_pBot->RunBot(p->roomid);
         }
         if (maps[p->roomid].game_start == false) {
             maps[p->roomid].init_Map(this, m_pTimer);
@@ -775,24 +834,24 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         for (auto& s : sessions[p->roomid]) {
             if ((TRUE == s.connected) && (s.key.load() != p->key)) {
-                send_add_player_packet(s.key.load(), p->key, p->roomid);
+                send_add_player_packet(s.key.load(), nkey, p->roomid);
             }
         }
         for (auto& s : sessions[p->roomid]) {
-            if ((TRUE == s.connected) && (s.key.load() != p->key))
-                send_add_player_packet(p->key, s.key.load(), p->roomid);
+            if ((TRUE == s.connected) && (s.key.load() != nkey))
+                send_add_player_packet(nkey, s.key.load(), p->roomid);
         }
 
         for (int i = 0; i < 15; ++i) {
             if (m_pBot->monsters[p->roomid][i].state == 1) {
                 //printf("send monster %d\n", i);
-                send_add_monster(i, p->roomid, p->key);
+                send_add_monster(i, p->roomid, nkey);
             }
         }
 
-        session_beforeIngame_lock.lock();
-        session_beforeIngame.erase(client_key);
-        session_beforeIngame_lock.unlock();
+        Lobby_sessions_lock.lock();
+        Lobby_sessions.erase(client_key);
+        Lobby_sessions_lock.unlock();
 
         break;
     }
@@ -889,6 +948,7 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_player_stop: {
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
+        if (roomID == -1) break;
         p->type = SC_player_stop;
         p->Position = sessions[roomID][p->key].f3Position;
         send_packet_to_players(p->key, reinterpret_cast<char*>(p), roomID);
@@ -975,9 +1035,12 @@ void Server::process_packet(int key, char* buf, int roomID)
         break;
     }
      // Lobby
-    case PacketType::SC_select_room: {
+    case PacketType::CS_room_select: {
         room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
-        CreateRoom(p->roomid);
+        CreateRoom(p->room);
+
+        p->type = SC_select_room;
+        send_packet(p->key, reinterpret_cast<char*>(p), -1);
         break;
     }
     }
@@ -1019,23 +1082,47 @@ void Server::WorkerFunc()
                 int rest_size = Transferred;
                 char* buf_ptr = over_ex->messageBuffer;
                 char packet_size = 0;
-                if (0 < sessions[roomID][key].prev_size)
-                    packet_size = sessions[roomID][key].packet_buf[0];
-                while (rest_size > 0) {
-                    if (0 == packet_size) packet_size = buf_ptr[0];
-                    int required = packet_size - sessions[roomID][key].prev_size;
-                    if (rest_size >= required) {
-                        memcpy(sessions[roomID][key].packet_buf + sessions[roomID][key].
-                            prev_size, buf_ptr, required);
-                        process_packet(key, sessions[roomID][key].packet_buf, roomID);
-                        rest_size -= required;
-                        buf_ptr += required;
-                        packet_size = 0;
+                
+                if (roomID != -1) {
+                    if (0 < sessions[roomID][key].prev_size)
+                        packet_size = sessions[roomID][key].packet_buf[0];
+                    while (rest_size > 0) {
+                        if (0 == packet_size) packet_size = buf_ptr[0];
+                        int required = packet_size - sessions[roomID][key].prev_size;
+                        if (rest_size >= required) {
+                            memcpy(sessions[roomID][key].packet_buf + sessions[roomID][key].
+                                prev_size, buf_ptr, required);
+                            process_packet(key, sessions[roomID][key].packet_buf, roomID);
+                            rest_size -= required;
+                            buf_ptr += required;
+                            packet_size = 0;
+                        }
+                        else {
+                            memcpy(sessions[roomID][key].packet_buf + sessions[roomID][key].prev_size,
+                                buf_ptr, rest_size);
+                            rest_size = 0;
+                        }
                     }
-                    else {
-                        memcpy(sessions[roomID][key].packet_buf + sessions[roomID][key].prev_size,
-                            buf_ptr, rest_size);
-                        rest_size = 0;
+                }
+                else {
+                    if (0 < Lobby_sessions[key].prev_size)
+                        packet_size = Lobby_sessions[key].packet_buf[0];
+                    while (rest_size > 0) {
+                        if (0 == packet_size) packet_size = buf_ptr[0];
+                        int required = packet_size - Lobby_sessions[key].prev_size;
+                        if (rest_size >= required) {
+                            memcpy(Lobby_sessions[key].packet_buf + Lobby_sessions[key].
+                                prev_size, buf_ptr, required);
+                            process_packet(key, Lobby_sessions[key].packet_buf, roomID);
+                            rest_size -= required;
+                            buf_ptr += required;
+                            packet_size = 0;
+                        }
+                        else {
+                            memcpy(Lobby_sessions[key].packet_buf + Lobby_sessions[key].prev_size,
+                                buf_ptr, rest_size);
+                            rest_size = 0;
+                        }
                     }
                 }
                 do_recv(key, roomID);
