@@ -36,7 +36,7 @@ public:
 
 	void RecvPacket();
 	void SendPacket(char* buf);
-	void Send_ready_packet(PlayerType t);
+	void Send_start_packet(PlayerType t);
 	void Send_attack_packet(int type);
 	void Send_stop_packet();
 	void Send_login_packet(char* id, char* pw);
@@ -76,9 +76,9 @@ public:
 	cout << "IP: " << ipaddr << endl;
 	}
 
+	int roomID = INVALIDID;
 private:
 	int client_key = INVALIDID;
-	int roomID = INVALIDID;
 	char userID[50];
 	unsigned long currentfps = 1;
 

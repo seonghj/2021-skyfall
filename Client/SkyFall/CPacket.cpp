@@ -123,13 +123,13 @@ void CPacket::SendPacket(char* buf)
     }
 }
 
-void CPacket::Send_ready_packet(PlayerType t)
+void CPacket::Send_start_packet(PlayerType t)
 {
-    game_ready_packet p;
+    game_start_packet p;
     p.key = client_key;
     p.roomid = roomID;
     p.size = sizeof(p);
-    p.type = CS_game_ready;
+    p.type = CS_game_start;
     p.weaponType = t;
 
     SendPacket(reinterpret_cast<char*>(&p));
@@ -535,11 +535,11 @@ void CPacket::ProcessPacket(char* buf)
         player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
         int key = p->key;
 
-        if (key < 0 || key > 20) break;
+        //if (key < 0 || key > 20) break;
 
         client_key = key;
         roomID = p->roomid;
-        printf("recv key from server: %d\n", key);
+        printf("recv key from server: %d / room = %d\n", key, roomID);
 
         //m_pPlayer = m_pFramework->m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
         m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pFramework->m_pPlayer;
@@ -599,8 +599,8 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_start_ok: {
         //GameConnect();
         game_start_packet* p = reinterpret_cast<game_start_packet*>(buf);
-        Swap_weapon(p->key, p->weaponType);
-        m_pScene->m_iState = INGAME;
+        Swap_weapon(p->key, PlayerType::PT_SWORD1H);
+        m_pScene->SetState(SCENE::INGAME);
         m_pFramework->MouseHold(false);
         break;
     }

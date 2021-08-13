@@ -35,6 +35,7 @@ struct OVER_EX
 	char			messageBuffer[BUFSIZE];
 	bool			is_recv;
 	int             type;
+	int				key;
 	int				roomID;
 	// 0 = session 1 = map
 };

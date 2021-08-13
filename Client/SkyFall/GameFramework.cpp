@@ -613,7 +613,7 @@ void CGameFramework::ShowRoomWindow()
 				// 모든 플레이어가 무기를 골랐다면, 시작 버튼을 누르면 게임 시작
 				// 임시로 state 변경해놓음
 				// m_pScene->SetState(SCENE::INGAME);
-				m_pPacket->Send_ready_packet(m_pPacket->Get_StartWeapon());
+				m_pPacket->Send_start_packet(m_pPacket->Get_StartWeapon());
 			}
 			ImGui::SameLine(0, 50);
 			if (ImGui::Button("Exit")) {
@@ -1130,6 +1130,7 @@ void CGameFramework::FrameAdvance()
 		if (false == m_pPlayer->GetAttack()) {
 			player_pos_packet p;
 			p.key = m_pPacket->Get_clientkey();
+			p.roomid = m_pPacket->roomID;
 			p.Position.x = floor(NowPosition.x);
 			p.Position.y = floor(NowPosition.y);
 			p.Position.z = floor(NowPosition.z);
@@ -1167,6 +1168,7 @@ void CGameFramework::FrameAdvance()
 			m_pPlayer->SetStanding(true);
 			player_stop_packet sp;
 			sp.key = m_pPacket->Get_clientkey();
+			sp.roomid = m_pPacket->roomID;
 			sp.size = sizeof(sp);
 			sp.type = PacketType::CS_player_stop;
 			sp.Position = m_pPlayer->GetPosition();
