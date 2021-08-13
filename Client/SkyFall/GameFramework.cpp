@@ -790,7 +790,7 @@ void CGameFramework::ProcessInput()
 		if (pKeysBuffer[VK_RIGHT] & 0xF0) dwDirection |= DIR_RIGHT;
 		if (pKeysBuffer[VK_PRIOR] & 0xF0) dwDirection |= DIR_UP;
 		if (pKeysBuffer[VK_NEXT] & 0xF0) dwDirection |= DIR_DOWN;*/
-		if (m_pPlayer->GetGround()) {
+		if (m_pPlayer->GetGround()&&!m_pPlayer->GetCharging()) {
 
 			if (pKeysBuffer['W'] & 0xF0) { dwDirection |= DIR_FORWARD; PressDirButton = true;}
 			if (pKeysBuffer['S'] & 0xF0) { dwDirection |= DIR_BACKWARD; PressDirButton = true;}

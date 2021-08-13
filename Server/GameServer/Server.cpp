@@ -868,7 +868,6 @@ void Server::process_packet(int key, char* buf, int roomID)
         sessions[p->roomid][key].AddProficiency();
         m_pBot->monsters[p->roomid][target].hp = m_pBot->monsters[p->roomid][target].hp - p->damage;
         p->leftHp = m_pBot->monsters[p->roomid][target].hp;
-        printf("damage : %f", sessions[p->roomid][key].GetAtkDamage());
         if (m_pBot->monsters[p->roomid][target].hp <= 0) {
             m_pBot->monsters[p->roomid][target].state = 0;
 
