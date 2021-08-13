@@ -539,6 +539,7 @@ void CGameFramework::ShowLoginWindow()
 			ImGui::SameLine(0, 50);
 			if (ImGui::Button("Create Account")) {
 				// 여기서 회원가입 창 띄워서 거기서 아이디 비번 넣고 보내고 할거임
+				m_bShowAccountWindow = true;
 			}
 			ImGui::PopStyleVar();
 		}
@@ -546,6 +547,8 @@ void CGameFramework::ShowLoginWindow()
 	}
 
 	ImGui::End();
+	if (m_bShowAccountWindow)
+		ShowAccountWindow(&m_bShowAccountWindow);
 }
 
 void CGameFramework::ShowLobbyWindow()
@@ -560,13 +563,12 @@ void CGameFramework::ShowLobbyWindow()
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
 			static int room_current_idx = 0;
 			{
-				const char* rooms[] = { "Room1","Room2", "Room3" };
 				ImGui::Text("Rooms");
 				if (ImGui::BeginListBox("##Room List", ImVec2(FRAME_BUFFER_WIDTH / 2 - 30, FRAME_BUFFER_HEIGHT / 2))) {
-					for (int n = 0; n < IM_ARRAYSIZE(rooms); n++)
+					for (int n = 0; n < m_vRooms.size(); n++)
 					{
 						const bool is_selected = (room_current_idx == n);
-						if (ImGui::Selectable(rooms[n], is_selected))
+						if (ImGui::Selectable(m_vRooms[n].c_str(), is_selected))
 							room_current_idx = n;
 
 						// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
@@ -589,13 +591,15 @@ void CGameFramework::ShowLobbyWindow()
 			ImGui::SameLine(0, 50);
 			if (ImGui::Button("Create Room")) {
 				// 여기서 새로운 방을 만듦
+				m_bShowCreateRoomWindow = true;
 			}
 			ImGui::PopStyleVar();
 		}
 		ImGui::PopStyleVar();
 	}
-
 	ImGui::End();
+	if (m_bShowCreateRoomWindow)
+		ShowCreateRoomWindow();
 }
 
 void CGameFramework::ShowRoomWindow()
@@ -626,6 +630,43 @@ void CGameFramework::ShowRoomWindow()
 		ImGui::PopStyleVar();
 	}
 	ImGui::End();
+}
+
+void CGameFramework::ShowAccountWindow(bool* p_open)
+{
+	ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar;
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(ImVec2(viewport->Size.x / 4, viewport->Size.y / 4));
+	ImGui::SetNextWindowSize(ImVec2(viewport->Size.x / 2, viewport->Size.y / 2));
+
+	if (ImGui::Begin("Create Account", p_open, flags))
+	{
+		ImGui::SetCursorPosY(viewport->Size.y / 4 - 40);
+		ImGui::Text("	  ID");
+		ImGui::SameLine();
+		ImGui::InputTextWithHint(" ", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank);
+		ImGui::Text("Password");
+		ImGui::SameLine();
+		ImGui::InputTextWithHint("  ", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
+
+
+		//ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
+		ImGui::SetCursorPosX(80);
+		//ImGui::SameLine(0, 50);
+		if (p_open && ImGui::Button("Create")) {
+			//m_pPacket->send_create_account(); 함수 추가해서 서버로 계정 정보 보내고 id 존재하면 이미 존재하는 id 창 띄우기
+			::ZeroMemory(m_bufID, strlen(m_bufID));
+			::ZeroMemory(m_bufPW, strlen(m_bufPW));
+			*p_open = false;
+		}
+		/*서버에서 아이디 생성 완료하면 받는 패킷에서 m_bShowAccountWindow = false로 변경*/
+	}
+	ImGui::End();
+
+}
+
+void CGameFramework::ShowCreateRoomWindow()
+{
 }
 
 void CGameFramework::CreateFontAndGui()
@@ -665,6 +706,7 @@ void CGameFramework::CreateFontAndGui()
 		m_resourceDescriptors->GetCpuHandle(Descriptors::ImGui), m_resourceDescriptors->GetGpuHandle(Descriptors::ImGui));
 
 	m_pScene->SetState(SCENE::LOGIN);
+	m_vRooms = { "Room1","Room2", "Room3" };
 }
 
 void CGameFramework::OnDestroy()
@@ -1060,10 +1102,12 @@ void CGameFramework::FrameAdvance()
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 	
-	if (m_pScene->GetState() == SCENE::LOGIN)
+	if (m_pScene->GetState() == SCENE::LOGIN) {
 		ShowLoginWindow();
-	else if (m_pScene->GetState() == SCENE::LOBBY)
+	}
+	else if (m_pScene->GetState() == SCENE::LOBBY) {
 		ShowLobbyWindow();
+	}
 	else if (m_pScene->GetState() == SCENE::INROOM)
 		ShowRoomWindow();
 	

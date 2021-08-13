@@ -67,9 +67,12 @@ public:
 	void SetCloud(float x, float z) { m_pcbMappedFog->gvFogPos = XMFLOAT2(x, z); }
 	void Restart();
 	void MouseHold(bool b) { m_bMouseHold = b; }
+
 	void ShowLoginWindow();
 	void ShowLobbyWindow();
 	void ShowRoomWindow();
+	void ShowAccountWindow(bool* p_open);
+	void ShowCreateRoomWindow();
 
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
@@ -166,5 +169,8 @@ private:
 	void CreateFontAndGui();
 	char m_bufID[11];
 	char m_bufPW[21];
+	bool m_bShowAccountWindow = false;
+	bool m_bShowCreateRoomWindow = false;
+	vector<string> m_vRooms;
 };
 
