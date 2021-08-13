@@ -35,6 +35,7 @@ CPlayer::CPlayer()
 	m_isRunning = false;
 	m_isStanding = true;
 	m_isAttack = false;
+	m_isCharging = false;
 
 	SetMaxHp(100);
 
