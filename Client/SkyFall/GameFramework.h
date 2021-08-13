@@ -73,6 +73,7 @@ public:
 	void ShowRoomWindow();
 	void ShowAccountWindow(bool* p_open);
 	void ShowCreateRoomWindow();
+	void ShowError(const char* str);
 
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
@@ -171,6 +172,8 @@ private:
 	char m_bufPW[21];
 	bool m_bShowAccountWindow = false;
 	bool m_bShowCreateRoomWindow = false;
+	bool m_bError = false;
 	vector<string> m_vRooms;
+	string m_ErrorMsg;
 };
 
