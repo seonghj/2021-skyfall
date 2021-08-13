@@ -642,18 +642,18 @@ void CPacket::ProcessPacket(char* buf)
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
         int key = p->key;
         if (p->key == client_key) {
-            //m_pPlayer->SetPosition(p->Position);
+            m_pPlayer->SetPosition(p->Position);
             m_pPlayer->Rotate(p->dx - m_pPlayer->GetPitch()
                 , p->dy - m_pPlayer->GetYaw(), 0);
             switch (p->MoveType) {
             case PlayerMove::RUNNING:
-                //m_pPlayer->SetRunning(true);
+                m_pPlayer->SetRunning(true);
                 break;
             }
         }
         else {
             switch (p->MoveType) {
-            case PlayerMove::WAKING:
+            case PlayerMove::WALKING:
                 m_pScene->AnimatePlayer(key, PlayerState::Walk);
                 break;
             case PlayerMove::RUNNING:
