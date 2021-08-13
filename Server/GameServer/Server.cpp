@@ -19,7 +19,7 @@ void SESSION::init()
     playing = false;
     key = -1;
 
-    state = 0;
+    state = Death;
     f3Position = DirectX::XMFLOAT3(0.0f, 124.0f, 0.0f);
     m_fPitch = 60;
     m_fYaw = -90;
@@ -212,7 +212,7 @@ void Server::Accept()
     printf("ready\n");
 
     while (1) {
-        accept_lock.lock();
+        //accept_lock.lock();
         client_sock = accept(listen_sock, (struct sockaddr*)&clientaddr, &addrlen);
         if (client_sock == INVALID_SOCKET) {
             printf("accept error: %d", WSAGetLastError());
@@ -225,10 +225,11 @@ void Server::Accept()
             break;
         }
 
+        std::lock_guard<std::mutex> lock_guard{ Lobby_sessions_lock };
         Lobby_sessions[client_key].init();
         Lobby_sessions[client_key].connected = TRUE;
         Lobby_sessions[client_key].key = client_key;
-        Lobby_sessions[client_key].roomID = -1;
+        Lobby_sessions[client_key].roomID = INVALUED_ID;
         Lobby_sessions[client_key].sock = client_sock;
         Lobby_sessions[client_key].clientaddr = clientaddr;
         getpeername(client_sock, (SOCKADDR*)&Lobby_sessions[client_key].clientaddr
@@ -240,13 +241,13 @@ void Server::Accept()
             Lobby_sessions[client_key].over.messageBuffer;
         Lobby_sessions[client_key].over.is_recv = true;
         Lobby_sessions[client_key].over.key = client_key;
-        Lobby_sessions[client_key].over.roomID = -1;
+        Lobby_sessions[client_key].over.roomID = INVALUED_ID;
 
 
         /*for (int i = 0; i < 20; i++)
             Lobby_sessions[client_key].near_monster.insert(i);*/
 
-        accept_lock.unlock();
+        //accept_lock.unlock();
         // ���ϰ� ����� �Ϸ� ��Ʈ ����
 
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_key, 0);
@@ -267,23 +268,38 @@ void Server::Accept()
 void Server::Disconnected(int key, int roomID)
 {
     std::lock_guard<std::mutex> lock_guard(sessions_lock);
-    for (int i = 0; i < MAX_PLAYER; ++i) {
-        //printf("%d\n", i->second);
-        if (sessions[roomID][i].key == key) {
-            printf("client_end: IP =%s, port=%d key = %d, Room = %d\n",
-                inet_ntoa(sessions[roomID][i].clientaddr.sin_addr)
-                , ntohs(sessions[roomID][i].clientaddr.sin_port), key, roomID);
-            //send_disconnect_player_packet(key);
-            closesocket(sessions[roomID][i].sock);
-            sessions[roomID][i].connected = FALSE;
-            sessions[roomID][i].key = -1;
-            //printf("disconnected %d\n", gameroom[roomID].ID[i]);
-            break;
-        }
+    if (sessions[roomID][key].key == key) {
+        printf("client_end: IP =%s, port=%d key = %d, Room = %d\n",
+            inet_ntoa(sessions[roomID][key].clientaddr.sin_addr)
+            , ntohs(sessions[roomID][key].clientaddr.sin_port), key, roomID);
+        //send_disconnect_player_packet(key);
+        closesocket(sessions[roomID][key].sock);
+        sessions[roomID][key].connected = FALSE;
+        sessions[roomID][key].key = -1;
+        //printf("disconnected %d\n", gameroom[roomID].ID[i]);
+        
     }
 
 #ifdef Run_DB
     m_pDB->Logout_player(sessions[roomID][key].id);
+#endif
+    //sessions[roomID].clear();
+}
+
+void Server::Disconnected(int key)
+{
+    std::lock_guard<std::mutex> lock_guard(Lobby_sessions_lock);
+    printf("client_end: IP =%s, port=%d Lobby key = %d\n",
+        inet_ntoa(Lobby_sessions[key].clientaddr.sin_addr)
+        , ntohs(Lobby_sessions[key].clientaddr.sin_port), key);
+    //send_disconnect_player_packet(key);
+    closesocket(Lobby_sessions[key].sock);
+    Lobby_sessions[key].connected = FALSE;
+    Lobby_sessions[key].key = -1;
+    //printf("disconnected %d\n", gameroom[roomID].ID[i]);
+
+#ifdef Run_DB
+    m_pDB->Logout_player(Lobby_sessions[key].id);
 #endif
     //sessions[roomID].clear();
 }
@@ -663,6 +679,11 @@ void Server::game_end(int roomnum)
     p.roomid = roomnum;
 
     send_packet_to_allplayers(roomnum, reinterpret_cast<char*>(&p));
+
+    for (auto& s : sessions[roomnum]) {
+
+    }
+
     maps_lock.lock();
     maps.erase(roomnum);
     maps_lock.unlock();
@@ -822,7 +843,7 @@ void Server::process_packet(int key, char* buf, int roomID)
             inet_ntoa(sessions[p->roomid][nkey].clientaddr.sin_addr)
             , ntohs(sessions[p->roomid][nkey].clientaddr.sin_port), nkey, p->roomid);
 
-        sessions[p->roomid][nkey].state = 1;
+        sessions[p->roomid][nkey].state = Alive;
 
         send_start_packet(nkey, p->roomid);
 
@@ -1027,7 +1048,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         p->leftHp = sessions[roomID][target].hp;
 
         if (sessions[roomID][key].hp <= 0) {
-            sessions[roomID][key].state = 0;
+            sessions[roomID][key].state = Death;
         }
 
         send_packet_to_players(key, reinterpret_cast<char*>(p), p->roomid);
@@ -1067,13 +1088,19 @@ void Server::WorkerFunc()
             {
                 //printf("error = %d\n", WSAGetLastError());
                 display_error("GQCS", WSAGetLastError());
-                Disconnected(key, roomID);
+                if (roomID == INVALUED_ID)
+                    Disconnected(nkey);
+                else
+                    Disconnected(nkey, roomID);
                 continue;
             }
 
             if ((Transferred == 0)) {
                 display_error("GQCS", WSAGetLastError());
-                Disconnected(key, roomID);
+                if (roomID == INVALUED_ID)
+                    Disconnected(nkey);
+                else
+                    Disconnected(nkey, roomID);
                 continue;
             }
             //printf("%d\n", true);
@@ -1082,7 +1109,7 @@ void Server::WorkerFunc()
                 int rest_size = Transferred;
                 char* buf_ptr = over_ex->messageBuffer;
                 char packet_size = 0;
-                if (roomID != -1) {
+                if (roomID != INVALUED_ID) {
                     if (0 < sessions[roomID][nkey].prev_size)
                         packet_size = sessions[roomID][nkey].packet_buf[0];
                     while (rest_size > 0) {

@@ -166,9 +166,9 @@ void Bot::CheckTarget(int roomID)
 {
 	XMFLOAT3 subtract;
 	for (SESSION& player : m_pServer->sessions[roomID]) {
-		if (player.state.load() == false) continue;
+		if (player.state.load() == Death) continue;
 		for (Monster& mon : monsters[roomID]) {
-			if (mon.state.load() == 0) continue;
+			if (mon.state.load() == Death) continue;
 			subtract = Vector3::Subtract((XMFLOAT3&)player.GetPosition(), (XMFLOAT3&)mon.GetPosition());
 			if ( 30 < Vector3::Length(subtract) || Vector3::Length(subtract) <= 300){
 				subtract = Vector3::Normalize(subtract);
@@ -211,9 +211,9 @@ void Bot::CheckBehavior(int roomID)
 {
 	for (SESSION& player : m_pServer->sessions[roomID]) {
 		if (player.connected.load() == false) continue;
-		if (player.state.load() == false) continue;
+		if (player.state.load() == Death) continue;
 		for (Monster& mon : monsters[roomID]) {
-			if (mon.state.load() == 0) continue;
+			if (mon.state.load() == Death) continue;
 			XMFLOAT3 subtract;
 			float rotation;
 			float range;

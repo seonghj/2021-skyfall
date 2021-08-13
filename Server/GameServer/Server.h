@@ -6,6 +6,11 @@
 #include "Timer.h"
 #include "Bot.h"
 
+constexpr int INVALUED_ID = -1;
+
+constexpr int Death = 0;
+constexpr int Alive = 0;
+
 //struct OVER_EX
 //{
 //    WSAOVERLAPPED	overlapped;
@@ -111,6 +116,7 @@ public:
     bool Init();
     void Thread_join();
     void Disconnected(int key, int roomID);
+    void Disconnected(int key);
 
     void Accept();
     void WorkerFunc();
