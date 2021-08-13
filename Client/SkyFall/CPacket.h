@@ -87,7 +87,7 @@ private:
 	HANDLE                         hcp;
 	std::vector <std::thread>      working_threads;
 
-	PlayerType start_weapon;
+	PlayerType start_weapon = PlayerType::PT_SWORD1H;
 
 	vector<vector<int>> m_vMapArrange = { { 0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}, {0, 2}, {1, 2}, {2, 2} };
 

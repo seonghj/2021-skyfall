@@ -599,7 +599,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_start_ok: {
         //GameConnect();
         game_start_packet* p = reinterpret_cast<game_start_packet*>(buf);
-        Swap_weapon(p->key, PlayerType::PT_SWORD1H);
+        Swap_weapon(p->key, start_weapon);
         m_pScene->SetState(SCENE::INGAME);
         m_pFramework->MouseHold(false);
         break;
@@ -684,6 +684,7 @@ void CPacket::ProcessPacket(char* buf)
         room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
         roomID = p->room;
         m_pScene->SetState(SCENE::INROOM);
+        m_pPlayer->SetJump(TRUE);
         break;
     }
     case PacketType::SC_start_pos: {
