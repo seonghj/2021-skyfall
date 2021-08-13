@@ -79,7 +79,6 @@ void CPacket::RecvPacket()
                 break;
             }
         }
-
         int rest_size = recvbytes;
         unsigned char* buf_ptr = reinterpret_cast<unsigned char*>(recvbuf);
         //// 받은 데이터 출력
@@ -655,21 +654,21 @@ void CPacket::ProcessPacket(char* buf)
         else {
             switch (p->MoveType) {
             case PlayerMove::WAKING:
-                m_pScene->AnimatePlayer(key, 3);
+                m_pScene->AnimatePlayer(key, PlayerState::Walk);
                 break;
             case PlayerMove::RUNNING:
                 if (p->dir & DIR_FORWARD)
-                    m_pScene->AnimatePlayer(key, 4);
+                    m_pScene->AnimatePlayer(key, PlayerState::Run);
                 else if (p->dir & DIR_BACKWARD)
-                    m_pScene->AnimatePlayer(key, 5);
+                    m_pScene->AnimatePlayer(key, PlayerState::RunBack);
                 else if (p->dir & DIR_RIGHT)
-                    m_pScene->AnimatePlayer(key, 6);
+                    m_pScene->AnimatePlayer(key, PlayerState::RunRight);
                 else if (p->dir & DIR_LEFT)
-                    m_pScene->AnimatePlayer(key, 7);
+                    m_pScene->AnimatePlayer(key, PlayerState::RunLeft);
                 //m_pScene->AnimatePlayer(key, 4);
                 break;
             case PlayerMove::STAND:
-                m_pScene->AnimatePlayer(key, 0);
+                m_pScene->AnimatePlayer(key, PlayerState::Idle);
                 break;
             default:
                 break;
@@ -774,7 +773,7 @@ void CPacket::ProcessPacket(char* buf)
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
         int key = p->key;
         if (p->key != client_key) {
-            m_pScene->AnimatePlayer(key, 0);
+            m_pScene->AnimatePlayer(key, PlayerState::Idle);
             if (m_pScene->m_mPlayer[key]->GetJump() == TRUE) {
                 m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(2, 0);
                 m_pScene->m_mPlayer[key]->SetJump(FALSE);
@@ -1022,10 +1021,13 @@ void CPacket::ProcessPacket(char* buf)
 
         if (p->target == client_key) {
             m_pPlayer->SetDamaged(true);
-            m_pScene->AnimatePlayer(client_key, 8);
+            m_pScene->AnimatePlayer(client_key, PlayerState::Take_Damage);
         }
         else
-            m_pScene->AnimatePlayer(p->target, 8);
+            m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
+
+        if (m_pScene->m_mPlayer[p->target]->GetHp() < 0)
+            m_pScene->AnimatePlayer(p->target, PlayerState::Death);
 
         break;
     }

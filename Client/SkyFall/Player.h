@@ -179,8 +179,8 @@ protected:
 		Walk,
 		Run,
 		RunBack,
-		RunLeft,
 		RunRight,
+		RunLeft,
 		Take_Damage,
 	};
 };

@@ -92,4 +92,16 @@ private:
 	vector<vector<int>> m_vMapArrange = { { 0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}, {0, 2}, {1, 2}, {2, 2} };
 
 	//static DWORD WINAPI ServerConnect(LPVOID arg);
+
+	enum PlayerState {
+		Idle = 0,
+		Death,
+		Jump,
+		Walk,
+		Run,
+		RunBack,
+		RunRight,
+		RunLeft,
+		Take_Damage,
+	};
 };

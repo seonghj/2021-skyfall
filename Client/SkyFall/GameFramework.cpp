@@ -1111,11 +1111,6 @@ void CGameFramework::FrameAdvance()
 
 	//	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
 	MoveToNextFrame();
-	
-	for (auto& p : m_pScene->m_mPlayer) {
-		if (p->m_pSkinnedAnimationController->IsTrackFinish(8))
-			m_pScene->AnimatePlayer(p->m_nkey, 0);
-	}
 
 	float fLength = sqrtf(m_pPlayer->GetVelocity().x * m_pPlayer->GetVelocity().x + m_pPlayer->GetVelocity().z * m_pPlayer->GetVelocity().z);
 	if (::IsZero(fLength) && m_pPlayer->GetGround())
