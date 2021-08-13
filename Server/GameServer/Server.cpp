@@ -403,7 +403,7 @@ void Server::send_Lobby_loginOK_packet(int key)
     p.key = key;
     p.size = sizeof(player_loginOK_packet);
     p.type = PacketType::SC_player_loginOK;
-    p.roomid = -1;
+    p.roomid = INVALIDID;
     p.Position = Lobby_sessions[key].f3Position.load();
     p.dx = Lobby_sessions[key].m_fPitch.load();
     p.dy = Lobby_sessions[key].m_fYaw.load();
@@ -680,9 +680,33 @@ void Server::game_end(int roomnum)
 
     send_packet_to_allplayers(roomnum, reinterpret_cast<char*>(&p));
 
+    int nkey;
+    Lobby_sessions_lock.lock();
     for (auto& s : sessions[roomnum]) {
+        nkey = SetLobbyKey();
 
+        s.over.key = nkey;
+        s.over.roomID = INVALUED_ID;
+        Lobby_sessions[nkey].init();
+        Lobby_sessions[nkey].connected = TRUE;
+        Lobby_sessions[nkey].key = nkey;
+        Lobby_sessions[nkey].roomID = INVALUED_ID;
+        Lobby_sessions[nkey].sock = s.sock;
+        Lobby_sessions[nkey].clientaddr = s.clientaddr;
+
+        Lobby_sessions[nkey].over = s.over;
+        Lobby_sessions[nkey].over.type = 0;
+        Lobby_sessions[nkey].over.dataBuffer.len = BUFSIZE;
+        Lobby_sessions[nkey].over.dataBuffer.buf =
+            Lobby_sessions[nkey].over.messageBuffer;
+        Lobby_sessions[nkey].over.is_recv = true;
+        Lobby_sessions[nkey].over.key = nkey;
+        Lobby_sessions[nkey].over.roomID = INVALUED_ID;
+        strcpy_s(Lobby_sessions[nkey].id, s.id);
+
+        send_Lobby_loginOK_packet(nkey);
     }
+    Lobby_sessions_lock.unlock();
 
     maps_lock.lock();
     maps.erase(roomnum);
@@ -834,8 +858,6 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         sessions[p->roomid][nkey].using_weapon = p->weaponType;
         sessions[p->roomid][nkey].weapon1 = p->weaponType;
-        sessions[p->roomid][nkey].roomID = p->roomid;
-
         strcpy_s(sessions[p->roomid][nkey].id, Lobby_sessions[client_key].id);
         send_player_key_packet(nkey, p->roomid);
 
