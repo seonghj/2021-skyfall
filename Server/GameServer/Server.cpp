@@ -128,28 +128,25 @@ int Server::SetroomID()
 
 bool Server::CreateRoom(int key)
 {
-    if (sessions.find(key) == sessions.end()) {
-        sessions_lock.lock();
-        //std::array<SESSION, 20> s{};
-        sessions.emplace(key, std::array<SESSION, 20>{});
-        sessions_lock.unlock();
+    if (sessions.find(key) != sessions.end()) return false;
 
-        maps_lock.lock();
-        maps.emplace(key, Map(key));
-        maps[key].SetNum(key);
-        //maps[key].init_Map(this, m_pTimer);
-        maps_lock.unlock();
+    sessions_lock.lock();
+    sessions.emplace(key, std::array<SESSION, 20>{});
+    sessions_lock.unlock();
 
-        m_pBot->monsters.emplace(key, std::array<Monster, 15>{});
-        //m_pBot->monsterRun = TRUE;
-        m_pBot->Init(key);
-        //m_pBot->RunBot(key);
+    maps_lock.lock();
+    maps.emplace(key, Map(key));
+    maps[key].SetNum(key);
+    //maps[key].init_Map(this, m_pTimer);
+    maps_lock.unlock();
 
-        printf("create game room - %d\n", key);
-        return true;
-    }
-    else
-        return false;
+    m_pBot->monsters.emplace(key, std::array<Monster, 15>{});
+    //m_pBot->monsterRun = TRUE;
+    m_pBot->Init(key);
+    //m_pBot->RunBot(key);
+
+    printf("create game room - %d\n", key);
+    return true;
 }
 
 void Server::ConnectLobby()
@@ -349,7 +346,7 @@ void Server::send_packet(int to, char* packet, int roomID)
 {
     if (SC_NONE >= packet[1] || packet[1] >= CS_NONE) return;
     SOCKET client_s;
-    if (roomID == -1)
+    if (roomID == INVALIDID)
         client_s = Lobby_sessions[to].sock;
     else
         client_s = sessions[roomID][to].sock;
@@ -393,7 +390,7 @@ void Server::send_Lobby_key_packet(int key)
     p.size = sizeof(player_key_packet);
     p.type = PacketType::SC_player_Lobbykey;
     p.roomid = -1;
-    send_packet(key, reinterpret_cast<char*>(&p),-1);
+    send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
 }
 
 void Server::send_Lobby_loginOK_packet(int key)
@@ -407,7 +404,26 @@ void Server::send_Lobby_loginOK_packet(int key)
     p.Position = Lobby_sessions[key].f3Position.load();
     p.dx = Lobby_sessions[key].m_fPitch.load();
     p.dy = Lobby_sessions[key].m_fYaw.load();
-    send_packet(key, reinterpret_cast<char*>(&p), -1);
+    send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
+}
+
+void Server::send_room_list_packet(int key)
+{
+    room_list_packet p;
+    p.key = key;
+    p.size = sizeof(p);
+    p.type = PacketType::SC_room_list;
+    p.roomid = INVALIDID;
+
+    for (int i = 0; i < 50; i++) {
+        if (sessions.find(i) != sessions.end())
+            p.isRoom[i] = true;
+        else
+            p.isRoom[i] = false;
+
+    }
+
+    send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
 }
 
 void Server::send_player_loginOK_packet(int key, int roomID)
@@ -872,6 +888,9 @@ void Server::process_packet(int key, char* buf, int roomID)
             }
         }
 #endif
+        sessions_lock.lock();
+        send_room_list_packet(client_key);
+        sessions_lock.unlock();
 
         strcpy_s(Lobby_sessions[client_key].id, p->id);
 
@@ -1121,10 +1140,26 @@ void Server::process_packet(int key, char* buf, int roomID)
         break;
     }
      // Lobby
+    case PacketType::CS_create_room: {
+        room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
+        int cnt = 0;
+        bool b = 0;
+        while (1) {
+            b = CreateRoom(cnt);
+            if (b == true) break;
+            ++cnt;
+        }
+
+        for (auto& s : Lobby_sessions) {
+            if (s.second.connected == false) continue;
+            send_room_list_packet(s.second.key);
+        }
+
+        break;
+    }
     case PacketType::CS_room_select: {
         room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
-        CreateRoom(p->room);
-
+        if (sessions.find(p->room) == sessions.end()) break;
         p->type = SC_select_room;
         send_packet(p->key, reinterpret_cast<char*>(p), -1);
         break;

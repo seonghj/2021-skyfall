@@ -229,7 +229,19 @@ void CPacket::Send_mon_damaged_packet(int target, int nAttack)
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
-void CPacket::Send_room_packet(int room)
+void CPacket::Send_room_create_packet()
+{
+    room_create_packet p;
+
+    p.key = client_key;
+    p.roomid = -1;
+    p.size = sizeof(p);
+    p.type = CS_create_room;
+
+    SendPacket(reinterpret_cast<char*>(&p));
+}
+
+void CPacket::Send_room_select_packet(int room)
 {
     room_select_packet p;
 
@@ -684,6 +696,17 @@ void CPacket::ProcessPacket(char* buf)
         roomID = p->room;
         m_pScene->SetState(SCENE::INROOM);
         m_pPlayer->SetJump(TRUE);
+        break;
+    }
+    case PacketType::SC_room_list: {
+        room_list_packet* p = reinterpret_cast<room_list_packet*>(buf);
+        for (int i = 0; i < 50; i++) {
+            if (p->isRoom[i] == true) {
+                string s = "room ";
+                s += to_string(i);
+                strcpy(m_pFramework->rooms[i], s.c_str());
+            }
+        }
         break;
     }
     case PacketType::SC_start_pos: {

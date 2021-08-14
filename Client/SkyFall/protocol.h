@@ -35,6 +35,7 @@ struct OVER_EX
 	char			messageBuffer[BUFSIZE];
 	bool			is_recv;
 	int             type;
+	int				key;
 	int				roomID;
 	// 0 = session 1 = map
 };
@@ -56,6 +57,8 @@ enum PacketType {
 	SC_player_Lobbykey,
 	SC_player_LobbyloginOK,
 	SC_player_LobbyloginFail,
+	SC_create_room,
+	SC_room_list,
 	SC_select_room,
 	SC_player_key,
 	SC_player_loginOK,
@@ -98,6 +101,7 @@ enum PacketType {
 
 
 	CS_room_select,
+	CS_create_room,
 	CS_player_Lobbylogin,
 	CS_player_login,
 	CS_game_ready,
@@ -125,7 +129,7 @@ enum EventType {
 	Mon_move_to_player,
 	Mon_attack_cooltime,
 	Mon_respawn,
-	MapBreak
+	MapBreak,
 };
 
 enum PlayerMove {
@@ -194,8 +198,15 @@ struct player_loginOK_packet :public Packet {
 struct player_loginFail_packet :public Packet {
 };
 
+struct room_create_packet :public Packet {
+};
+
 struct room_select_packet :public Packet {
 	short room;
+};
+
+struct room_list_packet :public Packet {
+	bool isRoom[50];
 };
 
 struct player_add_packet : public Packet {
@@ -388,6 +399,10 @@ struct mon_respawn_event : public Packet {
 };
 
 struct Mapbreak_event : public Packet {
+
+};
+
+struct game_end_event : public Packet {
 
 };
 #pragma pack(pop)

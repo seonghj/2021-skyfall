@@ -130,6 +130,7 @@ public:
 
     void send_Lobby_key_packet(int key);
     void send_Lobby_loginOK_packet(int key);
+    void send_room_list_packet(int key);
     void send_player_key_packet(int key, int roomID);
     void send_player_loginOK_packet(int key, int roomID);
     void send_player_loginFail_packet(int key, int roomID);

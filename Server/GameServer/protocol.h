@@ -57,6 +57,8 @@ enum PacketType {
 	SC_player_Lobbykey,
 	SC_player_LobbyloginOK,
 	SC_player_LobbyloginFail,
+	SC_create_room,
+	SC_room_list,
 	SC_select_room,
 	SC_player_key,
 	SC_player_loginOK,
@@ -99,6 +101,7 @@ enum PacketType {
 
 
 	CS_room_select,
+	CS_create_room,
 	CS_player_Lobbylogin,
 	CS_player_login,
 	CS_game_ready,
@@ -195,8 +198,15 @@ struct player_loginOK_packet :public Packet {
 struct player_loginFail_packet :public Packet {
 };
 
+struct room_create_packet :public Packet {
+};
+
 struct room_select_packet :public Packet {
 	short room;
+};
+
+struct room_list_packet :public Packet {
+	bool isRoom[50];
 };
 
 struct player_add_packet : public Packet {
