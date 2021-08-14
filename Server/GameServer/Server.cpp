@@ -704,12 +704,22 @@ void Server::send_game_end_packet(int key, int roomID)
     send_packet(key, reinterpret_cast<char*>(&p), roomID);
 }
 
+void Server::send_player_dead_packet(int key, int roomID)
+{
+    player_dead_packet p;
+    p.key = key;
+    p.size = sizeof(p);
+    p.type = SC_player_dead;
+    p.roomid = roomID;
+
+    send_packet_to_allplayers(roomID, reinterpret_cast<char*>(&p));
+}
+
 void Server::game_end(int roomnum, OVER_EX* over_ex)
 {
     int nkey;
     Lobby_sessions_lock.lock();
     for (auto& s : sessions[roomnum]) {
-        printf("앙\n");
         if (s.connected == false || s.playing == false) continue;
 
         send_game_end_packet(s.key.load(), s.roomID.load());
@@ -736,7 +746,6 @@ void Server::game_end(int roomnum, OVER_EX* over_ex)
 
         send_Lobby_loginOK_packet(nkey);
         //send_Lobby_key_packet(nkey);
-        printf("기모디\n");
     }
     Lobby_sessions_lock.unlock();
 
@@ -997,6 +1006,12 @@ void Server::process_packet(int key, char* buf, int roomID)
         }*/
 
         send_packet_to_players(key, reinterpret_cast<char*>(&packet), roomID);
+
+        if (sessions[roomID][p->key].f3Position.load().y <= 5) {
+            sessions[roomID][p->key].state = Death;
+            send_player_dead_packet(p->key, p->roomid);
+        }
+
         break;
     }
     case PacketType::CS_start_pos: {
@@ -1133,10 +1148,13 @@ void Server::process_packet(int key, char* buf, int roomID)
         sessions[roomID][target].hp = sessions[roomID][target].hp - p->damage;
         p->leftHp = sessions[roomID][target].hp;
         sessions[roomID][key].AddProficiency();
+        send_packet_to_players(key, reinterpret_cast<char*>(p), p->roomid);
+
         if (sessions[roomID][key].hp <= 0) {
             sessions[roomID][key].state = Death;
+            send_player_dead_packet(key, roomID);
         }
-        send_packet_to_players(key, reinterpret_cast<char*>(p), p->roomid);
+
         break;
     }
      // Lobby

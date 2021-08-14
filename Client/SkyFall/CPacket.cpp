@@ -1049,8 +1049,15 @@ void CPacket::ProcessPacket(char* buf)
         else
             m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
 
-        if (m_pScene->m_mPlayer[p->target]->GetHp() < 0)
-            m_pScene->AnimatePlayer(p->target, PlayerState::Death);
+       /* if (m_pScene->m_mPlayer[p->target]->GetHp() < 0)
+            m_pScene->AnimatePlayer(p->target, PlayerState::Death);*/
+
+        break;
+    }
+    case PacketType::SC_player_dead: {
+        player_dead_packet* p = reinterpret_cast<player_dead_packet*>(buf);
+        m_pScene->AnimatePlayer(p->key, PlayerState::Death);
+        // 죽은거 처리해
 
         break;
     }

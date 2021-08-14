@@ -78,6 +78,7 @@ enum PacketType {
 	SC_allow_shot,
 	SC_player_damage,
 	SC_player_stop,
+	SC_player_dead,
 	SC_map_set,
 	SC_map_collapse,
 	SC_cloud_move,
@@ -316,6 +317,10 @@ struct player_damage_packet : public Packet {
 
 struct player_stop_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
+};
+
+struct player_dead_packet : public Packet {
+
 };
 
 struct map_block_set : public Packet {
