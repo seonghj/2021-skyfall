@@ -1283,6 +1283,7 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::Mon_respawn: {
+                if (m_pBot->monsterRun[roomID] == false) break;
                 mon_respawn_event* e = reinterpret_cast<mon_respawn_event*>(over_ex->messageBuffer);
                 m_pBot->monsters[e->roomid][e->key].hp = 100;
                 m_pBot->monsters[e->roomid][e->key].f3Position = m_pBot->monsters[e->roomid][e->key].SpawnPos.load();
