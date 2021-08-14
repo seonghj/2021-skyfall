@@ -45,7 +45,7 @@ CPlayer::CPlayer()
 	m_fHitCool = 1.f;
 
 	m_ppPlayerUpdatedContext = NULL;
-	m_pCameraUpdatedContext = NULL;
+	m_ppCameraUpdatedContext = NULL;
 }
 
 CPlayer::~CPlayer()
@@ -208,7 +208,7 @@ void CPlayer::Update(float fTimeElapsed)
 	DWORD nCurrentCameraMode = m_pCamera->GetMode();
 	if (nCurrentCameraMode == THIRD_PERSON_CAMERA) {
 		//m_pCamera->Update(m_xmf3Position, fTimeElapsed);
-		if (m_pCameraUpdatedContext) OnCameraUpdateCallback(fTimeElapsed);
+		if (m_ppCameraUpdatedContext) OnCameraUpdateCallback(fTimeElapsed);
 		//m_pCamera->SetLookAt(m_xmf3Position);
 	}
 
@@ -380,7 +380,7 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 #endif
 	
 	SetPlayerUpdatedContext(ppContext);
-	//SetCameraUpdatedContext(pContext);
+	SetCameraUpdatedContext(ppContext);
 	SetPlace(2);
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)ppContext[m_nPlace];
 	XMFLOAT3 pos = pTerrain->GetPosition();
@@ -520,26 +520,34 @@ void CTerrainPlayer::OnPlayerUpdateCallback(float fTimeElapsed)
 
 void CTerrainPlayer::OnCameraUpdateCallback(float fTimeElapsed)
 {
-	CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)m_pCameraUpdatedContext;
-	XMFLOAT3 xmf3Scale = pTerrain->GetScale();
-	XMFLOAT3 xmf3CameraPosition = m_pCamera->GetPosition();
-	int z = (int)(xmf3CameraPosition.z / xmf3Scale.z);
-	bool bReverseQuad = ((z % 2) != 0);
-	float fHeight = pTerrain->GetHeight(xmf3CameraPosition.x, xmf3CameraPosition.z, bReverseQuad);
-	if (xmf3CameraPosition.y <= fHeight)
-	{
-		float d = fHeight - xmf3CameraPosition.y;
-		xmf3CameraPosition.y = fHeight;
-		XMFLOAT3 LookAtPos = m_pCamera->GetLookAtPosition();
-		LookAtPos.y += d;
-		m_pCamera->SetLookAtPosition(LookAtPos);
-		m_pCamera->SetPosition(xmf3CameraPosition);
-		/*if (m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
-		{
-			CThirdPersonCamera *p3rdPersonCamera = (CThirdPersonCamera *)m_pCamera;
-			p3rdPersonCamera->SetLookAt(GetPosition());
-		}*/
+	CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)m_ppCameraUpdatedContext[m_nPlace];
+	if (/*pTerrain->IsFalling()*/true) {
+		float fAmp = pTerrain->GetTime() / 5;
+		fAmp = max(min(2, fAmp), 1);
+		static float time = 0;
+		time += fTimeElapsed;
+		m_xmf3ShakeDegree = XMFLOAT3(0.2f * cos(PI * time * 20), fAmp * cos(PI * time * 20), 0);
+		m_pCamera->Rotate(m_xmf3ShakeDegree.x, m_xmf3ShakeDegree.y, 0);
 	}
+	//XMFLOAT3 xmf3Scale = pTerrain->GetScale();
+	//XMFLOAT3 xmf3CameraPosition = m_pCamera->GetPosition();
+	//int z = (int)(xmf3CameraPosition.z / xmf3Scale.z);
+	//bool bReverseQuad = ((z % 2) != 0);
+	//float fHeight = pTerrain->GetHeight(xmf3CameraPosition.x, xmf3CameraPosition.z, bReverseQuad);
+	//if (xmf3CameraPosition.y <= fHeight)
+	//{
+	//	float d = fHeight - xmf3CameraPosition.y;
+	//	xmf3CameraPosition.y = fHeight;
+	//	XMFLOAT3 LookAtPos = m_pCamera->GetLookAtPosition();
+	//	LookAtPos.y += d;
+	//	m_pCamera->SetLookAtPosition(LookAtPos);
+	//	m_pCamera->SetPosition(xmf3CameraPosition);
+	//	/*if (m_pCamera->GetMode() == THIRD_PERSON_CAMERA)
+	//	{
+	//		CThirdPersonCamera *p3rdPersonCamera = (CThirdPersonCamera *)m_pCamera;
+	//		p3rdPersonCamera->SetLookAt(GetPosition());
+	//	}*/
+	//}
 }
 
 void CTerrainPlayer::Animate(float fTimeElapsed)
@@ -645,7 +653,7 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 #endif
 
 	SetPlayerUpdatedContext(ppContext);
-	//SetCameraUpdatedContext(pContext);
+	SetCameraUpdatedContext(ppContext);
 	SetJump(true);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
@@ -901,7 +909,7 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 #endif
 
 	SetPlayerUpdatedContext(ppContext);
-	//SetCameraUpdatedContext(pContext);
+	SetCameraUpdatedContext(ppContext);
 
 
 	SetJump(true);
@@ -1088,7 +1096,7 @@ C2HswordPlayer::C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 #endif
 
 	SetPlayerUpdatedContext(ppContext);
-	//SetCameraUpdatedContext(pContext);
+	SetCameraUpdatedContext(ppContext);
 
 
 	m_pSkinnedAnimationController->SetAllTrackDisable();
@@ -1156,7 +1164,7 @@ C2HspearPlayer::C2HspearPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 #endif
 
 	SetPlayerUpdatedContext(ppContext);
-	//SetCameraUpdatedContext(pContext);
+	SetCameraUpdatedContext(ppContext);
 
 
 	m_pSkinnedAnimationController->SetAllTrackDisable();

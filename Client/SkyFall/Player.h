@@ -49,7 +49,7 @@ protected:
 	// stat
 
 	LPVOID*						m_ppPlayerUpdatedContext = NULL;
-	LPVOID						m_pCameraUpdatedContext = NULL;
+	LPVOID*						m_ppCameraUpdatedContext = NULL;
 
 	CCamera						*m_pCamera = NULL;
 
@@ -113,7 +113,7 @@ public:
 	void SetPlayerUpdatedContext(LPVOID* ppContext) { m_ppPlayerUpdatedContext = ppContext; }
 
 	virtual void OnCameraUpdateCallback(float fTimeElapsed) { }
-	void SetCameraUpdatedContext(LPVOID pContext) { m_pCameraUpdatedContext = pContext; }
+	void SetCameraUpdatedContext(LPVOID* ppContext) { m_ppCameraUpdatedContext = ppContext; }
 
 	virtual void CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
 	virtual void ReleaseShaderVariables();
@@ -170,7 +170,7 @@ public:
 
 protected:
 	CGameObject* pWeapon;
-
+	XMFLOAT3 m_xmf3ShakeDegree;
 #endif
 	enum PlayerState {
 		Idle = 0,
