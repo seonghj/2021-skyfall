@@ -306,7 +306,7 @@ void Bot::CheckBehavior(int roomID)
 
 void Bot::RunBot(int roomID)
 {
-	if (monsterRun) {
+	if (monsterRun[roomID]) {
 		mon_move_to_player_event e;
 		e.size = sizeof(e);
 		e.type = EventType::Mon_move_to_player;

@@ -126,7 +126,7 @@ enum EventType {
 	Mon_move_to_player,
 	Mon_attack_cooltime,
 	Mon_respawn,
-	MapBreak
+	MapBreak,
 };
 
 enum PlayerMove {
@@ -389,6 +389,10 @@ struct mon_respawn_event : public Packet {
 };
 
 struct Mapbreak_event : public Packet {
+
+};
+
+struct game_end_event : public Packet {
 
 };
 #pragma pack(pop)

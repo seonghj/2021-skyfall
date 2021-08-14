@@ -12,7 +12,7 @@ void Map::init_Map(Server* s, Timer* t)
 	over.type = 1;
 	over.key = roomnum;
 	over.roomID = roomnum;
-	game_start = false;
+	game_start = true;
 
 	std::random_device rd;
 	std::mt19937_64 gen(rd());
@@ -46,9 +46,16 @@ void Map::init_Map(Server* s, Timer* t)
 
 	game_time = 0;
 
-	//hMove = CreateEvent(NULL, TRUE, TRUE, NULL);
 	ismove = true;
 	//cloud_move();
+
+	// 테스트용
+	game_end_event e;
+	e.type = EventType::game_end;
+	e.size = sizeof(e);
+	e.key = roomnum;
+	e.roomid = roomnum;
+	m_pTimer->push_event(roomnum, OE_gEvent, 30000, reinterpret_cast<char*>(&e));
 }
 
 void Map::Set_map()
@@ -245,6 +252,6 @@ void Map::Map_collapse()
 	//print_Map();
 
 	if (num == 9) {
-		m_pServer->game_end(roomnum);
+		m_pServer->game_end(roomnum, NULL);
 	}
 }

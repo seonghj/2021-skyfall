@@ -74,10 +74,12 @@ public:
 
     std::unordered_map <int, std::array<Monster, 15>> monsters;
 
-    bool monsterRun = false;
+    std::unordered_map <int, bool> monsterRun;
 
     std::chrono::system_clock::time_point start;
     std::chrono::system_clock::time_point end;
+
+    std::mutex               monsters_lock;
 
 private:
     Server* m_pServer = NULL;

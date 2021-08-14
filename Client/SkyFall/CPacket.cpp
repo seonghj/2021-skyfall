@@ -605,7 +605,7 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_game_end: {
         printf("gameover\n");
-        //LobbyConnect();
+        
         break;
     }
     case PacketType::SC_player_info: {

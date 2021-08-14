@@ -104,7 +104,7 @@ int Server::SetroomID()
             maps_lock.unlock();
 
             m_pBot->monsters.emplace(cnt, std::array<Monster, 15>{});
-            //m_pBot->monsterRun = TRUE;
+            m_pBot->monsterRun.emplace(cnt, false);
             m_pBot->Init(cnt);
 
             /*m_pBot->monsters[cnt][0].SetPosition(2000, 197.757935, 5000);
@@ -661,12 +661,19 @@ void Server::send_start_packet(int to, int roomID)
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 
     if (maps[roomID].game_start == false) {
+        maps[roomID].game_start = true;
+        maps[roomID].init_Map(this, m_pTimer);
+        printf("Room %d Game start\n", roomID);
         Mapbreak_event e;
         e.roomid = roomID;
         e.size = sizeof(e);
         e.type = EventType::MapBreak;
         m_pTimer->push_event(roomID, OE_gEvent, MAP_BREAK_TIME, reinterpret_cast<char*>(&e));
-        maps[roomID].game_start = true;
+    }
+
+    if (m_pBot->monsterRun[roomID] == false) {
+        m_pBot->monsterRun[roomID] = true;
+        m_pBot->RunBot(roomID);
     }
 }
 
@@ -681,12 +688,12 @@ void Server::send_game_end_packet(int key, int roomID)
     send_packet(key, reinterpret_cast<char*>(&p), roomID);
 }
 
-void Server::game_end(int roomnum)
+void Server::game_end(int roomnum, OVER_EX* over_ex)
 {
-
     int nkey;
     Lobby_sessions_lock.lock();
     for (auto& s : sessions[roomnum]) {
+        printf("앙\n");
         if (s.connected == false || s.playing == false) continue;
 
         send_game_end_packet(s.key.load(), s.roomID.load());
@@ -713,6 +720,7 @@ void Server::game_end(int roomnum)
 
         send_Lobby_loginOK_packet(nkey);
         //send_Lobby_key_packet(nkey);
+        printf("기모디\n");
     }
     Lobby_sessions_lock.unlock();
 
@@ -722,6 +730,44 @@ void Server::game_end(int roomnum)
     sessions_lock.lock();
     sessions.erase(roomnum);
     sessions_lock.unlock();
+
+    m_pBot->monsters_lock.lock();
+    m_pBot->monsters.erase(roomnum);
+    m_pBot->monsterRun.erase(roomnum);
+    m_pBot->monsters_lock.unlock();
+
+    /*if (over_ex == NULL) return;
+    delete over_ex;*/
+}
+
+void Server::player_go_lobby(int key, int roomID)
+{
+    sessions[roomID][key].connected = false;
+    sessions[roomID][key].isready = false;
+    sessions[roomID][key].playing = false;
+
+    int nkey = SetLobbyKey();
+
+    sessions[roomID][key].over.key = nkey;
+    sessions[roomID][key].over.roomID = INVALUED_ID;
+    Lobby_sessions[nkey].init();
+    Lobby_sessions[nkey].connected = TRUE;
+    Lobby_sessions[nkey].key = nkey;
+    Lobby_sessions[nkey].roomID = INVALUED_ID;
+    Lobby_sessions[nkey].sock = sessions[roomID][key].sock;
+    Lobby_sessions[nkey].clientaddr = sessions[roomID][key].clientaddr;
+
+    Lobby_sessions[nkey].over = sessions[roomID][key].over;
+    Lobby_sessions[nkey].over.type = 0;
+    Lobby_sessions[nkey].over.dataBuffer.len = BUFSIZE;
+    Lobby_sessions[nkey].over.dataBuffer.buf =
+        Lobby_sessions[nkey].over.messageBuffer;
+    Lobby_sessions[nkey].over.is_recv = true;
+    Lobby_sessions[nkey].over.key = nkey;
+    Lobby_sessions[nkey].over.roomID = INVALUED_ID;
+    strcpy_s(Lobby_sessions[nkey].id, sessions[roomID][key].id);
+
+    send_Lobby_loginOK_packet(nkey);
 }
 
 bool Server::in_VisualField(SESSION a, SESSION b, int roomID)
@@ -881,14 +927,6 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         sessions[p->roomid][nkey].isready = true;
         sessions[p->roomid][nkey].playing = true;
-
-        if (m_pBot->monsterRun == false) {
-            m_pBot->monsterRun = true;
-            m_pBot->RunBot(p->roomid);
-        }
-        if (maps[p->roomid].game_start == false) {
-            maps[p->roomid].init_Map(this, m_pTimer);
-        }
 
         for (auto& s : sessions[p->roomid]) {
             if ((TRUE == s.connected) && (s.key.load() != nkey)) {
@@ -1193,6 +1231,7 @@ void Server::WorkerFunc()
                 continue;
             switch (over_ex->messageBuffer[1]) {
             case EventType::Mapset:{
+                if (maps[roomID].game_start == false) break;
                 map_block_set* p = reinterpret_cast<map_block_set*>(over_ex->messageBuffer);
                 maps[key].Set_map();
                 
@@ -1200,11 +1239,12 @@ void Server::WorkerFunc()
                 ep.roomid = key;
                 ep.size = sizeof(ep);
                 ep.type = EventType::game_end;
-                m_pTimer->push_event(key, OE_gEvent, 1000 * (MAP_BREAK_TIME*9), reinterpret_cast<char*>(&ep));
-
+                m_pTimer->push_event(ep.roomid, OE_gEvent, 1000 * (MAP_BREAK_TIME*9), reinterpret_cast<char*>(&ep));
+                //delete over_ex;
                 break;
             }
             case EventType::Cloud_move: {
+                if (maps[roomID].game_start == false) break;
                 cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(over_ex->messageBuffer);
                 send_cloud_move_packet(p->x, p->z, p->roomid);
                 //printf("room: %d cloud x: %f | y: %f\n\n", p->roomid, p->x, p->z);
@@ -1214,6 +1254,7 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::Mon_move_to_player: {
+                if (m_pBot->monsterRun[roomID] == false) break;
                 mon_move_to_player_event* e = reinterpret_cast<mon_move_to_player_event*>(over_ex->messageBuffer);
                 //m_pBot->CheckTarget(e->roomid);
                 m_pBot->CheckBehavior(e->roomid);
@@ -1222,12 +1263,14 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::Mon_attack_cooltime: {
+                if (m_pBot->monsterRun[roomID] == false) break;
                 mon_attack_cooltime_event* e = reinterpret_cast<mon_attack_cooltime_event*>(over_ex->messageBuffer);
                 m_pBot->monsters[e->roomid][e->key].CanAttack = TRUE;
                 delete over_ex;
                 break;
             }
             case EventType::MapBreak: {
+                if (maps[roomID].game_start == false) break;
                 Mapbreak_event* p = reinterpret_cast<Mapbreak_event*>(over_ex->messageBuffer);
                 maps[key].Map_collapse();
 
@@ -1258,6 +1301,16 @@ void Server::WorkerFunc()
                 send_packet_to_allplayers(e->roomid, reinterpret_cast<char*>(&p));
 
                 m_pBot->monsters[e->roomid][e->key].state = 1;
+                delete over_ex;
+                break;
+            }
+            case EventType::game_end: {
+                if (maps[roomID].game_start == false) break;
+                game_end_event* e = reinterpret_cast<game_end_event*>(over_ex->messageBuffer);
+                int roomID = e->roomid;
+                printf("gameover\n");
+                game_end(roomID, over_ex);
+                //delete over_ex;
                 break;
             }
             }

@@ -9,7 +9,7 @@
 constexpr int INVALUED_ID = -1;
 
 constexpr int Death = 0;
-constexpr int Alive = 0;
+constexpr int Alive = 1;
 
 //struct OVER_EX
 //{
@@ -140,6 +140,7 @@ public:
     void send_packet_to_allplayers(int roomnum, char* buf);
     void send_start_packet(int to, int roomID);
     void send_game_end_packet(int key, int roomID);
+    void player_go_lobby(int key, int roomID);
 
     void send_map_collapse_packet(int num, int roomID);
     void send_cloud_move_packet(float x, float z, int roomID);
@@ -152,7 +153,7 @@ public:
     void send_player_record(int key, int roomID, const SESSION& s, int time, int rank);
     void send_map_packet(int to, int roomID);
 
-    void game_end(int roomnum);
+    void game_end(int roomnum, OVER_EX* over_ex);
 
     bool in_VisualField(SESSION a, SESSION b, int roomID);
     bool in_VisualField(Monster a, SESSION b, int roomID);
