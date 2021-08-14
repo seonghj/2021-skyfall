@@ -70,6 +70,7 @@ public:
     std::atomic<float>      lv = 0;
     std::atomic<float>      att = 10;
     std::atomic<float>      speed = 20;
+    std::atomic<float>      proficiency = 0.0f;
 
     std::atomic<PlayerType>      using_weapon = PlayerType::PT_BASIC;
 
@@ -80,6 +81,8 @@ public:
     DirectX::XMFLOAT3 GetPosition() { return f3Position; }
 
     void TakeDamage(int iDamage) { hp -= iDamage * (100 - def) / 100; };
+    void AddProficiency() { proficiency += 0.06; }
+    float GetAtkDamage() const { return(att + att * (proficiency * proficiency)); }
 
 public:
     std::unordered_set<int> near_monster;

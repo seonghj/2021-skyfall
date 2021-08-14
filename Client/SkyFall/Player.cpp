@@ -35,6 +35,7 @@ CPlayer::CPlayer()
 	m_isRunning = false;
 	m_isStanding = true;
 	m_isAttack = false;
+	m_isCharging = false;
 
 	SetMaxHp(100);
 
@@ -741,6 +742,11 @@ void CBowPlayer::LButtonDown()
 	if (!m_isCharging && !m_isAttack) {
 		SetCharging(true);
 		SetActive("Arrow_Obj", true);
+
+		m_pCamera->SetPosition(Vector3::Add(m_pCamera->GetPosition(), Vector3::ScalarProduct(m_pCamera->GetRightVector(), -20, false)));
+		/*m_xmf3Position = Vector3::Add(m_xmf3Position, Vector3::ScalarProduct(m_xmf3Right, -10, false));*/
+		printf("x : %f / y : %f / z : %f\n", m_xmf3Position.x, m_xmf3Position.y, m_xmf3Position.z);
+
 	}
 }
 
@@ -751,6 +757,8 @@ void CBowPlayer::LButtonUp()
 		SetCharging(false);
 		SetActive("Arrow_Obj", false);
 		m_isRelease = true;
+		m_pCamera->SetPosition(Vector3::Add(m_pCamera->GetPosition(), Vector3::ScalarProduct(m_pCamera->GetRightVector(), 20, false)));
+		
 		//m_pSkinnedAnimationController->SetTrackEnable(nShotRelease, true);
 	}
 }
