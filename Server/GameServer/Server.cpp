@@ -670,19 +670,26 @@ void Server::send_start_packet(int to, int roomID)
     }
 }
 
-void Server::game_end(int roomnum)
+void Server::send_game_end_packet(int key, int roomID)
 {
     game_end_packet p;
     p.key = 0;
     p.size = sizeof(p);
     p.type = PacketType::SC_game_end;
-    p.roomid = roomnum;
+    p.roomid = roomID;
 
-    send_packet_to_allplayers(roomnum, reinterpret_cast<char*>(&p));
+    send_packet(key, reinterpret_cast<char*>(&p), roomID);
+}
+
+void Server::game_end(int roomnum)
+{
 
     int nkey;
     Lobby_sessions_lock.lock();
     for (auto& s : sessions[roomnum]) {
+        if (s.connected == false || s.playing == false) continue;
+
+        send_game_end_packet(s.key.load(), s.roomID.load());
         nkey = SetLobbyKey();
 
         s.over.key = nkey;
@@ -705,6 +712,7 @@ void Server::game_end(int roomnum)
         strcpy_s(Lobby_sessions[nkey].id, s.id);
 
         send_Lobby_loginOK_packet(nkey);
+        //send_Lobby_key_packet(nkey);
     }
     Lobby_sessions_lock.unlock();
 
