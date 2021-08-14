@@ -2585,8 +2585,8 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 	XMFLOAT3 xmf3Extents = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents).Extents;
 
 	float yExtents = SetBBObject(pd3dDevice, pd3dCommandList,
-		XMFLOAT3(0, 20, -xmf3Extents.z),
-		XMFLOAT3(xmf3Extents.x, xmf3Extents.y - 20, xmf3Extents.z))->m_pMesh->m_xmf3AABBExtents.y;
+		XMFLOAT3(0, 20, -xmf3Extents.z*2),
+		XMFLOAT3(xmf3Extents.x, xmf3Extents.y - 10, xmf3Extents.z*2))->m_pMesh->m_xmf3AABBExtents.y;
 
 	SetHpBar(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, 0, 100),

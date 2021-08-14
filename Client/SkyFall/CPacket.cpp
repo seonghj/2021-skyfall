@@ -599,8 +599,7 @@ void CPacket::ProcessPacket(char* buf)
         //GameConnect();
         game_start_packet* p = reinterpret_cast<game_start_packet*>(buf);
         Swap_weapon(p->key, start_weapon);
-        m_pScene->SetState(SCENE::INGAME);
-        m_pFramework->MouseHold(false);
+        m_pFramework->StartGame();
         break;
     }
     case PacketType::SC_game_end: {

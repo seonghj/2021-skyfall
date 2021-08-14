@@ -68,6 +68,7 @@ public:
 	void Restart();
 	void MouseHold(bool b) { m_bMouseHold = b; }
 	void UpdateShadowMap();
+	void StartGame();
 
 	void ShowLoginWindow();
 	void ShowLobbyWindow();

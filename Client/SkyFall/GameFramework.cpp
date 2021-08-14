@@ -388,7 +388,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 					m_fYaw = 0;
 					break;
 				case VK_ESCAPE:
-					::PostQuitMessage(0);
+					//::PostQuitMessage(0);
 					break;
 				case VK_RETURN:
 					break;
@@ -1092,11 +1092,27 @@ void CGameFramework::FrameAdvance()
 	ID3D12DescriptorHeap* heaps = m_resourceDescriptors->Heap();
 	m_pd3dCommandList->SetDescriptorHeaps(1, &heaps);
 	
-	PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
-	m_pSprite->Begin(m_pd3dCommandList);
-	m_pFont->DrawString(m_pSprite.get(), L"SKYFALL", XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 20));
-	m_pSprite->End();
-	PIXEndEvent(m_pd3dCommandQueue);
+	if (m_pScene->GetState() == SCENE::INGAME)
+	{
+		PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
+		char str[6]="";
+		int t = m_pcbMappedFrameworkInfo->m_fCurrentTime;
+		
+		char h[4];
+		itoa(t / 60, h, 10);
+		strcat(str, h);
+		strcat(str, ":");
+		if (t % 60 < 10)
+			strcat(str, "0");
+
+		char m[3];
+		itoa(t % 60, m, 10);
+		strcat(str, m);
+		m_pSprite->Begin(m_pd3dCommandList);
+		m_pFont->DrawString(m_pSprite.get(), str, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 10));
+		m_pSprite->End();
+		PIXEndEvent(m_pd3dCommandQueue);
+	}
 
 	// Start the Dear ImGui frame
 	ImGui_ImplDX12_NewFrame();
@@ -1309,4 +1325,11 @@ void CGameFramework::UpdateShadowMap()
 	pCamera->Move(Vector3::ScalarProduct(look, -500, false));
 	m_pScene->m_pLights[0].m_xmf3Position = pCamera->GetPosition();
 	pCamera->RegenerateViewMatrix();
+}
+
+void CGameFramework::StartGame()
+{
+	m_pScene->SetState(SCENE::INGAME);
+	MouseHold(false);
+	m_GameTimer.Reset();
 }

@@ -677,15 +677,15 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 
 	m_ppBullets = new CBullet * [MAX_BULLET];
-
-	CGameObject* pArrow = FindFrame("Arrow_Obj");/*CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Arrow.bin", NULL);*/
-	CMesh* pMesh = pArrow->m_pMesh;
-	//CMesh* pMesh = CBullet::m_pArrow->m_pMesh;
+	if(!CBullet::m_pArrow)
+		CBullet::m_pArrow = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Arrow.bin", NULL);
+	//CMesh* pMesh = pArrow->m_pMesh;
+	CMesh* pMesh = CBullet::m_pArrow->m_pMesh;
 
 	for (int i = 0; i < MAX_BULLET; ++i)
 	{
 		m_ppBullets[i] = new CBullet(pMesh);
-
+		m_ppBullets[i]->SetScale(10, 10, 10);
 		m_ppBullets[i]->SetBBObject(pd3dDevice, pd3dCommandList,
 			XMFLOAT3(0, pMesh->m_xmf3AABBExtents.y + 10, 0),	// Center
 			XMFLOAT3(2, 5, 2));									// Extents
@@ -910,9 +910,6 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 
 	SetPlayerUpdatedContext(ppContext);
 	SetCameraUpdatedContext(ppContext);
-
-
-	SetJump(true);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	pWeapon = pPlayerModel->m_pModelRootObject->FindFrame("Sword_Blade");
