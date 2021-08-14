@@ -1,7 +1,7 @@
 #pragma once
 
-#define FRAME_BUFFER_WIDTH		640
-#define FRAME_BUFFER_HEIGHT		480
+//#define FRAME_BUFFER_WIDTH		640
+//#define FRAME_BUFFER_HEIGHT		480
 
 #include "Timer.h"
 #include "Player.h"
@@ -67,6 +67,7 @@ public:
 	void SetCloud(float x, float z) { m_pcbMappedFog->gvFogPos = XMFLOAT2(x, z); }
 	void Restart();
 	void MouseHold(bool b) { m_bMouseHold = b; }
+	void UpdateShadowMap();
 
 	void ShowLoginWindow();
 	void ShowLobbyWindow();
@@ -156,8 +157,8 @@ private:
 	//Font
 	unique_ptr<SpriteBatch>		m_pSprite;
 	unique_ptr<SpriteFont>		m_pFont;
-	unique_ptr<DescriptorHeap> m_resourceDescriptors;
-	unique_ptr<GraphicsMemory> m_graphicsMemory;
+	unique_ptr<DescriptorHeap>	m_resourceDescriptors;
+	unique_ptr<GraphicsMemory>	m_graphicsMemory;
 
 	enum Descriptors
 	{

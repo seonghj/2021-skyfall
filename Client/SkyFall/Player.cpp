@@ -36,6 +36,7 @@ CPlayer::CPlayer()
 	m_isStanding = true;
 	m_isAttack = false;
 	m_isDamaged = false;
+	m_isCharging = false;
 
 	SetMaxHp(100);
 
@@ -363,7 +364,6 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Take_Damage, PlayerState::Take_Damage);
 	m_pSkinnedAnimationController->SetTrackType(PlayerState::Take_Damage, ANIMATION_TYPE_ONCE);
 
-
 	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Jump, PlayerState::Jump);
 	m_pSkinnedAnimationController->SetTrackType(PlayerState::Jump, ANIMATION_TYPE_ONCE);
 
@@ -439,7 +439,7 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 			pos.y += 40;
 			pos = Vector3::Add(pos, Vector3::ScalarProduct(Vector3::Normalize(m_xmf3Look), 50));
 			m_pCamera->SetLookAt(pos);
-			m_pCamera->GenerateProjectionMatrix(1.0f, 1000.0f, ASPECT_RATIO, 60.0f);
+			m_pCamera->GenerateProjectionMatrix(1.0f, 2000.0f, ASPECT_RATIO, 60.0f);
 			m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 			m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
 			break;
@@ -451,7 +451,7 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 			m_pCamera = OnChangeCamera(SPACESHIP_CAMERA, nCurrentCameraMode);
 			m_pCamera->SetTimeLag(0.0f);
 			m_pCamera->SetOffset(XMFLOAT3(0.0f, 0.0f, 0.0f));
-			m_pCamera->GenerateProjectionMatrix(1.01f, 1000.0f, ASPECT_RATIO, 60.0f);
+			m_pCamera->GenerateProjectionMatrix(1.01f, 2000.0f, ASPECT_RATIO, 60.0f);
 			m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 			m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
 			break;
@@ -473,7 +473,7 @@ CCamera *CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 			//m_pCamera->SetPosition(Vector3::Subtract(pos,Vector3::ScalarProduct(GetLook(),10,false)));
 			pos.y += 50;
 			m_pCamera->SetLookAt(pos);
-			m_pCamera->GenerateProjectionMatrix(1.01f, 1000.0f, ASPECT_RATIO, 60.0f);
+			m_pCamera->GenerateProjectionMatrix(1.01f, 2000.0f, ASPECT_RATIO, 60.0f);
 			m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 			m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
 			break;
@@ -1101,6 +1101,13 @@ C2HswordPlayer::C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	pWeapon->SetBBObject(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, -bb.Center.y / 4, 0),
 		XMFLOAT3(bb.Extents.x, bb.Extents.y, bb.Extents.z));
+
+	SetPlace(4);
+	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)ppContext[m_nPlace];
+	XMFLOAT3 pos = pTerrain->GetPosition();
+	pos.x += 100 + rand() % 1900;
+	pos.z += 100 + rand() % 1900;
+	SetPosition(XMFLOAT3(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z));
 }
 
 C2HswordPlayer::~C2HswordPlayer()
@@ -1164,6 +1171,13 @@ C2HspearPlayer::C2HspearPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	pWeapon->SetBBObject(pd3dDevice, pd3dCommandList,
 		XMFLOAT3(0, -bb.Center.y/4, 0),
 		XMFLOAT3(bb.Extents.x, bb.Extents.y, bb.Extents.z));
+
+	SetPlace(4);
+	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)ppContext[m_nPlace];
+	XMFLOAT3 pos = pTerrain->GetPosition();
+	pos.x += 100 + rand() % 1900;
+	pos.z += 100 + rand() % 1900;
+	SetPosition(XMFLOAT3(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z));
 }
 
 C2HspearPlayer::~C2HspearPlayer()

@@ -77,6 +77,7 @@ static matrix gmtxProjectToTexture = {
 
 Texture2D gtxtShadowMap : register(t0);
 SamplerState gssShadowMap : register(s2);
+//SamplerComparisonState gssShadowMap : register(s2);
 cbuffer cbShadow :register(b0)
 {
 	matrix gmtxShadowTransform : packoffset(c0);
@@ -175,7 +176,8 @@ VS_WIREFRAME_OUTPUT VSWireFrame(VS_WIREFRAME_INPUT input)
 	VS_WIREFRAME_OUTPUT output;
 
 	output.positionW = (float3)mul(float4(input.position, 1.0f), gmtxGameObject);
-	output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
+	//output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
+	output.normalW = input.normal;
 	output.tangentW = (float3)mul(float4(input.tangent, 1.0f), gmtxGameObject);
 	output.bitangentW = (float3)mul(float4(input.bitangent, 1.0f), gmtxGameObject);
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
@@ -208,10 +210,10 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 
 	if (/*gnTexturesMask & MATERIAL_NORMAL_MAP*/true)
 	{
-		float3 normalW = input.normalW;
-		float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
-		normalW = normalize(mul(vNormal, TBN));
+		float3 normalW = normalize(input.normalW);
+		//float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
+		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
+		//normalW = normalize(mul(vNormal, TBN));
 		cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
 		cColor = lerp(cColor, cIllumination, 0.5f);
 		cColor = Fog(cColor, input.positionW);
@@ -273,7 +275,8 @@ VS_SKINNED_WIREFRAME_OUTPUT VSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_INP
 	//output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
 //	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
 
-	output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
+	output.normalW = input.normal;
+	//output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
 	output.tangentW = (float3)mul(float4(input.tangent, 1.0f), gmtxGameObject);
 	output.bitangentW = (float3)mul(float4(input.bitangent, 1.0f), gmtxGameObject);
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
@@ -305,10 +308,10 @@ float4 PSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_OUTPUT input) : SV_TARGE
 
 	if (/*gnTexturesMask & MATERIAL_NORMAL_MAP*/true)
 	{
-		float3 normalW = input.normalW;
-		float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
-		normalW = normalize(mul(vNormal, TBN));
+		float3 normalW = normalize(input.normalW);
+		//float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
+		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
+		//normalW = normalize(mul(vNormal, TBN));
 		cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
 		cColor = lerp(cColor, cIllumination, 0.5f);
 		cColor = Fog(cColor, input.positionW);
@@ -335,6 +338,8 @@ struct VS_TERRAIN_INPUT
 	float4 color : COLOR;
 	float2 uv0 : TEXCOORD0;
 	float2 uv1 : TEXCOORD1;
+	float3 normal :NORMAL;
+	float3 tangent :TANGENT;
 };
 
 struct VS_TERRAIN_OUTPUT
@@ -344,6 +349,8 @@ struct VS_TERRAIN_OUTPUT
 	float4 color : COLOR;
 	float2 uv0 : TEXCOORD0;
 	float2 uv1 : TEXCOORD1;
+	float3 normalW :NORMAL;
+	float3 tangentW :TANGENT;
 	float4 shadowPosition: TEXCOORD2;
 	int nState : STATE;
 };
@@ -360,9 +367,16 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 	if (output.positionW.y <= 87.f) {
 		output.positionW.y = 85.f + 2 * cos(output.positionW.x /3 + output.positionW.z /2 + gfCurrentTime * 2);
 		output.nState = WATER;
+		float3 e1 = float3(1, 85.f + 2 * cos((output.positionW.x + 1) / 3 + output.positionW.z / 2 + gfCurrentTime * 2), 0);
+		float3 e2 = float3(0, 85.f + 2 * cos((output.positionW.x) / 3 + (output.positionW.z + 1) / 2 + gfCurrentTime * 2), 1);
+		output.normalW = mul(normalize(cross(e1, e2)), (float3x3)gmtxGameObject);
+		output.tangentW = mul(normalize(e1), (float3x3)gmtxGameObject);
 	}
-	else
+	else {
 		output.nState = GROUND;
+		output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
+		output.tangentW = (float3)mul(float4(input.tangent, 1.0f), gmtxGameObject);
+	}
 
 
 	//const int2 arrange[10] = { int2(0,0),int2(1,0),int2(2,0),int2(0,1),int2(1,1),int2(2,1),int2(0,2),int2(1,2),int2(2,2),int2(-1,-1) };
@@ -380,6 +394,7 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 	output.color = input.color;
 	output.uv0 = input.uv0;
 	output.uv1 = input.uv1;
+	
 
 	
 
@@ -407,15 +422,19 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
 
 	float4 cColor;
-	if (input.nState == WATER&& input.positionW.y <= 87.f) {
+	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	float3 normalW = normalize(input.normalW);
+	float4 cIllumination;
+	if ((!gbFalling || input.nState == WATER) && input.positionW.y <= 87.f) {
 		float2 uv = input.positionW.xz/50;
 		uv.x += gfCurrentTime / 10;
 		uv.y -= gfCurrentTime / 10;
 		float4 cWater = gtxtWater.Sample(gssWrap, uv);
-		float4 cWaterNormal = gtxtWaterNormal.Sample(gssWrap, input.uv1);
+		cNormalColor = gtxtWaterNormal.Sample(gssWrap, uv);
 		cColor = cWater;
-		if (shadowPosition.z <= (fsDepth + fBias)) fShadowFactor = 1.f; //not shadow
-		else fShadowFactor = 0.3f;
+		if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 0.f; //not shadow
+		else fShadowFactor = 1.f;
+		//cIllumination = float4(fShadowFactor, fShadowFactor, fShadowFactor, fShadowFactor);
 	}
 	else {
 		float4 cBaseTexColor = gtxtTerrainBaseTexture.Sample(gssWrap, input.uv0);
@@ -423,22 +442,21 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 		cColor = saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
 		//float4 cColor = input.color * saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
 		if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; // not shadow
-	}
+	}	
 
-	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
-	float4 cIllumination = float4(fShadowFactor, fShadowFactor, fShadowFactor, fShadowFactor);
-
-	if (/*gnTexturesMask & MATERIAL_NORMAL_MAP*/true)
+	if (input.nState == WATER && input.positionW.y <= 87.f)
 	{
-		//float3 normalW = normalize(float3(0,1,0));
-		//float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
-		//normalW = normalize(mul(vNormal, TBN));
-		//cIllumination = Lighting(input.positionW, normalW,fShadowFactor);
-		if(fShadowFactor==0.f)
-			cColor = lerp(cColor, cIllumination, 0.4f);
-		cColor = Fog(cColor, input.positionW);
+		float3 tangentW = normalize(input.tangentW - dot(input.tangentW, normalW) * normalW);
+		float3 bitangentW = normalize(cross(normalW, tangentW));
+		float3x3 TBN = float3x3(tangentW, bitangentW, normalW);
+		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
+		normalW = normalize(mul(vNormal, TBN));
 	}
+	cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
+	
+	cColor = lerp(cColor, cIllumination, 0.5f);
+
+	cColor = Fog(cColor, input.positionW);
 	return(cColor);
 }
 

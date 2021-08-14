@@ -730,6 +730,11 @@ void CGameFramework::OnDestroy()
 	if (m_pd3dDevice) m_pd3dDevice->Release();
 	if (m_pdxgiFactory) m_pdxgiFactory->Release();
 
+	if (m_pSprite)m_pSprite.release();
+	if (m_pFont)m_pFont.release();
+	if (m_resourceDescriptors)m_resourceDescriptors.release();
+	if (m_graphicsMemory)m_graphicsMemory.release();
+
 #if defined(_DEBUG)
 	IDXGIDebug1* pdxgiDebug = NULL;
 	DXGIGetDebugInterface1(0, __uuidof(IDXGIDebug1), (void**)&pdxgiDebug);
@@ -754,7 +759,7 @@ void CGameFramework::BuildObjects()
 	pCamera->SetPosition(m_pScene->m_pLights[0].m_xmf3Position);
 	pCamera->SetLookVector(m_pScene->m_pLights[0].m_xmf3Direction);
 	pCamera->RegenerateViewMatrix();
-	pCamera->GenerateProjectionMatrixOrtho(1.01f, 2000.0f, m_nWndClientWidth*2, m_nWndClientHeight*2);
+	pCamera->GenerateProjectionMatrixOrtho(1.01f, 1000.0f, m_nWndClientWidth * 2, m_nWndClientHeight * 2);
 	pCamera->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
 
 	m_pShadowMap = new CShadowMap(m_nWndClientWidth, m_nWndClientHeight, pCamera);
@@ -770,7 +775,7 @@ void CGameFramework::BuildObjects()
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
 	m_pScene->AddWeapon(m_pd3dDevice, m_pd3dCommandList);
 	m_pPlayer = m_pScene->m_pPlayer = pPlayer;
-	pPlayer->Rotate(60.0f, -90.f, 0);
+	pPlayer->Rotate(60.0f, -100.f, 0);
 	//m_pPlayer->SetPlace(4);
 	
 	m_pCamera = pPlayer->GetCamera();
@@ -1035,12 +1040,10 @@ void CGameFramework::FrameAdvance()
 
 	ProcessInput();
 	CheckCollision();
+
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
-	CCamera* pCamera = m_pShadowMap->GetCamera();
-	pCamera->SetPosition(XMFLOAT3(m_pPlayer->GetPosition().x, 0, m_pPlayer->GetPosition().z));
-	pCamera->Move(XMFLOAT3(-500, 200, -500));
-	m_pScene->m_pLights[0].m_xmf3Position = pCamera->GetPosition();
-	pCamera->RegenerateViewMatrix();
+	UpdateShadowMap();
+
     AnimateObjects();
 
 	HRESULT hResult = m_pd3dCommandAllocator->Reset();
@@ -1053,7 +1056,7 @@ void CGameFramework::FrameAdvance()
 	m_pShadowMap->UpdateShaderVariable(m_pd3dCommandList);
 
 	m_pShadowMap->Render(m_pd3dCommandList, NULL);
-	if (m_pScene) m_pScene->RenderShadow(m_pd3dCommandList,pCamera);
+	if (m_pScene) m_pScene->RenderShadow(m_pd3dCommandList, m_pShadowMap->GetCamera());
 	m_pPlayer->RenderShadow(m_pd3dCommandList, NULL);
 
 	//if (m_pBowPlayer) m_pBowPlayer->RenderShadow(m_pd3dCommandList, m_pCamera);
@@ -1294,4 +1297,16 @@ void CGameFramework::Restart()
 		pHpBar->m_bActive = false;
 	}
 	m_pScene->m_ppUIObjects[2]->SetAlpha(0.0f);
+}
+
+void CGameFramework::UpdateShadowMap()
+{
+	CCamera* pCamera = m_pShadowMap->GetCamera();
+	XMFLOAT3 look = pCamera->GetLookVector();
+	XMFLOAT3 pos = Vector3::Add(m_pPlayer->GetPosition(), m_pPlayer->GetLookVector(), 500);
+
+	pCamera->SetPosition(XMFLOAT3(pos.x, 0, pos.z));
+	pCamera->Move(Vector3::ScalarProduct(look, -500, false));
+	m_pScene->m_pLights[0].m_xmf3Position = pCamera->GetPosition();
+	pCamera->RegenerateViewMatrix();
 }
