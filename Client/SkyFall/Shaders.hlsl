@@ -76,8 +76,8 @@ static matrix gmtxProjectToTexture = {
 	0.5f,0.5f,0.0f,1.0f };
 
 Texture2D gtxtShadowMap : register(t0);
-SamplerState gssShadowMap : register(s2);
-//SamplerComparisonState gssShadowMap : register(s2);
+//SamplerState gssShadowMap : register(s2);
+SamplerComparisonState gssShadowMap : register(s2);
 cbuffer cbShadow :register(b0)
 {
 	matrix gmtxShadowTransform : packoffset(c0);
@@ -102,6 +102,40 @@ VS_SHADOW_OUTPUT VSShadow(VS_SHADOW_INPUT input)
 
 	return output;
 }
+
+float CalcShadowFactor(float3 shadowPosH, float fBias)
+{
+	//NDC 공간 기준의 깊이 값
+	float depth = shadowPosH.z - fBias;
+
+	uint width, height, numMips;
+	gtxtShadowMap.GetDimensions(0, width, height, numMips);
+
+	//텍셀 크기
+	float dx = 1.0f / (float)width;
+
+	float percentLit = 0.0f;
+	const float2 offsets[9] =
+	{
+	  float2(-dx, -dx), float2(0.0f, -dx), float2(dx, -dx),
+	  float2(-dx, 0.0f), float2(0.0f, 0.0f), float2(dx, 0.0f),
+	  float2(-dx, dx), float2(0.0f, dx), float2(dx, dx)
+	};
+
+	const float weight[9] = {
+		1.f / 18,1.f / 18,1.f / 18,
+		1.f / 18,10.f / 18,1.f / 18,
+		1.f / 18,1.f / 18,1.f / 18
+	};
+
+	[unroll]
+	for (int i = 0; i < 9; ++i)
+	{
+		percentLit += gtxtShadowMap.SampleCmpLevelZero(gssShadowMap, shadowPosH.xy + offsets[i], depth).r * weight[i];
+	}
+	return percentLit;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 SamplerState gssWrap : register(s0);
@@ -194,12 +228,10 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
 	float fShadowFactor = 0.3f, fBias = 0.00006f;
 
-	//float fDepth = shadowPosition.z;
-	//float fPercentLit = gtxtShadowMap.SampleCmpLevelZero(gssShadowMap, shadowPosition.xy, fDepth).r;
-	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //not shadow
+	fShadowFactor = CalcShadowFactor(shadowPosition, gfBias);
 
-	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
-	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //not shadow
+	//float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
+	//if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //not shadow
 
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
 
@@ -211,9 +243,9 @@ float4 PSWireFrame(VS_WIREFRAME_OUTPUT input) : SV_TARGET
 	if (/*gnTexturesMask & MATERIAL_NORMAL_MAP*/true)
 	{
 		float3 normalW = normalize(input.normalW);
-		//float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
-		//normalW = normalize(mul(vNormal, TBN));
+		float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
+		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
+		normalW = normalize(mul(vNormal, TBN));
 		cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
 		cColor = lerp(cColor, cIllumination, 0.5f);
 		cColor = Fog(cColor, input.positionW);
@@ -293,25 +325,23 @@ float4 PSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_OUTPUT input) : SV_TARGE
 	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
 	float fShadowFactor = 0.3f, fBias = 0.00006f;
 
-	//float fDepth = shadowPosition.z;
-	//float fPercentLit = gtxtShadowMap.SampleCmpLevelZero(gssShadowMap, shadowPosition.xy, fDepth).r;
-	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //not shadow
+	fShadowFactor = CalcShadowFactor(shadowPosition, gfBias);
 
-	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
-	if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //not shadow
+	//float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
+	//if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; //not shadow
 	
 	float4 cColor = gtxtTexture.Sample(gssWrap, input.uv);
 
-	float4 cNormalColor = float4(0.f,0.f, 0.f, 1.0f);
+	float4 cNormalColor = float4(0.f,0.f, 1.f, 1.0f);
 
 	float4 cIllumination = float4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	if (/*gnTexturesMask & MATERIAL_NORMAL_MAP*/true)
 	{
 		float3 normalW = normalize(input.normalW);
-		//float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
-		//float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
-		//normalW = normalize(mul(vNormal, TBN));
+		float3x3 TBN = float3x3(normalize(input.tangentW), normalize(input.bitangentW), normalize(input.normalW));
+		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
+		normalW = normalize(mul(vNormal, TBN));
 		cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
 		cColor = lerp(cColor, cIllumination, 0.5f);
 		cColor = Fog(cColor, input.positionW);
@@ -413,16 +443,14 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 {
 
 	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
-	float fShadowFactor = 0.0f, fBias = 0.046f;
+	float fShadowFactor = 0.0f, fBias = 0.006f;
 
-	//float fDepth = shadowPosition.z;
-	//float fPercentLit = gtxtShadowMap.SampleCmpLevelZero(gssShadowMap, shadowPosition.xy, fDepth).r;
-	//if (shadowPosition.z <= (fPercentLit + fBias)) fShadowFactor = 1.f; //not shadow
+	fShadowFactor = CalcShadowFactor(shadowPosition, fBias);
 
-	float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
+	//float fsDepth = gtxtShadowMap.Sample(gssShadowMap, shadowPosition.xy).r;
 
 	float4 cColor;
-	float4 cNormalColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	float4 cNormalColor = float4(0.0f, 0.0f, 1.0f, 1.0f);
 	float3 normalW = normalize(input.normalW);
 	float4 cIllumination;
 	if ((!gbFalling || input.nState == WATER) && input.positionW.y <= 87.f) {
@@ -432,26 +460,25 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 		float4 cWater = gtxtWater.Sample(gssWrap, uv);
 		cNormalColor = gtxtWaterNormal.Sample(gssWrap, uv);
 		cColor = cWater;
-		if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 0.f; //not shadow
-		else fShadowFactor = 1.f;
+		//if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 0.f; //not shadow
+		//else fShadowFactor = 1.f;
 		//cIllumination = float4(fShadowFactor, fShadowFactor, fShadowFactor, fShadowFactor);
+		fShadowFactor = 1 - fShadowFactor;
 	}
 	else {
 		float4 cBaseTexColor = gtxtTerrainBaseTexture.Sample(gssWrap, input.uv0);
 		float4 cDetailTexColor = gtxtTerrainDetailTexture.Sample(gssWrap, input.uv1);
 		cColor = saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
 		//float4 cColor = input.color * saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
-		if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; // not shadow
+		//if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; // not shadow
 	}	
 
-	if (input.nState == WATER && input.positionW.y <= 87.f)
-	{
-		float3 tangentW = normalize(input.tangentW - dot(input.tangentW, normalW) * normalW);
-		float3 bitangentW = normalize(cross(normalW, tangentW));
-		float3x3 TBN = float3x3(tangentW, bitangentW, normalW);
-		float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
-		normalW = normalize(mul(vNormal, TBN));
-	}
+	float3 tangentW = normalize(input.tangentW - dot(input.tangentW, normalW) * normalW);
+	float3 bitangentW = normalize(cross(normalW, tangentW));
+	float3x3 TBN = float3x3(tangentW, bitangentW, normalW);
+	float3 vNormal = normalize(cNormalColor.rgb * 2.0f - 1.0f); //[0, 1] -> [-1, 1]
+	normalW = normalize(mul(vNormal, TBN));
+
 	cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
 	
 	cColor = lerp(cColor, cIllumination, 0.5f);

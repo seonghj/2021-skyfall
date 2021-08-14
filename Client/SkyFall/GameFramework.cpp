@@ -55,7 +55,6 @@ bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 {
 	m_hInstance = hInstance;
 	m_hWnd = hMainWnd;
-
 	CreateDirect3DDevice();
 	CreateCommandQueueAndList();
 	CreateRtvAndDsvDescriptorHeaps();
@@ -759,7 +758,7 @@ void CGameFramework::BuildObjects()
 	pCamera->SetPosition(m_pScene->m_pLights[0].m_xmf3Position);
 	pCamera->SetLookVector(m_pScene->m_pLights[0].m_xmf3Direction);
 	pCamera->RegenerateViewMatrix();
-	pCamera->GenerateProjectionMatrixOrtho(1.01f, 1000.0f, m_nWndClientWidth * 2, m_nWndClientHeight * 2);
+	pCamera->GenerateProjectionMatrixOrtho(1.01f, 1000.0f, m_nWndClientWidth * 3, m_nWndClientHeight * 3);
 	pCamera->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
 
 	m_pShadowMap = new CShadowMap(m_nWndClientWidth, m_nWndClientHeight, pCamera);

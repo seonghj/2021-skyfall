@@ -525,7 +525,7 @@ void CShadowMap::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsC
 
 	m_pd3dcbShadow->Map(0, NULL, (void**)&m_pcbMappedShadowTransform);
 
-	m_pcbMappedShadowTransform->m_fBias = 0.0012f;
+	m_pcbMappedShadowTransform->m_fBias = 0.008f;
 }
 
 void CShadowMap::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
