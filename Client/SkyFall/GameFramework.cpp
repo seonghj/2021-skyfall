@@ -302,6 +302,7 @@ void CGameFramework::ChangeSwapChainState()
 void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
     if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
+    if (m_pScene && m_pScene->GetState() == SCENE::LOBBY) return;
     switch (nMessageID)
     {
     case WM_LBUTTONDOWN: {
@@ -447,6 +448,10 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
             case VK_END:
                 m_pShadowMap->Minus();
                 break;
+            case 'R':
+            case 'r':
+                if (m_pScene->GetState() == SCENE::ENDGAME)
+                    Restart();
             }
             break;
         default:
@@ -471,7 +476,7 @@ void CGameFramework::OnProcessingKeyboardMessageForLogIn(HWND hWnd, UINT nMessag
 
 LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
-    if (m_pScene->GetState() == SCENE::LOGIN || m_pScene->GetState() == SCENE::ENDGAME) return(0);
+    if (m_pScene->GetState() == SCENE::LOGIN) return(0);
     switch (nMessageID)
     {
     case WM_ACTIVATE:
@@ -1228,14 +1233,15 @@ void CGameFramework::ReleaseShaderVariables()
     }
 }
 
-void CGameFramework::Restart() 
+void CGameFramework::Restart()
 {
-    m_pScene->m_iState = SCENE::INGAME;
+    m_pScene->m_iState = SCENE::LOBBY;
     m_pScene->m_ppUIObjects[0]->SetvPercent(1.0f);
     m_GameTimer.Reset();
     m_ChargeTimer.Reset();
     m_pPlayer->SetHp(m_pPlayer->m_iMaxHp);
     m_pPlayer->SetPosition(XMFLOAT3(5048, 200, 1300));
+    m_bMouseHold = true;
     for (int i = 0; i < m_pScene->m_nGameObjects; i++)
     {
         m_pScene->m_ppGameObjects[i]->SetHp(m_pScene->m_ppGameObjects[i]->m_iMaxHp);

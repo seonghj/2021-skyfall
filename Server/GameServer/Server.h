@@ -141,6 +141,7 @@ public:
     void send_packet_to_allplayers(int roomnum, char* buf);
     void send_start_packet(int to, int roomID);
     void send_game_end_packet(int key, int roomID);
+    void send_player_dead_packet(int key, int roomID);
     void player_go_lobby(int key, int roomID);
 
     void send_map_collapse_packet(int num, int roomID);
