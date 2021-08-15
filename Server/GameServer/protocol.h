@@ -95,6 +95,7 @@ enum PacketType {
 	SC_monster_attack,
 	SC_monster_damaged,
 	SC_monster_respawn,
+	SC_monster_stop,
 	SC_player_record,
 	SC_player_getitem,
 
@@ -374,6 +375,10 @@ struct mon_respawn_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
 	float dx, dy, dz;
 	short MonsterType;
+};
+
+struct mon_stop_packet : public Packet {
+	DirectX::XMFLOAT3 Position;
 };
 
 struct player_record_packet : public Packet {

@@ -199,6 +199,7 @@ void Bot::CheckBehavior(int roomID)
 
 			if (range < 300.0f)
 			{
+				mon.isTrace = true;
 				subtract = Vector3::Normalize(subtract);
 				/*mon.SetPosition(floor(mon.GetPosition().x)
 					, floor(mon.GetPosition().y), floor(mon.GetPosition().z));*/
@@ -255,6 +256,12 @@ void Bot::CheckBehavior(int roomID)
 				else if (range > distance) {
 					mon.Move(subtract, 2.f);
 					m_pServer->send_monster_pos(mon, cross);
+				}
+			}
+			else {
+				if (mon.isTrace == true) {
+					mon.isTrace = false;
+					m_pServer->send_monster_stop(mon.key, mon.roomID.load());
 				}
 			}
 		}

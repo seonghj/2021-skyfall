@@ -608,6 +608,24 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
     }
 }
 
+void Server::send_monster_stop(int key, int roomID)
+{
+    mon_stop_packet p;
+    p.size = sizeof(p);
+    p.type = PacketType::SC_monster_stop;
+    p.key = key;
+    p.roomid = roomID;
+    p.Position = m_pBot->monsters[roomID][key].f3Position.load();
+
+    for (auto& k : GameRooms[roomID]) {
+        if (sessions[k].connected == FALSE) continue;
+        if (sessions[k].playing == FALSE) continue;
+        if (in_VisualField(m_pBot->monsters[roomID][key], sessions[k], roomID)) {
+            send_packet(k, reinterpret_cast<char*>(&p), roomID);
+        }
+    }
+}
+
 void Server::send_player_record(int key, int roomID
     , const SESSION& s, int time, int rank)
 {

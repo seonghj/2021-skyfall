@@ -1056,6 +1056,13 @@ void CPacket::ProcessPacket(char* buf)
         CheckCollision(m_pScene->m_ppGameObjects[key]);
         break;
     }
+    case PacketType::SC_monster_stop: {
+        mon_stop_packet* p = reinterpret_cast<mon_stop_packet*>(buf);
+        int key = p->key;
+        m_pScene->m_ppGameObjects[key]->ChangeState(0);
+
+        break;
+    }
     case PacketType::SC_player_damage: {
         player_damage_packet* p = reinterpret_cast<player_damage_packet*>(buf);
         m_pScene->m_mPlayer[p->target]->SetHp(p->leftHp);

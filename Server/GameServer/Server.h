@@ -159,6 +159,7 @@ public:
     void send_remove_monster(int key, int roomID, int to);
     void send_monster_pos(const Monster& mon, XMFLOAT3 direction);
     void send_monster_attack(const Monster& mon, XMFLOAT3 direction, int target);
+    void send_monster_stop(int key, int roomID);
 
     void send_player_record(int key, int roomID, const SESSION& s, int time, int rank);
     void send_map_packet(int to, int roomID);
