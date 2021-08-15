@@ -55,7 +55,7 @@ void Map::init_Map(Server* s, Timer* t)
 	e.size = sizeof(e);
 	e.key = roomnum;
 	e.roomid = roomnum;
-	m_pTimer->push_event(roomnum, OE_gEvent, 30000, reinterpret_cast<char*>(&e));*/
+	m_pTimer->push_event(roomnum, OE_gEvent, 50000, reinterpret_cast<char*>(&e));*/
 }
 
 void Map::Set_map()

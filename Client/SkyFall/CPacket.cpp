@@ -254,6 +254,18 @@ void CPacket::Send_room_select_packet(int room)
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
+void CPacket::Send_return_lobby_packet()
+{
+    return_lobby_packet p;
+
+    p.key = client_key;
+    p.roomid = roomID;
+    p.size = sizeof(p);
+    p.type = CS_return_lobby;
+
+    SendPacket(reinterpret_cast<char*>(&p));
+}
+
 void CPacket::Swap_weapon(int key, PlayerType weapon)
 {
     if (key != client_key) {
@@ -531,6 +543,7 @@ int CPacket::MonsterAttackCheck(CMonster* mon)
 
 void CPacket::ProcessPacket(char* buf)
 {
+    //printf("%d\n", buf[1]);
     switch (buf[1])
     {
     case PacketType::SC_player_Lobbykey: {
@@ -540,6 +553,7 @@ void CPacket::ProcessPacket(char* buf)
         client_key = key;
         roomID = -1;
         printf("recv Lobby key from server: %d\n", key);
+        m_pPlayer->m_pPacket = this;
         break;
     }
     case PacketType::SC_player_key: {
@@ -617,7 +631,11 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_game_end: {
         printf("gameover\n");
-        
+        m_pScene->m_iState = SCENE::ENDGAME;
+        m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
+        m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
+        m_pFramework->rooms.erase(roomID);
+
         break;
     }
     case PacketType::SC_player_info: {
@@ -700,7 +718,8 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_room_list: {
         room_list_packet* p = reinterpret_cast<room_list_packet*>(buf);
-        for (int i = 0; i < 50; i++) {
+        printf("get room list\n");
+        for (int i = 0; i < 20; i++) {
             if (p->isRoom[i] == true) {
                 string s = "room ";
                 s += to_string(i);
@@ -801,8 +820,8 @@ void CPacket::ProcessPacket(char* buf)
                 m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(2, 0);
                 m_pScene->m_mPlayer[key]->SetJump(FALSE);
             }
-            m_pScene->m_mPlayer[key]->SetPosition(p->Position);
         }
+        m_pScene->m_mPlayer[key]->SetPosition(p->Position);
         m_pScene->m_mPlayer[key]->SetGround(true);
         break;
     }
@@ -1041,11 +1060,14 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_player_dead: {
         player_dead_packet* p = reinterpret_cast<player_dead_packet*>(buf);
+        
+        printf("player dead %d %d\n", p->key, p->roomid);
         m_pScene->AnimatePlayer(p->key, PlayerState::Death);
-        // 죽은거 처리해
-        m_pScene->m_iState = SCENE::ENDGAME;
-        m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
-        m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
+        if (p->key == client_key) {
+            m_pScene->m_iState = SCENE::ENDGAME;
+            m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
+            m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
+        }
         break;
     }
     }

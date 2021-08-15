@@ -45,6 +45,7 @@ public:
 	void Send_mon_damaged_packet(int target, int nAttack);
 	void Send_room_create_packet();
 	void Send_room_select_packet(int room);
+	void Send_return_lobby_packet();
 
 	void Swap_weapon(int key, PlayerType weapon);
 	void Map_set(map_block_set* p);

@@ -129,19 +129,27 @@ public:
     void process_packet(int key, char* buf, int roomID);
 
     void send_Lobby_key_packet(int key);
+    void send_Lobby_key_packet(int key, int roomID, int nkey);
     void send_Lobby_loginOK_packet(int key);
+
     void send_room_list_packet(int key);
+
     void send_player_key_packet(int key, int roomID);
     void send_player_loginOK_packet(int key, int roomID);
     void send_player_loginFail_packet(int key, int roomID);
+
     void send_add_player_packet(int key, int to, int roomID);
     void send_remove_player_packet(int key, int roomID);
+
     void send_disconnect_player_packet(int key,int roomID);
+
     void send_packet_to_players(int key, char* buf, int roomID);
     void send_packet_to_allplayers(int roomnum, char* buf);
+
     void send_start_packet(int to, int roomID);
     void send_game_end_packet(int key, int roomID);
     void send_player_dead_packet(int key, int roomID);
+
     void player_go_lobby(int key, int roomID);
 
     void send_map_collapse_packet(int num, int roomID);

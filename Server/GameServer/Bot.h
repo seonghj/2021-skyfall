@@ -67,7 +67,6 @@ public:
 
     void Init(int roomID);
 
-    void CheckTarget(int roomID);
     void CheckBehavior(int roomID);
 
     void RunBot(int roomID);

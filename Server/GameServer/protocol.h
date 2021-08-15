@@ -120,6 +120,7 @@ enum PacketType {
 	CS_monster_pos,
 	CS_monster_attack,
 	CS_monster_damaged,
+	CS_return_lobby,
 	CS_NONE,
 };
 
@@ -207,7 +208,7 @@ struct room_select_packet :public Packet {
 };
 
 struct room_list_packet :public Packet {
-	bool isRoom[50];
+	bool isRoom[20];
 };
 
 struct player_add_packet : public Packet {
@@ -389,6 +390,9 @@ struct player_record_packet : public Packet {
 
 struct player_getitem_packet :public Packet {
 	short item;
+};
+
+struct return_lobby_packet :public Packet {
 };
 
 struct mon_move_to_player_event : public Packet {
