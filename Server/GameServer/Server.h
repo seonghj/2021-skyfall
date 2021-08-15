@@ -97,6 +97,15 @@ class DB;
 class Bot;
 class Monster;
 
+class GameRoom {
+public:
+    int pkeys[20];
+    char name[20];
+    bool CanJoin = false;
+
+    Map* m_pMap;
+};
+
 class Server {
 public:
     Server();
@@ -174,8 +183,7 @@ public:
 
     //std::unordered_map <int, SESSION> Lobby_sessions;
     //std::unordered_map <int, std::array<SESSION, 20>> sessions; // ¹æID, Player¹è¿­
-    std::unordered_map <int, bool> CanJoin;
-    std::unordered_map <int, std::array<int, 20>> GameRooms;
+    std::unordered_map <int, GameRoom> GameRooms;
     std::array<SESSION, 1000> sessions;
 
 private:
@@ -184,13 +192,10 @@ private:
     Bot*                           m_pBot = NULL;
     DB*                            m_pDB = NULL;
 
-    std::unordered_map <int, Map>                     maps;
-    std::unordered_map <int, Bot>                     Bots;
 
     std::vector <std::thread>      working_threads;
     std::thread                    accept_thread;
     std::thread                    timer_thread;
-    std::vector <std::thread>      map_threads;
 
     std::mutex                     accept_lock;
     std::mutex                     sessions_lock;

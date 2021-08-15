@@ -164,7 +164,7 @@ void Bot::Init(int roomID)
 
 void Bot::CheckBehavior(int roomID)
 {
-	for (int& player : m_pServer->GameRooms[roomID]) {
+	for (int& player : m_pServer->GameRooms[roomID].pkeys) {
 		if (player == INVALIDID) continue;
 		if (m_pServer->sessions[player].connected.load() == false) continue;
 		if (m_pServer->sessions[player].state.load() == Death) continue;

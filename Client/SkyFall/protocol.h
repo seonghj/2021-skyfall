@@ -100,6 +100,7 @@ enum PacketType {
 	SC_player_getitem,
 
 
+	CS_create_account,
 	CS_room_select,
 	CS_create_room,
 	CS_player_Lobbylogin,

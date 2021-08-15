@@ -68,7 +68,7 @@ int Server::SetInGameKey(int roomID)
     while (true){
         if (cnt == MAX_PLAYER)
             return -1;
-        if (INVALIDID == GameRooms[roomID][cnt]){
+        if (INVALIDID == GameRooms[roomID].pkeys[cnt]){
             return cnt;
         }
         else 
@@ -134,14 +134,14 @@ bool Server::CreateRoom(int key)
     if (GameRooms.find(key) != GameRooms.end()) return false;
 
     GameRooms_lock.lock();
-    GameRooms.emplace(key, std::array<int, 20>{});
+    GameRooms.emplace(key, GameRoom{});
     GameRooms_lock.unlock();
     for (int i = 0; i < MAX_PLAYER; ++i)
-        GameRooms[key][i] = INVALIDID;
+        GameRooms[key].pkeys[i] = INVALIDID;
 
     maps_lock.lock();
-    maps.emplace(key, Map(key));
-    maps[key].SetNum(key);
+    GameRooms[key].m_pMap = new Map;
+    GameRooms[key].m_pMap->SetNum(key);
     //maps[key].init_Map(this, m_pTimer);
     maps_lock.unlock();
 
@@ -149,8 +149,7 @@ bool Server::CreateRoom(int key)
     //m_pBot->monsterRun = TRUE;
     m_pBot->Init(key);
     //m_pBot->RunBot(key);
-    CanJoin.emplace(key, true);
-    CanJoin[key] = true;
+    GameRooms[key].CanJoin = true;
 
     return true;
 }
@@ -351,11 +350,13 @@ void Server::send_room_list_packet(int key)
     p.roomid = INVALIDID;
 
     for (int i = 0; i < 20; i++) {
-        if (CanJoin[i] == true)
+        if (GameRooms.find(i) == GameRooms.end()) continue;
+        if (GameRooms[i].CanJoin == true)
             p.isRoom[i] = true;
         else
             p.isRoom[i] = false;
     }
+    //printf("%d\n", GameRooms.size());
 
     send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
     printf("list send to %d\n", key);
@@ -397,9 +398,9 @@ void Server::send_start_packet(int to, int roomID)
 
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 
-    if (maps[roomID].game_start == false) {
-        maps[roomID].game_start = true;
-        maps[roomID].init_Map(this, m_pTimer);
+    if (GameRooms[roomID].m_pMap->game_start == false) {
+        GameRooms[roomID].m_pMap->game_start = true;
+        GameRooms[roomID].m_pMap->init_Map(this, m_pTimer);
         printf("Room %d Game start\n", roomID);
         Mapbreak_event e;
         e.roomid = roomID;
@@ -419,7 +420,7 @@ void Server::send_add_player_packet(int key, int to, int roomID)
 {
     int nkey = 0;
     for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (GameRooms[roomID][i] == key) {
+        if (GameRooms[roomID].pkeys[i] == key) {
             nkey = i;
             break;
         }
@@ -449,11 +450,11 @@ void Server::send_remove_player_packet(int ingamekey, int roomID)
     p.type = PacketType::SC_player_remove;
     p.roomid = roomID;
 
-    for (auto& k : GameRooms[roomID]) {
+    for (auto& k : GameRooms[roomID].pkeys) {
         if (sessions[k].connected == TRUE)
             send_packet(sessions[k].key, reinterpret_cast<char*>(&p), roomID);
     }
-    Disconnected(GameRooms[roomID][ingamekey]);
+    Disconnected(GameRooms[roomID].pkeys[ingamekey]);
 }
 
 void Server::send_disconnect_player_packet(int ingamekey, int roomID)
@@ -464,21 +465,22 @@ void Server::send_disconnect_player_packet(int ingamekey, int roomID)
     p.type = PacketType::SC_player_disconnect;
     p.roomid = roomID;
 
-    for (auto& k : GameRooms[roomID]) {
+    for (auto& k : GameRooms[roomID].pkeys) {
         if (sessions[k].connected == TRUE)
             send_packet(sessions[k].key, reinterpret_cast<char*>(&p), roomID);
     }
-    Disconnected(GameRooms[roomID][ingamekey]);
+    Disconnected(GameRooms[roomID].pkeys[ingamekey]);
 }
 
 void Server::send_packet_to_players(int ingamekey, char* buf, int roomID)
 {
    //sessions_lock.lock();
-    for (auto& k : GameRooms[roomID]) {
+    for (auto& k : GameRooms[roomID].pkeys) {
         if (k == INVALIDID) continue;
         if (sessions[k].connected == FALSE) continue;
         if (sessions[k].playing == FALSE) continue;
-        if (in_VisualField(sessions[k], sessions[GameRooms[roomID][ingamekey]], roomID)) {
+        if (in_VisualField(sessions[k]
+            , sessions[GameRooms[roomID].pkeys[ingamekey]], roomID)) {
             send_packet(k, buf, roomID);
         }
     }
@@ -488,7 +490,7 @@ void Server::send_packet_to_players(int ingamekey, char* buf, int roomID)
 void Server::send_packet_to_allplayers(int roomID, char* buf)
 {
    //sessions_lock.lock();
-    for (auto& k : GameRooms[roomID]) {
+    for (auto& k : GameRooms[roomID].pkeys) {
         if (k == INVALIDID) continue;
         if (sessions[k].connected == FALSE) continue;
         if (sessions[k].playing == FALSE) continue;
@@ -571,7 +573,7 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction)
 
     //printf("%d\n", mon.key);
 
-    for (auto& k : GameRooms[roomID]) {
+    for (auto& k : GameRooms[roomID].pkeys) {
         if (sessions[k].connected == FALSE) continue;
         if (sessions[k].playing == FALSE) continue;
         if (in_VisualField(mon, sessions[k], roomID)) {
@@ -592,9 +594,9 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
     p.direction = direction;
     p.degree = mon.m_fRoll.load();
     p.target = target;
-    p.PlayerLeftHp = sessions[GameRooms[roomID][target]].hp.load();
+    p.PlayerLeftHp = sessions[GameRooms[roomID].pkeys[target]].hp.load();
 
-    for (auto& k : GameRooms[roomID]) {
+    for (auto& k : GameRooms[roomID].pkeys) {
         if (sessions[k].connected == FALSE) continue;
         if (sessions[k].playing == FALSE) continue;
         if (in_VisualField(mon, sessions[k], roomID)) {
@@ -602,8 +604,8 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
         }
     }
 
-    if (sessions[GameRooms[roomID][target]].hp <= 0) {
-        sessions[GameRooms[roomID][target]].state = Death;
+    if (sessions[GameRooms[roomID].pkeys[target]].hp <= 0) {
+        sessions[GameRooms[roomID].pkeys[target]].state = Death;
         send_player_dead_packet(target, roomID);
     }
 }
@@ -617,7 +619,7 @@ void Server::send_monster_stop(int key, int roomID)
     p.roomid = roomID;
     p.Position = m_pBot->monsters[roomID][key].f3Position.load();
 
-    for (auto& k : GameRooms[roomID]) {
+    for (auto& k : GameRooms[roomID].pkeys) {
         if (sessions[k].connected == FALSE) continue;
         if (sessions[k].playing == FALSE) continue;
         if (in_VisualField(m_pBot->monsters[roomID][key], sessions[k], roomID)) {
@@ -655,7 +657,7 @@ void Server::send_map_packet(int to, int roomID)
     p.roomid = roomID;
 
     for (int i = 0; i < MAX_MAP_BLOCK; i++){
-        p.block_type[i] = maps[roomID].Map_type[i];
+        p.block_type[i] = GameRooms[roomID].m_pMap->Map_type[i];
     }
 
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
@@ -683,14 +685,15 @@ void Server::send_player_dead_packet(int ingamekey, int roomID)
 
     send_packet_to_allplayers(roomID, reinterpret_cast<char*>(&p));
 
-    sessions[GameRooms[roomID][ingamekey]].playing == FALSE;
+    sessions[GameRooms[roomID].pkeys[ingamekey]].playing == FALSE;
 }
 
 void Server::game_end(int roomnum, OVER_EX* over_ex)
 {
-    CanJoin[roomnum] = false;
+    GameRooms[roomnum].CanJoin = false;
     GameRooms_lock.lock();
-    for (auto& key : GameRooms[roomnum]) {
+    delete GameRooms[roomnum].m_pMap;
+    for (auto& key : GameRooms[roomnum].pkeys) {
         if (key == INVALIDID) continue;
         if (sessions[key].connected == false || sessions[key].playing == false) continue;
         send_game_end_packet(key, sessions[key].roomID.load());
@@ -699,9 +702,9 @@ void Server::game_end(int roomnum, OVER_EX* over_ex)
     GameRooms.erase(roomnum);
     GameRooms_lock.unlock();
 
-    maps_lock.lock();
+    /*maps_lock.lock();
     maps.erase(roomnum);
-    maps_lock.unlock();
+    maps_lock.unlock();*/
 
     m_pBot->monsters_lock.lock();
     m_pBot->monsters.erase(roomnum);
@@ -717,8 +720,8 @@ void Server::player_go_lobby(int key, int roomID)
     //send_game_end_packet(key, roomID);
 
     for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (key == GameRooms[roomID][i])
-            GameRooms[roomID][i] = INVALIDID;
+        if (key == GameRooms[roomID].pkeys[i])
+            GameRooms[roomID].pkeys[i] = INVALIDID;
     }
 
     sessions[key].roomID = INVALIDID;
@@ -765,7 +768,7 @@ unsigned short Server::calc_attack(int key, char attacktype)
 
 void Server::player_move(int InGamekey, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy)
 {
-    int client_key = GameRooms[roomID][InGamekey];
+    int client_key = GameRooms[roomID].pkeys[InGamekey];
 
     sessions[client_key].m_fPitch.store(fmodf(sessions[client_key].m_fPitch.load() + dx, 360.f));
     sessions[client_key].m_fYaw.store(fmodf(sessions[client_key].m_fYaw.load() + dy, 360.f));
@@ -822,11 +825,11 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (strcmp(p->id, "test") != 0) {
             b = m_pDB->Search_ID(p->id, p->pw, &is_Login);
 
-            if (!b && !is_Login) b = m_pDB->Insert_ID(p->id);
+            if (!b) send_player_loginFail_packet(client_key);
 
             if (is_Login) {
                 send_player_loginFail_packet(client_key);
-                Disconnected(client_key);
+                //Disconnected(client_key);
                 break;
             }
         }
@@ -851,7 +854,7 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         int nkey = SetInGameKey(p->roomid);
 
-        GameRooms[p->roomid][nkey] = client_key;
+        GameRooms[p->roomid].pkeys[nkey] = client_key;
         sessions[client_key].InGamekey = nkey;
         sessions[client_key].roomID = p->roomid;
         sessions[client_key].over.roomID = p->roomid;
@@ -873,12 +876,12 @@ void Server::process_packet(int key, char* buf, int roomID)
         sessions[key].playing = true;
 
 
-        for (auto& k : GameRooms[p->roomid]) {
+        for (auto& k : GameRooms[p->roomid].pkeys) {
             if ((TRUE == sessions[k].connected) && (k != client_key)) {
                 send_add_player_packet(k, client_key, p->roomid);
             }
         }
-        for (auto& k : GameRooms[p->roomid]) {
+        for (auto& k : GameRooms[p->roomid].pkeys) {
             if ((TRUE == sessions[k].connected) && (k != client_key)) {
                 send_add_player_packet(client_key, k, p->roomid);
             }
@@ -908,9 +911,9 @@ void Server::process_packet(int key, char* buf, int roomID)
         packet.roomid = roomID;
         packet.state = p->state;
         packet.size = sizeof(player_pos_packet);
-        packet.Position = sessions[GameRooms[p->roomid][p->key]].f3Position;
-        packet.dx = sessions[GameRooms[p->roomid][p->key]].m_fPitch;
-        packet.dy = sessions[GameRooms[p->roomid][p->key]].m_fYaw;
+        packet.Position = sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position;
+        packet.dx = sessions[GameRooms[p->roomid].pkeys[p->key]].m_fPitch;
+        packet.dy = sessions[GameRooms[p->roomid].pkeys[p->key]].m_fYaw;
         packet.MoveType = p->MoveType;
         packet.dir = p->dir;
 
@@ -921,8 +924,8 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         send_packet_to_players(key, reinterpret_cast<char*>(&packet), roomID);
 
-        if (sessions[GameRooms[p->roomid][p->key]].f3Position.load().y <= 5) {
-            sessions[GameRooms[p->roomid][p->key]].state = Death;
+        if (sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position.load().y <= 5) {
+            sessions[GameRooms[p->roomid].pkeys[p->key]].state = Death;
             send_player_dead_packet(p->key, p->roomid);
         }
 
@@ -930,14 +933,14 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_start_pos: {
         player_start_pos* p = reinterpret_cast<player_start_pos*>(buf);
-        sessions[GameRooms[p->roomid][p->key]].f3Position = p->Position;
+        sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position = p->Position;
         send_packet(key, reinterpret_cast<char*>(p), roomID);
         break;
     }
     case PacketType::CS_weapon_swap :{
          Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
          p->type = SC_weapon_swap;
-         sessions[GameRooms[p->roomid][p->key]].using_weapon = p->weapon;
+         sessions[GameRooms[p->roomid].pkeys[p->key]].using_weapon = p->weapon;
          
          send_packet_to_allplayers(roomID, reinterpret_cast<char*>(&p));
          break;
@@ -974,7 +977,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (p->key == -1) break;
         if (roomID == -1) break;
         p->type = SC_player_stop;
-        p->Position = sessions[GameRooms[p->roomid][p->key]].f3Position;
+        p->Position = sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position;
         send_packet_to_players(p->key, reinterpret_cast<char*>(p), roomID);
         break;
     }
@@ -982,7 +985,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         player_getitem_packet* p = reinterpret_cast<player_getitem_packet*>(buf);
         int key = p->key;
         int room = p->roomid;
-        for (auto& i : sessions[GameRooms[p->roomid][p->key]].inventory) {
+        for (auto& i : sessions[GameRooms[p->roomid].pkeys[p->key]].inventory) {
             if (i == 0) {
                 i = p->item;
                 break;
@@ -1016,9 +1019,9 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (m_pBot->monsters[p->roomid][target].state == 0) break;
 
         p->type = SC_monster_damaged;
-        p->damage = (sessions[GameRooms[p->roomid][key]].att * (1.f + p->nAttack / 4.f))
+        p->damage = (sessions[GameRooms[p->roomid].pkeys[key]].att * (1.f + p->nAttack / 4.f))
             * (100 - m_pBot->monsters[p->roomid][target].def) / 100;
-        sessions[GameRooms[p->roomid][key]].AddProficiency();
+        sessions[GameRooms[p->roomid].pkeys[key]].AddProficiency();
         m_pBot->monsters[p->roomid][target].hp = m_pBot->monsters[p->roomid][target].hp - p->damage;
         p->leftHp = m_pBot->monsters[p->roomid][target].hp;
         if (m_pBot->monsters[p->roomid][target].hp <= 0) {
@@ -1045,16 +1048,17 @@ void Server::process_packet(int key, char* buf, int roomID)
         int target = p->target;
 
         p->type = SC_player_damage;
-        p->damage = (sessions[GameRooms[p->roomid][key]].GetAtkDamage() * (1.f + p->nAttack / 4.f))
-            * (100 - sessions[GameRooms[p->roomid][target]].def) / 100;
-        sessions[GameRooms[p->roomid][target]].hp 
-            = sessions[GameRooms[p->roomid][target]].hp - p->damage;
-        p->leftHp = sessions[GameRooms[p->roomid][target]].hp;
-        sessions[GameRooms[p->roomid][key]].AddProficiency();
+        p->damage = (sessions[GameRooms[p->roomid].pkeys[key]].GetAtkDamage() 
+            * (1.f + p->nAttack / 4.f))
+            * (100 - sessions[GameRooms[p->roomid].pkeys[target]].def) / 100;
+        sessions[GameRooms[p->roomid].pkeys[target]].hp 
+            = sessions[GameRooms[p->roomid].pkeys[target]].hp - p->damage;
+        p->leftHp = sessions[GameRooms[p->roomid].pkeys[target]].hp;
+        sessions[GameRooms[p->roomid].pkeys[key]].AddProficiency();
         send_packet_to_players(key, reinterpret_cast<char*>(p), p->roomid);
 
-        if (sessions[GameRooms[p->roomid][target]].hp.load() <= 0) {
-            sessions[GameRooms[p->roomid][target]].state = Death;
+        if (sessions[GameRooms[p->roomid].pkeys[target]].hp.load() <= 0) {
+            sessions[GameRooms[p->roomid].pkeys[target]].state = Death;
             send_player_dead_packet(target, roomID);
         }
 
@@ -1165,9 +1169,10 @@ void Server::WorkerFunc()
                 continue;
             switch (over_ex->messageBuffer[1]) {
             case EventType::Mapset:{
-                if (maps[roomID].game_start == false) break;
+                if (GameRooms[roomID].m_pMap == NULL) break;
+                if (GameRooms[roomID].m_pMap->game_start == false) break;
                 map_block_set* p = reinterpret_cast<map_block_set*>(over_ex->messageBuffer);
-                maps[key].Set_map();
+                GameRooms[roomID].m_pMap->Set_map();
                 
                 game_end_packet ep;
                 ep.roomid = key;
@@ -1178,12 +1183,13 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::Cloud_move: {
-                if (maps[roomID].game_start == false) break;
+                if (GameRooms[roomID].m_pMap == NULL) break;
+                if (GameRooms[roomID].m_pMap->game_start == false) break;
                 cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(over_ex->messageBuffer);
                 send_cloud_move_packet(p->x, p->z, p->roomid);
                 //printf("room: %d cloud x: %f | y: %f\n\n", p->roomid, p->x, p->z);
-                maps[key].ismove = true;
-                maps[key].cloud_move();
+                GameRooms[roomID].m_pMap->ismove = true;
+                GameRooms[roomID].m_pMap->cloud_move();
                 delete over_ex;
                 break;
             }
@@ -1204,9 +1210,10 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::MapBreak: {
-                if (maps[roomID].game_start == false) break;
+                if (GameRooms[roomID].m_pMap == NULL) break;
+                if (GameRooms[roomID].m_pMap->game_start == false) break;
                 Mapbreak_event* p = reinterpret_cast<Mapbreak_event*>(over_ex->messageBuffer);
-                maps[key].Map_collapse();
+                GameRooms[roomID].m_pMap->Map_collapse();
 
                 Mapbreak_event e;
                 e.roomid = key;
@@ -1240,7 +1247,8 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::game_end: {
-                if (maps[roomID].game_start == false) break;
+                if (GameRooms[roomID].m_pMap == NULL) break;
+                if (GameRooms[roomID].m_pMap->game_start == false) break;
                 game_end_event* e = reinterpret_cast<game_end_event*>(over_ex->messageBuffer);
                 int roomID = e->roomid;
                 printf("room: %d gameover\n", roomID);
@@ -1295,9 +1303,6 @@ void Server::Thread_join()
     timer_thread.join();
 
     for (auto& t : working_threads)
-        t.join();
-
-    for (auto& t : map_threads)
         t.join();
 
     delete m_pTimer;
