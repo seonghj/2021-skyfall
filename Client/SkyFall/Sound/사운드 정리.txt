@@ -1,0 +1,15 @@
+인게임 메인 bgm
+1. Poisoned Rose
+2. The Battle of 1066
+
+마지막 경기구역만 남거나 5명 이하로 남은 경우 bgm 변경
+1, Gothic Vigilante
+2. Final Boss
+
+효과음
+
+몬스터 피격 - Hit with Club
+
+화살 피격 - Iron Club Hits Golf Ball
+
+칼, 창 공격 - Rake Swing Whoosh Close, Golf Swing Practice
