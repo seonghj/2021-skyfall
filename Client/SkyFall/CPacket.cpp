@@ -900,6 +900,9 @@ void CPacket::ProcessPacket(char* buf)
             else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
                 m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 3);
             }
+
+            if (m_pScene->m_ppGameObjects[key]->GetState() != 3)
+                m_pScene->m_ppGameObjects[key]->ChangeState(3);
         }
 
         CheckCollision(m_pScene->m_ppGameObjects[key]);
