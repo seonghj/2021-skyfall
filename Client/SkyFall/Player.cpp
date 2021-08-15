@@ -36,6 +36,7 @@ CPlayer::CPlayer()
 	m_isStanding = true;
 	m_isAttack = false;
 	m_isCharging = false;
+	m_fStamina = MAX_STAMINA;
 
 	SetMaxHp(100);
 
@@ -219,6 +220,8 @@ void CPlayer::Update(float fTimeElapsed)
 	float VY = m_xmf3Velocity.y;
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, Vector3::ScalarProduct(m_xmf3Velocity, -fDeceleration, true));
 	m_xmf3Velocity.y = VY;
+	if (m_fStamina <= MAX_STAMINA && !m_isRunning && !m_isAttack)
+		m_fStamina += 0.05;
 }
 
 CCamera *CPlayer::OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode)
@@ -545,6 +548,9 @@ void CTerrainPlayer::OnPlayerUpdateCallback(float fTimeElapsed)
 	{
 		SetGround(false);
 	}
+	cout << "여기 들왔다?" << endl;
+	if (m_fStamina < 0.0f)
+		SetRunning(false);
 }
 
 void CTerrainPlayer::OnCameraUpdateCallback(float fTimeElapsed)
@@ -583,6 +589,7 @@ void CTerrainPlayer::Move(DWORD dwDirection, float fDistance, bool bUpdateVeloci
 	if (dwDirection&&m_isGround)
 	{
 		if (m_isRunning) {
+			m_fStamina -= 0.1;
 			if (dwDirection & DIR_FORWARD) {
 				m_pSkinnedAnimationController->SetAllTrackDisable();
 				m_pSkinnedAnimationController->SetTrackEnable(PlayerState::Run, true);
@@ -1033,9 +1040,13 @@ void C1HswordPlayer::RButtonDown()
 {
 	if (m_isGround) {
 		if (m_isRunning)
+		{
 			m_nAttack = 2;
+		}
 		else
+		{
 			m_nAttack = 3;
+		}
 
 		m_isAttack = true;
 	}

@@ -323,7 +323,21 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
         if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
             m_pPacket->Send_attack_packet(PlayerAttackType::BOWR);
         else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
+        {
+            if (m_pPlayer->GetGround() && m_pPlayer->GetRunning())
+            {
+                if (m_pPlayer->GetStamina() < 20.0f)
+                    break;
+                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 20.0f);
+            }
+            else if (m_pPlayer->GetGround() && !m_pPlayer->GetRunning())
+            {
+                if (m_pPlayer->GetStamina() < 30.0f)
+                    break;
+                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 30.0f);
+            }
             m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
+        }
         ::SetCapture(hWnd);
         ::GetCursorPos(&m_ptOldCursorPos);
         if (!m_bRotateEnable) {
@@ -824,7 +838,7 @@ void CGameFramework::ProcessInput()
                 m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
                 m_pPlayer->SetFriction(0.f);
             }
-            else if (pKeysBuffer[VK_SHIFT] & 0xF0)
+            else if (pKeysBuffer[VK_SHIFT] & 0xF0 && m_pPlayer->GetStamina() > 10.0f)
             {
                 m_pPlayer->SetRunning(true);
             }
@@ -998,6 +1012,7 @@ void CGameFramework::MoveToNextFrame()
 //#define _WITH_PLAYER_TOP
 void CGameFramework::FrameAdvance()
 {
+    cout << "Stamina : " << m_pPlayer->GetStamina() << endl;
     m_GameTimer.Tick(60.0f);
 
     ProcessInput();

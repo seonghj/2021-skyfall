@@ -50,6 +50,7 @@ protected:
 	int							m_iProficiency = 0;
 	int							m_nPlace;
 	bool						m_bHit = false;
+	float						m_fStamina;
 	// stat
 
 	LPVOID*						m_ppPlayerUpdatedContext = NULL;
@@ -84,6 +85,7 @@ public:
 	void SetMkill(int kill) { m_iMkill = kill; }
 	void SetRate(int rate) { m_iRate = rate; }
 	void SetPro(int pro) { m_iProficiency = pro; }
+	void SetStamina(float sta) { m_fStamina = sta; }
 	void Reset();
 
 	virtual void RButtonDown() {};
@@ -107,6 +109,7 @@ public:
 	int   GetMkill() const{ return(m_iMkill); }
 	int   GetRate() const { return(m_iRate);}
 	int   GetPro() const { return(m_iProficiency); }
+	float GetStamina() const { return(m_fStamina); }
 
 	void SetScale(XMFLOAT3& xmf3Scale) { m_xmf3Scale = xmf3Scale; }
 
