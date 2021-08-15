@@ -85,7 +85,7 @@ extern bool								gbShowBoundingBox;
 #define UI_BLOOD 0x02
 
 #define _WITH_LEFT_HAND_COORDINATES
-#define _WITH_SOUND_RESOURCE
+//#define _WITH_SOUND_RESOURCE
 #define _WITH_SOUND_CALLBACK
 
 #pragma comment(lib, "d3dcompiler.lib")
