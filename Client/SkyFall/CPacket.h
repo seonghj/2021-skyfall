@@ -107,12 +107,4 @@ private:
 		RunLeft,
 		Take_Damage,
 	};
-
-	enum MonsterState {
-		m_Idle,
-		m_Die,
-		m_Take_Damage,
-		m_Walk,
-		m_Run,
-	};
 };

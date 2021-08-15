@@ -719,7 +719,6 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_mPlayer[key]->Rotate(p->dx - m_pScene->m_mPlayer[key]->GetPitch()
                 , p->dy - m_pScene->m_mPlayer[key]->GetYaw(), 0);
         }
-        m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(PlayerState::Take_Damage, 0);
         break;
     }
     case PacketType::SC_select_room: {
@@ -828,12 +827,10 @@ void CPacket::ProcessPacket(char* buf)
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
         int key = p->key;
         m_pScene->m_mPlayer[key]->SetGround(true);
-        if (m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->GetTrackPosition(PlayerState::Take_Damage) == 0
-            || m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->IsTrackFinish(PlayerState::Take_Damage))
-            m_pScene->AnimatePlayer(key, PlayerState::Idle);
+        m_pScene->AnimatePlayer(key, PlayerState::Idle);
         if (p->key != InGamekey) {
             if (m_pScene->m_mPlayer[key]->GetJump() == TRUE) {
-                m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(PlayerState::Jump, 0);
+                m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(2, 0);
                 m_pScene->m_mPlayer[key]->SetJump(FALSE);
             }
         }
@@ -905,15 +902,8 @@ void CPacket::ProcessPacket(char* buf)
                 m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 3);
             }
 
-            if (m_pScene->m_ppGameObjects[key]->GetState() != MonsterState::m_Walk) {
-                if (m_pScene->m_ppGameObjects[key]->GetState() == MonsterState::m_Take_Damage) {
-                    if (m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->IsTrackFinish(MonsterState::m_Take_Damage) == true)
-                        m_pScene->m_ppGameObjects[key]->ChangeState(MonsterState::m_Walk);
-                }
-                else {
-                    m_pScene->m_ppGameObjects[key]->ChangeState(MonsterState::m_Walk);
-                }
-            }
+            if (m_pScene->m_ppGameObjects[key]->GetState() != 3)
+                m_pScene->m_ppGameObjects[key]->ChangeState(3);
         }
 
         CheckCollision(m_pScene->m_ppGameObjects[key]);
@@ -994,9 +984,9 @@ void CPacket::ProcessPacket(char* buf)
         cout << "Monster: " << p->target << " hp: " << m_pScene->m_ppGameObjects[p->target]->GetHp() << endl;
         m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
         if (m_pScene->m_ppGameObjects[p->target]->m_iHp > 0)
-            m_pScene->m_ppGameObjects[p->target]->ChangeState(MonsterState::m_Take_Damage);
+            m_pScene->m_ppGameObjects[p->target]->ChangeState(2);
         else {
-            m_pScene->m_ppGameObjects[p->target]->ChangeState(MonsterState::m_Die);
+            m_pScene->m_ppGameObjects[p->target]->ChangeState(1);
         }
         m_pScene->m_ppGameObjects[p->target]->m_pSkinnedAnimationController->SetAllTrackDisable();
         m_pScene->m_ppGameObjects[p->target]->m_pSkinnedAnimationController->SetTrackPosition(
@@ -1069,7 +1059,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_stop: {
         mon_stop_packet* p = reinterpret_cast<mon_stop_packet*>(buf);
         int key = p->key;
-        m_pScene->m_ppGameObjects[key]->ChangeState(MonsterState::m_Idle);
+        m_pScene->m_ppGameObjects[key]->ChangeState(0);
 
         break;
     }
@@ -1081,10 +1071,12 @@ void CPacket::ProcessPacket(char* buf)
 
         if (p->target == InGamekey) {
             m_pPlayer->SetStanding(true);
-            //Send_stop_packet();
+            Send_stop_packet();
             m_pPlayer->SetDamaged(true);
+            m_pScene->AnimatePlayer(InGamekey, PlayerState::Take_Damage);
         }
-        m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
+        else
+            m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
 
        /* if (m_pScene->m_mPlayer[p->target]->GetHp() < 0)
             m_pScene->AnimatePlayer(p->target, PlayerState::Death);*/
