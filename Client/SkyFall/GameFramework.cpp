@@ -1055,12 +1055,33 @@ void CGameFramework::FrameAdvance()
     ID3D12DescriptorHeap* heaps = m_resourceDescriptors->Heap();
     m_pd3dCommandList->SetDescriptorHeaps(1, &heaps);
     
-    PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
-    m_pSprite->Begin(m_pd3dCommandList);
-    m_pFont->DrawString(m_pSprite.get(), L"SKYFALL", XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 20));
-    m_pSprite->End();
-    PIXEndEvent(m_pd3dCommandQueue);
-
+    if (m_pScene && m_pScene->GetState() != SCENE::ENDGAME)
+    {
+        PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
+        m_pSprite->Begin(m_pd3dCommandList);
+        m_pFont->DrawString(m_pSprite.get(), L"SKYFALL", XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 20));
+        m_pSprite->End();
+        PIXEndEvent(m_pd3dCommandQueue);
+    }
+    else if (m_pScene && m_pScene->GetState() == SCENE::ENDGAME)
+    {
+        PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
+        m_pSprite->Begin(m_pd3dCommandList);
+        const wchar_t* wc;
+        string s = "\nRate         : ";
+        s += to_string(m_pPlayer->GetRate());
+        s += "\nPlayer Kill  : ";
+        s += to_string(m_pPlayer->GetPkill());
+        s += "\nMonster Kill :";
+        s += to_string(m_pPlayer->GetMkill());
+        s += "\nProficiency  :";
+        s += to_string(m_pPlayer->GetPro());
+        wstring ws = wstring(s.begin(), s.end());
+        wc = ws.c_str();
+        m_pFont->DrawString(m_pSprite.get(), wc, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 + 20, 200));
+        m_pSprite->End();
+        PIXEndEvent(m_pd3dCommandQueue);
+    }
     // Start the Dear ImGui frame
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -1242,6 +1263,8 @@ void CGameFramework::Restart()
     m_pPlayer->SetHp(m_pPlayer->m_iMaxHp);
     m_pPlayer->SetPosition(XMFLOAT3(5048, 200, 1300));
     m_bMouseHold = true;
+    float rotate = acosf(Vector3::DotProduct(Vector3::Normalize(m_pPlayer->GetLook()), XMFLOAT3(0, 0, 0)));
+    m_pPlayer->Rotate(0, rotate, 0);
     for (int i = 0; i < m_pScene->m_nGameObjects; i++)
     {
         m_pScene->m_ppGameObjects[i]->SetHp(m_pScene->m_ppGameObjects[i]->m_iMaxHp);
