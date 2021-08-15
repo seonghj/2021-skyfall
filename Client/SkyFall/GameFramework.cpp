@@ -1012,7 +1012,6 @@ void CGameFramework::MoveToNextFrame()
 //#define _WITH_PLAYER_TOP
 void CGameFramework::FrameAdvance()
 {
-    cout << "Stamina : " << m_pPlayer->GetStamina() << endl;
     m_GameTimer.Tick(60.0f);
 
     ProcessInput();

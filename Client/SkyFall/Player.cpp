@@ -548,7 +548,6 @@ void CTerrainPlayer::OnPlayerUpdateCallback(float fTimeElapsed)
 	{
 		SetGround(false);
 	}
-	cout << "여기 들왔다?" << endl;
 	if (m_fStamina < 0.0f)
 		SetRunning(false);
 }
