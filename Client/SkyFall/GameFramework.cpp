@@ -10,6 +10,8 @@
 #define EXP_FOG 2.0f
 #define EXP2_FOG 3.0f
 
+#define UI_CIRCLE 0x01
+
 CGameFramework::CGameFramework()
 {
 	m_pdxgiFactory = NULL;
@@ -199,7 +201,7 @@ void CGameFramework::CreateRtvAndDsvDescriptorHeaps()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
 	::ZeroMemory(&d3dDescriptorHeapDesc, sizeof(D3D12_DESCRIPTOR_HEAP_DESC));
-	d3dDescriptorHeapDesc.NumDescriptors = m_nSwapChainBuffers;
+	d3dDescriptorHeapDesc.NumDescriptors = m_nSwapChainBuffers + 1;	// nSwapChain + MiniMapTexture
 	d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	d3dDescriptorHeapDesc.NodeMask = 0;
@@ -665,6 +667,28 @@ void CGameFramework::ShowError(const char* str)
 	ImGui::End();
 }
 
+void CGameFramework::DrawTimer()
+{
+	PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
+	char str[6] = "";
+	int t = m_pcbMappedFrameworkInfo->m_fCurrentTime;
+
+	char h[4];
+	_itoa_s(t / 60, h, 10);
+	strcat_s(str, h);
+	strcat_s(str, ":");
+	if (t % 60 < 10)
+		strcat_s(str, "0");
+
+	char m[3];
+	_itoa_s(t % 60, m, 10);
+	strcat_s(str, m);
+	m_pSprite->Begin(m_pd3dCommandList);
+	m_pFont->DrawString(m_pSprite.get(), str, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 10));
+	m_pSprite->End();
+	PIXEndEvent(m_pd3dCommandQueue);
+}
+
 void CGameFramework::CreateFontAndGui()
 {
 	{
@@ -704,6 +728,86 @@ void CGameFramework::CreateFontAndGui()
 	m_pScene->SetState(SCENE::LOGIN);
 	m_vRooms = { "Room1","Room2", "Room3" };
 	m_ErrorMsg = "Error Message";
+}
+
+void CGameFramework::RenderMiniMap() const
+{
+	::SynchronizeResourceTransition(m_pd3dCommandList, m_pMiniMapTexture->GetTexture(0), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	FLOAT Color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dRtvCPUDescriptorHandle = m_pd3dRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	d3dRtvCPUDescriptorHandle.ptr += m_nRtvDescriptorIncrementSize * m_nSwapChainBuffers;
+	m_pd3dCommandList->ClearRenderTargetView(d3dRtvCPUDescriptorHandle, Color, 0, NULL);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dDsvCPUDescriptorHandle = m_pd3dDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
+
+	m_pd3dCommandList->OMSetRenderTargets(1, &d3dRtvCPUDescriptorHandle, TRUE, &d3dDsvCPUDescriptorHandle);
+
+	m_pScene->Render(m_pd3dCommandList, m_pMiniMapCamera, true);
+	::SynchronizeResourceTransition(m_pd3dCommandList, m_pMiniMapTexture->GetTexture(0), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ);
+}
+
+void CGameFramework::BuildMiniMap()
+{
+	m_pMiniMapTexture = new CTexture(1, RESOURCE_TEXTURE2D);
+
+	D3D12_CLEAR_VALUE d3dClearValue = { DXGI_FORMAT_R8G8B8A8_UNORM, { 0.0f, 0.0f, 0.0f, 1.0f } };
+	m_pMiniMapTexture->CreateTexture(m_pd3dDevice, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ, &d3dClearValue, 0);
+
+	m_pMiniMap = new CUIObject(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pMiniMapTexture, -0.98, 0.6, -0.7, 0.98, 0.8);
+	m_pMiniMap->SetAlpha(0.8f);
+	m_pMiniMap->SethPercent(1.f);
+	m_pMiniMap->SetInfo(UI_CIRCLE);
+	m_pMiniMap->UpdateShaderVariables(m_pd3dCommandList);
+
+	//D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
+	//::ZeroMemory(&d3dDescriptorHeapDesc, sizeof(D3D12_DESCRIPTOR_HEAP_DESC));
+	//d3dDescriptorHeapDesc.NumDescriptors = 1;
+	//d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	//d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	//d3dDescriptorHeapDesc.NodeMask = 0;
+	//HRESULT hResult = m_pd3dDevice->CreateDescriptorHeap(&d3dDescriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&m_pd3dRtvDescriptorHeap);
+
+	D3D12_RENDER_TARGET_VIEW_DESC RtvDesc;
+	RtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	RtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+	RtvDesc.Texture2D.MipSlice = 0;
+	RtvDesc.Texture2D.PlaneSlice = 0;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dRtvCPUDescriptorHandle = m_pd3dRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	d3dRtvCPUDescriptorHandle.ptr += m_nRtvDescriptorIncrementSize * m_nSwapChainBuffers;
+	m_pd3dDevice->CreateRenderTargetView(m_pMiniMapTexture->GetTexture(0), &RtvDesc, d3dRtvCPUDescriptorHandle);
+
+	m_pMiniMapCamera = new CCamera();
+	m_pMiniMapCamera->SetPosition(XMFLOAT3(0, 0, 0));
+	m_pMiniMapCamera->SetLookVector(XMFLOAT3(0, -1, 0));
+	m_pMiniMapCamera->RegenerateViewMatrix();
+	m_pMiniMapCamera->GenerateProjectionMatrixOrtho(1.01f, 2000.0f, m_nWndClientWidth, m_nWndClientHeight);
+	m_pMiniMapCamera->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
+}
+
+void CGameFramework::UpdateMiniMap()
+{
+
+	XMFLOAT3 pos = m_pPlayer->GetPosition();
+	//m_pMiniMapCamera->SetLookAtPosition(pos);
+	m_pMiniMapCamera->GenerateViewMatrix(XMFLOAT3(pos.x, 1000, pos.z), pos, m_pPlayer->GetLookVector());
+}
+
+void CGameFramework::BuildShadowMap()
+{
+	CCamera* pCamera = new CCamera();
+	pCamera->SetPosition(m_pScene->m_pLights[0].m_xmf3Position);
+	pCamera->SetLookVector(m_pScene->m_pLights[0].m_xmf3Direction);
+	pCamera->RegenerateViewMatrix();
+	pCamera->GenerateProjectionMatrixOrtho(1.01f, 1000.0f, m_nWndClientWidth * 3, m_nWndClientHeight * 3);
+	pCamera->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
+
+	m_pShadowMap = new CShadowMap(m_nWndClientWidth, m_nWndClientHeight, pCamera);
+	m_pShadowMap->CreateShader(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature());
+	m_pShadowMap->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
+	m_pShadowMap->CreateShadowMap(m_pd3dDevice);
 }
 
 void CGameFramework::OnDestroy()
@@ -754,19 +858,9 @@ void CGameFramework::BuildObjects()
 	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList, m_vMapArrange);
 
 	m_pd3dCommandList->SetGraphicsRootSignature(m_pScene->GetGraphicsRootSignature());
-	CCamera* pCamera = new CCamera();
-	pCamera->SetPosition(m_pScene->m_pLights[0].m_xmf3Position);
-	pCamera->SetLookVector(m_pScene->m_pLights[0].m_xmf3Direction);
-	pCamera->RegenerateViewMatrix();
-	pCamera->GenerateProjectionMatrixOrtho(1.01f, 1000.0f, m_nWndClientWidth * 3, m_nWndClientHeight * 3);
-	pCamera->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
 
-	m_pShadowMap = new CShadowMap(m_nWndClientWidth, m_nWndClientHeight, pCamera);
-	m_pShadowMap->CreateShader(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature());
-	m_pShadowMap->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
-	m_pShadowMap->CreateShadowMap(m_pd3dDevice);
-
-
+	BuildShadowMap();
+	BuildMiniMap();
 	CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Basic.bin", NULL);
 	CTerrainPlayer* pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pModel, (void**)m_pScene->m_ppTerrain);
 	delete pModel;
@@ -774,7 +868,7 @@ void CGameFramework::BuildObjects()
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
 	m_pScene->AddWeapon(m_pd3dDevice, m_pd3dCommandList);
 	m_pPlayer = m_pScene->m_pPlayer = pPlayer;
-	pPlayer->Rotate(60.0f, -100.f, 0);
+	pPlayer->Rotate(20.0f, -90.f, 0);
 	//m_pPlayer->SetPlace(4);
 	
 	m_pCamera = pPlayer->GetCamera();
@@ -1042,17 +1136,21 @@ void CGameFramework::FrameAdvance()
 
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
 	UpdateShadowMap();
+	UpdateMiniMap();
 
     AnimateObjects();
+
 
 	HRESULT hResult = m_pd3dCommandAllocator->Reset();
 	hResult = m_pd3dCommandList->Reset(m_pd3dCommandAllocator, NULL);
 
-	m_pShadowMap->Set(m_pd3dCommandList);
 	m_pScene->Set(m_pd3dCommandList);
 
-	UpdateShaderVariables();
+	RenderMiniMap();
+
+	m_pShadowMap->Set(m_pd3dCommandList);
 	m_pShadowMap->UpdateShaderVariable(m_pd3dCommandList);
+	UpdateShaderVariables();
 
 	m_pShadowMap->Render(m_pd3dCommandList, NULL);
 	if (m_pScene) m_pScene->RenderShadow(m_pd3dCommandList, m_pShadowMap->GetCamera());
@@ -1087,30 +1185,17 @@ void CGameFramework::FrameAdvance()
 
 	m_pShadowMap->UpdateShaderVariables(m_pd3dCommandList);
 	if (m_pScene) m_pScene->Render(m_pd3dCommandList, m_pCamera);
+	if (m_pMiniMap) {
+		m_pMiniMap->UpdateShaderVariables(m_pd3dCommandList);
+		m_pMiniMap->Render(m_pd3dCommandList, m_pCamera);
+	}
 
 	ID3D12DescriptorHeap* heaps = m_resourceDescriptors->Heap();
 	m_pd3dCommandList->SetDescriptorHeaps(1, &heaps);
 	
 	if (m_pScene->GetState() == SCENE::INGAME)
 	{
-		PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
-		char str[6]="";
-		int t = m_pcbMappedFrameworkInfo->m_fCurrentTime;
-		
-		char h[4];
-		itoa(t / 60, h, 10);
-		strcat(str, h);
-		strcat(str, ":");
-		if (t % 60 < 10)
-			strcat(str, "0");
-
-		char m[3];
-		itoa(t % 60, m, 10);
-		strcat(str, m);
-		m_pSprite->Begin(m_pd3dCommandList);
-		m_pFont->DrawString(m_pSprite.get(), str, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 10));
-		m_pSprite->End();
-		PIXEndEvent(m_pd3dCommandQueue);
+		DrawTimer();
 	}
 
 	// Start the Dear ImGui frame

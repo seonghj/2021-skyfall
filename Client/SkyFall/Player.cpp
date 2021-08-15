@@ -521,9 +521,9 @@ void CTerrainPlayer::OnPlayerUpdateCallback(float fTimeElapsed)
 void CTerrainPlayer::OnCameraUpdateCallback(float fTimeElapsed)
 {
 	CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)m_ppCameraUpdatedContext[m_nPlace];
-	if (/*pTerrain->IsFalling()*/true) {
+	if (pTerrain->IsFalling()) {
 		float fAmp = pTerrain->GetTime() / 5;
-		fAmp = max(min(2, fAmp), 1);
+		fAmp = min(2, fAmp);
 		static float time = 0;
 		time += fTimeElapsed;
 		m_xmf3ShakeDegree = XMFLOAT3(0.2f * cos(PI * time * 20), fAmp * cos(PI * time * 20), 0);
