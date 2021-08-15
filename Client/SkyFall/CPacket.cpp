@@ -112,6 +112,7 @@ void CPacket::RecvPacket()
 
 void CPacket::SendPacket(char* buf)
 {
+    //if (SC_NONE >= buf[1] || buf[1] >= CS_NONE) return;
     int retval = 0;
     wsabuf.len = buf[0];
     wsabuf.buf = buf;
