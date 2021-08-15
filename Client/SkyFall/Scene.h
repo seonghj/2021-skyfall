@@ -39,7 +39,7 @@ struct LIGHTS
 };
 
 enum SCENE {
-	LOGIN, LOBBY, INROOM, INGAME, ENDGAME
+	LOGIN, LOBBY, INROOM, INGAME, ENDGAME,
 };
 
 
@@ -154,8 +154,8 @@ public:
 
 	CGameObject							** m_ppWeapons = new CGameObject * [4];
 
-	int m_iState;
-
+	int									m_iState;
+	int									rate = MAX_PLAYER;
 };
 
 extern D3D12_SHADER_RESOURCE_VIEW_DESC GetShaderResourceViewDesc(D3D12_RESOURCE_DESC d3dResourceDesc, UINT nTextureType);

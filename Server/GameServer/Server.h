@@ -9,7 +9,7 @@
 constexpr int INVALUED_ID = -1;
 
 constexpr int Death = 0;
-constexpr int Alive = 0;
+constexpr int Alive = 1;
 
 //struct OVER_EX
 //{
@@ -52,6 +52,7 @@ public:
     std::atomic<int>         key = -1;
     std::atomic<int>         roomID = -1;
     char                     id[50];
+    std::atomic<int>         InGamekey = -1;
 
     // 0 죽음 / 1 생존
     std::atomic<bool>       state = 0;
@@ -106,19 +107,19 @@ public:
 
     void display_error(const char* msg, int err_no);
 
-    int SetClientKey(int roomID);
+    int SetInGameKey(int roomID);
     int SetroomID();
     int SetLobbyKey();
+
     bool CreateRoom(int key);
+
     void Set_pTimer(Timer* t) { m_pTimer = t; }
     void Set_pBot(Bot* b) { m_pBot = b; }
     void Set_pDB(DB* d) { m_pDB = d; }
 
-    void ConnectLobby();
 
     bool Init();
     void Thread_join();
-    void Disconnected(int key, int roomID);
     void Disconnected(int key);
 
     void Accept();
@@ -130,15 +131,26 @@ public:
 
     void send_Lobby_key_packet(int key);
     void send_Lobby_loginOK_packet(int key);
-    void send_player_key_packet(int key, int roomID);
+
+    void send_room_list_packet(int key);
+
+    void send_player_InGamekey_packet(int key, int roomID);
     void send_player_loginOK_packet(int key, int roomID);
     void send_player_loginFail_packet(int key, int roomID);
+
     void send_add_player_packet(int key, int to, int roomID);
     void send_remove_player_packet(int key, int roomID);
+
     void send_disconnect_player_packet(int key,int roomID);
+
     void send_packet_to_players(int key, char* buf, int roomID);
     void send_packet_to_allplayers(int roomnum, char* buf);
+
     void send_start_packet(int to, int roomID);
+    void send_game_end_packet(int key, int roomID);
+    void send_player_dead_packet(int key, int roomID);
+
+    void player_go_lobby(int key, int roomID);
 
     void send_map_collapse_packet(int num, int roomID);
     void send_cloud_move_packet(float x, float z, int roomID);
@@ -147,11 +159,12 @@ public:
     void send_remove_monster(int key, int roomID, int to);
     void send_monster_pos(const Monster& mon, XMFLOAT3 direction);
     void send_monster_attack(const Monster& mon, XMFLOAT3 direction, int target);
+    void send_monster_stop(int key, int roomID);
 
     void send_player_record(int key, int roomID, const SESSION& s, int time, int rank);
     void send_map_packet(int to, int roomID);
 
-    void game_end(int roomnum);
+    void game_end(int roomnum, OVER_EX* over_ex);
 
     bool in_VisualField(SESSION a, SESSION b, int roomID);
     bool in_VisualField(Monster a, SESSION b, int roomID);
@@ -159,8 +172,11 @@ public:
 
     void player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy);
 
-    std::unordered_map <int, SESSION> Lobby_sessions;
-    std::unordered_map <int, std::array<SESSION, 20>> sessions; // 방ID, Player배열
+    //std::unordered_map <int, SESSION> Lobby_sessions;
+    //std::unordered_map <int, std::array<SESSION, 20>> sessions; // 방ID, Player배열
+    std::unordered_map <int, bool> CanJoin;
+    std::unordered_map <int, std::array<int, 20>> GameRooms;
+    std::array<SESSION, 1000> sessions;
 
 private:
     HANDLE                         hcp;
@@ -178,6 +194,6 @@ private:
 
     std::mutex                     accept_lock;
     std::mutex                     sessions_lock;
-    std::mutex                     Lobby_sessions_lock;
+    std::mutex                     GameRooms_lock;
     std::mutex                     maps_lock;
 };

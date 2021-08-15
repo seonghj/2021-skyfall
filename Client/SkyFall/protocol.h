@@ -6,7 +6,7 @@ constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
 constexpr int BUFSIZE = 128;
 constexpr int MAX_CLIENT = 3000;
-constexpr int MAX_PLAYER = 2;
+constexpr int MAX_PLAYER = 20;
 constexpr int INVALIDID = -1;
 constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
@@ -15,7 +15,7 @@ constexpr int AI_ID = 5000;
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 6144;
 constexpr int MAP_BLOCK_SIZE = 2048;
-constexpr int MAP_BREAK_TIME = 100000;
+constexpr int MAP_BREAK_TIME = 90000;
 
 constexpr int MON_SPAWN_TIME = 10000;
 
@@ -23,7 +23,6 @@ constexpr float VIEWING_DISTANCE = 1000.f;
 
 constexpr int INVENTORY_MAX = 20;
 
-// 1 = 3cm
 
 #define SERVERIP   "127.0.0.1"
 //#define SERVERIP   "39.120.192.92"
@@ -56,8 +55,10 @@ enum PacketType {
 	SC_player_Lobbykey,
 	SC_player_LobbyloginOK,
 	SC_player_LobbyloginFail,
+	SC_create_room,
+	SC_room_list,
 	SC_select_room,
-	SC_player_key,
+	SC_player_InGamekey,
 	SC_player_loginOK,
 	SC_player_loginFail,
 	SC_player_add,
@@ -75,6 +76,7 @@ enum PacketType {
 	SC_allow_shot,
 	SC_player_damage,
 	SC_player_stop,
+	SC_player_dead,
 	SC_map_set,
 	SC_map_collapse,
 	SC_cloud_move,
@@ -93,11 +95,13 @@ enum PacketType {
 	SC_monster_attack,
 	SC_monster_damaged,
 	SC_monster_respawn,
+	SC_monster_stop,
 	SC_player_record,
 	SC_player_getitem,
 
 
 	CS_room_select,
+	CS_create_room,
 	CS_player_Lobbylogin,
 	CS_player_login,
 	CS_game_ready,
@@ -115,6 +119,7 @@ enum PacketType {
 	CS_monster_pos,
 	CS_monster_attack,
 	CS_monster_damaged,
+	CS_return_lobby,
 	CS_NONE,
 };
 
@@ -125,7 +130,7 @@ enum EventType {
 	Mon_move_to_player,
 	Mon_attack_cooltime,
 	Mon_respawn,
-	MapBreak
+	MapBreak,
 };
 
 enum PlayerMove {
@@ -194,8 +199,15 @@ struct player_loginOK_packet :public Packet {
 struct player_loginFail_packet :public Packet {
 };
 
+struct room_create_packet :public Packet {
+};
+
 struct room_select_packet :public Packet {
 	short room;
+};
+
+struct room_list_packet :public Packet {
+	bool isRoom[20];
 };
 
 struct player_add_packet : public Packet {
@@ -210,6 +222,7 @@ struct game_ready_packet :public Packet {
 
 struct game_start_packet :public Packet {
 	PlayerType weaponType;
+	short ingamekey;
 };
 
 struct start_ok_packet :public Packet {
@@ -307,6 +320,10 @@ struct player_stop_packet : public Packet {
 	DirectX::XMFLOAT3 Position;
 };
 
+struct player_dead_packet : public Packet {
+
+};
+
 struct map_block_set : public Packet {
 	char block_type[9];
 
@@ -360,6 +377,10 @@ struct mon_respawn_packet : public Packet {
 	short MonsterType;
 };
 
+struct mon_stop_packet : public Packet {
+	DirectX::XMFLOAT3 Position;
+};
+
 struct player_record_packet : public Packet {
 	char id[50];
 	short survivalTime;
@@ -375,6 +396,9 @@ struct player_getitem_packet :public Packet {
 	short item;
 };
 
+struct return_lobby_packet :public Packet {
+};
+
 struct mon_move_to_player_event : public Packet {
 
 };
@@ -388,6 +412,10 @@ struct mon_respawn_event : public Packet {
 };
 
 struct Mapbreak_event : public Packet {
+
+};
+
+struct game_end_event : public Packet {
 
 };
 #pragma pack(pop)

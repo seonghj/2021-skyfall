@@ -43,7 +43,9 @@ public:
 	void Send_swap_weapon_packet(PlayerType weapon);
 	void Send_damage_to_player_packet(int target, int nAttack);
 	void Send_mon_damaged_packet(int target, int nAttack);
-	void Send_room_packet(int room);
+	void Send_room_create_packet();
+	void Send_room_select_packet(int room);
+	void Send_return_lobby_packet();
 
 	void Swap_weapon(int key, PlayerType weapon);
 	void Map_set(map_block_set* p);
@@ -77,6 +79,7 @@ public:
 	}
 
 	int roomID = INVALIDID;
+	int InGamekey = INVALIDID;
 private:
 	int client_key = INVALIDID;
 	char userID[50];
@@ -103,5 +106,13 @@ private:
 		RunRight,
 		RunLeft,
 		Take_Damage,
+	};
+
+	enum MonsterState {
+		m_Idle,
+		m_Die,
+		m_Take_Damage,
+		m_Walk,
+		m_Run,
 	};
 };

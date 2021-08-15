@@ -694,6 +694,7 @@ void CShadowMap::Set(ID3D12GraphicsCommandList* pd3dCommandList)
 
 	D3D12_CPU_DESCRIPTOR_HANDLE d3dDsvCPUDescriptorHandle = m_pd3dDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
+
 	pd3dCommandList->OMSetRenderTargets(0, NULL, false, &d3dDsvCPUDescriptorHandle);
 	pd3dCommandList->OMSetStencilRef(0);
 }

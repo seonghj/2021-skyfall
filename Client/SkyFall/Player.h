@@ -44,12 +44,16 @@ protected:
 	bool						m_isCharging;
 	bool						m_isDamaged = false;
 
+	int							m_iPkill = 0;
+	int							m_iMkill = 0;
+	int							m_iRate = 0;
+	int							m_iProficiency = 0;
 	int							m_nPlace;
 	bool						m_bHit = false;
 	// stat
 
-	LPVOID*						m_ppPlayerUpdatedContext = NULL;
-	LPVOID*						m_ppCameraUpdatedContext = NULL;
+	LPVOID						*m_ppPlayerUpdatedContext = NULL;
+	LPVOID						*m_ppCameraUpdatedContext = NULL;
 
 	CCamera						*m_pCamera = NULL;
 
@@ -76,6 +80,11 @@ public:
 	void SetCharging(bool charge) { m_isCharging = charge; }
 	void SetPlace(int nPlace) { m_nPlace = nPlace; }
 	virtual void SetDamaged(bool damaged) { m_isDamaged = damaged; }
+	void SetPkill(int kill) { m_iPkill = kill; }
+	void SetMkill(int kill) { m_iMkill = kill; }
+	void SetRate(int rate) { m_iRate = rate; }
+	void SetPro(int pro) { m_iProficiency = pro; }
+	void Reset();
 
 	virtual void RButtonDown() {};
 	virtual void RButtonUp() {};
@@ -92,8 +101,12 @@ public:
 	bool  GetAttack() const { return(m_isAttack); }
 	bool  GetStanding() const { return(m_isStanding); }
 	bool  GetCharging() const { return(m_isCharging); }
-	int GetPlace() const { return(m_nPlace); }
+	int   GetPlace() const { return(m_nPlace); }
 	bool  GetDamaged() const { return(m_isDamaged); }
+	int	  GetPkill() const { return(m_iPkill); }
+	int   GetMkill() const{ return(m_iMkill); }
+	int   GetRate() const { return(m_iRate);}
+	int   GetPro() const { return(m_iProficiency); }
 
 	void SetScale(XMFLOAT3& xmf3Scale) { m_xmf3Scale = xmf3Scale; }
 

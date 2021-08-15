@@ -1,7 +1,5 @@
 #pragma once
 
-//#define FRAME_BUFFER_WIDTH		640
-//#define FRAME_BUFFER_HEIGHT		480
 
 #include "Timer.h"
 #include "Player.h"
@@ -68,7 +66,6 @@ public:
 	void Restart();
 	void MouseHold(bool b) { m_bMouseHold = b; }
 	void StartGame();
-
 	void ShowLoginWindow();
 	void ShowLobbyWindow();
 	void ShowRoomWindow();
@@ -84,6 +81,8 @@ public:
 	CTerrainPlayer*				m_pPlayer = NULL;
 	CCamera*					m_pCamera = NULL;
 	CScene*						m_pScene = NULL;
+
+	unordered_map<int, char[20]>	rooms;
 
 private:
 	HINSTANCE					m_hInstance;
@@ -156,8 +155,8 @@ private:
 	//Font
 	unique_ptr<SpriteBatch>		m_pSprite;
 	unique_ptr<SpriteFont>		m_pFont;
-	unique_ptr<DescriptorHeap>	m_resourceDescriptors;
-	unique_ptr<GraphicsMemory>	m_graphicsMemory;
+	unique_ptr<DescriptorHeap> m_resourceDescriptors;
+	unique_ptr<GraphicsMemory> m_graphicsMemory;
 
 	void DrawTimer();
 

@@ -7,7 +7,6 @@
 //#include "protocol.h"
 #include "CPacket.h"
 
-
 ID3D12DescriptorHeap *CScene::m_pd3dCbvSrvDescriptorHeap = NULL;
 
 D3D12_CPU_DESCRIPTOR_HANDLE	CScene::m_d3dCbvCPUDescriptorStartHandle;
@@ -42,10 +41,13 @@ void CScene::BuildDefaultLightsAndMaterials()
 
 	m_pLights[0].m_bEnable = true;
 	m_pLights[0].m_nType = POINT_LIGHT;
-	m_pLights[0].m_fRange = 5000.0f; 
-	m_pLights[0].m_xmf4Ambient = XMFLOAT4(1.f, 1.f, 1.f, 1.0f);
+	m_pLights[0].m_fRange = 5000.0f;
+	/*m_pLights[0].m_xmf4Ambient = XMFLOAT4(1.f, 1.f, 1.f, 1.0f);
 	m_pLights[0].m_xmf4Diffuse = XMFLOAT4(1.f, 1.f, 1.f, 1.0f);
-	m_pLights[0].m_xmf4Specular = XMFLOAT4(1.f, 1.f, 1.f, 1.0f);
+	m_pLights[0].m_xmf4Specular = XMFLOAT4(1.f, 1.f, 1.f, 1.0f);*/
+	m_pLights[0].m_xmf4Ambient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
+	m_pLights[0].m_xmf4Diffuse = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
+	m_pLights[0].m_xmf4Specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.0f);
 	m_pLights[0].m_xmf3Position = XMFLOAT3(-100.0f, 500.0f, -100.0f);
 	m_pLights[0].m_xmf3Direction = XMFLOAT3(0.4f, -1.0f, 0.4f);
 	m_pLights[0].m_xmf3Attenuation = XMFLOAT3(1.0f, 0.001f, 0.0001f);
@@ -140,21 +142,19 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	}
 
 
-	m_nUIs = 2;
+	m_nUIs = 3;
 	m_ppUIObjects = new CUIObject * [m_nUIs];
 	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_FILL.dds", -0.85, -0.95, 0.85, -0.85, 0.8);
 	m_ppUIObjects[0]->SetAlpha(0.8f);
 	m_ppUIObjects[0]->SethPercent(1.f);
 
-	/*m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_BOX.dds", -0.98, -0.95, -0.80, -0.8, 0.8);
-	m_ppUIObjects[1]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
-	m_ppUIObjects[1]->SetAlpha(0.8f);
-	m_ppUIObjects[1]->SetvPercent(1.f);*/
-
 	m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
 	m_ppUIObjects[1]->SetAlpha(0.0f);
-	m_ppUIObjects[1]->SethPercent(1.f);
+	m_ppUIObjects[1]->SetvPercent(1.f);
 
+	m_ppUIObjects[2] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Win_UI.dds", -1, -1, 1, 1, 0.8);
+	m_ppUIObjects[2]->SetAlpha(0.0f);
+	m_ppUIObjects[2]->SetvPercent(1.f);
 
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
@@ -359,7 +359,7 @@ void CScene::ReleaseObjects()
 		for (int i = 0; i < m_nGameObjects; i++) if (m_ppGameObjects[i]) m_ppGameObjects[i]->Release();
 		delete[] m_ppGameObjects;
 	}
-	
+
 	for (int i = 0; i < MAX_PLAYER; i++) {
 		if (m_mBowPlayer[i]) {
 			m_mBowPlayer[i]->Release();
@@ -1000,13 +1000,20 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 		case 'z': case 'Z':
 			gbShowBoundingBox = !gbShowBoundingBox;
 			break;
+		case '5':
+			m_ppUIObjects[2]->SetAlpha(0.0f);
+			m_ppUIObjects[3]->SetAlpha(0.0f);
 		case '9':
+			m_ppUIObjects[2]->SetAlpha(1.0f);
+			m_ppUIObjects[3]->SetAlpha(0.0f);
 			//CB_UI_INFO ui;
 			//ui.gfAlpha = m_ppUIObjects[0]->GetAlpha() + 0.1f;
 			//m_ppUIObjects[0]->SetUI(&ui);
 			//m_ppGameObjects[0]->FindFrame("HpBar")->MoveStrafe(10.f);
 			break;
 		case '0':
+			m_ppUIObjects[2]->SetAlpha(0.0f);
+			m_ppUIObjects[3]->SetAlpha(1.0f);
 			//m_ppGameObjects[0]->FindFrame("HpBar")->MoveStrafe(-10.f);
 			break;
 		case '1':
@@ -1152,7 +1159,16 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	}
 	else if (m_iState == SCENE::ENDGAME)
 	{
-		m_ppUIObjects[1]->Render(pd3dCommandList, pCamera);
+		if (m_pPlayer->GetRate() == 1)
+		{
+			m_ppUIObjects[3]->UpdateShaderVariables(pd3dCommandList);
+			m_ppUIObjects[3]->Render(pd3dCommandList, pCamera);
+		}
+		else if (m_pPlayer->GetRate() > 1)
+		{
+			m_ppUIObjects[2]->UpdateShaderVariables(pd3dCommandList);
+			m_ppUIObjects[2]->Render(pd3dCommandList, pCamera);
+		}
 	}
 }
 

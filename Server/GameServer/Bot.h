@@ -44,6 +44,7 @@ public:
     std::atomic<float>      speed = 20;
 
     bool                    CanAttack = TRUE;
+    bool                    isTrace = false;
 
     void init();
     void SetPosition(float x, float y, float z);
@@ -67,17 +68,18 @@ public:
 
     void Init(int roomID);
 
-    void CheckTarget(int roomID);
     void CheckBehavior(int roomID);
 
     void RunBot(int roomID);
 
     std::unordered_map <int, std::array<Monster, 15>> monsters;
 
-    bool monsterRun = false;
+    std::unordered_map <int, bool> monsterRun;
 
     std::chrono::system_clock::time_point start;
     std::chrono::system_clock::time_point end;
+
+    std::mutex               monsters_lock;
 
 private:
     Server* m_pServer = NULL;

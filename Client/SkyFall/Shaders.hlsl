@@ -210,8 +210,8 @@ VS_WIREFRAME_OUTPUT VSWireFrame(VS_WIREFRAME_INPUT input)
 	VS_WIREFRAME_OUTPUT output;
 
 	output.positionW = (float3)mul(float4(input.position, 1.0f), gmtxGameObject);
-	//output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
-	output.normalW = input.normal;
+	output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
+	//output.normalW = input.normal;
 	output.tangentW = (float3)mul(float4(input.tangent, 1.0f), gmtxGameObject);
 	output.bitangentW = (float3)mul(float4(input.bitangent, 1.0f), gmtxGameObject);
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
@@ -307,8 +307,8 @@ VS_SKINNED_WIREFRAME_OUTPUT VSSkinnedAnimationWireFrame(VS_SKINNED_WIREFRAME_INP
 	//output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
 //	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
 
-	output.normalW = input.normal;
-	//output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
+	output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
+	//output.normalW = input.normal;
 	output.tangentW = (float3)mul(float4(input.tangent, 1.0f), gmtxGameObject);
 	output.bitangentW = (float3)mul(float4(input.bitangent, 1.0f), gmtxGameObject);
 	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
@@ -424,9 +424,9 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 	output.color = input.color;
 	output.uv0 = input.uv0;
 	output.uv1 = input.uv1;
-	
 
 	
+
 
 
 	//matrix shadowProject = mul(mul(mul(gmtxGameObject, gmtxLightView), gmtxLightProjection), gmtxProjectToTexture);
@@ -440,6 +440,7 @@ VS_TERRAIN_OUTPUT VSTerrain(VS_TERRAIN_INPUT input)
 
 
 float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
+
 {
 
 	float3 shadowPosition = input.shadowPosition.xyz / input.shadowPosition.w;
@@ -454,7 +455,7 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 	float3 normalW = normalize(input.normalW);
 	float4 cIllumination;
 	if ((!gbFalling || input.nState == WATER) && input.positionW.y <= 87.f) {
-		float2 uv = input.positionW.xz/50;
+		float2 uv = input.positionW.xz / 50;
 		uv.x += gfCurrentTime / 10;
 		uv.y -= gfCurrentTime / 10;
 		float4 cWater = gtxtWater.Sample(gssWrap, uv);
@@ -471,7 +472,7 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 		cColor = saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
 		//float4 cColor = input.color * saturate((cBaseTexColor * 0.5f) + (cDetailTexColor * 0.5f));
 		//if (shadowPosition.z <= (fsDepth + gfBias)) fShadowFactor = 1.f; // not shadow
-	}	
+	}
 
 	float3 tangentW = normalize(input.tangentW - dot(input.tangentW, normalW) * normalW);
 	float3 bitangentW = normalize(cross(normalW, tangentW));
@@ -480,7 +481,7 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
 	normalW = normalize(mul(vNormal, TBN));
 
 	cIllumination = Lighting(input.positionW, normalW, fShadowFactor);
-	
+
 	cColor = lerp(cColor, cIllumination, 0.5f);
 
 	cColor = Fog(cColor, input.positionW);
@@ -615,6 +616,7 @@ float4 PSHPBar(GS_HPBAR_GEOMETRY_OUTPUT input) : SV_TARGET
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+
 #define UI_CIRCLE 0x01
 #define UI_BLOOD 0x02
 cbuffer cbUIInfo : register(b6)
@@ -623,6 +625,7 @@ cbuffer cbUIInfo : register(b6)
 	float		gfPercentV : packoffset(c0.y);
 	float		gfPercentH : packoffset(c0.z);
 	uint		gnUiInfo :packoffset(c0.w);
+
 };
 
 Texture2D gtxtUI : register(t3);
@@ -677,6 +680,6 @@ float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 		else
 			cColor.a = 0;
 	}
-	
+
 	return cColor;
 }

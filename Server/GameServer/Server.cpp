@@ -18,6 +18,7 @@ void SESSION::init()
     isready = false;
     playing = false;
     key = -1;
+    InGamekey = -1;
 
     state = Death;
     f3Position = DirectX::XMFLOAT3(0.0f, 124.0f, 0.0f);
@@ -61,13 +62,13 @@ void Server::display_error(const char* msg, int err_no)
     LocalFree(lpMsgBuf);
 }
 
-int Server::SetClientKey(int roomID)
+int Server::SetInGameKey(int roomID)
 {
     int cnt = 0;
     while (true){
-        if (cnt == 20)
+        if (cnt == MAX_PLAYER)
             return -1;
-        if (FALSE == sessions[roomID][cnt].connected){
+        if (INVALIDID == GameRooms[roomID][cnt]){
             return cnt;
         }
         else 
@@ -77,9 +78,11 @@ int Server::SetClientKey(int roomID)
 
 int Server::SetLobbyKey()
 {
-    int cnt = 100;
+    int cnt = 500;
     while (true) {
-        if (FALSE == Lobby_sessions[cnt].connected) {
+        if (cnt == 1000)
+            return -1;
+        if (FALSE == sessions[cnt].connected) {
             return cnt;
         }
         else
@@ -89,102 +92,67 @@ int Server::SetLobbyKey()
 
 int Server::SetroomID()
 {
-    int cnt = 1;
-    while (1) {
-        if (sessions.find(cnt) == sessions.end()) {
-            sessions_lock.lock();
-            //std::array<SESSION, 20> s{};
-            sessions.emplace(cnt, std::array<SESSION, 20>{});
-            sessions_lock.unlock();
+    //int cnt = 1;
+    //while (1) {
+    //    if (sessions.find(cnt) == sessions.end()) {
+    //        sessions_lock.lock();
+    //        //std::array<SESSION, 20> s{};
+    //        sessions.emplace(cnt, std::array<SESSION, 20>{});
+    //        sessions_lock.unlock();
 
-            maps_lock.lock();
-            maps.emplace(cnt, Map(cnt));
-            maps[cnt].SetNum(cnt);
-            //maps[cnt].init_Map(this, m_pTimer);
-            maps_lock.unlock();
+    //        maps_lock.lock();
+    //        maps.emplace(cnt, Map(cnt));
+    //        maps[cnt].SetNum(cnt);
+    //        //maps[cnt].init_Map(this, m_pTimer);
+    //        maps_lock.unlock();
 
-            m_pBot->monsters.emplace(cnt, std::array<Monster, 15>{});
-            //m_pBot->monsterRun = TRUE;
-            m_pBot->Init(cnt);
+    //        m_pBot->monsters.emplace(cnt, std::array<Monster, 15>{});
+    //        m_pBot->monsterRun.emplace(cnt, false);
+    //        m_pBot->Init(cnt);
 
-            /*m_pBot->monsters[cnt][0].SetPosition(2000, 197.757935, 5000);
-            m_pBot->monsters[cnt][0].state = 1;
-            m_pBot->monsters[cnt][0].type = MonsterType::Dragon;
-            m_pBot->monsters[cnt][0].Rotate(-90.0f, 20.0f, 0.0f);
-            m_pBot->monsters[cnt][0].key = 0;*/
+    //        /*m_pBot->monsters[cnt][0].SetPosition(2000, 197.757935, 5000);
+    //        m_pBot->monsters[cnt][0].state = 1;
+    //        m_pBot->monsters[cnt][0].type = MonsterType::Dragon;
+    //        m_pBot->monsters[cnt][0].Rotate(-90.0f, 20.0f, 0.0f);
+    //        m_pBot->monsters[cnt][0].key = 0;*/
 
-            m_pBot->RunBot(cnt);
+    //        m_pBot->RunBot(cnt);
 
-            printf("create game room - %d\n", cnt);
-            return cnt;
-        }
-        if (FALSE == sessions[cnt][MAX_PLAYER - 1].connected)
-            return cnt;
-        else {
-           ++cnt;
-        }
-    }
+    //        printf("create game room - %d\n", cnt);
+    //        return cnt;
+    //    }
+    //    if (FALSE == sessions[cnt][MAX_PLAYER - 1].connected)
+    //        return cnt;
+    //    else {
+    //       ++cnt;
+    //    }
+    //}
 }
 
 bool Server::CreateRoom(int key)
 {
-    if (sessions.find(key) == sessions.end()) {
-        sessions_lock.lock();
-        //std::array<SESSION, 20> s{};
-        sessions.emplace(key, std::array<SESSION, 20>{});
-        sessions_lock.unlock();
+    if (GameRooms.find(key) != GameRooms.end()) return false;
 
-        maps_lock.lock();
-        maps.emplace(key, Map(key));
-        maps[key].SetNum(key);
-        //maps[key].init_Map(this, m_pTimer);
-        maps_lock.unlock();
+    GameRooms_lock.lock();
+    GameRooms.emplace(key, std::array<int, 20>{});
+    GameRooms_lock.unlock();
+    for (int i = 0; i < MAX_PLAYER; ++i)
+        GameRooms[key][i] = INVALIDID;
 
-        m_pBot->monsters.emplace(key, std::array<Monster, 15>{});
-        //m_pBot->monsterRun = TRUE;
-        m_pBot->Init(key);
-        //m_pBot->RunBot(key);
+    maps_lock.lock();
+    maps.emplace(key, Map(key));
+    maps[key].SetNum(key);
+    //maps[key].init_Map(this, m_pTimer);
+    maps_lock.unlock();
 
-        printf("create game room - %d\n", key);
-        return true;
-    }
-    else
-        return false;
-}
+    m_pBot->monsters.emplace(key, std::array<Monster, 15>{});
+    //m_pBot->monsterRun = TRUE;
+    m_pBot->Init(key);
+    //m_pBot->RunBot(key);
+    CanJoin.emplace(key, true);
+    CanJoin[key] = true;
 
-void Server::ConnectLobby()
-{
-    std::array<SESSION, 20> s{};
-    sessions.emplace(LOBBY_ID, s);
-    sessions[LOBBY_ID][0].key = LOBBY_ID;
-    sessions[LOBBY_ID][0].connected = TRUE;
-    // ���� �ʱ�ȭ
-    WSADATA wsa;
-    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-        return;
-
-    // socket()
-    sessions[LOBBY_ID][0].sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-
-    // connect()
-    SOCKADDR_IN lobbyaddr;
-    ZeroMemory(&lobbyaddr, sizeof(lobbyaddr));
-    lobbyaddr.sin_family = AF_INET;
-    lobbyaddr.sin_addr.s_addr = inet_addr(SERVERIP);
-    lobbyaddr.sin_port = htons(LOBBYPORT);
-    connect(sessions[LOBBY_ID][0].sock, (SOCKADDR*)&lobbyaddr, sizeof(lobbyaddr));
-
-    memset(&sessions[LOBBY_ID][0].over.overlapped, 0, sizeof(sessions[LOBBY_ID][0].over.overlapped));
-    sessions[LOBBY_ID][0].over.is_recv = true;
-    sessions[LOBBY_ID][0].over.dataBuffer.len = BUFSIZE;
-    sessions[LOBBY_ID][0].over.dataBuffer.buf =
-        sessions[LOBBY_ID][0].over.messageBuffer;
-
-    std::cout << "Lobby connected\n";
-
-    CreateIoCompletionPort((HANDLE)sessions[LOBBY_ID][0].sock, hcp, LOBBY_ID, 0);
-
-    do_recv(LOBBY_ID, 0);
+    return true;
 }
 
 void Server::Accept()
@@ -212,7 +180,7 @@ void Server::Accept()
     printf("ready\n");
 
     while (1) {
-        //accept_lock.lock();
+        accept_lock.lock();
         client_sock = accept(listen_sock, (struct sockaddr*)&clientaddr, &addrlen);
         if (client_sock == INVALID_SOCKET) {
             printf("accept error: %d", WSAGetLastError());
@@ -225,29 +193,29 @@ void Server::Accept()
             break;
         }
 
-        std::lock_guard<std::mutex> lock_guard{ Lobby_sessions_lock };
-        Lobby_sessions[client_key].init();
-        Lobby_sessions[client_key].connected = TRUE;
-        Lobby_sessions[client_key].key = client_key;
-        Lobby_sessions[client_key].roomID = INVALUED_ID;
-        Lobby_sessions[client_key].sock = client_sock;
-        Lobby_sessions[client_key].clientaddr = clientaddr;
-        getpeername(client_sock, (SOCKADDR*)&Lobby_sessions[client_key].clientaddr
-            , &Lobby_sessions[client_key].addrlen);
+        sessions[client_key].init();
+        sessions[client_key].connected = TRUE;
+        sessions[client_key].key = client_key;
+        sessions[client_key].roomID = INVALUED_ID;
+        sessions[client_key].sock = client_sock;
+        sessions[client_key].clientaddr = clientaddr;
+        getpeername(client_sock, (SOCKADDR*)&sessions[client_key].clientaddr
+            , &sessions[client_key].addrlen);
 
-        Lobby_sessions[client_key].over.type = 0;
-        Lobby_sessions[client_key].over.dataBuffer.len = BUFSIZE;
-        Lobby_sessions[client_key].over.dataBuffer.buf =
-            Lobby_sessions[client_key].over.messageBuffer;
-        Lobby_sessions[client_key].over.is_recv = true;
-        Lobby_sessions[client_key].over.key = client_key;
-        Lobby_sessions[client_key].over.roomID = INVALUED_ID;
+        ZeroMemory(&sessions[client_key].over.overlapped
+            , sizeof(sessions[client_key].over.overlapped));
+        sessions[client_key].over.type = 0;
+        sessions[client_key].over.dataBuffer.len = BUFSIZE;
+        sessions[client_key].over.dataBuffer.buf =
+            sessions[client_key].over.messageBuffer;
+        sessions[client_key].over.is_recv = true;
+        sessions[client_key].over.roomID = INVALUED_ID;
 
 
         /*for (int i = 0; i < 20; i++)
             Lobby_sessions[client_key].near_monster.insert(i);*/
 
-        //accept_lock.unlock();
+        accept_lock.unlock();
         // ���ϰ� ����� �Ϸ� ��Ʈ ����
 
         CreateIoCompletionPort((HANDLE)client_sock, hcp, client_key, 0);
@@ -265,82 +233,48 @@ void Server::Accept()
     WSACleanup();
 }
 
-void Server::Disconnected(int key, int roomID)
-{
-    std::lock_guard<std::mutex> lock_guard(sessions_lock);
-    if (sessions[roomID][key].key == key) {
-        printf("client_end: IP =%s, port=%d key = %d, Room = %d\n",
-            inet_ntoa(sessions[roomID][key].clientaddr.sin_addr)
-            , ntohs(sessions[roomID][key].clientaddr.sin_port), key, roomID);
-        //send_disconnect_player_packet(key);
-        closesocket(sessions[roomID][key].sock);
-        sessions[roomID][key].connected = FALSE;
-        sessions[roomID][key].key = -1;
-        //printf("disconnected %d\n", gameroom[roomID].ID[i]);
-        
-    }
-
-#ifdef Run_DB
-    m_pDB->Logout_player(sessions[roomID][key].id);
-#endif
-    //sessions[roomID].clear();
-}
 
 void Server::Disconnected(int key)
 {
-    std::lock_guard<std::mutex> lock_guard(Lobby_sessions_lock);
+    //std::lock_guard<std::mutex> lock_guard(sessions_lock);
     printf("client_end: IP =%s, port=%d Lobby key = %d\n",
-        inet_ntoa(Lobby_sessions[key].clientaddr.sin_addr)
-        , ntohs(Lobby_sessions[key].clientaddr.sin_port), key);
+        inet_ntoa(sessions[key].clientaddr.sin_addr)
+        , ntohs(sessions[key].clientaddr.sin_port), key);
     //send_disconnect_player_packet(key);
-    closesocket(Lobby_sessions[key].sock);
-    Lobby_sessions[key].connected = FALSE;
-    Lobby_sessions[key].key = -1;
+    closesocket(sessions[key].sock);
+    sessions[key].connected = FALSE;
+    sessions[key].key = INVALIDID;
     //printf("disconnected %d\n", gameroom[roomID].ID[i]);
 
 #ifdef Run_DB
     m_pDB->Logout_player(Lobby_sessions[key].id);
 #endif
-    //sessions[roomID].clear();
+    //sessions.clear();
 }
 
 void Server::do_recv(int key, int roomID)
 {
     DWORD flags = 0;
-    SOCKET client_s;
-    OVER_EX* over;
-    if (roomID == -1) {
-        client_s = Lobby_sessions[key].sock;
-        over = &Lobby_sessions[key].over;
 
-        over->dataBuffer.len = BUFSIZE;
-        over->dataBuffer.buf = over->messageBuffer;
-        ZeroMemory(&over->overlapped, sizeof(over->overlapped));
+    SOCKET client_s = sessions[key].sock;
+    OVER_EX* over = &sessions[key].over;
 
-        if (WSARecv(client_s, &over->dataBuffer, 1, (LPDWORD)Lobby_sessions[key].prev_size,
-            &flags, &(over->overlapped), NULL)) {
-            int err_no = WSAGetLastError();
-            if (err_no != WSA_IO_PENDING) {
-                printf("key: %d recv error: %d\n", key, err_no);
-                Disconnected(key, Lobby_sessions[key].over.roomID);
-            }
-        }
-    }
-    else {
-        client_s = sessions[roomID][key].sock;
-        over = &sessions[roomID][key].over;
+    over->dataBuffer.len = BUFSIZE;
+    over->dataBuffer.buf = over->messageBuffer;
+    ZeroMemory(&over->overlapped, sizeof(over->overlapped));
 
-        over->dataBuffer.len = BUFSIZE;
-        over->dataBuffer.buf = over->messageBuffer;
-        ZeroMemory(&over->overlapped, sizeof(over->overlapped));
-
-        if (WSARecv(client_s, &over->dataBuffer, 1, (LPDWORD)sessions[roomID][key].prev_size,
-            &flags, &(over->overlapped), NULL)) {
-            int err_no = WSAGetLastError();
-            if (err_no != WSA_IO_PENDING) {
-                printf("key: %d recv error: %d\n", key, err_no);
-                Disconnected(key, sessions[roomID][key].over.roomID);
-            }
+    if (WSARecv(client_s, &over->dataBuffer, 1, (LPDWORD)sessions[key].prev_size,
+        &flags, &(over->overlapped), NULL)) {
+        int err_no = WSAGetLastError();
+        if (err_no != WSA_IO_PENDING) {
+            /*if (over->dataBuffer.buf[1] != 0) {
+                printf("key: %d recv error: %d / packet: %d\n", key, err_no
+                    , over->dataBuffer.buf[1]);
+                Disconnected(key, sessions[key].over.roomID);
+            }*/
+            printf("key: %d room: %d recv error: %d / packet: %d\n", key, roomID, err_no
+                , over->dataBuffer.buf[1]);
+            Disconnected(key);
         }
     }
 }
@@ -348,11 +282,7 @@ void Server::do_recv(int key, int roomID)
 void Server::send_packet(int to, char* packet, int roomID)
 {
     if (SC_NONE >= packet[1] || packet[1] >= CS_NONE) return;
-    SOCKET client_s;
-    if (roomID == -1)
-        client_s = Lobby_sessions[to].sock;
-    else
-        client_s = sessions[roomID][to].sock;
+    SOCKET client_s = sessions[to].sock;
 
     OVER_EX* over = new OVER_EX;
     ZeroMemory(over, sizeof(OVER_EX));
@@ -368,19 +298,20 @@ void Server::send_packet(int to, char* packet, int roomID)
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
             //printf("to: %d packet: %d send error: %d\n", to, packet[1], err_no);
-            //Disconnected(to, sessions[roomID][to].over.roomID);
+            //Disconnected(to, sessions[to].over.roomID);
         }
     }
     //printf("to: %d packet: %d send\n", to, packet[1]);
 }
 
-void Server::send_player_key_packet(int key, int roomID)
+// Lobby
+void Server::send_player_InGamekey_packet(int key, int roomID)
 {
     player_key_packet p;
 
-    p.key = key;
+    p.key = sessions[key].InGamekey;
     p.size = sizeof(player_key_packet);
-    p.type = PacketType::SC_player_key;
+    p.type = PacketType::SC_player_InGamekey;
     p.roomid = roomID;
     send_packet(key, reinterpret_cast<char*>(&p), roomID);
 }
@@ -392,8 +323,9 @@ void Server::send_Lobby_key_packet(int key)
     p.key = key;
     p.size = sizeof(player_key_packet);
     p.type = PacketType::SC_player_Lobbykey;
-    p.roomid = -1;
-    send_packet(key, reinterpret_cast<char*>(&p),-1);
+    p.roomid = INVALIDID;
+
+    send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
 }
 
 void Server::send_Lobby_loginOK_packet(int key)
@@ -404,10 +336,29 @@ void Server::send_Lobby_loginOK_packet(int key)
     p.size = sizeof(player_loginOK_packet);
     p.type = PacketType::SC_player_loginOK;
     p.roomid = INVALIDID;
-    p.Position = Lobby_sessions[key].f3Position.load();
-    p.dx = Lobby_sessions[key].m_fPitch.load();
-    p.dy = Lobby_sessions[key].m_fYaw.load();
-    send_packet(key, reinterpret_cast<char*>(&p), -1);
+    p.Position = sessions[key].f3Position.load();
+    p.dx = sessions[key].m_fPitch.load();
+    p.dy = sessions[key].m_fYaw.load();
+    send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
+}
+
+void Server::send_room_list_packet(int key)
+{
+    room_list_packet p;
+    p.key = key;
+    p.size = sizeof(p);
+    p.type = PacketType::SC_room_list;
+    p.roomid = INVALIDID;
+
+    for (int i = 0; i < 20; i++) {
+        if (CanJoin[i] == true)
+            p.isRoom[i] = true;
+        else
+            p.isRoom[i] = false;
+    }
+
+    send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
+    printf("list send to %d\n", key);
 }
 
 void Server::send_player_loginOK_packet(int key, int roomID)
@@ -418,9 +369,9 @@ void Server::send_player_loginOK_packet(int key, int roomID)
     p.size = sizeof(player_loginOK_packet);
     p.type = PacketType::SC_player_loginOK;
     p.roomid = roomID;
-    p.Position = sessions[roomID][key].f3Position.load();
-    p.dx = sessions[roomID][key].m_fPitch.load();
-    p.dy = sessions[roomID][key].m_fYaw.load();
+    p.Position = sessions[key].f3Position.load();
+    p.dx = sessions[key].m_fPitch.load();
+    p.dy = sessions[key].m_fYaw.load();
     send_packet(key, reinterpret_cast<char*>(&p), roomID);
 }
 
@@ -434,62 +385,101 @@ void Server::send_player_loginFail_packet(int key, int roomID)
     send_packet(key, reinterpret_cast<char*>(&p), roomID);
 }
 
+void Server::send_start_packet(int to, int roomID)
+{
+    game_start_packet p;
+    p.type = PacketType::SC_start_ok;
+    p.size = sizeof(p);
+    p.key = to;
+    p.roomid = roomID;
+    p.weaponType = sessions[to].using_weapon;
+    p.ingamekey = sessions[to].InGamekey;
+
+    send_packet(to, reinterpret_cast<char*>(&p), roomID);
+
+    if (maps[roomID].game_start == false) {
+        maps[roomID].game_start = true;
+        maps[roomID].init_Map(this, m_pTimer);
+        printf("Room %d Game start\n", roomID);
+        Mapbreak_event e;
+        e.roomid = roomID;
+        e.size = sizeof(e);
+        e.type = EventType::MapBreak;
+        m_pTimer->push_event(roomID, OE_gEvent, MAP_BREAK_TIME, reinterpret_cast<char*>(&e));
+    }
+
+    if (m_pBot->monsterRun[roomID] == false) {
+        m_pBot->monsterRun[roomID] = true;
+        m_pBot->RunBot(roomID);
+    }
+}
+
+// In Game
 void Server::send_add_player_packet(int key, int to, int roomID)
 {
+    int nkey = 0;
+    for (int i = 0; i < MAX_PLAYER; ++i) {
+        if (GameRooms[roomID][i] == key) {
+            nkey = i;
+            break;
+        }
+    }
+
     player_add_packet p;
 
-    p.key = key;
+    p.key = nkey;
     p.size = sizeof(player_add_packet);
     p.type = PacketType::SC_player_add;
     p.roomid = roomID;
-    p.Position = sessions[roomID][key].f3Position.load();
-    p.dx = sessions[roomID][key].m_fPitch.load();
-    p.dy = sessions[roomID][key].m_fYaw.load();
-    p.WeaponType = sessions[roomID][key].using_weapon;
+    p.Position = sessions[key].f3Position.load();
+    p.dx = sessions[key].m_fPitch.load();
+    p.dy = sessions[key].m_fYaw.load();
+    p.WeaponType = sessions[key].using_weapon;
 
     //printf("%d send login to %d\n",key, to);
 
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
-void Server::send_remove_player_packet(int key, int roomID)
+void Server::send_remove_player_packet(int ingamekey, int roomID)
 {
     player_remove_packet p;
-    p.key = key;
+    p.key = ingamekey;
     p.size = sizeof(player_remove_packet);
     p.type = PacketType::SC_player_remove;
     p.roomid = roomID;
 
-    for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (sessions[roomID][i].connected == TRUE)
-            send_packet(i, reinterpret_cast<char*>(&p), roomID);
+    for (auto& k : GameRooms[roomID]) {
+        if (sessions[k].connected == TRUE)
+            send_packet(sessions[k].key, reinterpret_cast<char*>(&p), roomID);
     }
-    Disconnected(key, roomID);
+    Disconnected(GameRooms[roomID][ingamekey]);
 }
 
-void Server::send_disconnect_player_packet(int key, int roomID)
+void Server::send_disconnect_player_packet(int ingamekey, int roomID)
 {
     player_disconnect_packet p;
-    p.key = key;
+    p.key = ingamekey;
     p.size = sizeof(player_disconnect_packet);
     p.type = PacketType::SC_player_disconnect;
     p.roomid = roomID;
 
-    for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (sessions[roomID][i].connected == TRUE)
-            send_packet(i, reinterpret_cast<char*>(&p), roomID);
+    for (auto& k : GameRooms[roomID]) {
+        if (sessions[k].connected == TRUE)
+            send_packet(sessions[k].key, reinterpret_cast<char*>(&p), roomID);
     }
-    Disconnected(key, roomID);
+    Disconnected(GameRooms[roomID][ingamekey]);
 }
 
-void Server::send_packet_to_players(int key, char* buf, int roomID)
+void Server::send_packet_to_players(int ingamekey, char* buf, int roomID)
 {
    //sessions_lock.lock();
-    for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (sessions[roomID][i].connected == FALSE) continue;
-        if (sessions[roomID][i].playing == FALSE) continue;
-        if (in_VisualField(sessions[roomID][key], sessions[roomID][i], roomID)) {
-            send_packet(i, buf, roomID);
+    for (auto& k : GameRooms[roomID]) {
+        if (k == INVALIDID) continue;
+        if (sessions[k].connected == FALSE) continue;
+        if (sessions[k].playing == FALSE) continue;
+        if (in_VisualField(sessions[k], sessions[GameRooms[roomID][ingamekey]], roomID)) {
+            send_packet(k, buf, roomID);
         }
     }
     //sessions_lock.unlock();
@@ -498,10 +488,11 @@ void Server::send_packet_to_players(int key, char* buf, int roomID)
 void Server::send_packet_to_allplayers(int roomID, char* buf)
 {
    //sessions_lock.lock();
-    for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (sessions[roomID][i].connected == FALSE) continue;
-        if (sessions[roomID][i].playing == FALSE) continue;
-        send_packet(i, buf, roomID);
+    for (auto& k : GameRooms[roomID]) {
+        if (k == INVALIDID) continue;
+        if (sessions[k].connected == FALSE) continue;
+        if (sessions[k].playing == FALSE) continue;
+        send_packet(k, buf, roomID);
     }
    //sessions_lock.unlock();
 }
@@ -580,13 +571,11 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction)
 
     //printf("%d\n", mon.key);
 
-    for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (sessions[roomID][i].connected == FALSE) continue;
-        if (sessions[roomID][i].playing == FALSE) continue;
-        if (true == in_VisualField(mon, sessions[roomID][i], roomID)) {
-            send_packet(i, reinterpret_cast<char*>(&p), roomID);
-            //printf("%d\n", mon.key);
-            //printf("send to %d \n", sessions[roomID][i].key.load());
+    for (auto& k : GameRooms[roomID]) {
+        if (sessions[k].connected == FALSE) continue;
+        if (sessions[k].playing == FALSE) continue;
+        if (in_VisualField(mon, sessions[k], roomID)) {
+            send_packet(k, reinterpret_cast<char*>(&p), roomID);
         }
     }
 }
@@ -603,13 +592,36 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
     p.direction = direction;
     p.degree = mon.m_fRoll.load();
     p.target = target;
-    p.PlayerLeftHp = sessions[roomID][target].hp.load();
+    p.PlayerLeftHp = sessions[GameRooms[roomID][target]].hp.load();
 
-    for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (sessions[roomID][i].connected == FALSE) continue;
-        if (true == in_VisualField(mon, sessions[roomID][i], roomID)) {
-            send_packet(i, reinterpret_cast<char*>(&p), roomID);
-            //printf("send to %d \n", sessions[roomID][i].key.load());
+    for (auto& k : GameRooms[roomID]) {
+        if (sessions[k].connected == FALSE) continue;
+        if (sessions[k].playing == FALSE) continue;
+        if (in_VisualField(mon, sessions[k], roomID)) {
+            send_packet(k, reinterpret_cast<char*>(&p), roomID);
+        }
+    }
+
+    if (sessions[GameRooms[roomID][target]].hp <= 0) {
+        sessions[GameRooms[roomID][target]].state = Death;
+        send_player_dead_packet(target, roomID);
+    }
+}
+
+void Server::send_monster_stop(int key, int roomID)
+{
+    mon_stop_packet p;
+    p.size = sizeof(p);
+    p.type = PacketType::SC_monster_stop;
+    p.key = key;
+    p.roomid = roomID;
+    p.Position = m_pBot->monsters[roomID][key].f3Position.load();
+
+    for (auto& k : GameRooms[roomID]) {
+        if (sessions[k].connected == FALSE) continue;
+        if (sessions[k].playing == FALSE) continue;
+        if (in_VisualField(m_pBot->monsters[roomID][key], sessions[k], roomID)) {
+            send_packet(k, reinterpret_cast<char*>(&p), roomID);
         }
     }
 }
@@ -649,71 +661,72 @@ void Server::send_map_packet(int to, int roomID)
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
-void Server::send_start_packet(int to, int roomID)
-{
-    game_start_packet p;
-    p.type = PacketType::SC_start_ok;
-    p.size = sizeof(p);
-    p.key = to;
-    p.roomid = roomID;
-    p.weaponType = sessions[roomID][to].using_weapon;
 
-    send_packet(to, reinterpret_cast<char*>(&p), roomID);
-
-    if (maps[roomID].game_start == false) {
-        Mapbreak_event e;
-        e.roomid = roomID;
-        e.size = sizeof(e);
-        e.type = EventType::MapBreak;
-        m_pTimer->push_event(roomID, OE_gEvent, MAP_BREAK_TIME, reinterpret_cast<char*>(&e));
-        maps[roomID].game_start = true;
-    }
-}
-
-void Server::game_end(int roomnum)
+void Server::send_game_end_packet(int key, int roomID)
 {
     game_end_packet p;
     p.key = 0;
     p.size = sizeof(p);
     p.type = PacketType::SC_game_end;
-    p.roomid = roomnum;
+    p.roomid = roomID;
 
-    send_packet_to_allplayers(roomnum, reinterpret_cast<char*>(&p));
+    send_packet(key, reinterpret_cast<char*>(&p), roomID);
+}
 
-    int nkey;
-    Lobby_sessions_lock.lock();
-    for (auto& s : sessions[roomnum]) {
-        nkey = SetLobbyKey();
+void Server::send_player_dead_packet(int ingamekey, int roomID)
+{
+    player_dead_packet p;
+    p.key = ingamekey;
+    p.size = sizeof(p);
+    p.type = SC_player_dead;
+    p.roomid = roomID;
 
-        s.over.key = nkey;
-        s.over.roomID = INVALUED_ID;
-        Lobby_sessions[nkey].init();
-        Lobby_sessions[nkey].connected = TRUE;
-        Lobby_sessions[nkey].key = nkey;
-        Lobby_sessions[nkey].roomID = INVALUED_ID;
-        Lobby_sessions[nkey].sock = s.sock;
-        Lobby_sessions[nkey].clientaddr = s.clientaddr;
+    send_packet_to_allplayers(roomID, reinterpret_cast<char*>(&p));
 
-        Lobby_sessions[nkey].over = s.over;
-        Lobby_sessions[nkey].over.type = 0;
-        Lobby_sessions[nkey].over.dataBuffer.len = BUFSIZE;
-        Lobby_sessions[nkey].over.dataBuffer.buf =
-            Lobby_sessions[nkey].over.messageBuffer;
-        Lobby_sessions[nkey].over.is_recv = true;
-        Lobby_sessions[nkey].over.key = nkey;
-        Lobby_sessions[nkey].over.roomID = INVALUED_ID;
-        strcpy_s(Lobby_sessions[nkey].id, s.id);
+    sessions[GameRooms[roomID][ingamekey]].playing == FALSE;
+}
 
-        send_Lobby_loginOK_packet(nkey);
+void Server::game_end(int roomnum, OVER_EX* over_ex)
+{
+    CanJoin[roomnum] = false;
+    GameRooms_lock.lock();
+    for (auto& key : GameRooms[roomnum]) {
+        if (key == INVALIDID) continue;
+        if (sessions[key].connected == false || sessions[key].playing == false) continue;
+        send_game_end_packet(key, sessions[key].roomID.load());
+        sessions[key].InGamekey = INVALIDID;
     }
-    Lobby_sessions_lock.unlock();
+    GameRooms.erase(roomnum);
+    GameRooms_lock.unlock();
 
     maps_lock.lock();
     maps.erase(roomnum);
     maps_lock.unlock();
-    sessions_lock.lock();
-    sessions.erase(roomnum);
-    sessions_lock.unlock();
+
+    m_pBot->monsters_lock.lock();
+    m_pBot->monsters.erase(roomnum);
+    m_pBot->monsterRun.erase(roomnum);
+    m_pBot->monsters_lock.unlock();
+
+    if (over_ex == NULL) return;
+    delete over_ex;
+}
+
+void Server::player_go_lobby(int key, int roomID)
+{
+    //send_game_end_packet(key, roomID);
+
+    for (int i = 0; i < MAX_PLAYER; ++i) {
+        if (key == GameRooms[roomID][i])
+            GameRooms[roomID][i] = INVALIDID;
+    }
+
+    sessions[key].roomID = INVALIDID;
+    sessions[key].over.roomID = INVALUED_ID;
+    sessions[key].playing = false;
+    sessions[key].InGamekey = INVALIDID;
+
+    send_room_list_packet(key);
 }
 
 bool Server::in_VisualField(SESSION a, SESSION b, int roomID)
@@ -750,30 +763,30 @@ unsigned short Server::calc_attack(int key, char attacktype)
     return 0;
 }
 
-void Server::player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy)
+void Server::player_move(int InGamekey, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy)
 {
-    int client_key = key;
+    int client_key = GameRooms[roomID][InGamekey];
 
-    sessions[roomID][client_key].m_fPitch.store(fmodf(sessions[roomID][client_key].m_fPitch.load() + dx, 360.f));
-    sessions[roomID][client_key].m_fYaw.store(fmodf(sessions[roomID][client_key].m_fYaw.load() + dy, 360.f));
+    sessions[client_key].m_fPitch.store(fmodf(sessions[client_key].m_fPitch.load() + dx, 360.f));
+    sessions[client_key].m_fYaw.store(fmodf(sessions[client_key].m_fYaw.load() + dy, 360.f));
     
-    if (sessions[roomID][client_key].f3Position.load().x == pos.x
-        && sessions[roomID][client_key].f3Position.load().z == pos.z) {
-        sessions[roomID][client_key].f3Position = pos;
+    if (sessions[client_key].f3Position.load().x == pos.x
+        && sessions[client_key].f3Position.load().z == pos.z) {
+        sessions[client_key].f3Position = pos;
         return;
     }
     else
-        sessions[roomID][client_key].f3Position = pos;
+        sessions[client_key].f3Position = pos;
 
-    /*std::lock_guard <std::mutex> lg(sessions[roomID][client_key].nm_lock);
+    /*std::lock_guard <std::mutex> lg(sessions[client_key].nm_lock);
     std::unordered_set<int> old_nm;
     std::unordered_set<int> new_nm;
 
-    old_nm = sessions[roomID][client_key].near_monster;
+    old_nm = sessions[client_key].near_monster;
 
     for (auto& m : m_pBot->monsters[roomID]) {
         if (m.state == 0) continue;
-        if (in_VisualField(m, sessions[roomID][client_key], roomID)) {
+        if (in_VisualField(m, sessions[client_key], roomID)) {
             new_nm.insert(m.key.load());
         }
     }
@@ -781,7 +794,7 @@ void Server::player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, f
     for (auto m : new_nm) {
         if (m_pBot->monsters[roomID][m].state == 0) continue;
         if (old_nm.find(m) == old_nm.end()) {
-            sessions[roomID][client_key].near_monster.insert(m);
+            sessions[client_key].near_monster.insert(m);
             send_add_monster(m, roomID, key);
         }
     }
@@ -789,7 +802,7 @@ void Server::player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, f
     for (auto m : old_nm) {
         if (m_pBot->monsters[roomID][m].state == 0) continue;
         if (new_nm.find(m) == new_nm.end()) {
-            sessions[roomID][client_key].near_monster.erase(m);
+            sessions[client_key].near_monster.erase(m);
             send_remove_monster(m, roomID, client_key);
         }
     }*/
@@ -818,14 +831,15 @@ void Server::process_packet(int key, char* buf, int roomID)
             }
         }
 #endif
+        send_room_list_packet(client_key);
 
-        strcpy_s(Lobby_sessions[client_key].id, p->id);
+        strcpy_s(sessions[client_key].id, p->id);
 
         send_Lobby_loginOK_packet(client_key);
 
         printf("client_connected to Lobby: IP =%s, port=%d key = %d\n",
-            inet_ntoa(Lobby_sessions[client_key].clientaddr.sin_addr)
-            , ntohs(Lobby_sessions[client_key].clientaddr.sin_port), client_key);
+            inet_ntoa(sessions[client_key].clientaddr.sin_addr)
+            , ntohs(sessions[client_key].clientaddr.sin_port), client_key);
 
         break;
     }
@@ -835,73 +849,47 @@ void Server::process_packet(int key, char* buf, int roomID)
         int client_key = p->key;
         bool is_Login = false;
 
-        int nkey = SetClientKey(p->roomid);
+        int nkey = SetInGameKey(p->roomid);
 
-        if (nkey == -1) break;
-        Lobby_sessions[client_key].over.roomID = p->roomid;
-        Lobby_sessions[client_key].over.key = nkey;
-        sessions[p->roomid][nkey].init();
-        sessions[p->roomid][nkey].connected = TRUE;
-        sessions[p->roomid][nkey].key = nkey;
-        sessions[p->roomid][nkey].roomID = p->roomid;
-        sessions[p->roomid][nkey].sock = Lobby_sessions[client_key].sock;
-        sessions[p->roomid][nkey].clientaddr = Lobby_sessions[client_key].clientaddr;
+        GameRooms[p->roomid][nkey] = client_key;
+        sessions[client_key].InGamekey = nkey;
+        sessions[client_key].roomID = p->roomid;
+        sessions[client_key].over.roomID = p->roomid;
+        sessions[client_key].using_weapon = p->weaponType;
+       
+        send_player_InGamekey_packet(client_key, p->roomid);
 
-        sessions[p->roomid][nkey].over = Lobby_sessions[client_key].over;
-        sessions[p->roomid][nkey].over.type = 0;
-        sessions[p->roomid][nkey].over.dataBuffer.len = BUFSIZE;
-        sessions[p->roomid][nkey].over.dataBuffer.buf =
-            sessions[p->roomid][nkey].over.messageBuffer;
-        sessions[p->roomid][nkey].over.is_recv = true;
-        sessions[p->roomid][nkey].over.key = nkey;
-        sessions[p->roomid][nkey].over.roomID = p->roomid;
+        printf("connected to Game: IP =%s, port=%d key = %d Room = %d / nkey: %d\n",
+            inet_ntoa(sessions[key].clientaddr.sin_addr)
+            , ntohs(sessions[key].clientaddr.sin_port), key, p->roomid, nkey);
 
-        sessions[p->roomid][nkey].using_weapon = p->weaponType;
-        sessions[p->roomid][nkey].weapon1 = p->weaponType;
-        strcpy_s(sessions[p->roomid][nkey].id, Lobby_sessions[client_key].id);
-        send_player_key_packet(nkey, p->roomid);
+        sessions[key].state = Alive;
 
-        printf("client_connected to Game: IP =%s, port=%d key = %d Room = %d\n",
-            inet_ntoa(sessions[p->roomid][nkey].clientaddr.sin_addr)
-            , ntohs(sessions[p->roomid][nkey].clientaddr.sin_port), nkey, p->roomid);
-
-        sessions[p->roomid][nkey].state = Alive;
-
-        send_start_packet(nkey, p->roomid);
+        send_start_packet(key, p->roomid);
 
         //send_map_packet(client_key, roomID);
 
-        sessions[p->roomid][nkey].isready = true;
-        sessions[p->roomid][nkey].playing = true;
+        sessions[key].isready = true;
+        sessions[key].playing = true;
 
-        if (m_pBot->monsterRun == false) {
-            m_pBot->monsterRun = true;
-            m_pBot->RunBot(p->roomid);
-        }
-        if (maps[p->roomid].game_start == false) {
-            maps[p->roomid].init_Map(this, m_pTimer);
-        }
 
-        for (auto& s : sessions[p->roomid]) {
-            if ((TRUE == s.connected) && (s.key.load() != nkey)) {
-                send_add_player_packet(s.key.load(), nkey, p->roomid);
+        for (auto& k : GameRooms[p->roomid]) {
+            if ((TRUE == sessions[k].connected) && (k != client_key)) {
+                send_add_player_packet(k, client_key, p->roomid);
             }
         }
-        for (auto& s : sessions[p->roomid]) {
-            if ((TRUE == s.connected) && (s.key.load() != nkey))
-                send_add_player_packet(nkey, s.key.load(), p->roomid);
+        for (auto& k : GameRooms[p->roomid]) {
+            if ((TRUE == sessions[k].connected) && (k != client_key)) {
+                send_add_player_packet(client_key, k, p->roomid);
+            }
         }
 
         for (int i = 0; i < 15; ++i) {
             if (m_pBot->monsters[p->roomid][i].state == 1) {
                 //printf("send monster %d\n", i);
-                send_add_monster(i, p->roomid, nkey);
+                send_add_monster(i, p->roomid, key);
             }
         }
-
-        Lobby_sessions_lock.lock();
-        Lobby_sessions.erase(client_key);
-        Lobby_sessions_lock.unlock();
 
         break;
     }
@@ -920,34 +908,38 @@ void Server::process_packet(int key, char* buf, int roomID)
         packet.roomid = roomID;
         packet.state = p->state;
         packet.size = sizeof(player_pos_packet);
-        packet.Position = sessions[roomID][p->key].f3Position;
-        packet.dx = sessions[roomID][p->key].m_fPitch;
-        packet.dy = sessions[roomID][p->key].m_fYaw;
+        packet.Position = sessions[GameRooms[p->roomid][p->key]].f3Position;
+        packet.dx = sessions[GameRooms[p->roomid][p->key]].m_fPitch;
+        packet.dy = sessions[GameRooms[p->roomid][p->key]].m_fYaw;
         packet.MoveType = p->MoveType;
         packet.dir = p->dir;
 
-        /*if (sessions[roomID][p->key].playing == FALSE) {
+        /*if (sessions[p->key].playing == FALSE) {
             send_packet(p->key, reinterpret_cast<char*>(&packet), roomID);
             break;
         }*/
 
         send_packet_to_players(key, reinterpret_cast<char*>(&packet), roomID);
+
+        if (sessions[GameRooms[p->roomid][p->key]].f3Position.load().y <= 5) {
+            sessions[GameRooms[p->roomid][p->key]].state = Death;
+            send_player_dead_packet(p->key, p->roomid);
+        }
+
         break;
     }
     case PacketType::CS_start_pos: {
         player_start_pos* p = reinterpret_cast<player_start_pos*>(buf);
-        sessions[roomID][p->key].f3Position = p->Position;
+        sessions[GameRooms[p->roomid][p->key]].f3Position = p->Position;
         send_packet(key, reinterpret_cast<char*>(p), roomID);
         break;
     }
     case PacketType::CS_weapon_swap :{
          Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
          p->type = SC_weapon_swap;
-         sessions[roomID][p->key].using_weapon = p->weapon;
-         for (int i = 0; i < MAX_PLAYER; ++i) {
-             if (sessions[roomID][i].connected == FALSE) continue;
-             send_packet(i, buf, roomID);
-         }
+         sessions[GameRooms[p->roomid][p->key]].using_weapon = p->weapon;
+         
+         send_packet_to_allplayers(roomID, reinterpret_cast<char*>(&p));
          break;
     }
     case PacketType::CS_player_move: {
@@ -966,17 +958,6 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_player_attack:{
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
-        switch (p->attack_type) {
-        case BOWL: {
-            // �浹ó��
-            break;
-        }
-        case SWORD1HL1: {
-            // �浹ó��
-
-            break;
-        }
-        }
         p->type = SC_player_attack;
         send_packet_to_players(p->key, reinterpret_cast<char*>(p), roomID);
         break;
@@ -990,9 +971,10 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_player_stop: {
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
+        if (p->key == -1) break;
         if (roomID == -1) break;
         p->type = SC_player_stop;
-        p->Position = sessions[roomID][p->key].f3Position;
+        p->Position = sessions[GameRooms[p->roomid][p->key]].f3Position;
         send_packet_to_players(p->key, reinterpret_cast<char*>(p), roomID);
         break;
     }
@@ -1000,7 +982,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         player_getitem_packet* p = reinterpret_cast<player_getitem_packet*>(buf);
         int key = p->key;
         int room = p->roomid;
-        for (auto& i : sessions[room][key].inventory) {
+        for (auto& i : sessions[GameRooms[p->roomid][p->key]].inventory) {
             if (i == 0) {
                 i = p->item;
                 break;
@@ -1034,9 +1016,9 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (m_pBot->monsters[p->roomid][target].state == 0) break;
 
         p->type = SC_monster_damaged;
-        p->damage = (sessions[p->roomid][key].att * (1.f + p->nAttack / 4.f))
+        p->damage = (sessions[GameRooms[p->roomid][key]].att * (1.f + p->nAttack / 4.f))
             * (100 - m_pBot->monsters[p->roomid][target].def) / 100;
-        sessions[p->roomid][key].AddProficiency();
+        sessions[GameRooms[p->roomid][key]].AddProficiency();
         m_pBot->monsters[p->roomid][target].hp = m_pBot->monsters[p->roomid][target].hp - p->damage;
         p->leftHp = m_pBot->monsters[p->roomid][target].hp;
         if (m_pBot->monsters[p->roomid][target].hp <= 0) {
@@ -1063,24 +1045,53 @@ void Server::process_packet(int key, char* buf, int roomID)
         int target = p->target;
 
         p->type = SC_player_damage;
-        p->damage = (sessions[roomID][key].GetAtkDamage() * (1.f + p->nAttack / 4.f))
-            * (100 - sessions[roomID][target].def) / 100;
-        sessions[roomID][target].hp = sessions[roomID][target].hp - p->damage;
-        p->leftHp = sessions[roomID][target].hp;
-        sessions[roomID][key].AddProficiency();
-        if (sessions[roomID][key].hp <= 0) {
-            sessions[roomID][key].state = Death;
-        }
+        p->damage = (sessions[GameRooms[p->roomid][key]].GetAtkDamage() * (1.f + p->nAttack / 4.f))
+            * (100 - sessions[GameRooms[p->roomid][target]].def) / 100;
+        sessions[GameRooms[p->roomid][target]].hp 
+            = sessions[GameRooms[p->roomid][target]].hp - p->damage;
+        p->leftHp = sessions[GameRooms[p->roomid][target]].hp;
+        sessions[GameRooms[p->roomid][key]].AddProficiency();
         send_packet_to_players(key, reinterpret_cast<char*>(p), p->roomid);
+
+        if (sessions[GameRooms[p->roomid][target]].hp.load() <= 0) {
+            sessions[GameRooms[p->roomid][target]].state = Death;
+            send_player_dead_packet(target, roomID);
+        }
+
         break;
     }
      // Lobby
+    case PacketType::CS_create_room: {
+        room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
+        int cnt = 0;
+        bool b = 0;
+        while (1) {
+            b = CreateRoom(cnt);
+            if (b == true) break;
+            ++cnt;
+        }
+
+        printf("player key: %d create game room - %d\n", p->key, cnt);
+
+        send_room_list_packet(p->key);
+
+        break;
+    }
     case PacketType::CS_room_select: {
         room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
-        CreateRoom(p->room);
-
+        GameRooms_lock.lock();
+        if (GameRooms.find(p->room) == GameRooms.end()) {
+            GameRooms_lock.unlock();
+            break;
+        }
+        GameRooms_lock.unlock();
         p->type = SC_select_room;
         send_packet(p->key, reinterpret_cast<char*>(p), -1);
+        break;
+    }
+    case PacketType::CS_return_lobby: {
+        return_lobby_packet* p = reinterpret_cast<return_lobby_packet*>(buf);
+        player_go_lobby(p->key, p->roomid);
         break;
     }
     }
@@ -1100,7 +1111,6 @@ void Server::WorkerFunc()
         //std::thread::key Thread_key = std::this_thread::get_key();
         OVER_EX* over_ex = reinterpret_cast<OVER_EX*>(over);
         int roomID = over_ex->roomID;
-        int nkey = over_ex->key;
         switch (over_ex->type) {
         case OE_session: {
             // key = 유저번호
@@ -1108,19 +1118,13 @@ void Server::WorkerFunc()
             {
                 //printf("error = %d\n", WSAGetLastError());
                 display_error("GQCS", WSAGetLastError());
-                if (roomID == INVALUED_ID)
-                    Disconnected(nkey);
-                else
-                    Disconnected(nkey, roomID);
+                Disconnected(key);
                 continue;
             }
 
             if ((Transferred == 0)) {
                 display_error("GQCS", WSAGetLastError());
-                if (roomID == INVALUED_ID)
-                    Disconnected(nkey);
-                else
-                    Disconnected(nkey, roomID);
+                Disconnected(key);
                 continue;
             }
             //printf("%d\n", true);
@@ -1129,50 +1133,26 @@ void Server::WorkerFunc()
                 int rest_size = Transferred;
                 char* buf_ptr = over_ex->messageBuffer;
                 char packet_size = 0;
-                if (roomID != INVALUED_ID) {
-                    if (0 < sessions[roomID][nkey].prev_size)
-                        packet_size = sessions[roomID][nkey].packet_buf[0];
-                    while (rest_size > 0) {
-                        if (0 == packet_size) packet_size = buf_ptr[0];
-                        int required = packet_size - sessions[roomID][nkey].prev_size;
-                        if (rest_size >= required) {
-                            memcpy(sessions[roomID][nkey].packet_buf + sessions[roomID][nkey].
-                                prev_size, buf_ptr, required);
-                            process_packet(nkey, sessions[roomID][nkey].packet_buf, roomID);
-                            rest_size -= required;
-                            buf_ptr += required;
-                            packet_size = 0;
-                        }
-                        else {
-                            memcpy(sessions[roomID][nkey].packet_buf + sessions[roomID][nkey].prev_size,
-                                buf_ptr, rest_size);
-                            rest_size = 0;
-                        }
+                if (0 < sessions[key].prev_size)
+                    packet_size = sessions[key].packet_buf[0];
+                while (rest_size > 0) {
+                    if (0 == packet_size) packet_size = buf_ptr[0];
+                    int required = packet_size - sessions[key].prev_size;
+                    if (rest_size >= required) {
+                        memcpy(sessions[key].packet_buf + sessions[key].
+                            prev_size, buf_ptr, required);
+                        process_packet(key, sessions[key].packet_buf, roomID);
+                        rest_size -= required;
+                        buf_ptr += required;
+                        packet_size = 0;
                     }
-                    do_recv(nkey, roomID);
-                }
-                else {
-                    if (0 < Lobby_sessions[key].prev_size)
-                        packet_size = Lobby_sessions[key].packet_buf[0];
-                    while (rest_size > 0) {
-                        if (0 == packet_size) packet_size = buf_ptr[0];
-                        int required = packet_size - Lobby_sessions[key].prev_size;
-                        if (rest_size >= required) {
-                            memcpy(Lobby_sessions[key].packet_buf + Lobby_sessions[key].
-                                prev_size, buf_ptr, required);
-                            process_packet(key, Lobby_sessions[key].packet_buf, roomID);
-                            rest_size -= required;
-                            buf_ptr += required;
-                            packet_size = 0;
-                        }
-                        else {
-                            memcpy(Lobby_sessions[key].packet_buf + Lobby_sessions[key].prev_size,
-                                buf_ptr, rest_size);
-                            rest_size = 0;
-                        }
+                    else {
+                        memcpy(sessions[key].packet_buf + sessions[key].prev_size,
+                            buf_ptr, rest_size);
+                        rest_size = 0;
                     }
-                    do_recv(key, roomID);
                 }
+                do_recv(key, roomID);
             }
             else {
                 delete over_ex;
@@ -1185,6 +1165,7 @@ void Server::WorkerFunc()
                 continue;
             switch (over_ex->messageBuffer[1]) {
             case EventType::Mapset:{
+                if (maps[roomID].game_start == false) break;
                 map_block_set* p = reinterpret_cast<map_block_set*>(over_ex->messageBuffer);
                 maps[key].Set_map();
                 
@@ -1192,11 +1173,12 @@ void Server::WorkerFunc()
                 ep.roomid = key;
                 ep.size = sizeof(ep);
                 ep.type = EventType::game_end;
-                m_pTimer->push_event(key, OE_gEvent, 1000 * (MAP_BREAK_TIME*9), reinterpret_cast<char*>(&ep));
-
+                m_pTimer->push_event(ep.roomid, OE_gEvent, 1000 * (MAP_BREAK_TIME*9), reinterpret_cast<char*>(&ep));
+                //delete over_ex;
                 break;
             }
             case EventType::Cloud_move: {
+                if (maps[roomID].game_start == false) break;
                 cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(over_ex->messageBuffer);
                 send_cloud_move_packet(p->x, p->z, p->roomid);
                 //printf("room: %d cloud x: %f | y: %f\n\n", p->roomid, p->x, p->z);
@@ -1206,6 +1188,7 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::Mon_move_to_player: {
+                if (m_pBot->monsterRun[roomID] == false) break;
                 mon_move_to_player_event* e = reinterpret_cast<mon_move_to_player_event*>(over_ex->messageBuffer);
                 //m_pBot->CheckTarget(e->roomid);
                 m_pBot->CheckBehavior(e->roomid);
@@ -1214,12 +1197,14 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::Mon_attack_cooltime: {
+                if (m_pBot->monsterRun[roomID] == false) break;
                 mon_attack_cooltime_event* e = reinterpret_cast<mon_attack_cooltime_event*>(over_ex->messageBuffer);
                 m_pBot->monsters[e->roomid][e->key].CanAttack = TRUE;
                 delete over_ex;
                 break;
             }
             case EventType::MapBreak: {
+                if (maps[roomID].game_start == false) break;
                 Mapbreak_event* p = reinterpret_cast<Mapbreak_event*>(over_ex->messageBuffer);
                 maps[key].Map_collapse();
 
@@ -1232,6 +1217,7 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::Mon_respawn: {
+                if (m_pBot->monsterRun[roomID] == false) break;
                 mon_respawn_event* e = reinterpret_cast<mon_respawn_event*>(over_ex->messageBuffer);
                 m_pBot->monsters[e->roomid][e->key].hp = 100;
                 m_pBot->monsters[e->roomid][e->key].f3Position = m_pBot->monsters[e->roomid][e->key].SpawnPos.load();
@@ -1250,6 +1236,16 @@ void Server::WorkerFunc()
                 send_packet_to_allplayers(e->roomid, reinterpret_cast<char*>(&p));
 
                 m_pBot->monsters[e->roomid][e->key].state = 1;
+                delete over_ex;
+                break;
+            }
+            case EventType::game_end: {
+                if (maps[roomID].game_start == false) break;
+                game_end_event* e = reinterpret_cast<game_end_event*>(over_ex->messageBuffer);
+                int roomID = e->roomid;
+                printf("room: %d gameover\n", roomID);
+                game_end(roomID, over_ex);
+                //delete over_ex;
                 break;
             }
             }
@@ -1262,11 +1258,14 @@ void Server::WorkerFunc()
 
 bool Server::Init()
 {
-    sessions.clear();
 
 #ifdef Run_Lobby
     ConnectLobby();
 #endif
+
+    for (auto& s : sessions) {
+        s.init();
+    }
 
     // ���� �ʱ�ȭ
     WSADATA wsa;
