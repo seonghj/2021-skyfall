@@ -173,6 +173,7 @@ void CPacket::Send_stop_packet()
 {
     player_stop_packet p;
     p.key = InGamekey;
+    p.roomid = roomID;
     p.size = sizeof(p);
     p.type = PacketType::CS_player_stop;
     p.Position = m_pPlayer->GetPosition();
@@ -825,15 +826,15 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_stop: {
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
         int key = p->key;
+        m_pScene->m_mPlayer[key]->SetGround(true);
+        m_pScene->AnimatePlayer(key, PlayerState::Idle);
         if (p->key != InGamekey) {
-            m_pScene->AnimatePlayer(key, PlayerState::Idle);
             if (m_pScene->m_mPlayer[key]->GetJump() == TRUE) {
                 m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(2, 0);
                 m_pScene->m_mPlayer[key]->SetJump(FALSE);
             }
         }
         m_pScene->m_mPlayer[key]->SetPosition(p->Position);
-        m_pScene->m_mPlayer[key]->SetGround(true);
         break;
     }
 
@@ -923,12 +924,13 @@ void CPacket::ProcessPacket(char* buf)
         m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->degree;
         m_pScene->m_ppGameObjects[key]->Attack();
 
-        m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
         if (p->target == InGamekey) {
             m_pPlayer->SetHp(p->PlayerLeftHp);
             //m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
+            m_pPlayer->SetDamaged(true);
         }
+        m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
         break;
     }
     case PacketType::SC_monster_add: {
@@ -1061,6 +1063,8 @@ void CPacket::ProcessPacket(char* buf)
         //m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
 
         if (p->target == InGamekey) {
+            m_pPlayer->SetStanding(true);
+            Send_stop_packet();
             m_pPlayer->SetDamaged(true);
             m_pScene->AnimatePlayer(InGamekey, PlayerState::Take_Damage);
         }

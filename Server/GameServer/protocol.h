@@ -15,7 +15,7 @@ constexpr int AI_ID = 5000;
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 6144;
 constexpr int MAP_BLOCK_SIZE = 2048;
-constexpr int MAP_BREAK_TIME = 100000;
+constexpr int MAP_BREAK_TIME = 90000;
 
 constexpr int MON_SPAWN_TIME = 10000;
 
@@ -23,7 +23,6 @@ constexpr float VIEWING_DISTANCE = 1000.f;
 
 constexpr int INVENTORY_MAX = 20;
 
-// 1 = 3cm
 
 #define SERVERIP   "127.0.0.1"
 //#define SERVERIP   "39.120.192.92"

@@ -1189,13 +1189,7 @@ void CGameFramework::FrameAdvance()
         if (m_pPlayer->GetGround() == true && false == m_pPlayer->GetStanding() && false == PressDirButton) {
             dwDirection = 0;
             m_pPlayer->SetStanding(true);
-            player_stop_packet sp;
-            sp.key = m_pPacket->InGamekey;
-            sp.roomid = m_pPacket->roomID;
-            sp.size = sizeof(sp);
-            sp.type = PacketType::CS_player_stop;
-            sp.Position = m_pPlayer->GetPosition();
-            m_pPacket->SendPacket(reinterpret_cast<char*>(&sp));
+            m_pPacket->Send_stop_packet();
         }
     }
 
