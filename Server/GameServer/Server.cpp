@@ -77,7 +77,7 @@ int Server::SetClientKey(int roomID)
 
 int Server::SetLobbyKey()
 {
-    int cnt = 100;
+    int cnt = 1000;
     while (true) {
         if (FALSE == Lobby_sessions[cnt].connected) {
             return cnt;
@@ -144,6 +144,9 @@ bool Server::CreateRoom(int key)
     //m_pBot->monsterRun = TRUE;
     m_pBot->Init(key);
     //m_pBot->RunBot(key);
+    CanJoin.emplace(key, true);
+    CanJoin[key] = true;
+
     return true;
 }
 
@@ -230,6 +233,8 @@ void Server::Accept()
         getpeername(client_sock, (SOCKADDR*)&Lobby_sessions[client_key].clientaddr
             , &Lobby_sessions[client_key].addrlen);
 
+        ZeroMemory(&Lobby_sessions[client_key].over.overlapped
+            , sizeof(Lobby_sessions[client_key].over.overlapped));
         Lobby_sessions[client_key].over.type = 0;
         Lobby_sessions[client_key].over.dataBuffer.len = BUFSIZE;
         Lobby_sessions[client_key].over.dataBuffer.buf =
@@ -304,7 +309,7 @@ void Server::do_recv(int key, int roomID)
     DWORD flags = 0;
     SOCKET client_s;
     OVER_EX* over;
-    if (roomID == -1) {
+    if (roomID == INVALIDID) {
         client_s = Lobby_sessions[key].sock;
         over = &Lobby_sessions[key].over;
 
@@ -316,8 +321,15 @@ void Server::do_recv(int key, int roomID)
             &flags, &(over->overlapped), NULL)) {
             int err_no = WSAGetLastError();
             if (err_no != WSA_IO_PENDING) {
-                printf("key: %d recv error: %d\n", key, err_no);
-                Disconnected(key, Lobby_sessions[key].over.roomID);
+               /* if (over->dataBuffer.buf[1] != 0) {
+                    printf("key: %d recv error: %d / packet: %d\n", key, err_no
+                        , over->dataBuffer.buf[1]);
+                    Disconnected(key, Lobby_sessions[key].over.roomID);
+                }*/
+                printf("key: %d recv error: %d / packet: %d\n", key, err_no
+                    , over->dataBuffer.buf[1]);
+                printf("%d\n", Lobby_sessions[key].prev_size);
+                Disconnected(key);
             }
         }
     }
@@ -333,7 +345,14 @@ void Server::do_recv(int key, int roomID)
             &flags, &(over->overlapped), NULL)) {
             int err_no = WSAGetLastError();
             if (err_no != WSA_IO_PENDING) {
-                printf("key: %d recv error: %d\n", key, err_no);
+                /*if (over->dataBuffer.buf[1] != 0) {
+                    printf("key: %d recv error: %d / packet: %d\n", key, err_no
+                        , over->dataBuffer.buf[1]);
+                    Disconnected(key, sessions[roomID][key].over.roomID);
+                }*/
+                printf("key: %d room: %d recv error: %d / packet: %d\n", key, roomID, err_no
+                    , over->dataBuffer.buf[1]);
+                printf("%d\n", Lobby_sessions[key].prev_size);
                 Disconnected(key, sessions[roomID][key].over.roomID);
             }
         }
@@ -427,11 +446,10 @@ void Server::send_room_list_packet(int key)
     p.roomid = INVALIDID;
 
     for (int i = 0; i < 20; i++) {
-        if (sessions.find(i) != sessions.end())
+        if (CanJoin[i] == true)
             p.isRoom[i] = true;
         else
             p.isRoom[i] = false;
-
     }
 
     send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
@@ -735,45 +753,41 @@ void Server::send_player_dead_packet(int key, int roomID)
 
 void Server::game_end(int roomnum, OVER_EX* over_ex)
 {
+    CanJoin[roomnum] = false;
     int nkey;
-    Lobby_sessions_lock.lock();
     for (auto& s : sessions[roomnum]) {
         if (s.connected == false || s.playing == false) continue;
 
         send_game_end_packet(s.key.load(), s.roomID.load());
-        nkey = SetLobbyKey();
+        //nkey = SetLobbyKey();
 
-        s.over.key = nkey;
-        s.over.roomID = INVALUED_ID;
-        Lobby_sessions[nkey].init();
-        Lobby_sessions[nkey].connected = TRUE;
-        Lobby_sessions[nkey].key = nkey;
-        Lobby_sessions[nkey].roomID = INVALUED_ID;
-        Lobby_sessions[nkey].sock = s.sock;
-        Lobby_sessions[nkey].clientaddr = s.clientaddr;
+        //s.over.key = nkey;
+        //s.over.roomID = INVALUED_ID;
+        //Lobby_sessions[nkey].init();
+        //Lobby_sessions[nkey].connected = TRUE;
+        //Lobby_sessions[nkey].key = nkey;
+        //Lobby_sessions[nkey].roomID = INVALUED_ID;
+        //Lobby_sessions[nkey].sock = s.sock;
+        //Lobby_sessions[nkey].clientaddr = s.clientaddr;
 
-        Lobby_sessions[nkey].over = s.over;
-        Lobby_sessions[nkey].over.type = 0;
-        Lobby_sessions[nkey].over.dataBuffer.len = BUFSIZE;
-        Lobby_sessions[nkey].over.dataBuffer.buf =
-            Lobby_sessions[nkey].over.messageBuffer;
-        Lobby_sessions[nkey].over.is_recv = true;
-        Lobby_sessions[nkey].over.key = nkey;
-        Lobby_sessions[nkey].over.roomID = INVALUED_ID;
-        strcpy_s(Lobby_sessions[nkey].id, s.id);
+        //Lobby_sessions[nkey].over = s.over;
+        //Lobby_sessions[nkey].over.type = 0;
+        //Lobby_sessions[nkey].over.dataBuffer.len = BUFSIZE;
+        //Lobby_sessions[nkey].over.dataBuffer.buf =
+        //    Lobby_sessions[nkey].over.messageBuffer;
+        //Lobby_sessions[nkey].over.is_recv = true;
+        //Lobby_sessions[nkey].over.key = nkey;
+        //Lobby_sessions[nkey].over.roomID = INVALUED_ID;
+        //strcpy_s(Lobby_sessions[nkey].id, s.id);
 
-        //send_Lobby_loginOK_packet(nkey);
-        send_Lobby_key_packet(nkey);
-        send_room_list_packet(nkey);
     }
-    Lobby_sessions_lock.unlock();
 
     maps_lock.lock();
     maps.erase(roomnum);
     maps_lock.unlock();
-    sessions_lock.lock();
+   /* sessions_lock.lock();
     sessions.erase(roomnum);
-    sessions_lock.unlock();
+    sessions_lock.unlock();*/
 
     m_pBot->monsters_lock.lock();
     m_pBot->monsters.erase(roomnum);
@@ -794,8 +808,9 @@ void Server::player_go_lobby(int key, int roomID)
 
     sessions[roomID][key].over.key = nkey;
     sessions[roomID][key].over.roomID = INVALUED_ID;
+    sessions[roomID][key].connected = false;
+    sessions[roomID][key].playing = false;
     Lobby_sessions[nkey].init();
-    Lobby_sessions_lock.unlock();
     Lobby_sessions[nkey].connected = TRUE;
     Lobby_sessions[nkey].key = nkey;
     Lobby_sessions[nkey].roomID = INVALUED_ID;
@@ -812,9 +827,26 @@ void Server::player_go_lobby(int key, int roomID)
     Lobby_sessions[nkey].over.roomID = INVALUED_ID;
     strcpy_s(Lobby_sessions[nkey].id, sessions[roomID][key].id);
 
+    Lobby_sessions_lock.unlock();
+
     //send_Lobby_loginOK_packet(nkey);
     send_Lobby_key_packet(nkey);
     send_room_list_packet(nkey);
+
+    int cnt = 0;
+
+    for (auto& s : sessions[roomID]) {
+        if (s.connected.load() == false)
+            ++cnt;
+    }
+
+    if (cnt >= MAX_PLAYER) {
+        sessions_lock.lock();
+        sessions.erase(roomID);
+        CanJoin[roomID] = false;
+        CanJoin.erase(roomID);
+        sessions_lock.unlock();
+    }
 }
 
 bool Server::in_VisualField(SESSION a, SESSION b, int roomID)
@@ -946,6 +978,7 @@ void Server::process_packet(int key, char* buf, int roomID)
             sessions_lock.unlock();
             break;
         }
+        Lobby_sessions[client_key].connected = false;
         Lobby_sessions[client_key].over.roomID = p->roomid;
         Lobby_sessions[client_key].over.key = nkey;
         sessions[p->roomid][nkey].init();
@@ -968,13 +1001,14 @@ void Server::process_packet(int key, char* buf, int roomID)
         sessions[p->roomid][nkey].weapon1 = p->weaponType;
         strcpy_s(sessions[p->roomid][nkey].id, Lobby_sessions[client_key].id);
         sessions_lock.unlock();
-        send_player_key_packet(nkey, p->roomid);
 
         printf("Lobby: %d connected to Game: IP =%s, port=%d key = %d Room = %d\n", client_key,
             inet_ntoa(sessions[p->roomid][nkey].clientaddr.sin_addr)
             , ntohs(sessions[p->roomid][nkey].clientaddr.sin_port), nkey, p->roomid);
 
         sessions[p->roomid][nkey].state = Alive;
+
+        send_player_key_packet(nkey, p->roomid);
 
         send_start_packet(nkey, p->roomid);
 
@@ -1282,30 +1316,29 @@ void Server::WorkerFunc()
                             rest_size = 0;
                         }
                     }
-                    do_recv(nkey, roomID);
                 }
                 else {
-                    if (0 < Lobby_sessions[key].prev_size)
-                        packet_size = Lobby_sessions[key].packet_buf[0];
+                    if (0 < Lobby_sessions[nkey].prev_size)
+                        packet_size = Lobby_sessions[nkey].packet_buf[0];
                     while (rest_size > 0) {
                         if (0 == packet_size) packet_size = buf_ptr[0];
-                        int required = packet_size - Lobby_sessions[key].prev_size;
+                        int required = packet_size - Lobby_sessions[nkey].prev_size;
                         if (rest_size >= required) {
-                            memcpy(Lobby_sessions[key].packet_buf + Lobby_sessions[key].
+                            memcpy(Lobby_sessions[nkey].packet_buf + Lobby_sessions[nkey].
                                 prev_size, buf_ptr, required);
-                            process_packet(key, Lobby_sessions[key].packet_buf, roomID);
+                            process_packet(nkey, Lobby_sessions[nkey].packet_buf, roomID);
                             rest_size -= required;
                             buf_ptr += required;
                             packet_size = 0;
                         }
                         else {
-                            memcpy(Lobby_sessions[key].packet_buf + Lobby_sessions[key].prev_size,
+                            memcpy(Lobby_sessions[nkey].packet_buf + Lobby_sessions[nkey].prev_size,
                                 buf_ptr, rest_size);
                             rest_size = 0;
                         }
                     }
-                    do_recv(key, roomID);
                 }
+                do_recv(nkey, roomID);
             }
             else {
                 delete over_ex;

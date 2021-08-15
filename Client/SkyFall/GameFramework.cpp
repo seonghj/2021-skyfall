@@ -563,7 +563,7 @@ void CGameFramework::ShowLobbyWindow()
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
         {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
-            static int room_current_idx = 0;
+            static int room_current_idx = -1;
             {
                 //const char* rooms[] = { "Room1","Room2", "Room3" };
                 ImGui::Text("Rooms");
@@ -587,7 +587,8 @@ void CGameFramework::ShowLobbyWindow()
             if (ImGui::Button("Join")) {
                 // 여기서 방에 입장
                 // 임시로 state 변경해놓음
-                m_pPacket->Send_room_select_packet(room_current_idx);
+                if (room_current_idx >= 0)
+                    m_pPacket->Send_room_select_packet(room_current_idx);
                 //m_pScene->SetState(SCENE::INROOM);
 
             }

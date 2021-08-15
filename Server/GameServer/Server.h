@@ -109,7 +109,9 @@ public:
     int SetClientKey(int roomID);
     int SetroomID();
     int SetLobbyKey();
+
     bool CreateRoom(int key);
+
     void Set_pTimer(Timer* t) { m_pTimer = t; }
     void Set_pBot(Bot* b) { m_pBot = b; }
     void Set_pDB(DB* d) { m_pDB = d; }
@@ -173,6 +175,7 @@ public:
 
     std::unordered_map <int, SESSION> Lobby_sessions;
     std::unordered_map <int, std::array<SESSION, 20>> sessions; // ¹æID, Player¹è¿­
+    std::unordered_map <int, bool> CanJoin;
 
 private:
     HANDLE                         hcp;
