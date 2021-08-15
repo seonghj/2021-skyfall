@@ -636,7 +636,15 @@ void CPacket::ProcessPacket(char* buf)
         printf("gameover\n");
         m_pScene->m_iState = SCENE::ENDGAME;
         m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
-        m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
+        m_pPlayer->SetRate(m_pScene->rate--);
+        if (m_pPlayer->GetRate() == 1)
+        {
+            m_pScene->m_ppUIObjects[3]->SetAlpha(1.0f);
+        }
+        else if (m_pPlayer->GetRate() > 1)
+        {
+            m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
+        }
         m_pFramework->rooms.erase(roomID);
 
         break;
@@ -1078,7 +1086,14 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_iState = SCENE::ENDGAME;
             m_pPlayer->SetRate(m_pScene->rate--);
             m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
-            m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
+            if (m_pPlayer->GetRate() == 1)
+            {
+                m_pScene->m_ppUIObjects[3]->SetAlpha(1.0f);
+            }
+            else if (m_pPlayer->GetRate() > 1)
+            {
+                m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
+            }
         }
         break;
     }
