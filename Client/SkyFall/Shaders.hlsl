@@ -657,8 +657,12 @@ float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 	if (input.uv.x > gfPercentH)
 		cColor = float4(0.3, 0.3, 0.3, 0.5);
 	float2 xy = input.uv * 2 - 1; // [0,1] -> [-1,1]
-	if (gnUiInfo & UI_CIRCLE && pow(xy.x, 2) + pow(xy.y, 2) > 1) {
-		cColor.a = 0;
+	if (gnUiInfo & UI_CIRCLE) {
+		float r = pow(xy.x, 2) + pow(xy.y, 2);
+		if (r > 1)
+			cColor.a = 0;
+		else if (r < 0.01)
+			cColor.rgb += float3(0.5f, 0, 0);
 	}
 	
 	return cColor;
