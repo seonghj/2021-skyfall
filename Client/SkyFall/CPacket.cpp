@@ -1063,8 +1063,17 @@ void CPacket::ProcessPacket(char* buf)
         
         printf("player dead %d %d\n", p->key, p->roomid);
         m_pScene->AnimatePlayer(p->key, PlayerState::Death);
-        if (p->key == client_key) {
+        // 죽은거 처리해
+        if (p->key != client_key)
+        {
+            m_pScene->m_mPlayer[p->key]->SetPosition(XMFLOAT3(-6000, 0, -6000));
+            m_pScene->m_mPlayer[p->key]->SetRate(m_pScene->rate--);
+        }
+        if (p->key == client_key)
+        {
+            client_key = 0;
             m_pScene->m_iState = SCENE::ENDGAME;
+            m_pPlayer->SetRate(m_pScene->rate--);
             m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
             m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
         }
