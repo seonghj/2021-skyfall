@@ -81,6 +81,9 @@ extern bool								gbShowBoundingBox;
 
 #define ANIMATION_CALLBACK_EPSILON	0.015f
 
+#define UI_CIRCLE 0x01
+#define UI_BLOOD 0x02
+
 #define _WITH_LEFT_HAND_COORDINATES
 #define _WITH_SOUND_RESOURCE
 #define _WITH_SOUND_CALLBACK

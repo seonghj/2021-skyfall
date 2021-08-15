@@ -340,6 +340,11 @@ void CSoundCallbackHandler::HandleCallback(void *pCallbackData, float fTrackPosi
 #endif
 }
 
+CTerrainPlayer::CTerrainPlayer() : CPlayer()
+{
+	pWeapon = NULL;
+}
+
 CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void **ppContext)
 {
 
@@ -355,30 +360,11 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0,0,30), XMFLOAT3(7,7,30));
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 9, pPlayerModel);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Idle, PlayerState::Idle);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Walk, PlayerState::Walk);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Run, PlayerState::Run);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunBack, PlayerState::RunBack);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunLeft, PlayerState::RunLeft);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunRight, PlayerState::RunRight);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Take_Damage, PlayerState::Take_Damage);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Take_Damage, ANIMATION_TYPE_ONCE);
-
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Jump, PlayerState::Jump);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Jump, ANIMATION_TYPE_ONCE);
-
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Death, PlayerState::Death);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Death, ANIMATION_TYPE_ONCE);
-
-
+	SetBasicAnimation();
 #ifdef _WITH_SOUND_CALLBACK
-	m_pSkinnedAnimationController->SetCallbackKeys(PlayerState::Walk, 1);
-	m_pSkinnedAnimationController->SetCallbackKey(PlayerState::Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
-
-	CAnimationCallbackHandler *pAnimationCallbackHandler = new CSoundCallbackHandler();
-	m_pSkinnedAnimationController->SetAnimationCallbackHandler(PlayerState::Walk, pAnimationCallbackHandler);
+	SetAnimationSound();
 #endif
-	
+
 	SetPlayerUpdatedContext(ppContext);
 	SetCameraUpdatedContext(ppContext);
 	SetPlace(2);
@@ -388,17 +374,13 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandLi
 	pos.z += 1480;
 	SetPosition(XMFLOAT3(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z));
 
-	m_pSkinnedAnimationController->SetAllTrackDisable();
-	m_pSkinnedAnimationController->SetTrackEnable(PlayerState::Idle, true);
-	//SetJump(true);
-
+	
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	//CHeightMapTerrain *pTerrain = (CHeightMapTerrain *)pContext;
-	//SetPosition(XMFLOAT3(310.0f, pTerrain->GetHeight(310.0f, 595.0f), 595.0f));	
-
-
-	//SetScale(XMFLOAT3(1.2f, 1.2f, 1.2f));
+	m_pBloodUI = new CUIObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
+	m_pBloodUI->SetAlpha(0.0f);
+	m_pBloodUI->SethPercent(1.f);
+	m_pBloodUI->SetInfo(UI_BLOOD);
 }
 
 CTerrainPlayer::~CTerrainPlayer()
@@ -526,8 +508,8 @@ void CTerrainPlayer::OnCameraUpdateCallback(float fTimeElapsed)
 		fAmp = min(2, fAmp);
 		static float time = 0;
 		time += fTimeElapsed;
-		m_xmf3ShakeDegree = XMFLOAT3(0.2f * cos(PI * time * 20), fAmp * cos(PI * time * 20), 0);
-		m_pCamera->Rotate(m_xmf3ShakeDegree.x, m_xmf3ShakeDegree.y, 0);
+		XMFLOAT3 xmf3ShakeDegree = XMFLOAT3(0.2f * cos(PI * time * 20), fAmp * cos(PI * time * 20), 0);
+		m_pCamera->Rotate(xmf3ShakeDegree.x, xmf3ShakeDegree.y, 0);
 	}
 	//XMFLOAT3 xmf3Scale = pTerrain->GetScale();
 	//XMFLOAT3 xmf3CameraPosition = m_pCamera->GetPosition();
@@ -553,6 +535,37 @@ void CTerrainPlayer::OnCameraUpdateCallback(float fTimeElapsed)
 void CTerrainPlayer::Animate(float fTimeElapsed)
 {
 	CGameObject::Animate(fTimeElapsed);
+}
+
+void CTerrainPlayer::SetBasicAnimation()
+{
+	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Idle, PlayerState::Idle);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Walk, PlayerState::Walk);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Run, PlayerState::Run);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunBack, PlayerState::RunBack);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunLeft, PlayerState::RunLeft);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunRight, PlayerState::RunRight);
+	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Take_Damage, PlayerState::Take_Damage);
+	m_pSkinnedAnimationController->SetTrackType(PlayerState::Take_Damage, ANIMATION_TYPE_ONCE);
+
+	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Jump, PlayerState::Jump);
+	m_pSkinnedAnimationController->SetTrackType(PlayerState::Jump, ANIMATION_TYPE_ONCE);
+
+	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Death, PlayerState::Death);
+	m_pSkinnedAnimationController->SetTrackType(PlayerState::Death, ANIMATION_TYPE_ONCE);
+
+
+	m_pSkinnedAnimationController->SetAllTrackDisable();
+	m_pSkinnedAnimationController->SetTrackEnable(PlayerState::Idle, true);
+}
+
+void CTerrainPlayer::SetAnimationSound()
+{
+	m_pSkinnedAnimationController->SetCallbackKeys(PlayerState::Walk, 1);
+	m_pSkinnedAnimationController->SetCallbackKey(PlayerState::Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
+
+	CAnimationCallbackHandler* pAnimationCallbackHandler = new CSoundCallbackHandler();
+	m_pSkinnedAnimationController->SetAnimationCallbackHandler(PlayerState::Walk, pAnimationCallbackHandler);
 }
 
 
@@ -593,6 +606,13 @@ void CTerrainPlayer::Update(float fTimeElapsed)
 	if (m_pSkinnedAnimationController)
 	{
 		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
+		if (m_isDamaged) {
+			m_pBloodUI->DecreaseAlpha(fTimeElapsed);
+			if(m_pSkinnedAnimationController->IsTrackFinish(PlayerState::Take_Damage)){
+				m_isDamaged = false;
+				m_pBloodUI->SetAlpha(0);
+			}
+		}
 		if (m_isJump) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackPosition(PlayerState::Jump, 0);
@@ -622,18 +642,10 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 12, pPlayerModel);
 
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Idle, PlayerState::Idle);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Death, PlayerState::Death);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Death, ANIMATION_TYPE_ONCE);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Jump, PlayerState::Jump);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Jump, ANIMATION_TYPE_ONCE);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Walk, PlayerState::Walk);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Run, PlayerState::Run);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunBack, PlayerState::RunBack);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunLeft, PlayerState::RunLeft);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunRight, PlayerState::RunRight);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Take_Damage, PlayerState::Take_Damage);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Take_Damage, ANIMATION_TYPE_ONCE);
+	SetBasicAnimation();
+#ifdef _WITH_SOUND_CALLBACK
+	SetAnimationSound();
+#endif
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nShotHold, nShotHold);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nShotRelease, nShotRelease);
@@ -641,16 +653,6 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nShotReady, nShotReady);
 	m_pSkinnedAnimationController->SetTrackType(nShotReady, ANIMATION_TYPE_ONCE);
-
-
-
-#ifdef _WITH_SOUND_CALLBACK
-	m_pSkinnedAnimationController->SetCallbackKeys(PlayerState::Walk, 1);
-	m_pSkinnedAnimationController->SetCallbackKey(PlayerState::Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
-
-	CAnimationCallbackHandler* pAnimationCallbackHandler = new CSoundCallbackHandler();
-	m_pSkinnedAnimationController->SetAnimationCallbackHandler(PlayerState::Walk, pAnimationCallbackHandler);
-#endif
 
 	SetPlayerUpdatedContext(ppContext);
 	SetCameraUpdatedContext(ppContext);
@@ -691,6 +693,11 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 			XMFLOAT3(2, 5, 2));									// Extents
 		m_ppBullets[i]->SetWireFrameShader();
 	}
+
+	m_pBloodUI = new CUIObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
+	m_pBloodUI->SetAlpha(0.0f);
+	m_pBloodUI->SethPercent(1.f);
+	m_pBloodUI->SetInfo(UI_BLOOD);
 }
 
 CBowPlayer::~CBowPlayer()
@@ -705,13 +712,6 @@ void CBowPlayer::Update(float fTimeElapsed)
 		if (m_isRelease&&m_pSkinnedAnimationController->IsTrackFinish(nShotRelease)) {
 			m_isRelease = false;
 		}
-		if (m_isDamaged && m_pSkinnedAnimationController->IsTrackFinish(PlayerState::Take_Damage))
-			m_isDamaged = false;
-		if (m_isJump) {
-			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackPosition(PlayerState::Jump, 0);
-			m_pSkinnedAnimationController->SetTrackEnable(PlayerState::Jump, true);
-		}
 		else if (m_isCharging) {
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nShotReady, true);
@@ -720,6 +720,10 @@ void CBowPlayer::Update(float fTimeElapsed)
 		{
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(PlayerState::Idle, true);
+		}
+		else {
+			CTerrainPlayer::Update(fTimeElapsed);
+			return;
 		}
 	}
 	CPlayer::Update(fTimeElapsed);
@@ -877,18 +881,10 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 13, pPlayerModel);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Idle, PlayerState::Idle);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Death, PlayerState::Death);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Death, ANIMATION_TYPE_ONCE);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Jump, PlayerState::Jump);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Jump, ANIMATION_TYPE_ONCE);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Walk, PlayerState::Walk);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Run, PlayerState::Run);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunBack, PlayerState::RunBack);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunLeft, PlayerState::RunLeft);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunRight, PlayerState::RunRight);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Take_Damage, PlayerState::Take_Damage);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Take_Damage, ANIMATION_TYPE_ONCE);
+	SetBasicAnimation();
+#ifdef _WITH_SOUND_CALLBACK
+	SetAnimationSound();
+#endif
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack1, nAttack1);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack2, nAttack2);
@@ -899,14 +895,6 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackType(nAttack2, ANIMATION_TYPE_ONCE);
 	m_pSkinnedAnimationController->SetTrackSpeed(nAttack1, 1.5f);
 	m_pSkinnedAnimationController->SetTrackSpeed(nAttack2, 1.5f);
-
-#ifdef _WITH_SOUND_CALLBACK
-	m_pSkinnedAnimationController->SetCallbackKeys(PlayerState::Walk, 1);
-	m_pSkinnedAnimationController->SetCallbackKey(PlayerState::Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
-
-	CAnimationCallbackHandler* pAnimationCallbackHandler = new CSoundCallbackHandler();
-	m_pSkinnedAnimationController->SetAnimationCallbackHandler(PlayerState::Walk, pAnimationCallbackHandler);
-#endif
 
 	SetPlayerUpdatedContext(ppContext);
 	SetCameraUpdatedContext(ppContext);
@@ -926,6 +914,11 @@ C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	pos.x += 100 + rand() % 1900;
 	pos.z += 100 + rand() % 1900;
 	SetPosition(XMFLOAT3(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z));
+
+	m_pBloodUI = new CUIObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
+	m_pBloodUI->SetAlpha(0.0f);
+	m_pBloodUI->SethPercent(1.f);
+	m_pBloodUI->SetInfo(UI_BLOOD);
 }
 
 C1HswordPlayer::~C1HswordPlayer()
@@ -937,17 +930,7 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 {
 	if (m_pSkinnedAnimationController)
 	{
-		float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
-
-		if (m_isDamaged && m_pSkinnedAnimationController->IsTrackFinish(PlayerState::Take_Damage))
-			m_isDamaged = false;
-
-		if (m_isJump) {
-			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackPosition(PlayerState::Jump, 0);
-			m_pSkinnedAnimationController->SetTrackEnable(PlayerState::Jump, true);
-		}
-		else if (m_isAttack) {
+		if (m_isAttack) {
 			float d = m_pSkinnedAnimationController->GetTrackPosition(nAttack1 + m_nAttack);
 
 			if (abs(d-0.2f)<=fTimeElapsed) {
@@ -966,10 +949,9 @@ void C1HswordPlayer::Update(float fTimeElapsed)
 			m_pSkinnedAnimationController->SetAllTrackDisable();
 			m_pSkinnedAnimationController->SetTrackEnable(nAttack1 + m_nAttack, true);
 		}
-		else if (::IsZero(fLength) && m_isGround && !m_isDamaged)
-		{
-			m_pSkinnedAnimationController->SetAllTrackDisable();
-			m_pSkinnedAnimationController->SetTrackEnable(PlayerState::Idle, true);
+		else {
+			CTerrainPlayer::Update(fTimeElapsed);
+			return;
 		}
 	}
 	CPlayer::Update(fTimeElapsed);
@@ -1061,18 +1043,10 @@ C2HswordPlayer::C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 13, pPlayerModel);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Idle, PlayerState::Idle);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Death, PlayerState::Death);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Death, ANIMATION_TYPE_ONCE);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Jump, PlayerState::Jump);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Jump, ANIMATION_TYPE_ONCE);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Walk, PlayerState::Walk);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Run, PlayerState::Run);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunBack, PlayerState::RunBack);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunLeft, PlayerState::RunLeft);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunRight, PlayerState::RunRight);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Take_Damage, PlayerState::Take_Damage);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Take_Damage, ANIMATION_TYPE_ONCE);
+	SetBasicAnimation();
+#ifdef _WITH_SOUND_CALLBACK
+	SetAnimationSound();
+#endif
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack1, nAttack1);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack2, nAttack2);
@@ -1083,14 +1057,6 @@ C2HswordPlayer::C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackType(nAttack2, ANIMATION_TYPE_ONCE);
 	m_pSkinnedAnimationController->SetTrackSpeed(nAttack1, 1.5f);
 	m_pSkinnedAnimationController->SetTrackSpeed(nAttack2, 1.5f);
-
-#ifdef _WITH_SOUND_CALLBACK
-	m_pSkinnedAnimationController->SetCallbackKeys(PlayerState::Walk, 1);
-	m_pSkinnedAnimationController->SetCallbackKey(PlayerState::Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
-
-	CAnimationCallbackHandler* pAnimationCallbackHandler = new CSoundCallbackHandler();
-	m_pSkinnedAnimationController->SetAnimationCallbackHandler(PlayerState::Walk, pAnimationCallbackHandler);
-#endif
 
 	SetPlayerUpdatedContext(ppContext);
 	SetCameraUpdatedContext(ppContext);
@@ -1128,19 +1094,12 @@ C2HspearPlayer::C2HspearPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	pPlayerModel->m_pModelRootObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 30), XMFLOAT3(7, 7, 30));
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 
+
 	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, 13, pPlayerModel);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Idle, PlayerState::Idle);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Death, PlayerState::Death);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Death, ANIMATION_TYPE_ONCE);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Jump, PlayerState::Jump);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Jump, ANIMATION_TYPE_ONCE);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Walk, PlayerState::Walk);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Run, PlayerState::Run);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunBack, PlayerState::RunBack);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunLeft, PlayerState::RunLeft);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::RunRight, PlayerState::RunRight);
-	m_pSkinnedAnimationController->SetTrackAnimationSet(PlayerState::Take_Damage, PlayerState::Take_Damage);
-	m_pSkinnedAnimationController->SetTrackType(PlayerState::Take_Damage, ANIMATION_TYPE_ONCE);
+	SetBasicAnimation();
+#ifdef _WITH_SOUND_CALLBACK
+	SetAnimationSound();
+#endif
 
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack1, nAttack1);
 	m_pSkinnedAnimationController->SetTrackAnimationSet(nAttack2, nAttack2);
@@ -1152,13 +1111,6 @@ C2HspearPlayer::C2HspearPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	m_pSkinnedAnimationController->SetTrackSpeed(nAttack1, 1.5f);
 	m_pSkinnedAnimationController->SetTrackSpeed(nAttack2, 1.5f);
 
-#ifdef _WITH_SOUND_CALLBACK
-	m_pSkinnedAnimationController->SetCallbackKeys(PlayerState::Walk, 1);
-	m_pSkinnedAnimationController->SetCallbackKey(PlayerState::Walk, 0, 0.001f, _T("Sound/Footstep01.wav"));
-
-	CAnimationCallbackHandler* pAnimationCallbackHandler = new CSoundCallbackHandler();
-	m_pSkinnedAnimationController->SetAnimationCallbackHandler(PlayerState::Walk, pAnimationCallbackHandler);
-#endif
 
 	SetPlayerUpdatedContext(ppContext);
 	SetCameraUpdatedContext(ppContext);
@@ -1183,6 +1135,11 @@ C2HspearPlayer::C2HspearPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	pos.x += 100 + rand() % 1900;
 	pos.z += 100 + rand() % 1900;
 	SetPosition(XMFLOAT3(pos.x, pTerrain->GetHeight(pos.x, pos.z), pos.z));
+
+	m_pBloodUI = new CUIObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
+	m_pBloodUI->SetAlpha(0.0f);
+	m_pBloodUI->SethPercent(1.f);
+	m_pBloodUI->SetInfo(UI_BLOOD);
 }
 
 C2HspearPlayer::~C2HspearPlayer()

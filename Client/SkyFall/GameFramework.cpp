@@ -10,7 +10,6 @@
 #define EXP_FOG 2.0f
 #define EXP2_FOG 3.0f
 
-#define UI_CIRCLE 0x01
 
 CGameFramework::CGameFramework()
 {
@@ -1136,7 +1135,8 @@ void CGameFramework::FrameAdvance()
 
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
 	UpdateShadowMap();
-	UpdateMiniMap();
+	if(m_pScene->GetState() == SCENE::INGAME)
+		UpdateMiniMap();
 
     AnimateObjects();
 
@@ -1146,7 +1146,8 @@ void CGameFramework::FrameAdvance()
 
 	m_pScene->Set(m_pd3dCommandList);
 
-	RenderMiniMap();
+	if (m_pScene->GetState() == SCENE::INGAME)
+		RenderMiniMap();
 
 	m_pShadowMap->Set(m_pd3dCommandList);
 	m_pShadowMap->UpdateShaderVariable(m_pd3dCommandList);
@@ -1185,7 +1186,7 @@ void CGameFramework::FrameAdvance()
 
 	m_pShadowMap->UpdateShaderVariables(m_pd3dCommandList);
 	if (m_pScene) m_pScene->Render(m_pd3dCommandList, m_pCamera);
-	if (m_pMiniMap) {
+	if (m_pScene->GetState() == SCENE::INGAME && m_pMiniMap) {
 		m_pMiniMap->UpdateShaderVariables(m_pd3dCommandList);
 		m_pMiniMap->Render(m_pd3dCommandList, m_pCamera);
 	}

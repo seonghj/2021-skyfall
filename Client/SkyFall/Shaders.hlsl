@@ -616,6 +616,7 @@ float4 PSHPBar(GS_HPBAR_GEOMETRY_OUTPUT input) : SV_TARGET
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 #define UI_CIRCLE 0x01
+#define UI_BLOOD 0x02
 cbuffer cbUIInfo : register(b6)
 {
 	float		gfAlpha : packoffset(c0.x);
@@ -657,12 +658,24 @@ float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 	if (input.uv.x > gfPercentH)
 		cColor = float4(0.3, 0.3, 0.3, 0.5);
 	float2 xy = input.uv * 2 - 1; // [0,1] -> [-1,1]
+	xy.y = -xy.y;
 	if (gnUiInfo & UI_CIRCLE) {
-		float r = pow(xy.x, 2) + pow(xy.y, 2);
+		float r = sqrt(pow(xy.x, 2) + pow(xy.y, 2));
 		if (r > 1)
 			cColor.a = 0;
-		else if (r < 0.01)
+		else if (r < 0.02)
 			cColor.rgb += float3(0.5f, 0, 0);
+		else if (xy.y / r < sin(3.1415f * 5 / 19)) {
+			cColor.rgb -= float3(0.2f, 0.2f, 0.2f);
+		}
+	}
+	else if (gnUiInfo & UI_BLOOD) {
+		float r = sqrt(pow(xy.x, 2) + pow(xy.y, 2));
+		if (r > 1) {
+			cColor.rgba = float4(1, 0, 0, gfAlpha * (r - 1));
+		}
+		else
+			cColor.a = 0;
 	}
 	
 	return cColor;

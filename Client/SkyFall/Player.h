@@ -75,7 +75,7 @@ public:
 	virtual void SetAttack(bool shoot) { m_isAttack = shoot; }
 	void SetCharging(bool charge) { m_isCharging = charge; }
 	void SetPlace(int nPlace) { m_nPlace = nPlace; }
-	void SetDamaged(bool damaged) { m_isDamaged = damaged; }
+	virtual void SetDamaged(bool damaged) { m_isDamaged = damaged; }
 
 	virtual void RButtonDown() {};
 	virtual void RButtonUp() {};
@@ -150,7 +150,7 @@ public:
 class CTerrainPlayer : public CPlayer
 {
 public:
-	CTerrainPlayer() :CPlayer() {};
+	CTerrainPlayer();
 	CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void ** ppContext=NULL);
 	virtual ~CTerrainPlayer();
 
@@ -161,8 +161,15 @@ public:
 	virtual void OnCameraUpdateCallback(float fTimeElapsed);
 
 	virtual void Animate(float fTimeElapsed);
+	void SetBasicAnimation();
+	void SetBloodAlpha(float a) { m_pBloodUI->SetAlpha(a); }
+	virtual void SetDamaged(bool damaged) {
+		m_isDamaged = damaged;
+		m_pBloodUI->SetAlpha(1);
+	}
 
 #ifdef _WITH_SOUND_CALLBACK
+	virtual void SetAnimationSound();
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
 
@@ -170,7 +177,7 @@ public:
 
 protected:
 	CGameObject* pWeapon;
-	XMFLOAT3 m_xmf3ShakeDegree;
+	CUIObject* m_pBloodUI;
 #endif
 	enum PlayerState {
 		Idle = 0,

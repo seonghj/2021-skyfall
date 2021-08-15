@@ -792,7 +792,7 @@ public:
 	void SetvPercent(float p) { m_pcbMappedUI->gfPercentVer = p; }
 	void SethPercent(float p) { m_pcbMappedUI->gfPercentHor = p; }
 	void SetInfo(UINT n) { m_pcbMappedUI->gnUiInfo = n; }
-
+	void DecreaseAlpha(float fTimeElapsed) { m_pcbMappedUI->gfAlpha -= fTimeElapsed; }
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void ReleaseShaderVariables();
