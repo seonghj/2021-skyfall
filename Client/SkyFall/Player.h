@@ -44,10 +44,10 @@ protected:
 	bool						m_isCharging;
 	bool						m_isDamaged = false;
 
-	int							m_iPkill;
-	int							m_iMkill;
-	int							m_iRate;
-	int							m_iProficiency;
+	int							m_iPkill = 0;
+	int							m_iMkill = 0;
+	int							m_iRate = 0;
+	int							m_iProficiency = 0;
 	int							m_nPlace;
 	bool						m_bHit = false;
 	// stat
@@ -84,6 +84,7 @@ public:
 	void SetMkill(int kill) { m_iMkill = kill; }
 	void SetRate(int rate) { m_iRate = rate; }
 	void SetPro(int pro) { m_iProficiency = pro; }
+	void Reset();
 
 	virtual void RButtonDown() {};
 	virtual void RButtonUp() {};

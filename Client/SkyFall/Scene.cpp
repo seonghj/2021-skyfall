@@ -139,7 +139,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	}
 
 
-	m_nUIs = 3;
+	m_nUIs = 4;
 	m_ppUIObjects = new CUIObject * [m_nUIs];
 	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_FILL.dds", -0.93, -0.8, -0.85, 0.9, 0.8);
 	m_ppUIObjects[0]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
@@ -155,6 +155,11 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_ppUIObjects[2]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	m_ppUIObjects[2]->SetAlpha(0.0f);
 	m_ppUIObjects[2]->SetvPercent(1.f);
+
+	m_ppUIObjects[3] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Win_UI.dds", -1, -1, 1, 1, 0.8);
+	m_ppUIObjects[3]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	m_ppUIObjects[3]->SetAlpha(0.0f);
+	m_ppUIObjects[3]->SetvPercent(1.f);
 
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
@@ -973,13 +978,20 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 		case 'z': case 'Z':
 			gbShowBoundingBox = !gbShowBoundingBox;
 			break;
+		case '5':
+			m_ppUIObjects[2]->SetAlpha(0.0f);
+			m_ppUIObjects[3]->SetAlpha(0.0f);
 		case '9':
+			m_ppUIObjects[2]->SetAlpha(1.0f);
+			m_ppUIObjects[3]->SetAlpha(0.0f);
 			//CB_UI_INFO ui;
 			//ui.gfAlpha = m_ppUIObjects[0]->GetAlpha() + 0.1f;
 			//m_ppUIObjects[0]->SetUI(&ui);
 			//m_ppGameObjects[0]->FindFrame("HpBar")->MoveStrafe(10.f);
 			break;
 		case '0':
+			m_ppUIObjects[2]->SetAlpha(0.0f);
+			m_ppUIObjects[3]->SetAlpha(1.0f);
 			//m_ppGameObjects[0]->FindFrame("HpBar")->MoveStrafe(-10.f);
 			break;
 		case '1':
@@ -1123,7 +1135,16 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	}
 	else if (m_iState == SCENE::ENDGAME)
 	{
-		m_ppUIObjects[2]->Render(pd3dCommandList, pCamera);
+		if (m_pPlayer->GetRate() == 1)
+		{
+			m_ppUIObjects[3]->UpdateShaderVariables(pd3dCommandList);
+			m_ppUIObjects[3]->Render(pd3dCommandList, pCamera);
+		}
+		else if (m_pPlayer->GetRate() > 1)
+		{
+			m_ppUIObjects[2]->UpdateShaderVariables(pd3dCommandList);
+			m_ppUIObjects[2]->Render(pd3dCommandList, pCamera);
+		}
 	}
 }
 

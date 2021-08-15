@@ -1068,13 +1068,13 @@ void CGameFramework::FrameAdvance()
         PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
         m_pSprite->Begin(m_pd3dCommandList);
         const wchar_t* wc;
-        string s = "\nRate         : ";
+        string s = "\nRate           : ";
         s += to_string(m_pPlayer->GetRate());
-        s += "\nPlayer Kill  : ";
+        s += "\nPlayer Kill   : ";
         s += to_string(m_pPlayer->GetPkill());
-        s += "\nMonster Kill :";
+        s += "\nMonster Kill : ";
         s += to_string(m_pPlayer->GetMkill());
-        s += "\nProficiency  :";
+        s += "\nProficiency  : ";
         s += to_string(m_pPlayer->GetPro());
         wstring ws = wstring(s.begin(), s.end());
         wc = ws.c_str();
@@ -1262,11 +1262,15 @@ void CGameFramework::Restart()
     m_pScene->m_ppUIObjects[0]->SetvPercent(1.0f);
     m_GameTimer.Reset();
     m_ChargeTimer.Reset();
+    m_pPlayer->Reset();
     m_pPlayer->SetHp(m_pPlayer->m_iMaxHp);
-    m_pPlayer->SetPosition(XMFLOAT3(5048, 200, 1300));
+    m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
+    XMFLOAT3 pos = m_pPlayer->GetPosition();
+    m_pCamera->SetPosition(Vector3::Add(pos, m_pCamera->GetOffset()));
+    pos.y += 50.0f;
+    m_pCamera->SetLookAt(pos);
     m_bMouseHold = true;
-    float rotate = acosf(Vector3::DotProduct(Vector3::Normalize(m_pPlayer->GetLook()), XMFLOAT3(0, 0, 0)));
-    m_pPlayer->Rotate(0, rotate, 0);
+    m_pScene->rate = MAX_PLAYER;
     for (int i = 0; i < m_pScene->m_nGameObjects; i++)
     {
         m_pScene->m_ppGameObjects[i]->SetHp(m_pScene->m_ppGameObjects[i]->m_iMaxHp);
@@ -1274,5 +1278,11 @@ void CGameFramework::Restart()
         pHpBar->m_iHp = m_pScene->m_ppGameObjects[i]->m_iMaxHp;
         pHpBar->m_bActive = false;
     }
+    for (int i = 0; i < MAX_PLAYER; i++)
+    {
+        m_pScene->m_mPlayer[i]->SetHp(m_pScene->m_mPlayer[i]->m_iMaxHp);
+        m_pScene->m_mPlayer[i]->Reset();
+    }
     m_pScene->m_ppUIObjects[2]->SetAlpha(0.0f);
+    m_pScene->m_ppUIObjects[3]->SetAlpha(0.0f);
 }

@@ -319,6 +319,35 @@ void CPlayer::RotatePlayer(int iYaw)
 	m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, xmmtxRotate);
 }
 
+void CPlayer::Reset()
+{
+	m_xmf3Right = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	m_xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	m_xmf3Look = XMFLOAT3(0.0f, 0.0f, 1.0f);
+
+	m_xmf3Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_xmf3Gravity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_fMaxVelocityXZ = 0.0f;
+	m_fMaxVelocityY = 0.0f;
+	m_fFriction = 0.0f;
+
+	m_fPitch = 0.0f;
+	m_fRoll = 0.0f;
+	m_fYaw = 0.0f;
+
+	m_isJump = false;
+	m_isGround = true;
+	m_isRunning = false;
+	m_isStanding = true;
+	m_isAttack = false;
+	m_isCharging = false;
+
+	m_iPkill = 0;
+	m_iMkill = 0;
+	m_iRate = 0;
+	m_iProficiency = 0;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 
 
