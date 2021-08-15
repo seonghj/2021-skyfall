@@ -2315,9 +2315,17 @@ CMapObject::CMapObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	CGameObject* pObject = FindFrame("RootNode")->m_pChild->m_pChild;	
 
 	while (bCollide) {
+		string str = pObject->m_pstrFrameName;
 		BoundingBox bb = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents);
-		bb.Extents.x *= 0.5f;
-		bb.Extents.z *= 0.5f;
+		if (str.find("SM_Rock") + str.find("SM_Prop") + str.find("SM_Terrain") == -1) {
+			bb.Extents.x *= 0.5f;
+			bb.Extents.z *= 0.5f;
+		}
+		else {
+			bb.Extents.x *= 0.8f;
+			bb.Extents.z *= 0.8f;
+		}
+
 		pObject->SetBBObject(pd3dDevice, pd3dCommandList, XMFLOAT3(0, 0, 0), bb.Extents);
 		//pObject->UpdateTransform();
 		if (pObject->m_pSibling)
@@ -2776,8 +2784,8 @@ void CUIObject::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 
 void CUIObject::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	D3D12_GPU_VIRTUAL_ADDRESS d3dcbFogGpuVirtualAddress = m_pd3dcbUI->GetGPUVirtualAddress();
-	pd3dCommandList->SetGraphicsRootConstantBufferView(19, d3dcbFogGpuVirtualAddress); //UI
+	D3D12_GPU_VIRTUAL_ADDRESS d3dcbUIGpuVirtualAddress = m_pd3dcbUI->GetGPUVirtualAddress();
+	pd3dCommandList->SetGraphicsRootConstantBufferView(19, d3dcbUIGpuVirtualAddress); //UI
 }
 
 void CUIObject::ReleaseShaderVariables()
@@ -2813,6 +2821,31 @@ CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCo
 	m_ppMaterials[0] = NULL;
 
 	SetMaterial(0, pTerrainMaterial);
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture, float l, float b, float r, float t, float a)
+{
+	CScene::CreateShaderResourceViews(pd3dDevice, pTexture, false);
+	pTexture->SetGraphicsSrvRootArgument(0, 7, 0);
+
+	CUIMesh* pMesh = new CUIMesh(pd3dDevice, pd3dCommandList, l, b, r, t, a);
+	SetMesh(pMesh);
+
+	CUIShader* pUIShader = new CUIShader();
+	pUIShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+	pUIShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	CMaterial* pTerrainMaterial = new CMaterial(1);
+	pTerrainMaterial->SetTexture(pTexture, 0);
+	pTerrainMaterial->SetShader(pUIShader);
+
+	m_nMaterials = 1;
+	m_ppMaterials = new CMaterial * [m_nMaterials];
+	m_ppMaterials[0] = NULL;
+
+	SetMaterial(0, pTerrainMaterial);
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
 CUIObject::~CUIObject()

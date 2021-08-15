@@ -615,13 +615,13 @@ float4 PSHPBar(GS_HPBAR_GEOMETRY_OUTPUT input) : SV_TARGET
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-
+#define UI_CIRCLE 0x01
 cbuffer cbUIInfo : register(b6)
 {
 	float		gfAlpha : packoffset(c0.x);
 	float		gfPercentV : packoffset(c0.y);
 	float		gfPercentH : packoffset(c0.z);
-
+	uint		gnUiInfo :packoffset(c0.w);
 };
 
 Texture2D gtxtUI : register(t3);
@@ -654,8 +654,12 @@ float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 {
 	float4 cColor = gtxtUI.Sample(gssWrap, input.uv);
 	cColor.a = gfAlpha;
-	if (1 - input.uv.y > gfPercentV)
+	if (input.uv.x > gfPercentH)
 		cColor = float4(0.3, 0.3, 0.3, 0.5);
-
+	float2 xy = input.uv * 2 - 1; // [0,1] -> [-1,1]
+	if (gnUiInfo & UI_CIRCLE && pow(xy.x, 2) + pow(xy.y, 2) > 1) {
+		cColor.a = 0;
+	}
+	
 	return cColor;
 }

@@ -142,9 +142,8 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_nUIs = 2;
 	m_ppUIObjects = new CUIObject * [m_nUIs];
 	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_FILL.dds", -0.85, -0.95, 0.85, -0.85, 0.8);
-	m_ppUIObjects[0]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	m_ppUIObjects[0]->SetAlpha(0.8f);
-	m_ppUIObjects[0]->SetvPercent(1.f);
+	m_ppUIObjects[0]->SethPercent(1.f);
 
 	/*m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_BOX.dds", -0.98, -0.95, -0.80, -0.8, 0.8);
 	m_ppUIObjects[1]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
@@ -152,9 +151,8 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_ppUIObjects[1]->SetvPercent(1.f);*/
 
 	m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
-	m_ppUIObjects[1]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 	m_ppUIObjects[1]->SetAlpha(0.0f);
-	m_ppUIObjects[1]->SetvPercent(1.f);
+	m_ppUIObjects[1]->SethPercent(1.f);
 
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
@@ -363,25 +361,21 @@ void CScene::ReleaseObjects()
 	for (int i = 0; i < MAX_PLAYER; i++) {
 		if (m_mBowPlayer[i]) {
 			m_mBowPlayer[i]->Release();
-			delete m_mBowPlayer[i];
 		}
 	}
 	for (int i = 0; i < MAX_PLAYER; i++) {
 		if (m_m1HswordPlayer[i]) {
 			m_m1HswordPlayer[i]->Release();
-			delete m_m1HswordPlayer[i];
 		}
 	}
 	for (int i = 0; i < MAX_PLAYER; i++) {
 		if (m_m2HswordPlayer[i]) {
 			m_m2HswordPlayer[i]->Release();
-			delete m_m2HswordPlayer[i];
 		}
 	}
 	for (int i = 0; i < MAX_PLAYER; i++) {
 		if (m_m2HspearPlayer[i]) {
 			m_m2HspearPlayer[i]->Release();
-			delete m_m2HspearPlayer[i];
 		}
 	}
 
@@ -438,13 +432,13 @@ ID3D12RootSignature *CScene::CreateGraphicsRootSignature(ID3D12Device *pd3dDevic
 
 	pd3dDescriptorRanges[5].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	pd3dDescriptorRanges[5].NumDescriptors = 1;
-	pd3dDescriptorRanges[5].BaseShaderRegister = 11; //t11: gtxtEmissionTexture
+	pd3dDescriptorRanges[5].BaseShaderRegister = 10; //t10: empty
 	pd3dDescriptorRanges[5].RegisterSpace = 0;
 	pd3dDescriptorRanges[5].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	pd3dDescriptorRanges[6].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	pd3dDescriptorRanges[6].NumDescriptors = 1;
-	pd3dDescriptorRanges[6].BaseShaderRegister = 12; //t12: gtxtEmissionTexture
+	pd3dDescriptorRanges[6].BaseShaderRegister = 11; //t11: empty
 	pd3dDescriptorRanges[6].RegisterSpace = 0;
 	pd3dDescriptorRanges[6].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
@@ -803,6 +797,7 @@ void CScene::CheckBehavior(CMonster *pMonster)
 
 }
 
+
 void CScene::CreateCbvSrvUavDescriptorHeaps(ID3D12Device *pd3dDevice, int nConstantBufferViews, int nShaderResourceViews, int nUnorderedAccessViews)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
@@ -1087,7 +1082,7 @@ void CScene::AnimateObjects(float fTimeElapsed)
 	}
 }
 
-void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
+void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, bool onlyTerrain)
 {
 	if (m_pd3dGraphicsRootSignature) pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);
 	if (m_pd3dCbvSrvDescriptorHeap) pd3dCommandList->SetDescriptorHeaps(1, &m_pd3dCbvSrvDescriptorHeap);
@@ -1112,7 +1107,9 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 		}
 	}
 	if (m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
-	
+
+	if (onlyTerrain) return;
+
 	if (m_iState == SCENE::INROOM) {
 		m_pPlayer->Render(pd3dCommandList, NULL);
 		for(int i=0;i<4;++i)
@@ -1153,7 +1150,7 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 	}
 	else if (m_iState == SCENE::ENDGAME)
 	{
-		m_ppUIObjects[2]->Render(pd3dCommandList, pCamera);
+		m_ppUIObjects[1]->Render(pd3dCommandList, pCamera);
 	}
 }
 

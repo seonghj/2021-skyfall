@@ -67,7 +67,6 @@ public:
 	void SetCloud(float x, float z) { m_pcbMappedFog->gvFogPos = XMFLOAT2(x, z); }
 	void Restart();
 	void MouseHold(bool b) { m_bMouseHold = b; }
-	void UpdateShadowMap();
 	void StartGame();
 
 	void ShowLoginWindow();
@@ -144,7 +143,6 @@ private:
 	bool						m_bMouseHold = false; 
 	vector<vector<int>>			m_vMapArrange;
 
-	CShadowMap					*m_pShadowMap;
 
 	ID3D12Resource				*m_pd3dcbFrameworkInfo = NULL;
 	CB_FRAMEWORK_INFO			*m_pcbMappedFrameworkInfo = NULL;
@@ -160,6 +158,8 @@ private:
 	unique_ptr<SpriteFont>		m_pFont;
 	unique_ptr<DescriptorHeap>	m_resourceDescriptors;
 	unique_ptr<GraphicsMemory>	m_graphicsMemory;
+
+	void DrawTimer();
 
 	enum Descriptors
 	{
@@ -177,5 +177,19 @@ private:
 	bool m_bError = false;
 	vector<string> m_vRooms;
 	string m_ErrorMsg;
+
+	//miniMap
+	void RenderMiniMap() const;
+	void BuildMiniMap();
+	void UpdateMiniMap();
+	CUIObject* m_pMiniMap = NULL;
+	CTexture* m_pMiniMapTexture = NULL;
+	CCamera* m_pMiniMapCamera = NULL;
+
+	//Shadow
+	CShadowMap* m_pShadowMap;
+	void BuildShadowMap();
+	void UpdateShadowMap();
+
 };
 
