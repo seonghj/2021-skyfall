@@ -656,6 +656,8 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 	SetPlayerUpdatedContext(ppContext);
 	SetCameraUpdatedContext(ppContext);
+
+	m_pSkinnedAnimationController->SetAllTrackDisable();
 	SetJump(true);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
@@ -678,20 +680,29 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		XMFLOAT3(bb.Extents.x, bb.Extents.y, bb.Extents.z));
 
 
-	m_ppBullets = new CBullet * [MAX_BULLET];
-	if(!CBullet::m_pArrow)
+	//m_ppBullets = new CBullet * [MAX_BULLET];
+
+	if (!CBullet::m_pArrow) {
 		CBullet::m_pArrow = CGameObject::LoadGeometryFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Player/Arrow.bin", NULL);
-	//CMesh* pMesh = pArrow->m_pMesh;
+		//CBullet::m_pArrow->SetScale(10, 10, 10);
+		CBullet::m_pArrow->SetBBObject(pd3dDevice, pd3dCommandList,
+			XMFLOAT3(0, CBullet::m_pArrow->m_pMesh->m_xmf3AABBExtents.y + 10, 0),	// Center
+			XMFLOAT3(2, 5, 2));									// Extents
+		CBullet::m_pArrow->SetWireFrameShader();
+	}
 	CMesh* pMesh = CBullet::m_pArrow->m_pMesh;
 
 	for (int i = 0; i < MAX_BULLET; ++i)
 	{
-		m_ppBullets[i] = new CBullet(pMesh);
-		m_ppBullets[i]->SetScale(10, 10, 10);
-		m_ppBullets[i]->SetBBObject(pd3dDevice, pd3dCommandList,
+		CBullet* pBullet = new CBullet(pMesh);
+
+		pBullet->SetScale(10, 10, 10);
+		pBullet->SetBBObject(pd3dDevice, pd3dCommandList,
 			XMFLOAT3(0, pMesh->m_xmf3AABBExtents.y + 10, 0),	// Center
 			XMFLOAT3(2, 5, 2));									// Extents
-		m_ppBullets[i]->SetWireFrameShader();
+		pBullet->SetWireFrameShader();
+		pBullet->m_bActive = false;
+		m_vpBullets.push_back(pBullet);
 	}
 
 	m_pBloodUI = new CUIObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
@@ -702,6 +713,9 @@ CBowPlayer::CBowPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 CBowPlayer::~CBowPlayer()
 {
+	//for (auto& i : m_vpBullets)
+	//	delete i;
+	m_vpBullets.clear();
 }
 
 void CBowPlayer::Update(float fTimeElapsed)
@@ -762,16 +776,21 @@ void CBowPlayer::LButtonDown()
 	}
 }
 
-void CBowPlayer::LButtonUp()
+void CBowPlayer::LButtonUp(float fTimeCharge)
 {
 	if (m_isCharging) {
-		SetAttack(true);
+		if (fTimeCharge > 1.f) {
+			SetAttack(true);
+			m_isRelease = true;
+			m_pSkinnedAnimationController->SetTrackPosition(nShotRelease, 0);
+			m_pSkinnedAnimationController->SetTrackEnable(nShotRelease, true);
+		}
+		else
+			SetAttack(false);
+
 		SetCharging(false);
 		SetActive("Arrow_Obj", false);
-		m_isRelease = true;
-		m_pCamera->SetPosition(Vector3::Add(m_pCamera->GetPosition(), Vector3::ScalarProduct(m_pCamera->GetRightVector(), 20, false)));
-		
-		//m_pSkinnedAnimationController->SetTrackEnable(nShotRelease, true);
+		m_pCamera->SetPosition(Vector3::Add(m_pCamera->GetPosition(), Vector3::ScalarProduct(m_pCamera->GetRightVector(), 20, false)));			
 	}
 }
 
@@ -779,20 +798,41 @@ void CBowPlayer::LButtonUp()
 bool CBowPlayer::CheckCollision(CGameObject* pObject, bool isMonster)
 {
 	// Bullet - pObject
-	if (m_ppBullets)
-		for (int i = 0; i < m_nBullets; ++i) {
-			if (m_ppBullets[i]->isCollide(pObject)) {
-				cout << "Bullet Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
-				DeleteBullet(i);
-				//pObject->TakeDamage(m_iAtkStat);
-				if (isMonster)
-					m_pPacket->Send_mon_damaged_packet(pObject->m_nkey, 3);
-				else
-					m_pPacket->Send_damage_to_player_packet(pObject->m_nkey, 3);
+	if (!m_vpBullets.empty()) {
+		for (auto& pBullet : m_vpBullets) {
+			if (pBullet->m_bActive) {
+				if (pBullet->isCollide(pObject)) {
+					cout << "Bullet Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
+					pBullet->m_bActive = false;
+					if (isMonster) {
+						m_pPacket->Send_mon_damaged_packet(pObject->m_nkey, 3);
+						pObject->SetActive("HpBar", true);
+					}
+					else
+						m_pPacket->Send_damage_to_player_packet(pObject->m_nkey, 3);
+				}
+				else if (pBullet->GetPosition().y <= 0) {
+					pBullet->m_bActive = false;
+				}
 			}
-			if(m_ppBullets[i]->GetPosition().y<=0)
-				DeleteBullet(i--);
 		}
+	}
+	//if (m_ppBullets)
+	//	for (int i = 0; i < m_nBullets; ++i) {
+	//		if (m_ppBullets[i]->isCollide(pObject)) {
+	//			cout << "Bullet Collision - " << pObject->m_pstrFrameName << ": Hp = " << pObject->GetHp() << endl;
+	//			DeleteBullet(i);
+	//			//pObject->TakeDamage(m_iAtkStat);
+	//			if (isMonster) {
+	//				m_pPacket->Send_mon_damaged_packet(pObject->m_nkey, 3);
+	//				pObject->SetActive("HpBar", true);
+	//			}
+	//			else
+	//				m_pPacket->Send_damage_to_player_packet(pObject->m_nkey, 3);
+	//		}
+	//		if(m_ppBullets[i]->GetPosition().y<=0)
+	//			DeleteBullet(i--);
+	//	}
 
 	// Player - pObject
 	return CPlayer::CheckCollision(pObject,isMonster);
@@ -802,17 +842,30 @@ void CBowPlayer::Shot(float fTimeElapsed, float fSpeed)
 {
 	CGameObject* pBow = FindFrame("Bow_Main");
 
-	//m_ppBullets[m_nBullets]->m_xmf4x4World = pBow->m_xmf4x4World;
-
 	XMFLOAT4X4 xmf4x4Scale = Matrix4x4::Identity();
 	xmf4x4Scale._11 = 0.5;
 	xmf4x4Scale._22 = 0.5;
 	xmf4x4Scale._33 = 0.5;
-	m_ppBullets[m_nBullets]->m_xmf4x4ToParent =  Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
+
+	CBullet* pBullet = NULL;
+	for (auto& a : m_vpBullets) {
+		if (!a->m_bActive) {
+			a->m_bActive = true;
+			pBullet = a;
+			break;
+		}
+	}
+	pBullet->m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
+	pBullet->SetPosition(pBow->GetPosition());
+	pBullet->m_xmf3MovingDirection = GetCamera()->GetLookVector();
+	pBullet->SetSpeed(fSpeed);
+	pBullet->Rotate(90.f, 0, 0);
+
+	/*m_ppBullets[m_nBullets]->m_xmf4x4ToParent =  Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
 	m_ppBullets[m_nBullets]->SetPosition(pBow->GetPosition());
 	m_ppBullets[m_nBullets]->m_xmf3MovingDirection = GetCamera()->GetLookVector();
 	m_ppBullets[m_nBullets]->SetSpeed(fSpeed);
-	m_ppBullets[m_nBullets++]->Rotate(90.f, 0, 0);
+	m_ppBullets[m_nBullets++]->Rotate(90.f, 0, 0);*/
 	//m_ppBullets[m_nBullets++]->Move(GetCamera()->GetLookVector(), 10);
 }
 
@@ -825,33 +878,49 @@ void CBowPlayer::Shot(float fTimeElapsed, float fSpeed, XMFLOAT3 Look)
 	xmf4x4Scale._22 = 0.5;
 	xmf4x4Scale._33 = 0.5;
 
-	m_ppBullets[m_nBullets]->m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
+	CBullet* pBullet = NULL;
+	for (auto& a : m_vpBullets) {
+		if (!a->m_bActive) {
+			a->m_bActive = true;
+			pBullet = a;
+			break;
+		}
+	}
+	pBullet->m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
+	pBullet->SetPosition(pBow->GetPosition());
+	pBullet->m_xmf3MovingDirection = Look;
+	pBullet->SetSpeed(fSpeed);
+	pBullet->Move(Look, 10);
+
+	/*m_ppBullets[m_nBullets]->m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4Scale, m_xmf4x4ToParent);
 	m_ppBullets[m_nBullets]->SetPosition(pBow->GetPosition());
 	m_ppBullets[m_nBullets]->m_xmf3MovingDirection = Look;
-	printf("%f, %f, %f\n", Look.x, Look.y, Look.z);
-
 	m_ppBullets[m_nBullets]->SetSpeed(fSpeed);
-	m_ppBullets[m_nBullets++]->Move(Look, 10);
+	m_ppBullets[m_nBullets++]->Move(Look, 10);*/
 }
 
 void CBowPlayer::DeleteBullet(const int& idx)
 {
-	for (int i = idx; i < m_nBullets - 1; ++i) {
-		m_ppBullets[i] = m_ppBullets[i + 1];
-	}
-	--m_nBullets;
 }
 
 void CBowPlayer::Animate(float fTimeElapsed)
 {
 	CTerrainPlayer::Animate(fTimeElapsed);
+	for (auto& pBullet : m_vpBullets) {
+		if (pBullet->m_bActive) {
+			pBullet->Animate(fTimeElapsed);
+			if (pBullet->GetPosition().y <= 0) {
+				pBullet->m_bActive = false;
+			}
+		}
+	}
 
-	for (int i = 0; i < m_nBullets; ++i) {
+	/*for (int i = 0; i < m_nBullets; ++i) {
 		m_ppBullets[i]->Animate(fTimeElapsed);
 		if (m_ppBullets[i]->GetPosition().y <= 0) {
 			DeleteBullet(i--);
 		}
-	}
+	}*/
 }
 
 void CBowPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
@@ -866,9 +935,11 @@ void CBowPlayer::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCa
 	else
 		CGameObject::Render(pd3dCommandList, pCamera);
 
-	for (int i = 0; i < m_nBullets; ++i) {
+	/*for (int i = 0; i < m_nBullets; ++i) {
 		m_ppBullets[i]->Render(pd3dCommandList, pCamera);
-	}
+	}*/
+	for (auto& i : m_vpBullets)
+		i->Render(pd3dCommandList, pCamera);
 }
 
 C1HswordPlayer::C1HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext)
@@ -977,7 +1048,7 @@ void C1HswordPlayer::LButtonDown()
 	}
 }
 
-void C1HswordPlayer::LButtonUp()
+void C1HswordPlayer::LButtonUp(float fTime)
 {
 	if (m_isAttack) {
 		m_isAttack = false;
@@ -1022,7 +1093,7 @@ bool C1HswordPlayer::CheckCollision(CGameObject* pObject, bool isMonster)
 				m_pPacket->Send_mon_damaged_packet(pObject->m_nkey, m_nAttack);
 				pObject->SetBehaviorActivate(true);
 				//cout << "Monster Collision - " << pObject->m_pstrFrameName << endl;
-				pObject->FindFrame("HpBar")->m_bActive = true;
+				pObject->SetActive("HpBar", true);
 			}
 			else
 				m_pPacket->Send_damage_to_player_packet(pObject->m_nkey, m_nAttack);

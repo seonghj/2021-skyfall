@@ -2044,6 +2044,8 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device *pd3dDevice, ID3D12GraphicsCom
 CHeightMapTerrain::~CHeightMapTerrain(void)
 {
 	if (m_pHeightMapImage) delete m_pHeightMapImage;
+
+	ReleaseShaderVariables();
 }
 
 float CHeightMapTerrain::GetHeight(float x, float z, bool bReverseQuad)
@@ -2850,4 +2852,6 @@ CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCo
 
 CUIObject::~CUIObject()
 {
+	ReleaseShaderVariables();
+	delete m_pcbMappedUI;
 }

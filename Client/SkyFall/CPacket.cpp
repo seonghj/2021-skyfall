@@ -879,7 +879,7 @@ void CPacket::ProcessPacket(char* buf)
         m_pScene->AnimatePlayer(p->target, 8);
         if (p->target == client_key) {
             m_pPlayer->SetHp(p->PlayerLeftHp);
-            //m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
+            m_pScene->m_ppUIObjects[0]->SethPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
         }
         if (m_pPlayer->GetHp() <= 0) {

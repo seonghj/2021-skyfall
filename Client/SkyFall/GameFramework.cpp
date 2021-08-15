@@ -50,6 +50,7 @@ CGameFramework::CGameFramework()
 
 CGameFramework::~CGameFramework()
 {
+	ReleaseShaderVariables();
 }
 
 bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
@@ -336,8 +337,8 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 		if(strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
 			m_pPacket->Send_stop_packet();
 		::ReleaseCapture();
-		m_ChargeTimer.Stop();
-		m_pPlayer->LButtonUp();
+		m_ChargeTimer.Stop(); 
+		m_pPlayer->LButtonUp(m_ChargeTimer.GetTotalTime());
 		m_DegreeX = 0;
 		m_DegreeY = 0;
 		break;
@@ -896,7 +897,7 @@ void CGameFramework::BuildObjects()
 
 void CGameFramework::ReleaseObjects()
 {
-	if (m_pPlayer) m_pPlayer->Release();
+	//if (m_pPlayer) m_pPlayer->Release();
 	/*if (m_p1HswordPlayer) m_p1HswordPlayer->Release();
 	if (m_pBowPlayer) m_pBowPlayer->Release();*/
 
@@ -983,8 +984,8 @@ void CGameFramework::ProcessInput()
 				SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
 		}
 
-		if (m_pPlayer->GetAttack() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA&&
-			!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
+		if (m_pPlayer->GetAttack() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA &&
+			!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow") && m_ChargeTimer.GetTotalTime() > 1.f)
 		{
 			player_shot_packet p;
 			p.key = m_pPacket->Get_clientkey();

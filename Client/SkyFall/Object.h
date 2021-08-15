@@ -635,8 +635,8 @@ public:
 	static CGameObject* m_pArrow;
 
 public:
-	CBullet(void* pContext = 0) :CGameObject(), m_fSpeed(300.f), m_xmf3MovingDirection(0.f, 0.f, 0.f), m_xmf3Gravity(0.f, -0.2f, 0.f) { SetMesh((CStandardMesh*)pContext); };
-	virtual ~CBullet() { CGameObject::~CGameObject(); };
+	CBullet(void* pContext = 0) :CGameObject(), m_fSpeed(300.f), m_xmf3MovingDirection(0.f, 0.f, 0.f), m_xmf3Gravity(0.f, -0.2f, 0.f) { if (pContext)SetMesh((CStandardMesh*)pContext); };
+	virtual ~CBullet() {};
 	void Animate(float fElapsedTime);
 	void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; };
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera=NULL);

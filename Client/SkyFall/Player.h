@@ -80,7 +80,7 @@ public:
 	virtual void RButtonDown() {};
 	virtual void RButtonUp() {};
 	virtual void LButtonDown() {};
-	virtual void LButtonUp() {};
+	virtual void LButtonUp(float fTime) {};
 
 	XMFLOAT3& GetVelocity() { return(m_xmf3Velocity); }
 	float GetYaw() const { return(m_fYaw); }
@@ -210,7 +210,7 @@ public:
 	virtual void RButtonDown();
 	virtual void RButtonUp();
 	virtual void LButtonDown();
-	virtual void LButtonUp();
+	virtual void LButtonUp(float fTimeCharge);
 
 	virtual bool CheckCollision(CGameObject* pObject, bool isMonster = true);
 
@@ -221,11 +221,9 @@ public:
 	const int nShotRelease = 11;
 
 protected:
-	int m_nBullets = 0;
-	//vector<CBullet*> m_vpBullets;
-	CBullet** m_ppBullets = 0;
+	vector<CBullet*> m_vpBullets;
 
-	const int MAX_BULLET = 1000;
+	const int MAX_BULLET = 10;
 	bool		m_isRelease;
 };
 
@@ -242,7 +240,7 @@ public:
 	virtual void RButtonDown();
 	virtual void RButtonUp();
 	virtual void LButtonDown();
-	virtual void LButtonUp();
+	virtual void LButtonUp(float fTime);
 
 	virtual bool CheckCollision(CGameObject* pObject, bool isMonster = true);
 
@@ -260,7 +258,6 @@ class C2HswordPlayer : public C1HswordPlayer
 public:
 	C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
 	virtual ~C2HswordPlayer();
-
 };
 
 class C2HspearPlayer : public C1HswordPlayer

@@ -25,6 +25,7 @@
 #include <array>
 #include <unordered_map>
 #include <thread>
+#include <iterator>
 
 #pragma comment(lib, "ws2_32")
 #include <WS2tcpip.h>
