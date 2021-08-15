@@ -137,10 +137,11 @@ void CPacket::Send_start_packet(PlayerType t)
 
 void CPacket::Send_attack_packet(int type)
 {
+    if (InGamekey == -1) return;
     switch (type) {
     case PlayerAttackType::BOWL: {
         player_attack_packet p;
-        p.key = client_key;
+        p.key = InGamekey;
         p.size = sizeof(p);
         p.type = PacketType::CS_player_attack;
         p.attack_type = type;
@@ -149,7 +150,7 @@ void CPacket::Send_attack_packet(int type)
     }
     case PlayerAttackType::BOWR: {
         player_attack_packet p;
-        p.key = client_key;
+        p.key = InGamekey;
         p.size = sizeof(p);
         p.type = PacketType::CS_player_attack;
         p.attack_type = type;
@@ -158,7 +159,7 @@ void CPacket::Send_attack_packet(int type)
     }
     default: {
         player_attack_packet p;
-        p.key = client_key;
+        p.key = InGamekey;
         p.size = sizeof(p);
         p.type = PacketType::CS_player_attack;
         p.attack_type = type;
@@ -171,7 +172,7 @@ void CPacket::Send_attack_packet(int type)
 void CPacket::Send_stop_packet()
 {
     player_stop_packet p;
-    p.key = client_key;
+    p.key = InGamekey;
     p.size = sizeof(p);
     p.type = PacketType::CS_player_stop;
     p.Position = m_pPlayer->GetPosition();
@@ -193,7 +194,7 @@ void CPacket::Send_login_packet(char* id, char* pw)
 void CPacket::Send_swap_weapon_packet(PlayerType weapon)
 {
     Weapon_swap_packet p;
-    p.key = client_key;
+    p.key = InGamekey;
     p.size = sizeof(p);
     p.type = CS_weapon_swap;
     p.weapon = weapon;
@@ -205,7 +206,7 @@ void CPacket::Send_swap_weapon_packet(PlayerType weapon)
 void CPacket::Send_damage_to_player_packet(int target, int nAttack)
 {
     player_damage_packet p;
-    p.key = client_key;
+    p.key = InGamekey;
     p.type = CS_player_damage;
     p.roomid = roomID;
     p.size = sizeof(p);
@@ -219,7 +220,7 @@ void CPacket::Send_damage_to_player_packet(int target, int nAttack)
 void CPacket::Send_mon_damaged_packet(int target, int nAttack)
 {
     mon_damaged_packet p;
-    p.key = client_key;
+    p.key = InGamekey;
     p.type = CS_monster_damaged;
     p.roomid = roomID;
     p.size = sizeof(p);
@@ -269,7 +270,7 @@ void CPacket::Send_return_lobby_packet()
 
 void CPacket::Swap_weapon(int key, PlayerType weapon)
 {
-    if (key != client_key) {
+    if (key != InGamekey) {
         switch (weapon) {
         case PT_BOW: {
             float beforepitch = m_pScene->m_mPlayer[key]->GetPitch();
@@ -366,13 +367,13 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             int beforplace = m_pPlayer->GetPlace();
 
             m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
-            m_pScene->m_mPlayer[client_key] = m_pScene->m_mBowPlayer[client_key];
-            m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
+            m_pScene->m_mPlayer[InGamekey] = m_pScene->m_m1HswordPlayer[InGamekey];
+            m_pScene->m_pPlayer = m_pScene->m_mPlayer[InGamekey];
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
             m_pPlayer->m_pPacket = this;
-            m_pScene->m_mPlayer[client_key]->m_nkey = client_key;
-            m_pScene->m_mPlayer[client_key]->m_pPacket = this;
+            m_pScene->m_mPlayer[InGamekey]->m_nkey = InGamekey;
+            m_pScene->m_mPlayer[InGamekey]->m_pPacket = this;
 
             m_pPlayer->SetPosition(beforepos);
             m_pPlayer->SetPlace(beforplace);
@@ -391,13 +392,13 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             int beforplace = m_pPlayer->GetPlace();
 
             m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
-            m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
-            m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
+            m_pScene->m_mPlayer[InGamekey] = m_pScene->m_mBowPlayer[InGamekey];
+            m_pScene->m_pPlayer = m_pScene->m_mPlayer[InGamekey];
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
             m_pPlayer->m_pPacket = this;
-            m_pScene->m_mPlayer[client_key]->m_nkey = client_key;
-            m_pScene->m_mPlayer[client_key]->m_pPacket = this;
+            m_pScene->m_mPlayer[InGamekey]->m_nkey = InGamekey;
+            m_pScene->m_mPlayer[InGamekey]->m_pPacket = this;
 
             m_pPlayer->SetPosition(beforepos);
             m_pPlayer->SetPlace(beforplace);
@@ -415,14 +416,14 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
             XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
 
-            m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
-            m_pScene->m_mPlayer[client_key] = m_pScene->m_m2HswordPlayer[client_key];
-            m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
+            m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
+            m_pScene->m_mPlayer[InGamekey] = m_pScene->m_m2HswordPlayer[InGamekey];
+            m_pScene->m_pPlayer = m_pScene->m_mPlayer[InGamekey];
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
             m_pPlayer->m_pPacket = this;
-            m_pScene->m_mPlayer[client_key]->m_nkey = client_key;
-            m_pScene->m_mPlayer[client_key]->m_pPacket = this;
+            m_pScene->m_mPlayer[InGamekey]->m_nkey = InGamekey;
+            m_pScene->m_mPlayer[InGamekey]->m_pPacket = this;
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
 
@@ -440,14 +441,14 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             float beforeroll = m_pScene->m_mPlayer[key]->GetRoll();
             XMFLOAT3 beforepos = m_pScene->m_mPlayer[key]->GetPosition();
 
-            m_pScene->m_mPlayer[key]->SetPosition(XMFLOAT3(0, -500, 0));
-            m_pScene->m_mPlayer[client_key] = m_pScene->m_m2HspearPlayer[client_key];
-            m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key];
+            m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
+            m_pScene->m_mPlayer[InGamekey] = m_pScene->m_m2HspearPlayer[InGamekey];
+            m_pScene->m_pPlayer = m_pScene->m_mPlayer[InGamekey];
             m_pFramework->m_pPlayer = m_pScene->m_pPlayer;
             m_pPlayer = m_pFramework->m_pPlayer;
             m_pPlayer->m_pPacket = this;
-            m_pScene->m_mPlayer[client_key]->m_nkey = client_key;
-            m_pScene->m_mPlayer[client_key]->m_pPacket = this;
+            m_pScene->m_mPlayer[InGamekey]->m_nkey = InGamekey;
+            m_pScene->m_mPlayer[InGamekey]->m_pPacket = this;
 
             m_pScene->m_mPlayer[key]->SetPosition(beforepos);
 
@@ -557,18 +558,18 @@ void CPacket::ProcessPacket(char* buf)
         m_pPlayer->m_pPacket = this;
         break;
     }
-    case PacketType::SC_player_key: {
+    case PacketType::SC_player_InGamekey: {
         player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
         int key = p->key;
 
         //if (key < 0 || key > 20) break;
 
-        client_key = key;
+        InGamekey = key;
         roomID = p->roomid;
-        printf("recv key from server: %d / room = %d\n", key, roomID);
+        printf("recv InGamekey from server: %d / room = %d\n", key, roomID);
 
         //m_pPlayer = m_pFramework->m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pScene->m_m1HswordPlayer[client_key];
-        m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[client_key] = m_pFramework->m_pPlayer;
+        m_pPlayer = m_pScene->m_pPlayer = m_pScene->m_mPlayer[InGamekey] = m_pFramework->m_pPlayer;
         //m_pPlayer->SetPosition(XMFLOAT3(0, -500, 0));
 
         m_pFramework->m_pCamera = m_pPlayer->GetCamera();
@@ -603,8 +604,8 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_add: {
         player_add_packet* p = reinterpret_cast<player_add_packet*>(buf);
         int key = p->key;
-        printf("login key: %d\n", p->key);
-        if (key != client_key) {
+        printf("login key: %d weapon: %d\n", p->key, p->WeaponType);
+        if (key != InGamekey) {
             Swap_weapon(p->key, p->WeaponType);
             m_pScene->MovePlayer(key, p->Position);
             m_pScene->m_mPlayer[key]->Rotate(p->dx, p->dy, 0);
@@ -625,7 +626,8 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_start_ok: {
         //GameConnect();
         game_start_packet* p = reinterpret_cast<game_start_packet*>(buf);
-        Swap_weapon(p->key, start_weapon);
+        InGamekey = p->ingamekey;
+        Swap_weapon(p->ingamekey, start_weapon);
         m_pScene->SetState(SCENE::INGAME);
         m_pFramework->MouseHold(false);
         break;
@@ -672,7 +674,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
         int key = p->key;
-        if (p->key == client_key) {
+        if (p->key == InGamekey) {
             //m_pPlayer->SetPosition(p->Position);
             m_pPlayer->Rotate(p->dx - m_pPlayer->GetPitch()
                 , p->dy - m_pPlayer->GetYaw(), 0);
@@ -732,7 +734,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_start_pos: {
         player_start_pos* p = reinterpret_cast<player_start_pos*>(buf);
         int key = p->key;
-        if (p->key == client_key) {
+        if (p->key == InGamekey) {
             m_pPlayer->SetPosition(p->Position);
         }
         else {
@@ -749,7 +751,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_attack: {
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
         int key = p->key;
-        if (p->key == client_key) {
+        if (p->key == InGamekey) {
             switch (p->attack_type) {
             case SWORD1HL1: {
                 m_pPlayer->LButtonDown();
@@ -799,7 +801,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_allow_shot: {
         player_shot_packet* p = reinterpret_cast<player_shot_packet*>(buf);
         int key = p->key;
-        if (p->key == client_key) {
+        if (p->key == InGamekey) {
             m_pPlayer->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
             m_pPlayer->SetAttack(false);
             m_pPlayer->SetCharging(false);
@@ -815,7 +817,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_stop: {
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
         int key = p->key;
-        if (p->key != client_key) {
+        if (p->key != InGamekey) {
             m_pScene->AnimatePlayer(key, PlayerState::Idle);
             if (m_pScene->m_mPlayer[key]->GetJump() == TRUE) {
                 m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(2, 0);
@@ -1047,9 +1049,9 @@ void CPacket::ProcessPacket(char* buf)
         cout << "player: " << p->target << " hp: " << m_pScene->m_mPlayer[p->target]->GetHp() << endl;
         //m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
 
-        if (p->target == client_key) {
+        if (p->target == InGamekey) {
             m_pPlayer->SetDamaged(true);
-            m_pScene->AnimatePlayer(client_key, PlayerState::Take_Damage);
+            m_pScene->AnimatePlayer(InGamekey, PlayerState::Take_Damage);
         }
         else
             m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
@@ -1065,14 +1067,14 @@ void CPacket::ProcessPacket(char* buf)
         printf("player dead %d %d\n", p->key, p->roomid);
         m_pScene->AnimatePlayer(p->key, PlayerState::Death);
         // 죽은거 처리해
-        if (p->key != client_key)
+        if (p->key != InGamekey)
         {
             m_pScene->m_mPlayer[p->key]->SetPosition(XMFLOAT3(-6000, 0, -6000));
             m_pScene->m_mPlayer[p->key]->SetRate(m_pScene->rate--);
         }
-        if (p->key == client_key)
+        if (p->key == InGamekey)
         {
-            client_key = 0;
+            InGamekey = -1;
             m_pScene->m_iState = SCENE::ENDGAME;
             m_pPlayer->SetRate(m_pScene->rate--);
             m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));

@@ -6,7 +6,7 @@ constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
 constexpr int BUFSIZE = 128;
 constexpr int MAX_CLIENT = 3000;
-constexpr int MAX_PLAYER = 2;
+constexpr int MAX_PLAYER = 20;
 constexpr int INVALIDID = -1;
 constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
@@ -35,7 +35,6 @@ struct OVER_EX
 	char			messageBuffer[BUFSIZE];
 	bool			is_recv;
 	int             type;
-	int				key;
 	int				roomID;
 	// 0 = session 1 = map
 };
@@ -60,7 +59,7 @@ enum PacketType {
 	SC_create_room,
 	SC_room_list,
 	SC_select_room,
-	SC_player_key,
+	SC_player_InGamekey,
 	SC_player_loginOK,
 	SC_player_loginFail,
 	SC_player_add,
@@ -223,6 +222,7 @@ struct game_ready_packet :public Packet {
 
 struct game_start_packet :public Packet {
 	PlayerType weaponType;
+	short ingamekey;
 };
 
 struct start_ok_packet :public Packet {

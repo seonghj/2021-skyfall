@@ -52,6 +52,7 @@ public:
     std::atomic<int>         key = -1;
     std::atomic<int>         roomID = -1;
     char                     id[50];
+    std::atomic<int>         InGamekey = -1;
 
     // 0 죽음 / 1 생존
     std::atomic<bool>       state = 0;
@@ -106,7 +107,7 @@ public:
 
     void display_error(const char* msg, int err_no);
 
-    int SetClientKey(int roomID);
+    int SetInGameKey(int roomID);
     int SetroomID();
     int SetLobbyKey();
 
@@ -116,11 +117,9 @@ public:
     void Set_pBot(Bot* b) { m_pBot = b; }
     void Set_pDB(DB* d) { m_pDB = d; }
 
-    void ConnectLobby();
 
     bool Init();
     void Thread_join();
-    void Disconnected(int key, int roomID);
     void Disconnected(int key);
 
     void Accept();
@@ -131,12 +130,11 @@ public:
     void process_packet(int key, char* buf, int roomID);
 
     void send_Lobby_key_packet(int key);
-    void send_Lobby_key_packet(int key, int roomID, int nkey);
     void send_Lobby_loginOK_packet(int key);
 
     void send_room_list_packet(int key);
 
-    void send_player_key_packet(int key, int roomID);
+    void send_player_InGamekey_packet(int key, int roomID);
     void send_player_loginOK_packet(int key, int roomID);
     void send_player_loginFail_packet(int key, int roomID);
 
@@ -173,9 +171,11 @@ public:
 
     void player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy);
 
-    std::unordered_map <int, SESSION> Lobby_sessions;
-    std::unordered_map <int, std::array<SESSION, 20>> sessions; // 방ID, Player배열
+    //std::unordered_map <int, SESSION> Lobby_sessions;
+    //std::unordered_map <int, std::array<SESSION, 20>> sessions; // 방ID, Player배열
     std::unordered_map <int, bool> CanJoin;
+    std::unordered_map <int, std::array<int, 20>> GameRooms;
+    std::array<SESSION, 1000> sessions;
 
 private:
     HANDLE                         hcp;
@@ -193,6 +193,6 @@ private:
 
     std::mutex                     accept_lock;
     std::mutex                     sessions_lock;
-    std::mutex                     Lobby_sessions_lock;
+    std::mutex                     GameRooms_lock;
     std::mutex                     maps_lock;
 };

@@ -813,7 +813,7 @@ void CGameFramework::ProcessInput()
             {
                 m_pPlayer->SetJump(true);
                 player_move_packet p;
-                p.key = m_pPacket->Get_clientkey();
+                p.key = m_pPacket->InGamekey;
                 p.dx = m_DegreeX;
                 p.dy = m_DegreeY;
                 //p.MoveType = dwDirection;
@@ -857,7 +857,7 @@ void CGameFramework::ProcessInput()
             !strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
         {
             player_shot_packet p;
-            p.key = m_pPacket->Get_clientkey();
+            p.key = m_pPacket->InGamekey;
             p.size = sizeof(p);
             p.type = CS_allow_shot;
             p.Look = m_pCamera->GetLookVector();
@@ -1152,7 +1152,7 @@ void CGameFramework::FrameAdvance()
             m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
         if (false == m_pPlayer->GetAttack()) {
             player_pos_packet p;
-            p.key = m_pPacket->Get_clientkey();
+            p.key = m_pPacket->InGamekey;
             p.roomid = m_pPacket->roomID;
             p.Position.x = floor(NowPosition.x);
             p.Position.y = floor(NowPosition.y);
@@ -1190,7 +1190,7 @@ void CGameFramework::FrameAdvance()
             dwDirection = 0;
             m_pPlayer->SetStanding(true);
             player_stop_packet sp;
-            sp.key = m_pPacket->Get_clientkey();
+            sp.key = m_pPacket->InGamekey;
             sp.roomid = m_pPacket->roomID;
             sp.size = sizeof(sp);
             sp.type = PacketType::CS_player_stop;

@@ -164,7 +164,7 @@ void Bot::Init(int roomID)
 
 void Bot::CheckBehavior(int roomID)
 {
-	for (SESSION& player : m_pServer->sessions[roomID]) {
+	for (SESSION& player : m_pServer->sessions) {
 		if (player.connected.load() == false) continue;
 		if (player.state.load() == Death) continue;
 		for (Monster& mon : monsters[roomID]) {
