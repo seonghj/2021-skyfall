@@ -674,15 +674,15 @@ void CGameFramework::DrawTimer()
 	int t = m_pcbMappedFrameworkInfo->m_fCurrentTime;
 
 	char h[4];
-	itoa(t / 60, h, 10);
-	strcat(str, h);
-	strcat(str, ":");
+	_itoa_s(t / 60, h, 10);
+	strcat_s(str, h);
+	strcat_s(str, ":");
 	if (t % 60 < 10)
-		strcat(str, "0");
+		strcat_s(str, "0");
 
 	char m[3];
-	itoa(t % 60, m, 10);
-	strcat(str, m);
+	_itoa_s(t % 60, m, 10);
+	strcat_s(str, m);
 	m_pSprite->Begin(m_pd3dCommandList);
 	m_pFont->DrawString(m_pSprite.get(), str, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 10));
 	m_pSprite->End();

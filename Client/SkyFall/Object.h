@@ -773,6 +773,7 @@ struct CB_UI_INFO {
 	float gfAlpha;
 	float gfPercentVer;
 	float gfPercentHor;
+	UINT gnUiInfo;
 };
 
 class CUIObject : public CGameObject
@@ -782,6 +783,7 @@ protected:
 	CB_UI_INFO *m_pcbMappedUI = NULL;
 public:
 	CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName, float l, float b, float r, float t, float a);
+	CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture, float l, float b, float r, float t, float a);
 	~CUIObject();
 
 	float		 GetAlpha() { return m_pcbMappedUI->gfAlpha; }
@@ -789,6 +791,8 @@ public:
 	void SetAlpha(float a) { m_pcbMappedUI->gfAlpha = a; }
 	void SetvPercent(float p) { m_pcbMappedUI->gfPercentVer = p; }
 	void SethPercent(float p) { m_pcbMappedUI->gfPercentHor = p; }
+	void SetInfo(UINT n) { m_pcbMappedUI->gnUiInfo = n; }
+
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void ReleaseShaderVariables();
