@@ -361,7 +361,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
     }
     else {
         switch (weapon) {
-        case PT_BOW: {
+        case PT_SWORD1H: {
             float beforepitch = m_pPlayer->GetPitch();
             float beforeyaw = m_pPlayer->GetYaw();
             XMFLOAT3 beforepos = m_pPlayer->GetPosition();
@@ -386,7 +386,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pFramework->m_pCamera = m_pPlayer->GetCamera();
             break;
         }
-        case PT_SWORD1H: {
+        case PT_BOW: {
             XMFLOAT3 beforepos = m_pPlayer->GetPosition();
             float beforepitch = m_pPlayer->GetPitch();
             float beforeyaw = m_pPlayer->GetYaw();
