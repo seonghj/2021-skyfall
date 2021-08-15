@@ -920,8 +920,8 @@ void CPacket::ProcessPacket(char* buf)
         m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->degree;
         m_pScene->m_ppGameObjects[key]->Attack();
 
-        m_pScene->AnimatePlayer(p->target, 8);
-        if (p->target == client_key) {
+        m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
+        if (p->target == InGamekey) {
             m_pPlayer->SetHp(p->PlayerLeftHp);
             //m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
@@ -1074,7 +1074,6 @@ void CPacket::ProcessPacket(char* buf)
         
         printf("player dead %d %d\n", p->key, p->roomid);
         m_pScene->AnimatePlayer(p->key, PlayerState::Death);
-        // 죽은거 처리해
         if (p->key != InGamekey)
         {
             m_pScene->m_mPlayer[p->key]->SetPosition(XMFLOAT3(-6000, 0, -6000));

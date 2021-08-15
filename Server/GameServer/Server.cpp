@@ -602,8 +602,8 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
         }
     }
 
-    if (sessions[target].hp <= 0) {
-        sessions[target].state = Death;
+    if (sessions[GameRooms[roomID][target]].hp <= 0) {
+        sessions[GameRooms[roomID][target]].state = Death;
         send_player_dead_packet(target, roomID);
     }
 }
