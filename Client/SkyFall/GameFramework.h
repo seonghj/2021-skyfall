@@ -66,12 +66,6 @@ public:
 	void Restart();
 	void MouseHold(bool b) { m_bMouseHold = b; }
 	void StartGame();
-	void ShowLoginWindow();
-	void ShowLobbyWindow();
-	void ShowRoomWindow();
-	void ShowAccountWindow(bool* p_open);
-	void ShowCreateRoomWindow();
-	void ShowError(const char* str);
 
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
@@ -168,6 +162,12 @@ private:
 	};
 
 	//imgui
+	void ShowLoginWindow();
+	void ShowLobbyWindow();
+	void ShowRoomWindow();
+	void ShowAccountWindow(bool* p_open);
+	void ShowCreateRoomWindow(bool* p_open);
+	void ShowError(const char* str);
 	void CreateFontAndGui();
 	char m_bufID[11];
 	char m_bufPW[21];

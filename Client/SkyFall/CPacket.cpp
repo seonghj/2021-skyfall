@@ -695,7 +695,7 @@ void CPacket::ProcessPacket(char* buf)
         }
         else {
             switch (p->MoveType) {
-            case PlayerMove::WAKING:
+            case PlayerMove::WALKING:
                 m_pScene->AnimatePlayer(key, PlayerState::Walk);
                 break;
             case PlayerMove::RUNNING:

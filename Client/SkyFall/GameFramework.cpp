@@ -478,7 +478,8 @@ void CGameFramework::OnProcessingKeyboardMessageForLogIn(HWND hWnd, UINT nMessag
 
 LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
-    if (m_pScene->GetState() == SCENE::LOGIN) return(0);
+    if (m_pScene->GetState() != SCENE::INGAME || m_pScene->GetState() != SCENE::INROOM) return(0);
+
     switch (nMessageID)
     {
     case WM_ACTIVATE:
@@ -515,10 +516,15 @@ void CGameFramework::CheckCollision()
 
 void CGameFramework::ShowLoginWindow()
 {
-	ImGui::Begin("Login", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBringToFrontOnFocus);
+    if (m_bShowAccountWindow) {
+        ShowAccountWindow(&m_bShowAccountWindow);
+        return;
+    }
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT / 2), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(300, 100), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Login", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_AlwaysAutoResize);
 	{
-		ImGui::SetNextWindowSize(ImVec2(400, 100), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2 - 200, FRAME_BUFFER_HEIGHT / 2 - 50), ImGuiCond_FirstUseEver);
 		{
 			ImGui::Text("Login for playing SkyFall");
 		}
@@ -527,25 +533,26 @@ void CGameFramework::ShowLoginWindow()
 			ImGui::SetCursorPosY(ImGui::GetTextLineHeight() + 20);
 			ImGui::Text("	  ID");
 			ImGui::SameLine();
-			ImGui::InputTextWithHint(" ", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank); //ImGuiInputTextFlags_::
+            ImGui::InputTextWithHint(" ", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank);
+
 			ImGui::Text("Password");
 			ImGui::SameLine();
-			ImGui::InputTextWithHint("  ", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
+            ImGui::InputTextWithHint("  ", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
 		}
 
-		ImGui::SetCursorPosX(80);
+		ImGui::SetCursorPosX(120);
 		if (ImGui::Button("Login")) {
 			if (strlen(m_bufID) == 0) {
 				printf("%zu\n", strlen(m_bufID));
 				m_bError = true;
 			}
 			else {
-				// 여기서 서버에 로그인
+                // 여기서 서버에 로그인
 				m_pPacket->Set_UserID(m_bufID);
 				m_pPacket->Send_login_packet(m_bufID, m_bufPW);
 			}
 		}
-		ImGui::SameLine(0, 50);
+		ImGui::SameLine(0, 10);
 		if (ImGui::Button("Create Account")) {
 			// 여기서 회원가입 창 띄워서 거기서 아이디 비번 넣고 보내고 할거임
 			m_bShowAccountWindow = true;
@@ -553,19 +560,19 @@ void CGameFramework::ShowLoginWindow()
 	}
 
 	ImGui::End();
-	if (m_bShowAccountWindow)
-		ShowAccountWindow(&m_bShowAccountWindow);
 }
 
 void CGameFramework::ShowLobbyWindow()
 {
-	ImGui::Begin("Lobby", false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus);
-
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x * 0.7f, viewport->Size.y * 0.1f), ImGuiCond_FirstUseEver );
+    ImGui::SetNextWindowSize(ImVec2(200, viewport->Size.y * 0.5f), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Lobby", false, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_AlwaysAutoResize);
 	{
 		static int room_current_idx = 0;
 		{
 			ImGui::Text("Rooms");
-			if (ImGui::BeginListBox("##Room List", ImVec2(FRAME_BUFFER_WIDTH / 2 - 30, FRAME_BUFFER_HEIGHT / 2))) {
+            if (ImGui::BeginListBox("##Room List", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing()))) {
 				for (int n = 0; n < m_vRooms.size(); n++)
 				{
 					const bool is_selected = (room_current_idx == n);
@@ -581,29 +588,35 @@ void CGameFramework::ShowLobbyWindow()
 			}
 		}
 
-            ImGui::SetCursorPosX(80);
-            if (ImGui::Button("Join")) {
-                // 여기서 방에 입장
-                // 임시로 state 변경해놓음
-                if (room_current_idx >= 0)
-                    m_pPacket->Send_room_select_packet(room_current_idx);
-                //m_pScene->SetState(SCENE::INROOM);
-
+        ImGui::SetCursorPosX(20);
+		if (ImGui::Button("Join")) {
+			// 여기서 방에 입장
+			// 임시로 state 변경해놓음
+			if (room_current_idx >= 0)
+				m_pPacket->Send_room_select_packet(room_current_idx);
 		}
-		ImGui::SameLine(0, 50);
+		ImGui::SameLine(0, 20);
 		if (ImGui::Button("Create Room")) {
 			// 여기서 새로운 방을 만듦
 			m_bShowCreateRoomWindow = true;
+			::ZeroMemory(m_bufPW, strlen(m_bufPW));
 		}
+        ImGui::SameLine(0, 20);
+        if (ImGui::Button("Refresh")) {
+            // 여기서 방에 입장
+            // 임시로 state 변경해놓음
+            if (room_current_idx >= 0)
+                m_pPacket->Send_room_select_packet(room_current_idx);
+        }
 	}
 	ImGui::End();
 	if (m_bShowCreateRoomWindow)
-		ShowCreateRoomWindow();
+		ShowCreateRoomWindow(&m_bShowCreateRoomWindow);
 }
 
 void CGameFramework::ShowRoomWindow()
 {
-	ImGui::Begin("Room", false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Room", false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
 
 	{
 		ImGui::SetCursorPosX(80);
@@ -627,24 +640,25 @@ void CGameFramework::ShowRoomWindow()
 
 void CGameFramework::ShowAccountWindow(bool* p_open)
 {
-	ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar;
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar;
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(ImVec2(viewport->Size.x / 4, viewport->Size.y / 4), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSize(ImVec2(viewport->Size.x / 2, viewport->Size.y / 2), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(270, 100), ImGuiCond_FirstUseEver);
 
+    ImGui::Separator();
 	if (ImGui::Begin("Create Account", p_open, flags))
 	{
-		ImGui::SetCursorPosY(viewport->Size.y / 4 - 40);
+		//ImGui::SetCursorPosY(viewport->Size.y / 4 - 40);
 		ImGui::Text("	  ID");
 		ImGui::SameLine();
-		ImGui::InputTextWithHint(" ", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank);
+		ImGui::InputTextWithHint("##ID", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank);
 		ImGui::Text("Password");
 		ImGui::SameLine();
-		ImGui::InputTextWithHint("  ", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
+		ImGui::InputTextWithHint("##Password", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
 
 
-		ImGui::SetCursorPosX(viewport->Size.x / 4 - 30);
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 40);
+		ImGui::SetCursorPosX(ImGui::GetWindowSize().x/2 - 30);
+		//ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
 
 		if (p_open && ImGui::Button("Create")) {
 			//m_pPacket->send_create_account(); 함수 추가해서 서버로 계정 정보 보내고 id 존재하면 이미 존재하는 id 창 띄우기
@@ -658,8 +672,34 @@ void CGameFramework::ShowAccountWindow(bool* p_open)
 
 }
 
-void CGameFramework::ShowCreateRoomWindow()
+void CGameFramework::ShowCreateRoomWindow(bool* p_open)
 {
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar;
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(viewport->WorkSize.x / 4, viewport->Size.y / 4), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(200, 80), ImGuiCond_FirstUseEver);
+
+    if (ImGui::Begin("Create Room", p_open, flags))
+    {
+        //ImGui::SetCursorPosY(viewport->Size.y / 4 - 40);
+        ImGui::Text("Name");
+        ImGui::SameLine();
+        ImGui::InputTextWithHint("##RoomName", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_CharsNoBlank| ImGuiInputTextFlags_EnterReturnsTrue);
+
+
+        ImGui::SetCursorPosX(ImGui::GetWindowSize().x / 2 - 30);
+        //ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 40);
+
+        if (p_open && ImGui::Button("Create")) {
+            string str = m_bufPW;
+            if(find(m_vRooms.begin(),m_vRooms.end(),str)==m_vRooms.end())
+                m_vRooms.push_back(str);
+            ::ZeroMemory(m_bufPW, strlen(m_bufPW));
+            *p_open = false;
+        }
+    }
+    ImGui::End();
+
 }
 
 void CGameFramework::ShowError(const char* str)
@@ -733,7 +773,7 @@ void CGameFramework::CreateFontAndGui()
 		m_resourceDescriptors->GetCpuHandle(Descriptors::ImGui), m_resourceDescriptors->GetGpuHandle(Descriptors::ImGui));
 
 	m_pScene->SetState(SCENE::LOGIN);
-	m_vRooms = { "Room1","Room2", "Room3" };
+	m_vRooms = {};
 	m_ErrorMsg = "Error Message";
 }
 
@@ -920,7 +960,7 @@ void CGameFramework::ReleaseObjects()
 
 void CGameFramework::ProcessInput()
 {
-    if (m_pScene->GetState() == SCENE::LOGIN || m_pScene->GetState() == SCENE::ENDGAME) return;
+    if (m_pScene->GetState() != SCENE::INGAME && m_pScene->GetState() != SCENE::INROOM) return;
 
     float fTimeElapsed = m_GameTimer.GetTimeElapsed();
     static UCHAR pKeysBuffer[256];
@@ -1161,7 +1201,7 @@ void CGameFramework::FrameAdvance()
 	UpdateShaderVariables();
 
     m_pShadowMap->Render(m_pd3dCommandList, NULL);
-    if (m_pScene) m_pScene->RenderShadow(m_pd3dCommandList,pCamera);
+    if (m_pScene) m_pScene->RenderShadow(m_pd3dCommandList, m_pShadowMap->GetCamera());
     m_pPlayer->RenderShadow(m_pd3dCommandList, NULL);
 
     //if (m_pBowPlayer) m_pBowPlayer->RenderShadow(m_pd3dCommandList, m_pCamera);
@@ -1414,6 +1454,18 @@ void CGameFramework::Restart()
     }
     m_pScene->m_ppUIObjects[2]->SetAlpha(0.0f);
     m_pScene->m_ppUIObjects[3]->SetAlpha(0.0f);
+}
+
+void CGameFramework::UpdateShadowMap()
+{
+    CCamera* pCamera = m_pShadowMap->GetCamera();
+    XMFLOAT3 look = pCamera->GetLookVector();
+    XMFLOAT3 pos = Vector3::Add(m_pPlayer->GetPosition(), m_pPlayer->GetLookVector(), 500);
+
+    pCamera->SetPosition(XMFLOAT3(pos.x, 0, pos.z));
+    pCamera->Move(Vector3::ScalarProduct(look, -500, false));
+    m_pScene->m_pLights[0].m_xmf3Position = pCamera->GetPosition();
+    pCamera->RegenerateViewMatrix();
 }
 
 void CGameFramework::StartGame()
