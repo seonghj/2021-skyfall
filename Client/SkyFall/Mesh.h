@@ -24,6 +24,8 @@ class CGameObject;
 #define VERTEXT_NORMAL_DETAIL			(VERTEXT_POSITION | VERTEXT_NORMAL | VERTEXT_TEXTURE_COORD0 | VERTEXT_TEXTURE_COORD1)
 #define VERTEXT_NORMAL_TANGENT__DETAIL	(VERTEXT_POSITION | VERTEXT_NORMAL | VERTEXT_TANGENT | VERTEXT_TEXTURE_COORD0 | VERTEXT_TEXTURE_COORD1)
 
+#define STANDARD_MESH 0x01
+#define SKINNED_MESH 0x02
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
@@ -132,6 +134,7 @@ public:
 class CStandardMesh : public CMesh
 {
 public:
+	CStandardMesh() {};
 	CStandardMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual ~CStandardMesh();
 
@@ -189,6 +192,7 @@ public:
 
 	float GetHeight(float x, float z, bool bReverseQuad = false);
 	XMFLOAT3 GetHeightMapNormal(int x, int z);
+	XMFLOAT3 GetHeightMapTangent(int x, int z);
 	XMFLOAT3 GetScale() { return(m_xmf3Scale); }
 
 	BYTE *GetHeightMapPixels() { return(m_pHeightMapPixels); }
@@ -207,6 +211,8 @@ protected:
 	XMFLOAT4						*m_pxmf4Colors = NULL;
 	XMFLOAT2						*m_pxmf2TextureCoords0 = NULL;
 	XMFLOAT2						*m_pxmf2TextureCoords1 = NULL;
+	XMFLOAT3						* m_pxmf3Normals = NULL;
+	XMFLOAT3						* m_pxmf3Tangents = NULL;
 
 	ID3D12Resource					*m_pd3dColorBuffer = NULL;
 	ID3D12Resource					*m_pd3dColorUploadBuffer = NULL;
@@ -220,6 +226,13 @@ protected:
 	ID3D12Resource					*m_pd3dTextureCoord1UploadBuffer = NULL;
 	D3D12_VERTEX_BUFFER_VIEW		m_d3dTextureCoord1BufferView;
 
+	ID3D12Resource					* m_pd3dNormalBuffer = NULL;
+	ID3D12Resource					* m_pd3dNormalUploadBuffer = NULL;
+	D3D12_VERTEX_BUFFER_VIEW		m_d3dNormalBufferView;
+
+	ID3D12Resource					* m_pd3dTangentBuffer = NULL;
+	ID3D12Resource					* m_pd3dTangentUploadBuffer = NULL;
+	D3D12_VERTEX_BUFFER_VIEW		m_d3dTangentBufferView;
 public:
 	CHeightMapGridMesh(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, int xStart, int zStart, int nWidth, int nLength, XMFLOAT3 xmf3Scale = XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4 xmf4Color = XMFLOAT4(1.0f, 1.0f, 0.0f, 0.0f), void *pContext = NULL);
 	virtual ~CHeightMapGridMesh();
@@ -253,6 +266,7 @@ class CSkinnedMesh : public CStandardMesh
 {
 public:
 	CSkinnedMesh(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
+	CSkinnedMesh(CSkinnedMesh*);
 	virtual ~CSkinnedMesh();
 
 protected:

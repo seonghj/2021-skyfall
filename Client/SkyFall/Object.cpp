@@ -284,6 +284,10 @@ CAnimationLayer::CAnimationLayer()
 { 
 }
 
+CAnimationLayer::CAnimationLayer(const CAnimationLayer&)
+{
+}
+
 CAnimationLayer::~CAnimationLayer()
 {
 	for (int i = 0; i < m_nAnimatedBoneFrames; i++)
@@ -347,6 +351,22 @@ CAnimationSet::CAnimationSet(float fStartTime, float fEndTime, char* pstrName, i
 	m_nType = nType;
 
 	strcpy_s(m_pstrAnimationSetName, 64, pstrName);
+}
+
+CAnimationSet::CAnimationSet(const CAnimationSet& other)
+{
+	m_fStartTime = other.m_fStartTime;
+	m_fEndTime = other.m_fEndTime;
+	m_fLength = other.m_fEndTime - other.m_fStartTime;
+	m_nType = other.m_nType;
+	
+	strcpy_s(m_pstrAnimationSetName, 64, other.m_pstrAnimationSetName);
+
+	//m_pAnimationCallbackHandler = new CAnimationCallbackHandler(*other.m_pAnimationCallbackHandler);
+	//m_pAnimationLayers = new CAnimationLayer(*other.m_pAnimationLayers);
+
+
+	//m_pCallbackKeys = new CALLBACKKEY(*other.m_pCallbackKeys);
 }
 
 CAnimationSet::~CAnimationSet()
@@ -431,6 +451,13 @@ CAnimationSets::CAnimationSets(int nAnimationSets)
 	m_nAnimationSets = nAnimationSets;
 	m_ppAnimationSets = new CAnimationSet*[nAnimationSets];
 	for (int i = 0; i < m_nAnimationSets; i++) m_ppAnimationSets[i] = NULL;
+}
+
+CAnimationSets::CAnimationSets(const CAnimationSets& other)
+{
+	m_nAnimationSets = other.m_nAnimationSets;
+	m_ppAnimationSets = new CAnimationSet * [m_nAnimationSets];
+	for (int i = 0; i < m_nAnimationSets; i++) m_ppAnimationSets[i] = new CAnimationSet(*other.m_ppAnimationSets[i]);
 }
 
 CAnimationSets::~CAnimationSets()
@@ -597,6 +624,49 @@ float CAnimationController::GetTrackPosition(int nAnimationTrack)
 	return m_pAnimationSets->m_ppAnimationSets[m_pAnimationTracks[nAnimationTrack].m_nAnimationSet]->m_fPosition;
 }
 
+CLoadedModelInfo::CLoadedModelInfo(const CLoadedModelInfo& other)
+{
+	m_pModelRootObject = new CGameObject(*other.m_pModelRootObject);
+	m_pAnimationSets = new CAnimationSets(*other.m_pAnimationSets);
+	for (int i = 0; i < m_pAnimationSets->m_nAnimationSets; ++i) {
+		CAnimationSet* pAnimationSet = m_pAnimationSets->m_ppAnimationSets[i];
+
+		pAnimationSet->m_nAnimationLayers = other.m_pAnimationSets->m_ppAnimationSets[i]->m_nAnimationLayers;
+		pAnimationSet->m_pAnimationLayers = new CAnimationLayer[pAnimationSet->m_nAnimationLayers];
+
+		for (int j = 0; j < pAnimationSet->m_nAnimationLayers; j++) {
+			CAnimationLayer* pAnimationLayer = &pAnimationSet->m_pAnimationLayers[j];
+
+			pAnimationLayer->m_nAnimatedBoneFrames = other.m_pAnimationSets->m_ppAnimationSets[i]->m_pAnimationLayers[j].m_nAnimatedBoneFrames;
+
+			pAnimationLayer->m_ppAnimatedBoneFrameCaches = new CGameObject * [pAnimationLayer->m_nAnimatedBoneFrames];
+			pAnimationLayer->m_ppAnimationCurves = new CAnimationCurve * [pAnimationLayer->m_nAnimatedBoneFrames][9];
+
+			pAnimationLayer->m_fWeight = other.m_pAnimationSets->m_ppAnimationSets[i]->m_pAnimationLayers[j].m_fWeight;
+			for (int k = 0; k < pAnimationLayer->m_nAnimatedBoneFrames; k++)
+			{
+
+				for (int p = 0; p < 9; p++) {
+					if (other.m_pAnimationSets->m_ppAnimationSets[i]->m_pAnimationLayers[j].m_ppAnimationCurves[k][p])
+						pAnimationLayer->m_ppAnimationCurves[k][p] = new CAnimationCurve(*other.m_pAnimationSets->m_ppAnimationSets[i]->m_pAnimationLayers[j].m_ppAnimationCurves[k][p]);
+					else
+						pAnimationLayer->m_ppAnimationCurves[k][p] = NULL;
+
+				}
+
+				pAnimationLayer->m_ppAnimatedBoneFrameCaches[k] = m_pModelRootObject->FindFrame(
+					other.m_pAnimationSets->m_ppAnimationSets[i]->m_pAnimationLayers[j].m_ppAnimatedBoneFrameCaches[k]->m_pstrFrameName);			
+			}
+		}
+	}
+
+
+
+
+	m_nSkinnedMeshes = other.m_nSkinnedMeshes;
+	PrepareSkinning();
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 CLoadedModelInfo::~CLoadedModelInfo()
@@ -628,6 +698,43 @@ CGameObject::CGameObject(int nMaterials) : CGameObject()
 	{
 		m_ppMaterials = new CMaterial*[m_nMaterials];
 		for (int i = 0; i < m_nMaterials; i++) m_ppMaterials[i] = NULL;
+	}
+}
+
+CGameObject::CGameObject(const CGameObject& object) :CGameObject()
+{
+	strcpy_s(m_pstrFrameName, object.m_pstrFrameName);
+	m_nMaterials = object.m_nMaterials;
+	if (m_nMaterials > 0) {
+		m_ppMaterials = new CMaterial * [m_nMaterials];
+		for (int i = 0; i < m_nMaterials; ++i) {
+			m_ppMaterials[i] = NULL;
+			SetMaterial(i, object.m_ppMaterials[i]);
+		}
+	}
+	
+	if (object.m_pMesh) {
+		CMesh* pMesh;
+		if (object.m_pMesh->GetType() & SKINNED_MESH)
+			pMesh = new CSkinnedMesh((CSkinnedMesh*)object.m_pMesh);
+		else
+			pMesh = new CStandardMesh((CStandardMesh&)*object.m_pMesh);
+		m_pMesh = NULL;
+		SetMesh(pMesh);
+	}
+	m_xmf4x4ToParent = object.m_xmf4x4ToParent;
+	m_xmf3Scale = object.m_xmf3Scale;
+	m_xmf3Rotation = object.m_xmf3Rotation;
+	m_xmf3Translation = object.m_xmf3Rotation;
+
+	if (object.m_pSibling) {
+		m_pSibling = new CGameObject(*object.m_pSibling);
+		m_pSibling->m_pParent = this;
+	}
+	if (object.m_pChild) {
+		m_pChild = new CGameObject(*object.m_pChild);
+		m_pChild->m_pParent = this;
+
 	}
 }
 
@@ -2044,6 +2151,8 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device *pd3dDevice, ID3D12GraphicsCom
 CHeightMapTerrain::~CHeightMapTerrain(void)
 {
 	if (m_pHeightMapImage) delete m_pHeightMapImage;
+
+	ReleaseShaderVariables();
 }
 
 float CHeightMapTerrain::GetHeight(float x, float z, bool bReverseQuad)
@@ -2371,19 +2480,21 @@ void CBullet::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamer
 
 
 CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext, int nPlace) :CMonster()
-{
-	CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
+{	
+	{
+		//CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
+		CLoadedModelInfo* pDragonModel = pModel;
 
-	SetChild(pDragonModel->m_pModelRootObject, true);
+		SetChild(pDragonModel->m_pModelRootObject, true);
 
-	m_nAnimations = DragonState::AnimationCount;
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, m_nAnimations, pDragonModel);
+		m_nAnimations = DragonState::AnimationCount;
+		m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, m_nAnimations, pDragonModel);
 
-	strcpy_s(m_pstrFrameName, "Dragon");
+		strcpy_s(m_pstrFrameName, "Dragon");
 
-
-	CGameObject* pObject = pDragonModel->m_pModelRootObject->FindFrame("Polygonal_Dragon");
-
+		//delete pDragonModel;
+	}
+	CGameObject* pObject = FindFrame("Polygonal_Dragon");
 	XMFLOAT3 xmf3Extents = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents).Extents;
 
 	float yExtents = SetBBObject(pd3dDevice, pd3dCommandList,
@@ -2413,7 +2524,6 @@ CDragon::CDragon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 
 	InitAnimation();
 
-	delete pDragonModel;
 }
 
 CDragon::~CDragon()
@@ -2474,17 +2584,19 @@ void CDragon::Move(const XMFLOAT3& vDirection, float fSpeed)
 
 CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext, int nPlace) :CMonster()
 {
-	CLoadedModelInfo* pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
-	
-	SetChild(pWolfModel->m_pModelRootObject, true);
+	{
+		//CLoadedModelInfo* pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
+		CLoadedModelInfo* pWolfModel = pModel;
 
-	m_nAnimations = WolfState::AnimationCount;
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, m_nAnimations, pWolfModel);
-	strcpy_s(m_pstrFrameName, "Wolf");
+		SetChild(pWolfModel->m_pModelRootObject, true);
 
+		m_nAnimations = WolfState::AnimationCount;
+		m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, m_nAnimations, pWolfModel);
+		strcpy_s(m_pstrFrameName, "Wolf");
 
-	CGameObject* pObject = pWolfModel->m_pModelRootObject->FindFrame("Polygonal_Wolf");
-
+		//delete pWolfModel;
+	}
+	CGameObject* pObject = FindFrame("Polygonal_Wolf");
 	XMFLOAT3 xmf3Extents = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents).Extents;
 
 	float zExtents =SetBBObject(pd3dDevice, pd3dCommandList,
@@ -2512,7 +2624,6 @@ CWolf::CWolf(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandLis
 
 	InitAnimation();
 
-	delete pWolfModel;
 }
 
 CWolf::~CWolf()
@@ -2571,16 +2682,19 @@ void CWolf::Move(const XMFLOAT3& vDirection, float fSpeed)
 
 CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, int nAnimationTracks, void** ppContext, int nPlace) :CMonster()
 {
-	CLoadedModelInfo* pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
+	{
+		//CLoadedModelInfo* pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
+		CLoadedModelInfo* pMetalonModel = pModel;
 
-	SetChild(pMetalonModel->m_pModelRootObject, false);
+		SetChild(pMetalonModel->m_pModelRootObject, false);
 
-	m_nAnimations = MetalonState::AnimationCount;
-	m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, m_nAnimations, pMetalonModel);
+		m_nAnimations = MetalonState::AnimationCount;
+		m_pSkinnedAnimationController = new CAnimationController(pd3dDevice, pd3dCommandList, m_nAnimations, pMetalonModel);
 
-	strcpy_s(m_pstrFrameName, "Metalon");
-
-	CGameObject* pObject = pMetalonModel->m_pModelRootObject->FindFrame("Polygonal_Metalon");
+		strcpy_s(m_pstrFrameName, "Metalon");
+		//delete pMetalonModel;
+	}
+	CGameObject* pObject = FindFrame("Polygonal_Metalon");
 
 	XMFLOAT3 xmf3Extents = BoundingBox(pObject->m_pMesh->m_xmf3AABBCenter, pObject->m_pMesh->m_xmf3AABBExtents).Extents;
 
@@ -2611,7 +2725,6 @@ CMetalon::CMetalon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComm
 	//pHpBar->SetScale(10.f, 10.f, 10.f);
 	InitAnimation();
 
-	delete pMetalonModel;
 }
 
 CMetalon::~CMetalon()
@@ -2813,8 +2926,35 @@ CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCo
 	m_ppMaterials[0] = NULL;
 
 	SetMaterial(0, pTerrainMaterial);
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture, float l, float b, float r, float t, float a)
+{
+	CScene::CreateShaderResourceViews(pd3dDevice, pTexture, false);
+	pTexture->SetGraphicsSrvRootArgument(0, 7, 0);
+
+	CUIMesh* pMesh = new CUIMesh(pd3dDevice, pd3dCommandList, l, b, r, t, a);
+	SetMesh(pMesh);
+
+	CUIShader* pUIShader = new CUIShader();
+	pUIShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+	pUIShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	CMaterial* pTerrainMaterial = new CMaterial(1);
+	pTerrainMaterial->SetTexture(pTexture, 0);
+	pTerrainMaterial->SetShader(pUIShader);
+
+	m_nMaterials = 1;
+	m_ppMaterials = new CMaterial * [m_nMaterials];
+	m_ppMaterials[0] = NULL;
+
+	SetMaterial(0, pTerrainMaterial);
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
 CUIObject::~CUIObject()
 {
+	ReleaseShaderVariables();
+	delete m_pcbMappedUI;
 }

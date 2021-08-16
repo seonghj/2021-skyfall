@@ -70,7 +70,7 @@ public:
 
 	bool ProcessInput(UCHAR *pKeysBuffer);
     void AnimateObjects(float fTimeElapsed);
-    void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera=NULL);
+	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL, bool onlyTerrain = false);
 	void RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 	void Set(ID3D12GraphicsCommandList* pd3dCommandList);
 	void ReleaseUploadBuffers();
@@ -83,6 +83,8 @@ public:
 	CHeightMapTerrain* GetTerrain(int i) { return m_ppTerrain[i]; }
 	void SetState(int state) { m_iState = state; }
 	int GetState() const { return m_iState; }
+
+	void TakeDamage(bool isDamaged);
 
 protected:
 	ID3D12RootSignature					*m_pd3dGraphicsRootSignature = NULL;

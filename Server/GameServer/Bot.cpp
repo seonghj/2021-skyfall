@@ -103,13 +103,13 @@ void Bot::Init(int roomID)
 		monsters[roomID][5].state = 1;
 
 		monsters[roomID][6].type = MonsterType::Wolf;
-		monsters[roomID][6].SpawnPos = XMFLOAT3{ 3548, 124, 3668 };
+		monsters[roomID][6].SpawnPos = XMFLOAT3{ 3548, 124, 4500};
 		monsters[roomID][6].f3Position = monsters[roomID][6].SpawnPos.load();
 		monsters[roomID][6].Rotate(-90.0f, -40.0f, 0.0f);
 		monsters[roomID][6].state = 1;
 
 		monsters[roomID][7].type = MonsterType::Wolf;
-		monsters[roomID][7].SpawnPos = XMFLOAT3{ 3868, 124, 2763 };
+		monsters[roomID][7].SpawnPos = XMFLOAT3{ 3868, 124, 3763 };
 		monsters[roomID][7].f3Position = monsters[roomID][7].SpawnPos.load();
 		monsters[roomID][7].Rotate(-90.0f, -40.0f, 0.0f);
 		monsters[roomID][7].state = 1;
@@ -164,7 +164,7 @@ void Bot::Init(int roomID)
 
 void Bot::CheckBehavior(int roomID)
 {
-	for (int& player : m_pServer->GameRooms[roomID]) {
+	for (int& player : m_pServer->GameRooms[roomID].pkeys) {
 		if (player == INVALIDID) continue;
 		if (m_pServer->sessions[player].connected.load() == false) continue;
 		if (m_pServer->sessions[player].state.load() == Death) continue;
@@ -199,6 +199,7 @@ void Bot::CheckBehavior(int roomID)
 
 			if (range < 300.0f)
 			{
+				mon.isTrace = true;
 				subtract = Vector3::Normalize(subtract);
 				/*mon.SetPosition(floor(mon.GetPosition().x)
 					, floor(mon.GetPosition().y), floor(mon.GetPosition().z));*/
@@ -253,8 +254,14 @@ void Bot::CheckBehavior(int roomID)
 					}
 				}
 				else if (range > distance) {
-					mon.Move(subtract, 2.f);
+					mon.Move(subtract, 3.f);
 					m_pServer->send_monster_pos(mon, cross);
+				}
+			}
+			else {
+				if (mon.isTrace == true) {
+					mon.isTrace = false;
+					m_pServer->send_monster_stop(mon.key, mon.roomID.load());
 				}
 			}
 		}
@@ -269,7 +276,7 @@ void Bot::RunBot(int roomID)
 		e.type = EventType::Mon_move_to_player;
 		e.key = 0;
 		e.roomid = roomID;
-		m_pTimer->push_event(roomID, OE_gEvent, 33, reinterpret_cast<char*>(&e));
+		m_pTimer->push_event(roomID, OE_gEvent, 50, reinterpret_cast<char*>(&e));
 	}
 }
 

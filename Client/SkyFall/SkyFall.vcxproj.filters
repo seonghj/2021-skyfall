@@ -113,9 +113,6 @@
     <ClCompile Include="WICTextureLoader12.cpp">
       <Filter>리소스 파일\소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Monster.cpp">
-      <Filter>리소스 파일\소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="includes\imgui\imgui.cpp">
       <Filter>리소스 파일\소스 파일\imgui</Filter>
     </ClCompile>

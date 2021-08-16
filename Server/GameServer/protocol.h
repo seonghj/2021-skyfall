@@ -15,7 +15,7 @@ constexpr int AI_ID = 5000;
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 6144;
 constexpr int MAP_BLOCK_SIZE = 2048;
-constexpr int MAP_BREAK_TIME = 100000;
+constexpr int MAP_BREAK_TIME = 90000;
 
 constexpr int MON_SPAWN_TIME = 10000;
 
@@ -23,7 +23,8 @@ constexpr float VIEWING_DISTANCE = 1000.f;
 
 constexpr int INVENTORY_MAX = 20;
 
-// 1 = 3cm
+constexpr int MAX_ROOM = 20;
+
 
 #define SERVERIP   "127.0.0.1"
 //#define SERVERIP   "39.120.192.92"
@@ -53,6 +54,7 @@ enum terrain {
 
 enum PacketType {
 	SC_NONE,
+	SC_create_account,
 	SC_player_Lobbykey,
 	SC_player_LobbyloginOK,
 	SC_player_LobbyloginFail,
@@ -81,13 +83,6 @@ enum PacketType {
 	SC_map_set,
 	SC_map_collapse,
 	SC_cloud_move,
-	SC_bot_add,
-	SC_bot_remove,
-	SC_bot_info,
-	SC_bot_move,
-	SC_bot_pos,
-	SC_bot_attack,
-	SC_bot_damaged,
 	SC_monster_add,
 	SC_monster_remove,
 	SC_monster_info,
@@ -96,12 +91,15 @@ enum PacketType {
 	SC_monster_attack,
 	SC_monster_damaged,
 	SC_monster_respawn,
+	SC_monster_stop,
 	SC_player_record,
 	SC_player_getitem,
 
 
+	CS_create_account,
 	CS_room_select,
 	CS_create_room,
+	CS_refresh_lobby,
 	CS_player_Lobbylogin,
 	CS_player_login,
 	CS_game_ready,
@@ -134,7 +132,7 @@ enum EventType {
 };
 
 enum PlayerMove {
-	WAKING,
+	WALKING,
 	RUNNING,
 	JUMP,
 	STAND
@@ -186,8 +184,8 @@ struct player_key_packet :public Packet {
 };
 
 struct player_login_packet :public Packet {
-	char id[50];
-	char pw[50];
+	char id[20];
+	char pw[20];
 };
 
 struct player_loginOK_packet :public Packet {
@@ -200,6 +198,7 @@ struct player_loginFail_packet :public Packet {
 };
 
 struct room_create_packet :public Packet {
+	char name[20];
 };
 
 struct room_select_packet :public Packet {
@@ -207,7 +206,12 @@ struct room_select_packet :public Packet {
 };
 
 struct room_list_packet :public Packet {
-	bool isRoom[20];
+	char name[20];
+	short idx;
+};
+
+struct refresh_lobby_packet : public Packet {
+
 };
 
 struct player_add_packet : public Packet {
@@ -257,6 +261,7 @@ struct player_pos_packet : public Packet {
 	float dx, dy;
 	DWORD MoveType;
 	DWORD dir;
+	short frame;
 };
 
 struct player_start_pos : public Packet {
@@ -377,6 +382,10 @@ struct mon_respawn_packet : public Packet {
 	short MonsterType;
 };
 
+struct mon_stop_packet : public Packet {
+	DirectX::XMFLOAT3 Position;
+};
+
 struct player_record_packet : public Packet {
 	char id[50];
 	short survivalTime;
@@ -393,6 +402,12 @@ struct player_getitem_packet :public Packet {
 };
 
 struct return_lobby_packet :public Packet {
+};
+
+struct create_account_packet :public Packet {
+	char id[20];
+	char pw[20];
+	bool canmake;
 };
 
 struct mon_move_to_player_event : public Packet {

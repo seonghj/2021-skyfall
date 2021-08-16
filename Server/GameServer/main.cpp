@@ -5,7 +5,7 @@
 #include "Bot.h"
 #include "Timer.h"
 
-//#define Run_DB
+#define Run_DB
 #define Run_Bot
 
 Server*		g_pServer = new Server;
@@ -26,6 +26,7 @@ int main(int argc, char* argv[])
 		g_pDB->Disconnection_ODBC();
 		std::cout << "DB disconnected\n";
 	}
+	g_pDB->isRun = DB_Connected;
 #endif
 	g_pServer->Set_pTimer(g_pTimer);
 

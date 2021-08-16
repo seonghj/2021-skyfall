@@ -48,7 +48,7 @@ public:
     std::atomic<bool>        connected = false;
     bool                     isready = false;
     bool                     playing = false;
-    int                      prev_size;
+    int                      prev_size = 0;
     std::atomic<int>         key = -1;
     std::atomic<int>         roomID = -1;
     char                     id[50];
@@ -77,6 +77,8 @@ public:
 
     std::atomic<short>      inventory[INVENTORY_MAX]{};
 
+    int moveframe = -1;
+
     void init();
 
     DirectX::XMFLOAT3 GetPosition() { return f3Position; }
@@ -97,6 +99,15 @@ class DB;
 class Bot;
 class Monster;
 
+class GameRoom {
+public:
+    int pkeys[20];
+    char name[20];
+    bool CanJoin = false;
+    int TotalPlayer = 0;
+    Map* m_pMap;
+};
+
 class Server {
 public:
     Server();
@@ -111,7 +122,7 @@ public:
     int SetroomID();
     int SetLobbyKey();
 
-    bool CreateRoom(int key);
+    int CreateRoom(int key, char* name);
 
     void Set_pTimer(Timer* t) { m_pTimer = t; }
     void Set_pBot(Bot* b) { m_pBot = b; }
@@ -159,6 +170,7 @@ public:
     void send_remove_monster(int key, int roomID, int to);
     void send_monster_pos(const Monster& mon, XMFLOAT3 direction);
     void send_monster_attack(const Monster& mon, XMFLOAT3 direction, int target);
+    void send_monster_stop(int key, int roomID);
 
     void send_player_record(int key, int roomID, const SESSION& s, int time, int rank);
     void send_map_packet(int to, int roomID);
@@ -173,8 +185,7 @@ public:
 
     //std::unordered_map <int, SESSION> Lobby_sessions;
     //std::unordered_map <int, std::array<SESSION, 20>> sessions; // ¹æID, Player¹è¿­
-    std::unordered_map <int, bool> CanJoin;
-    std::unordered_map <int, std::array<int, 20>> GameRooms;
+    std::unordered_map <int, GameRoom> GameRooms;
     std::array<SESSION, 1000> sessions;
 
 private:
@@ -183,13 +194,10 @@ private:
     Bot*                           m_pBot = NULL;
     DB*                            m_pDB = NULL;
 
-    std::unordered_map <int, Map>                     maps;
-    std::unordered_map <int, Bot>                     Bots;
 
     std::vector <std::thread>      working_threads;
     std::thread                    accept_thread;
     std::thread                    timer_thread;
-    std::vector <std::thread>      map_threads;
 
     std::mutex                     accept_lock;
     std::mutex                     sessions_lock;

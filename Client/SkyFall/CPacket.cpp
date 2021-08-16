@@ -116,6 +116,7 @@ void CPacket::SendPacket(char* buf)
     int retval = 0;
     wsabuf.len = buf[0];
     wsabuf.buf = buf;
+    //printf("%d\n",wsabuf.len);
     retval = WSASend(sock, &wsabuf, 1, &sendbytes, 0, NULL, NULL);
     if (retval == SOCKET_ERROR) {
         printf("%d: ", WSAGetLastError());
@@ -173,6 +174,7 @@ void CPacket::Send_stop_packet()
 {
     player_stop_packet p;
     p.key = InGamekey;
+    p.roomid = roomID;
     p.size = sizeof(p);
     p.type = PacketType::CS_player_stop;
     p.Position = m_pPlayer->GetPosition();
@@ -239,7 +241,7 @@ void CPacket::Send_mon_damaged_packet(int target, int nAttack)
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
-void CPacket::Send_room_create_packet()
+void CPacket::Send_room_create_packet(const char* name)
 {
     room_create_packet p;
 
@@ -247,6 +249,7 @@ void CPacket::Send_room_create_packet()
     p.roomid = -1;
     p.size = sizeof(p);
     p.type = CS_create_room;
+    strncpy_s(p.name, name, 20);
 
     SendPacket(reinterpret_cast<char*>(&p));
 }
@@ -276,6 +279,29 @@ void CPacket::Send_return_lobby_packet()
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
+void CPacket::Send_refresh_room_packet()
+{
+    refresh_lobby_packet p;
+    p.key = client_key;
+    p.roomid = roomID;
+    p.size = sizeof(p);
+    p.type = CS_refresh_lobby;
+
+    SendPacket(reinterpret_cast<char*>(&p));
+}
+
+void CPacket::Send_create_account_packet(char* id, char* pw)
+{
+    create_account_packet p;
+    p.key = client_key;
+    p.size = sizeof(p);
+    p.type = PacketType::CS_create_account;
+    p.roomid = roomID;
+    strcpy_s(p.id, id);
+    strcpy_s(p.pw, pw);
+    p.canmake = 0;
+    SendPacket(reinterpret_cast<char*>(&p));
+}
 void CPacket::Swap_weapon(int key, PlayerType weapon)
 {
     if (key != InGamekey) {
@@ -368,7 +394,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
     }
     else {
         switch (weapon) {
-        case PT_BOW: {
+        case PT_SWORD1H: {
             float beforepitch = m_pPlayer->GetPitch();
             float beforeyaw = m_pPlayer->GetYaw();
             XMFLOAT3 beforepos = m_pPlayer->GetPosition();
@@ -393,7 +419,7 @@ void CPacket::Swap_weapon(int key, PlayerType weapon)
             m_pFramework->m_pCamera = m_pPlayer->GetCamera();
             break;
         }
-        case PT_SWORD1H: {
+        case PT_BOW: {
             XMFLOAT3 beforepos = m_pPlayer->GetPosition();
             float beforepitch = m_pPlayer->GetPitch();
             float beforeyaw = m_pPlayer->GetYaw();
@@ -554,9 +580,25 @@ int CPacket::MonsterAttackCheck(CMonster* mon)
 void CPacket::ProcessPacket(char* buf)
 {
     //printf("%d\n", buf[1]);
+    if (buf[1] <= SC_NONE || buf[1] >= CS_NONE) return;
     switch (buf[1])
     {
+    case PacketType::SC_create_account: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
+        create_account_packet* p = reinterpret_cast<create_account_packet*>(buf);
+        if (p->canmake == false) {
+            m_pFramework->SetbError(true);
+            m_pFramework->SetErrorMsg("Creation account fail");
+            printf("Creation account fail\n");
+        }
+        else {
+            m_pFramework->SetbShowAccountWindow(false);
+            m_pFramework->SetbError(false);
+        }
+        break;
+    }
     case PacketType::SC_player_Lobbykey: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
         player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
         int key = p->key;
 
@@ -567,10 +609,11 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::SC_player_InGamekey: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
         player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
         int key = p->key;
 
-        //if (key < 0 || key > 20) break;
+        if (key <= 1000) break;
 
         InGamekey = key;
         roomID = p->roomid;
@@ -588,10 +631,14 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::SC_player_loginFail: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
         printf("Login fail\n");
+        m_pFramework->SetbError(true);
+        m_pFramework->SetErrorMsg("Login fail");
         break;
     }
     case PacketType::SC_player_loginOK: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
         player_loginOK_packet* p = reinterpret_cast<player_loginOK_packet*>(buf);
         int key = p->key;
         if (isLogin == TRUE) break;
@@ -612,6 +659,8 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_add: {
         player_add_packet* p = reinterpret_cast<player_add_packet*>(buf);
         int key = p->key;
+        if (key < 0) break;
+        if (key >= MAX_PLAYER) break;
         printf("login key: %d weapon: %d\n", p->key, p->WeaponType);
         if (key != InGamekey) {
             Swap_weapon(p->key, p->WeaponType);
@@ -619,6 +668,7 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_mPlayer[key]->Rotate(p->dx, p->dy, 0);
             m_pScene->AnimatePlayer(key, 2);
             m_pScene->AnimatePlayer(key, 0);
+            ++TotalPlayer;
         }
         else {
             Swap_weapon(p->key, p->WeaponType);
@@ -639,6 +689,7 @@ void CPacket::ProcessPacket(char* buf)
         m_pScene->SetState(SCENE::INGAME);
         m_pFramework->TrunOnBGM(BGM::The_Battle_of_1066);
         m_pFramework->MouseHold(false);
+        TotalPlayer = 1;
         break;
     }
     case PacketType::SC_game_end: {
@@ -655,7 +706,6 @@ void CPacket::ProcessPacket(char* buf)
         {
             m_pScene->m_ppUIObjects[2]->SetAlpha(1.0f);
         }
-        m_pFramework->rooms.erase(roomID);
 
         break;
     }
@@ -667,6 +717,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
         int key = p->key;
+        if (key >= MAX_PLAYER) break;
         if (p->key == client_key) {
             switch (p->MoveType) {
             case PlayerMove::JUMP: {
@@ -692,6 +743,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
         int key = p->key;
+        if (key >= MAX_PLAYER) break;
         if (p->key == InGamekey) {
             //m_pPlayer->SetPosition(p->Position);
             m_pPlayer->Rotate(p->dx - m_pPlayer->GetPitch()
@@ -704,7 +756,7 @@ void CPacket::ProcessPacket(char* buf)
         }
         else {
             switch (p->MoveType) {
-            case PlayerMove::WAKING:
+            case PlayerMove::WALKING:
                 m_pScene->AnimatePlayer(key, PlayerState::Walk);
                 break;
             case PlayerMove::RUNNING:
@@ -728,9 +780,11 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_mPlayer[key]->Rotate(p->dx - m_pScene->m_mPlayer[key]->GetPitch()
                 , p->dy - m_pScene->m_mPlayer[key]->GetYaw(), 0);
         }
+        m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(PlayerState::Take_Damage, 0);
         break;
     }
     case PacketType::SC_select_room: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
         room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
         roomID = p->room;
         m_pScene->SetState(SCENE::INROOM);
@@ -739,20 +793,26 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::SC_room_list: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
         room_list_packet* p = reinterpret_cast<room_list_packet*>(buf);
-        printf("get room list\n");
-        for (int i = 0; i < 20; i++) {
-            if (p->isRoom[i] == true) {
-                string s = "room ";
-                s += to_string(i);
-                strcpy(m_pFramework->rooms[i], s.c_str());
-            }
+        if (p->idx >= 20) break;
+        if (p->idx == INVALIDID) {
+            m_pFramework->SetbError(true);
+            m_pFramework->SetErrorMsg("Room name already exists");
+            Send_refresh_room_packet();
+            break;
         }
+        else {
+            m_pFramework->SetbError(false);
+        }
+        m_pFramework->m_vRooms.insert(m_pFramework->m_vRooms.begin()
+            ,make_pair(p->idx, p->name));
         break;
     }
     case PacketType::SC_start_pos: {
         player_start_pos* p = reinterpret_cast<player_start_pos*>(buf);
         int key = p->key;
+        if (key >= MAX_PLAYER) break;
         if (p->key == InGamekey) {
             m_pPlayer->SetPosition(p->Position);
         }
@@ -764,12 +824,14 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_weapon_swap: {
         Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
         int key = p->key;
+        if (key >= MAX_PLAYER) break;
         Swap_weapon(key, p->weapon);
         break;
     }
     case PacketType::SC_player_attack: {
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
         int key = p->key;
+        if (key >= MAX_PLAYER) break;
         if (p->key == InGamekey) {
             switch (p->attack_type) {
             case SWORD1HL1: {
@@ -820,6 +882,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_allow_shot: {
         player_shot_packet* p = reinterpret_cast<player_shot_packet*>(buf);
         int key = p->key;
+        if (key >= MAX_PLAYER) break;
         if (p->key == InGamekey) {
             m_pPlayer->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
             m_pPlayer->SetAttack(false);
@@ -836,15 +899,18 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_stop: {
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
         int key = p->key;
-        if (p->key != InGamekey) {
+        if (key >= MAX_PLAYER) break;
+        m_pScene->m_mPlayer[key]->SetGround(true);
+        if (m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->GetTrackPosition(PlayerState::Take_Damage) == 0
+            || m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->IsTrackFinish(PlayerState::Take_Damage))
             m_pScene->AnimatePlayer(key, PlayerState::Idle);
+        if (p->key != InGamekey) {
             if (m_pScene->m_mPlayer[key]->GetJump() == TRUE) {
-                m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(2, 0);
+                m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(PlayerState::Jump, 0);
                 m_pScene->m_mPlayer[key]->SetJump(FALSE);
             }
         }
         m_pScene->m_mPlayer[key]->SetPosition(p->Position);
-        m_pScene->m_mPlayer[key]->SetGround(true);
         break;
     }
 
@@ -858,8 +924,8 @@ void CPacket::ProcessPacket(char* buf)
 
     case PacketType::SC_cloud_move: {
         cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(buf);
-        //m_pFramework->SetCloud(p->x, p->z);
-        m_pFramework->SetCloud(5000,1000);
+        m_pFramework->SetCloud(p->x, p->z);
+        //m_pFramework->SetCloud(5000,1000);
         //printf("key: %d cloud move x = %f, z = %f\n",p->roomid, p->x, p->z);
         break;
     }
@@ -869,15 +935,10 @@ void CPacket::ProcessPacket(char* buf)
         m_pPlayer->SetPosition(XMFLOAT3(m_pPlayer->GetPosition().x, 200, m_pPlayer->GetPosition().z));
         break;
     }
-    case PacketType::SC_bot_add: {
-        mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
-        int key = p->key;
-        //m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
-        break;
-    }
     case PacketType::SC_monster_pos: {
         mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
         int key = p->key;
+        if (key >= 15) break;
         {
             CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
             XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
@@ -912,8 +973,17 @@ void CPacket::ProcessPacket(char* buf)
                 m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 3);
             }
 
-            if (m_pScene->m_ppGameObjects[key]->GetState() != 3)
-                m_pScene->m_ppGameObjects[key]->ChangeState(3);
+            if (p->MonsterType != MonsterType::Dragon) {
+                if (m_pScene->m_ppGameObjects[key]->GetState() != MonsterState::m_Walk) {
+                    if (m_pScene->m_ppGameObjects[key]->GetState() == MonsterState::m_Take_Damage) {
+                        if (m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->IsTrackFinish(MonsterState::m_Take_Damage) == true)
+                            m_pScene->m_ppGameObjects[key]->ChangeState(MonsterState::m_Walk);
+                    }
+                    else {
+                        m_pScene->m_ppGameObjects[key]->ChangeState(MonsterState::m_Walk);
+                    }
+                }
+            }
         }
 
         CheckCollision(m_pScene->m_ppGameObjects[key]);
@@ -922,30 +992,33 @@ void CPacket::ProcessPacket(char* buf)
         p->Position = m_pScene->m_ppGameObjects[key]->GetPosition();
 
         //printf("%f, %f, %f\n", p->Position.x, p->Position.y, p->Position.z);
-
         SendPacket(reinterpret_cast<char*>(p));
         break;
     }
     case PacketType::SC_monster_attack: {
         mon_attack_packet* p = reinterpret_cast<mon_attack_packet*>(buf);
         int key = p->key;
+        if (key >= 15) break;
+        if (p->target >= MAX_PLAYER) break;
         //if (m_pScene->m_ppGameObjects[key]->m_iReady == FALSE) break;
         m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree - m_pScene->m_ppGameObjects[key]->m_fRotateDegree);
         m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->degree;
         m_pScene->m_ppGameObjects[key]->Attack();
 
-        m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
         if (p->target == InGamekey) {
             m_pPlayer->SetHp(p->PlayerLeftHp);
-            m_pFramework->TurnOnSE(SE::Monster_Hit);
-            //m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
+            m_pScene->m_ppUIObjects[0]->SethPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
+            m_pPlayer->SetDamaged(true);
+            m_pScene->TakeDamage(true);
         }
+        m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
         break;
     }
     case PacketType::SC_monster_add: {
         mon_add_packet* p = reinterpret_cast<mon_add_packet*>(buf);
         int key = p->key;
+        if (key >= 15) break;
         {
             CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
             XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
@@ -990,14 +1063,15 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_monster_damaged:{
         mon_damaged_packet* p = reinterpret_cast<mon_damaged_packet*>(buf);
+        if (p->target >= 15) break;
         m_pScene->m_ppGameObjects[p->target]->SetHp(p->leftHp);
         cout << "Monster: " << p->target << " hp: " << m_pScene->m_ppGameObjects[p->target]->GetHp() << endl;
         m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
         m_pFramework->TurnOnSE(SE::Monster_Hit);
         if (m_pScene->m_ppGameObjects[p->target]->m_iHp > 0)
-            m_pScene->m_ppGameObjects[p->target]->ChangeState(2);
+            m_pScene->m_ppGameObjects[p->target]->ChangeState(MonsterState::m_Take_Damage);
         else {
-            m_pScene->m_ppGameObjects[p->target]->ChangeState(1);
+            m_pScene->m_ppGameObjects[p->target]->ChangeState(MonsterState::m_Die);
         }
         m_pScene->m_ppGameObjects[p->target]->m_pSkinnedAnimationController->SetAllTrackDisable();
         m_pScene->m_ppGameObjects[p->target]->m_pSkinnedAnimationController->SetTrackPosition(
@@ -1009,6 +1083,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_respawn: {
         mon_respawn_packet* p = reinterpret_cast<mon_respawn_packet*>(buf);
         int key = p->key;
+        if (key >= 15) break;
         m_pScene->m_ppGameObjects[key]->ChangeState(0);
         m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->SetAllTrackDisable();
         m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->SetTrackPosition(
@@ -1047,7 +1122,6 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
             m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->dz - m_pScene->m_ppGameObjects[key]->m_fRotateDegree);
             m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->dz;
-
             XMFLOAT3 pos = m_pScene->m_ppGameObjects[key]->GetPosition();
             int nPlace = m_pScene->m_ppGameObjects[key]->GetPlace();
             if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
@@ -1067,18 +1141,33 @@ void CPacket::ProcessPacket(char* buf)
         CheckCollision(m_pScene->m_ppGameObjects[key]);
         break;
     }
+    case PacketType::SC_monster_stop: {
+        mon_stop_packet* p = reinterpret_cast<mon_stop_packet*>(buf);
+
+        int key = p->key;
+        if (key >= 15) break;
+        m_pScene->m_ppGameObjects[key]->ChangeState(MonsterState::m_Idle);
+
+        break;
+    }
     case PacketType::SC_player_damage: {
         player_damage_packet* p = reinterpret_cast<player_damage_packet*>(buf);
+        if (p->key >= MAX_PLAYER) break;
+        if (p->target >= MAX_PLAYER) break;
         m_pScene->m_mPlayer[p->target]->SetHp(p->leftHp);
+        if (p->target == InGamekey)
+            m_pScene->m_ppUIObjects[0]->SethPercent(p->leftHp / m_pPlayer->m_iMaxHp);
         cout << "player: " << p->target << " hp: " << m_pScene->m_mPlayer[p->target]->GetHp() << endl;
         //m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
 
         if (p->target == InGamekey) {
+            m_pPlayer->SetStanding(true);
+            m_pScene->m_ppUIObjects[0]->SethPercent(p->leftHp / m_pPlayer->m_iMaxHp);
+            //Send_stop_packet();
             m_pPlayer->SetDamaged(true);
-            m_pScene->AnimatePlayer(InGamekey, PlayerState::Take_Damage);
+            m_pScene->TakeDamage(true);
         }
-        else
-            m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
+        m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
 
        /* if (m_pScene->m_mPlayer[p->target]->GetHp() < 0)
             m_pScene->AnimatePlayer(p->target, PlayerState::Death);*/
@@ -1087,8 +1176,8 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_player_dead: {
         player_dead_packet* p = reinterpret_cast<player_dead_packet*>(buf);
-        
-        printf("player dead %d %d\n", p->key, p->roomid);
+        if (p->key >= MAX_PLAYER) break;
+        printf("player dead key: %d\n", p->key);
         m_pScene->AnimatePlayer(p->key, PlayerState::Death);
         if (p->key != InGamekey)
         {
