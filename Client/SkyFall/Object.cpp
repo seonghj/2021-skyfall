@@ -703,7 +703,7 @@ CGameObject::CGameObject(int nMaterials) : CGameObject()
 
 CGameObject::CGameObject(const CGameObject& object) :CGameObject()
 {
-	strcpy(m_pstrFrameName, object.m_pstrFrameName);
+	strcpy_s(m_pstrFrameName, object.m_pstrFrameName);
 	m_nMaterials = object.m_nMaterials;
 	if (m_nMaterials > 0) {
 		m_ppMaterials = new CMaterial * [m_nMaterials];
