@@ -2,7 +2,7 @@
 #pragma warning(disable : 4996)
 #include "Server.h"
 
-//#define Run_DB
+#define Run_DB
 //#define Run_Lobby
 
 void SESSION::init() 
@@ -275,7 +275,8 @@ void Server::Disconnected(int key)
     //printf("disconnected %d\n", gameroom[roomID].ID[i]);
 
 #ifdef Run_DB
-    m_pDB->Logout_player(sessions[key].id);
+    if(m_pDB->isRun)
+        m_pDB->Logout_player(sessions[key].id);
 #endif
     //sessions.clear();
 }
@@ -727,6 +728,12 @@ void Server::send_player_dead_packet(int ingamekey, int roomID)
     //send_packet(ingamekey, reinterpret_cast<char*>(&p), roomID);
 
     sessions[GameRooms[roomID].pkeys[ingamekey]].playing == FALSE;
+
+#ifdef Run_DB
+    if (m_pDB->isRun)
+        m_pDB->Send_player_record(sessions[GameRooms[roomID].pkeys[ingamekey]]
+            , 0, GameRooms[roomID].TotalPlayer);
+#endif 
 }
 
 void Server::game_end(int roomnum, OVER_EX* over_ex)
@@ -740,6 +747,11 @@ void Server::game_end(int roomnum, OVER_EX* over_ex)
         if (sessions[key].connected == false || sessions[key].playing == false) continue;
         send_game_end_packet(key, sessions[key].roomID.load());
         sessions[key].InGamekey = INVALIDID;
+#ifdef Run_DB
+        if (m_pDB->isRun)
+            m_pDB->Send_player_record(sessions[key], 0
+                , GameRooms[roomnum].TotalPlayer);
+#endif 
     }
     GameRooms.erase(roomnum);
 
@@ -865,12 +877,14 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         bool b;
 #ifdef Run_DB
-        if (strcmp(p->id, "test") != 0) {
-            b = m_pDB->Search_ID(p->id, p->pw);
+        if (m_pDB->isRun) {
+            if (strcmp(p->id, "test") != 0) {
+                b = m_pDB->Search_ID(p->id, p->pw);
 
-            if (!b) {
-                send_player_loginFail_packet(client_key, INVALIDID);
-                break;
+                if (!b) {
+                    send_player_loginFail_packet(client_key, INVALIDID);
+                    break;
+                }
             }
         }
 #endif

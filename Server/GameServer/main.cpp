@@ -26,6 +26,7 @@ int main(int argc, char* argv[])
 		g_pDB->Disconnection_ODBC();
 		std::cout << "DB disconnected\n";
 	}
+	g_pDB->isRun = DB_Connected;
 #endif
 	g_pServer->Set_pTimer(g_pTimer);
 
