@@ -83,8 +83,6 @@ public:
 	CCamera*					m_pCamera = NULL;
 	CScene*						m_pScene = NULL;
 
-	unordered_map<int, char[20]>	rooms;
-
 	int frametime = 0;
 
 private:

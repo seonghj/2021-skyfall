@@ -1442,8 +1442,6 @@ void CGameFramework::ReleaseShaderVariables()
 
 void CGameFramework::Restart()
 {
-    m_pPacket->Send_return_lobby_packet();
-
     m_pScene->m_iState = SCENE::LOBBY;
     m_pScene->m_ppUIObjects[0]->SethPercent(1.0f);
     m_GameTimer.Reset();
@@ -1471,6 +1469,15 @@ void CGameFramework::Restart()
     }
     m_pScene->m_ppUIObjects[1]->SetAlpha(0.0f);
     m_pScene->m_ppUIObjects[2]->SetAlpha(0.0f);
+
+    m_pPacket->Send_return_lobby_packet();
+
+    for (int i = 0; i < MAX_ROOM; i++) {
+        if (m_vRooms[i].first == m_pPacket->roomID) {
+            m_vRooms.erase(m_vRooms.begin() + i);
+            break;
+        }
+    }
 }
 
 void CGameFramework::UpdateShadowMap()

@@ -387,7 +387,6 @@ void Server::send_room_list_packet(int key)
         printf("send room %d %s\n", i, GameRooms[i].name);
         send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
     }
-    printf("list send to %d\n", key);
 }
 
 void Server::send_player_loginOK_packet(int key, int roomID)
@@ -935,11 +934,6 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         for (auto& k : GameRooms[p->roomid].pkeys) {
             if ((TRUE == sessions[k].connected) && (k != client_key)) {
-                send_add_player_packet(k, client_key, p->roomid);
-            }
-        }
-        for (auto& k : GameRooms[p->roomid].pkeys) {
-            if ((TRUE == sessions[k].connected) && (k != client_key)) {
                 send_add_player_packet(client_key, k, p->roomid);
             }
         }
@@ -948,6 +942,12 @@ void Server::process_packet(int key, char* buf, int roomID)
             if (m_pBot->monsters[p->roomid][i].state == 1) {
                 //printf("send monster %d\n", i);
                 send_add_monster(i, p->roomid, key);
+            }
+        }
+
+        for (auto& k : GameRooms[p->roomid].pkeys) {
+            if ((TRUE == sessions[k].connected) && (k != client_key)) {
+                send_add_player_packet(k, client_key, p->roomid);
             }
         }
 
@@ -1248,6 +1248,7 @@ void Server::WorkerFunc()
                 continue;
             switch (over_ex->messageBuffer[1]) {
             case EventType::Mapset:{
+                std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
                 if (GameRooms[roomID].m_pMap == NULL) break;
                 if (GameRooms[roomID].m_pMap->game_start == false) break;
                 map_block_set* p = reinterpret_cast<map_block_set*>(over_ex->messageBuffer);
@@ -1262,12 +1263,13 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::Cloud_move: {
+                std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
                 if (GameRooms[roomID].m_pMap == NULL) break;
                 if (GameRooms[roomID].m_pMap->game_start == false) break;
+                GameRooms[roomID].m_pMap->ismove = true;
                 cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(over_ex->messageBuffer);
                 send_cloud_move_packet(p->x, p->z, p->roomid);
                 //printf("room: %d cloud x: %f | y: %f\n\n", p->roomid, p->x, p->z);
-                GameRooms[roomID].m_pMap->ismove = true;
                 GameRooms[roomID].m_pMap->cloud_move();
                 delete over_ex;
                 break;
@@ -1289,6 +1291,7 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::MapBreak: {
+                std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
                 if (GameRooms[roomID].m_pMap == NULL) break;
                 if (GameRooms[roomID].m_pMap->game_start == false) break;
                 Mapbreak_event* p = reinterpret_cast<Mapbreak_event*>(over_ex->messageBuffer);
@@ -1326,6 +1329,7 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::game_end: {
+                std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
                 if (GameRooms[roomID].m_pMap == NULL) break;
                 if (GameRooms[roomID].m_pMap->game_start == false) break;
                 game_end_event* e = reinterpret_cast<game_end_event*>(over_ex->messageBuffer);
