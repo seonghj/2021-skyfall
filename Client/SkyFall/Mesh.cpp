@@ -543,7 +543,7 @@ CSkinnedMesh::CSkinnedMesh(CSkinnedMesh* other) : CSkinnedMesh(*other)
 		m_ppSkinningBoneFrameCaches = new CGameObject * [m_nSkinningBones];
 		for (int i = 0; i < m_nSkinningBones; i++)
 		{
-			strcpy(m_ppstrSkinningBoneNames[i], other->m_ppstrSkinningBoneNames[i]);
+			strcpy_s(m_ppstrSkinningBoneNames[i], other->m_ppstrSkinningBoneNames[i]);
 			m_ppSkinningBoneFrameCaches[i] = NULL;
 		}
 	}
