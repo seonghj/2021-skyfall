@@ -497,7 +497,7 @@ void Server::send_packet_to_players(int ingamekey, char* buf, int roomID)
 
 void Server::send_packet_to_allplayers(int roomID, char* buf)
 {
-    if (MAX_ROOM >= 20) return;
+    if (MAX_ROOM <= roomID) return;
    //sessions_lock.lock();
     for (auto& k : GameRooms[roomID].pkeys) {
         if (k == INVALIDID) continue;
@@ -616,7 +616,7 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
         }
     }
 
-    if (sessions[GameRooms[roomID].pkeys[target]].hp <= 0) {
+    if (sessions[GameRooms[roomID].pkeys[target]].hp.load() <= 0) {
         sessions[GameRooms[roomID].pkeys[target]].state = Death;
         send_player_dead_packet(target, roomID);
     }
@@ -698,6 +698,8 @@ void Server::send_player_dead_packet(int ingamekey, int roomID)
     p.roomid = roomID;
 
     send_packet_to_allplayers(roomID, reinterpret_cast<char*>(&p));
+
+    //send_packet(ingamekey, reinterpret_cast<char*>(&p), roomID);
 
     sessions[GameRooms[roomID].pkeys[ingamekey]].playing == FALSE;
 }
