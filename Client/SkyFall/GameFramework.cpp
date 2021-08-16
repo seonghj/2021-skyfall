@@ -590,7 +590,7 @@ void CGameFramework::ShowLobbyWindow()
 				for (int n = 0; n < m_vRooms.size(); n++)
 				{
 					const bool is_selected = (room_current_idx == n);
-					if (ImGui::Selectable(m_vRooms[n], is_selected))
+					if (ImGui::Selectable(m_vRooms[n].second.c_str(), is_selected))
 						room_current_idx = n;
 
 					// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
@@ -607,7 +607,7 @@ void CGameFramework::ShowLobbyWindow()
 			// 여기서 방에 입장
 			// 임시로 state 변경해놓음
             if (room_current_idx >= 0)
-                m_pPacket->Send_room_select_packet(room_current_idx);
+                m_pPacket->Send_room_select_packet(m_vRooms[room_current_idx].first);
 		}
 		ImGui::SameLine(0, 20);
 		if (ImGui::Button("Create Room")) {
@@ -618,6 +618,7 @@ void CGameFramework::ShowLobbyWindow()
         ImGui::SameLine(0, 20);
         if (ImGui::Button("Refresh")) {
             // 방 목록 새로고침
+            m_vRooms.clear();
             m_pPacket->Send_refresh_room_packet();
         }
 	}
@@ -691,7 +692,6 @@ void CGameFramework::ShowCreateRoomWindow(bool* p_open)
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(ImVec2(viewport->WorkSize.x / 4, viewport->Size.y / 4), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(200, 80), ImGuiCond_FirstUseEver);
-
     if (ImGui::Begin("Create Room", p_open, flags))
     {
         //ImGui::SetCursorPosY(viewport->Size.y / 4 - 40);
@@ -705,6 +705,7 @@ void CGameFramework::ShowCreateRoomWindow(bool* p_open)
 
         if (p_open && ImGui::Button("Create")) {
             string str = m_bufPW;
+            m_vRooms.clear();
             m_pPacket->Send_room_create_packet(str.c_str());
             *p_open = false;
         }

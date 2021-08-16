@@ -67,9 +67,7 @@ public:
 	void MouseHold(bool b) { m_bMouseHold = b; }
 	void StartGame();
 
-	array<char[20], 20> m_vRooms;
-	void SetRoomList(int idx, char* name) { strcpy_s(m_vRooms[idx], name); }
-	char* GetRoomName(int idx) { return m_vRooms[idx]; }
+	vector<pair<short, string>> m_vRooms;
 
 	void SetbError(bool b) { m_bError = b; }
 	void SetErrorMsg(string s) { m_ErrorMsg = s; }

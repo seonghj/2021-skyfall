@@ -786,14 +786,14 @@ void CPacket::ProcessPacket(char* buf)
         if (p->idx == INVALIDID) {
             m_pFramework->SetbError(true);
             m_pFramework->SetErrorMsg("Room name already exists");
+            Send_refresh_room_packet();
             break;
         }
         else {
             m_pFramework->SetbError(false);
         }
-
-        printf("get room list num = %d\n", p->idx);
-        m_pFramework->SetRoomList(p->idx, p->name);
+        m_pFramework->m_vRooms.insert(m_pFramework->m_vRooms.begin()
+            ,make_pair(p->idx, p->name));
         break;
     }
     case PacketType::SC_start_pos: {

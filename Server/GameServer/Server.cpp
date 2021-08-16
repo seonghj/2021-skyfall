@@ -373,16 +373,18 @@ void Server::send_Lobby_loginOK_packet(int key)
 
 void Server::send_room_list_packet(int key)
 {
-    for (auto& g : GameRooms) {
-        if (g.second.CanJoin == false) continue;
-        if (g.second.name == NULL) continue;
+    for (int i = 0; i < MAX_ROOM; ++i) {
+        if (GameRooms.find(i) == GameRooms.end()) break;
+        if (GameRooms[i].CanJoin == false) continue;
+        if (GameRooms[i].name == NULL) continue;
         room_list_packet p;
         p.key = key;
         p.size = sizeof(p);
         p.type = PacketType::SC_room_list;
         p.roomid = INVALIDID;
-        p.idx = g.first;
-        strcpy_s(p.name, g.second.name);
+        p.idx = i;
+        strcpy_s(p.name, GameRooms[i].name);
+        printf("send room %d %s\n", i, GameRooms[i].name);
         send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
     }
     printf("list send to %d\n", key);
@@ -982,10 +984,10 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         send_packet_to_players(key, reinterpret_cast<char*>(&packet), roomID);
 
-        /*if (sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position.load().y <= 5) {
+        if (sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position.load().y <= -500) {
             sessions[GameRooms[p->roomid].pkeys[p->key]].state = Death;
             send_player_dead_packet(p->key, p->roomid);
-        }*/
+        }
 
         break;
     }
@@ -1152,7 +1154,6 @@ void Server::process_packet(int key, char* buf, int roomID)
         
         printf("player key: %d create game room - %d\n", p->key, cnt);
         send_room_list_packet(p->key);
-
         break;
     }
     case PacketType::CS_room_select: {
