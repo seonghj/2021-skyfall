@@ -569,14 +569,14 @@ void CGameFramework::ShowLobbyWindow()
     ImGui::SetNextWindowSize(ImVec2(200, viewport->Size.y * 0.5f), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Lobby", false, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_AlwaysAutoResize);
 	{
-		static int room_current_idx = 0;
+		static int room_current_idx = -1;
 		{
 			ImGui::Text("Rooms");
             if (ImGui::BeginListBox("##Room List", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing()))) {
 				for (int n = 0; n < m_vRooms.size(); n++)
 				{
 					const bool is_selected = (room_current_idx == n);
-					if (ImGui::Selectable(m_vRooms[n].c_str(), is_selected))
+					if (ImGui::Selectable(m_vRooms[n], is_selected))
 						room_current_idx = n;
 
 					// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
@@ -603,10 +603,8 @@ void CGameFramework::ShowLobbyWindow()
 		}
         ImGui::SameLine(0, 20);
         if (ImGui::Button("Refresh")) {
-            // 여기서 방에 입장
-            // 임시로 state 변경해놓음
-            if (room_current_idx >= 0)
-                m_pPacket->Send_room_select_packet(room_current_idx);
+            // 방 목록 새로고침
+            m_pPacket->Send_refresh_room_packet();
         }
 	}
 	ImGui::End();
@@ -625,7 +623,8 @@ void CGameFramework::ShowRoomWindow()
 			// 모든 플레이어가 무기를 골랐다면, 시작 버튼을 누르면 게임 시작
 			// 임시로 state 변경해놓음
 			// m_pScene->SetState(SCENE::INGAME);
-			m_pPacket->Send_start_packet(m_pPacket->Get_StartWeapon());
+            if (m_pPacket->Get_StartWeapon() < PlayerType::PT_BASIC)
+			    m_pPacket->Send_start_packet(m_pPacket->Get_StartWeapon());
 		}
 		ImGui::SameLine(0, 50);
 		if (ImGui::Button("Exit")) {
@@ -692,9 +691,7 @@ void CGameFramework::ShowCreateRoomWindow(bool* p_open)
 
         if (p_open && ImGui::Button("Create")) {
             string str = m_bufPW;
-            if(find(m_vRooms.begin(),m_vRooms.end(),str)==m_vRooms.end())
-                m_vRooms.push_back(str);
-            ::ZeroMemory(m_bufPW, strlen(m_bufPW));
+            m_pPacket->Send_room_create_packet(str.c_str());
             *p_open = false;
         }
     }

@@ -232,7 +232,7 @@ void CPacket::Send_mon_damaged_packet(int target, int nAttack)
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
-void CPacket::Send_room_create_packet()
+void CPacket::Send_room_create_packet(const char* name)
 {
     room_create_packet p;
 
@@ -240,6 +240,7 @@ void CPacket::Send_room_create_packet()
     p.roomid = -1;
     p.size = sizeof(p);
     p.type = CS_create_room;
+    strncpy_s(p.name, name, 20);
 
     SendPacket(reinterpret_cast<char*>(&p));
 }
@@ -267,6 +268,15 @@ void CPacket::Send_return_lobby_packet()
     p.type = CS_return_lobby;
 
     SendPacket(reinterpret_cast<char*>(&p));
+}
+
+void CPacket::Send_refresh_room_packet()
+{
+    refresh_lobby_packet p;
+    p.key = client_key;
+    p.roomid = roomID;
+    p.size = sizeof(p);
+    p.type = CS_refresh_lobby;
 }
 
 void CPacket::Swap_weapon(int key, PlayerType weapon)
@@ -731,14 +741,8 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_room_list: {
         room_list_packet* p = reinterpret_cast<room_list_packet*>(buf);
-        printf("get room list\n");
-        for (int i = 0; i < 20; i++) {
-            if (p->isRoom[i] == true) {
-                string s = "room ";
-                s += to_string(i);
-                strcpy(m_pFramework->rooms[i], s.c_str());
-            }
-        }
+        printf("get room list num = %d\n", p->idx);
+        m_pFramework->SetRoomList(p->idx, p->name);
         break;
     }
     case PacketType::SC_start_pos: {
@@ -762,6 +766,7 @@ void CPacket::ProcessPacket(char* buf)
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
         int key = p->key;
         if (p->key == InGamekey) {
+            printf("tlqkf\n");
             switch (p->attack_type) {
             case SWORD1HL1: {
                 m_pPlayer->LButtonDown();

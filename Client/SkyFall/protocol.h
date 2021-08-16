@@ -23,6 +23,8 @@ constexpr float VIEWING_DISTANCE = 1000.f;
 
 constexpr int INVENTORY_MAX = 20;
 
+constexpr int MAX_ROOM = 20;
+
 
 #define SERVERIP   "127.0.0.1"
 //#define SERVERIP   "39.120.192.92"
@@ -103,6 +105,7 @@ enum PacketType {
 	CS_create_account,
 	CS_room_select,
 	CS_create_room,
+	CS_refresh_lobby,
 	CS_player_Lobbylogin,
 	CS_player_login,
 	CS_game_ready,
@@ -201,6 +204,7 @@ struct player_loginFail_packet :public Packet {
 };
 
 struct room_create_packet :public Packet {
+	char name[20];
 };
 
 struct room_select_packet :public Packet {
@@ -208,7 +212,12 @@ struct room_select_packet :public Packet {
 };
 
 struct room_list_packet :public Packet {
-	bool isRoom[20];
+	char name[20];
+	short idx;
+};
+
+struct refresh_lobby_packet : public Packet {
+
 };
 
 struct player_add_packet : public Packet {

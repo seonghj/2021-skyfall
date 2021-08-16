@@ -67,6 +67,8 @@ public:
 	void MouseHold(bool b) { m_bMouseHold = b; }
 	void StartGame();
 
+	void SetRoomList(int idx, char* name) { strcpy_s(m_vRooms[idx], name); }
+
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
 	float						m_DegreeY;
@@ -174,7 +176,7 @@ private:
 	bool m_bShowAccountWindow = false;
 	bool m_bShowCreateRoomWindow = false;
 	bool m_bError = false;
-	vector<string> m_vRooms;
+	array<char[20], 20> m_vRooms;
 	string m_ErrorMsg;
 
 	//miniMap

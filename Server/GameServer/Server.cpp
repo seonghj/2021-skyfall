@@ -129,7 +129,7 @@ int Server::SetroomID()
     //}
 }
 
-bool Server::CreateRoom(int key)
+bool Server::CreateRoom(int key, char* name)
 {
     if (GameRooms.find(key) != GameRooms.end()) return false;
 
@@ -138,6 +138,8 @@ bool Server::CreateRoom(int key)
     GameRooms_lock.unlock();
     for (int i = 0; i < MAX_PLAYER; ++i)
         GameRooms[key].pkeys[i] = INVALIDID;
+
+    strcpy_s(GameRooms[key].name, name);
 
     maps_lock.lock();
     GameRooms[key].m_pMap = new Map;
@@ -343,22 +345,17 @@ void Server::send_Lobby_loginOK_packet(int key)
 
 void Server::send_room_list_packet(int key)
 {
-    room_list_packet p;
-    p.key = key;
-    p.size = sizeof(p);
-    p.type = PacketType::SC_room_list;
-    p.roomid = INVALIDID;
-
-    for (int i = 0; i < 20; i++) {
-        if (GameRooms.find(i) == GameRooms.end()) continue;
-        if (GameRooms[i].CanJoin == true)
-            p.isRoom[i] = true;
-        else
-            p.isRoom[i] = false;
+    for (auto& g : GameRooms) {
+        if (g.second.CanJoin == false) continue;
+        room_list_packet p;
+        p.key = key;
+        p.size = sizeof(p);
+        p.type = PacketType::SC_room_list;
+        p.roomid = INVALIDID;
+        p.idx = g.first;
+        strcpy_s(p.name, g.second.name);
+        send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
     }
-    //printf("%d\n", GameRooms.size());
-
-    send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
     printf("list send to %d\n", key);
 }
 
@@ -1067,10 +1064,11 @@ void Server::process_packet(int key, char* buf, int roomID)
      // Lobby
     case PacketType::CS_create_room: {
         room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
+        if (GameRooms.size() >= MAX_ROOM) break;
         int cnt = 0;
         bool b = 0;
         while (1) {
-            b = CreateRoom(cnt);
+            b = CreateRoom(cnt, p->name);
             if (b == true) break;
             ++cnt;
         }
