@@ -219,6 +219,7 @@ void Server::Accept()
         sessions[client_key].over.is_recv = true;
         sessions[client_key].over.roomID = INVALUED_ID;
 
+        printf("client accept: %d\n", client_key);
 
         /*for (int i = 0; i < 20; i++)
             Lobby_sessions[client_key].near_monster.insert(i);*/
