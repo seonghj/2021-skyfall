@@ -90,6 +90,7 @@ extern bool								gbShowBoundingBox;
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib,"DirectXTK12.lib")
 #pragma comment(lib, "dxguid.lib")
+#pragma comment(lib,"fmod/FMOD/lib_x64/fmodL_vc.lib")
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
 

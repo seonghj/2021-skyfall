@@ -205,6 +205,10 @@ void CPacket::Send_swap_weapon_packet(PlayerType weapon)
 
 void CPacket::Send_damage_to_player_packet(int target, int nAttack)
 {
+    if (nAttack == 3)
+        m_pFramework->TurnOnSE(SE::Arrow_Hit);
+    else
+        m_pFramework->TurnOnSE(SE::Knife_Attack);
     player_damage_packet p;
     p.key = InGamekey;
     p.type = CS_player_damage;
@@ -219,6 +223,10 @@ void CPacket::Send_damage_to_player_packet(int target, int nAttack)
 
 void CPacket::Send_mon_damaged_packet(int target, int nAttack)
 {
+    if (nAttack == 3)
+        m_pFramework->TurnOnSE(SE::Arrow_Hit);
+    else
+        m_pFramework->TurnOnSE(SE::Monster_Hit);
     mon_damaged_packet p;
     p.key = InGamekey;
     p.type = CS_monster_damaged;
@@ -629,12 +637,14 @@ void CPacket::ProcessPacket(char* buf)
         InGamekey = p->ingamekey;
         Swap_weapon(p->ingamekey, start_weapon);
         m_pScene->SetState(SCENE::INGAME);
+        m_pFramework->TrunOnBGM(BGM::The_Battle_of_1066);
         m_pFramework->MouseHold(false);
         break;
     }
     case PacketType::SC_game_end: {
         printf("gameover\n");
         m_pScene->m_iState = SCENE::ENDGAME;
+        m_pFramework->TrunOnBGM(BGM::Poisoned_Rose);
         m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
         m_pPlayer->SetRate(m_pScene->rate--);
         if (m_pPlayer->GetRate() == 1)
@@ -724,6 +734,7 @@ void CPacket::ProcessPacket(char* buf)
         room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
         roomID = p->room;
         m_pScene->SetState(SCENE::INROOM);
+        m_pFramework->TrunOnBGM(BGM::Poisoned_Rose);
         m_pPlayer->SetJump(TRUE);
         break;
     }
@@ -926,6 +937,7 @@ void CPacket::ProcessPacket(char* buf)
         m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
         if (p->target == InGamekey) {
             m_pPlayer->SetHp(p->PlayerLeftHp);
+            m_pFramework->TurnOnSE(SE::Monster_Hit);
             //m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
         }
@@ -981,6 +993,7 @@ void CPacket::ProcessPacket(char* buf)
         m_pScene->m_ppGameObjects[p->target]->SetHp(p->leftHp);
         cout << "Monster: " << p->target << " hp: " << m_pScene->m_ppGameObjects[p->target]->GetHp() << endl;
         m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
+        m_pFramework->TurnOnSE(SE::Monster_Hit);
         if (m_pScene->m_ppGameObjects[p->target]->m_iHp > 0)
             m_pScene->m_ppGameObjects[p->target]->ChangeState(2);
         else {
@@ -1086,6 +1099,7 @@ void CPacket::ProcessPacket(char* buf)
         {
             InGamekey = -1;
             m_pScene->m_iState = SCENE::ENDGAME;
+            m_pFramework->TrunOnBGM(BGM::Poisoned_Rose);
             m_pPlayer->SetRate(m_pScene->rate--);
             m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
             if (m_pPlayer->GetRate() == 1)

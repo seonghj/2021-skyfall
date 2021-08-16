@@ -7,6 +7,7 @@
 #include "Player.h"
 #include "Scene.h"
 #include "CPacket.h"
+#include "Sound.h"
 
 struct CB_FRAMEWORK_INFO
 {
@@ -70,6 +71,8 @@ public:
 	void ShowLoginWindow();
 	void ShowLobbyWindow();
 	void ShowRoomWindow();
+	void TrunOnBGM(int n);
+	void TurnOnSE(int n);
 
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
@@ -168,5 +171,8 @@ private:
 	void CreateFontAndGui();
 	char m_bufID[11];
 	char m_bufPW[21];
+
+	CSound* m_bgm[BGM_NUM];
+	CSound* m_se[SE_NUM];
 };
 
