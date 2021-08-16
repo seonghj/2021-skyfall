@@ -11,6 +11,7 @@ constexpr int INVALIDID = -1;
 constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
 constexpr int AI_ID = 5000;
+constexpr int MAX_STAMINA = 100;
 
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 6144;
@@ -261,7 +262,7 @@ struct player_pos_packet : public Packet {
 	float dx, dy;
 	DWORD MoveType;
 	DWORD dir;
-	short frame;
+	PlayerType playertype;
 };
 
 struct player_start_pos : public Packet {
