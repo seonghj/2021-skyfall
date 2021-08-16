@@ -179,12 +179,6 @@ public:
 
 	virtual void Animate(float fTimeElapsed);
 	void SetBasicAnimation();
-	void SetBloodAlpha(float a) { m_pBloodUI->SetAlpha(a); }
-	virtual void SetDamaged(bool damaged) {
-		m_isDamaged = damaged;
-		if(damaged)
-			m_pBloodUI->SetAlpha(1);
-	}
 
 #ifdef _WITH_SOUND_CALLBACK
 	virtual void SetAnimationSound();
@@ -195,7 +189,6 @@ public:
 
 protected:
 	CGameObject* pWeapon;
-	CUIObject* m_pBloodUI;
 #endif
 	enum PlayerState {
 		Idle = 0,

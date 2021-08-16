@@ -532,6 +532,21 @@ CSkyBoxMesh::~CSkyBoxMesh()
 //
 CSkinnedMesh::CSkinnedMesh(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList) : CStandardMesh(pd3dDevice, pd3dCommandList)
 {
+	m_nType |= SKINNED_MESH;
+}
+
+CSkinnedMesh::CSkinnedMesh(CSkinnedMesh* other) : CSkinnedMesh(*other)
+{
+	if (m_nSkinningBones > 0)
+	{
+		m_ppstrSkinningBoneNames = new char[m_nSkinningBones][64];
+		m_ppSkinningBoneFrameCaches = new CGameObject * [m_nSkinningBones];
+		for (int i = 0; i < m_nSkinningBones; i++)
+		{
+			strcpy(m_ppstrSkinningBoneNames[i], other->m_ppstrSkinningBoneNames[i]);
+			m_ppSkinningBoneFrameCaches[i] = NULL;
+		}
+	}
 }
 
 CSkinnedMesh::~CSkinnedMesh()
@@ -699,6 +714,7 @@ void CSkinnedMesh::OnPreRender(ID3D12GraphicsCommandList *pd3dCommandList, void 
 
 CStandardMesh::CStandardMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
+	m_nType |= STANDARD_MESH;
 }
 
 CStandardMesh::~CStandardMesh()
@@ -743,7 +759,7 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 			OutputDebugString(pstrDebug);*/
 			if (m_nVertices > 0)
 			{
-				m_nType |= VERTEXT_POSITION;
+				//m_nType |= VERTEXT_POSITION;
 				m_pxmf3Positions = new XMFLOAT3[m_nVertices];
 				nReads = (UINT)::fread(m_pxmf3Positions, sizeof(XMFLOAT3), m_nVertices, pInFile);
 
@@ -773,7 +789,7 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 			OutputDebugString(pstrDebug);*/
 			if (nUVsPerVertex > 0) {
 				int nUVs = nUVsPerVertex * m_nVertices;
-				m_nType |= VERTEXT_TEXTURE_COORD0;
+				//m_nType |= VERTEXT_TEXTURE_COORD0;
 				m_pxmf2TextureCoords0 = new XMFLOAT2[nUVs];
 
 				nReads = (UINT)::fread(m_pxmf2TextureCoords0, sizeof(XMFLOAT2), nUVs, pInFile);
@@ -796,7 +812,7 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 			if (nNormalsPerVertex > 0) {
 				int nNormals = nNormalsPerVertex * m_nVertices;
 
-				m_nType |= VERTEXT_NORMAL;
+				//m_nType |= VERTEXT_NORMAL;
 				m_pxmf3Normals = new XMFLOAT3[nNormals];
 				nReads = (UINT)::fread(m_pxmf3Normals, sizeof(XMFLOAT3), nNormals, pInFile);
 
@@ -815,7 +831,7 @@ void CStandardMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 			if (nTangentsPerVertex > 0) {
 				int nTangents = nTangentsPerVertex * m_nVertices;
 
-				m_nType |= VERTEXT_TANGENT;
+				//m_nType |= VERTEXT_TANGENT;
 				m_pxmf3Tangents = new XMFLOAT3[nTangents];
 				nReads = (UINT)::fread(m_pxmf3Tangents, sizeof(XMFLOAT3), nTangents, pInFile);
 

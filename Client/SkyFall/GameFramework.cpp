@@ -1444,7 +1444,7 @@ void CGameFramework::Restart()
     m_pPacket->Send_return_lobby_packet();
 
     m_pScene->m_iState = SCENE::LOBBY;
-    m_pScene->m_ppUIObjects[0]->SetvPercent(1.0f);
+    m_pScene->m_ppUIObjects[0]->SethPercent(1.0f);
     m_GameTimer.Reset();
     m_ChargeTimer.Reset();
     m_pPlayer->Reset();

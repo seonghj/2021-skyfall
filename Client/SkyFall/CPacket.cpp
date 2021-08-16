@@ -986,6 +986,7 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_ppUIObjects[0]->SethPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
             m_pPlayer->SetDamaged(true);
+            m_pScene->TakeDamage(true);
         }
         m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
         break;
@@ -1132,8 +1133,10 @@ void CPacket::ProcessPacket(char* buf)
 
         if (p->target == InGamekey) {
             m_pPlayer->SetStanding(true);
+            m_pScene->m_ppUIObjects[0]->SethPercent(p->leftHp / m_pPlayer->m_iMaxHp);
             //Send_stop_packet();
             m_pPlayer->SetDamaged(true);
+            m_pScene->TakeDamage(true);
         }
         m_pScene->AnimatePlayer(p->target, PlayerState::Take_Damage);
 
