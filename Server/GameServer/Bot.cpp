@@ -103,7 +103,7 @@ void Bot::Init(int roomID)
 		monsters[roomID][5].state = 1;
 
 		monsters[roomID][6].type = MonsterType::Wolf;
-		monsters[roomID][6].SpawnPos = XMFLOAT3{ 3548, 124, 3668 };
+		monsters[roomID][6].SpawnPos = XMFLOAT3{ 3548, 124, 4500};
 		monsters[roomID][6].f3Position = monsters[roomID][6].SpawnPos.load();
 		monsters[roomID][6].Rotate(-90.0f, -40.0f, 0.0f);
 		monsters[roomID][6].state = 1;

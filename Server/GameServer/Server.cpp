@@ -1181,30 +1181,6 @@ void Server::WorkerFunc()
             }
             //printf("%d\n", true);
             if (over_ex->is_recv) {
-                //printf("thread key: %d\n", Thread_key);
-                /*int rest_size = Transferred;
-                char* buf_ptr = over_ex->messageBuffer;
-                char packet_size = 0;
-                if (0 < sessions[key].prev_size)
-                    packet_size = sessions[key].packet_buf[0];
-                while (rest_size > 0) {
-                    if (0 == packet_size) packet_size = buf_ptr[0];
-                    int required = packet_size - sessions[key].prev_size;
-                    if (rest_size >= required) {
-                        memcpy(sessions[key].packet_buf + sessions[key].
-                            prev_size, buf_ptr, required);
-                        printf("tlqkf %d\n", rest_size);
-                        process_packet(key, sessions[key].packet_buf, roomID);
-                        rest_size -= required;
-                        buf_ptr += required;
-                        packet_size = 0;
-                    }
-                    else {
-                        memcpy(sessions[key].packet_buf + sessions[key].prev_size,
-                            buf_ptr, rest_size);
-                        rest_size = 0;
-                    }
-                }*/
                 char* packet_ptr = over_ex->messageBuffer;
                 int num_data = Transferred + sessions[key].prev_size;
                 int packet_size = packet_ptr[0];
