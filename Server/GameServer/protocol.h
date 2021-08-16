@@ -54,6 +54,7 @@ enum terrain {
 
 enum PacketType {
 	SC_NONE,
+	SC_create_account,
 	SC_player_Lobbykey,
 	SC_player_LobbyloginOK,
 	SC_player_LobbyloginFail,
@@ -190,8 +191,8 @@ struct player_key_packet :public Packet {
 };
 
 struct player_login_packet :public Packet {
-	char id[50];
-	char pw[50];
+	char id[20];
+	char pw[20];
 };
 
 struct player_loginOK_packet :public Packet {
@@ -407,6 +408,12 @@ struct player_getitem_packet :public Packet {
 };
 
 struct return_lobby_packet :public Packet {
+};
+
+struct create_account_packet :public Packet {
+	char id[20];
+	char pw[20];
+	bool canmake;
 };
 
 struct mon_move_to_player_event : public Packet {

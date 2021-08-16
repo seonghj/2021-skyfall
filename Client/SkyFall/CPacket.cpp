@@ -281,6 +281,18 @@ void CPacket::Send_refresh_room_packet()
     SendPacket(reinterpret_cast<char*>(&p));
 }
 
+void CPacket::Send_create_account_packet(char* id, char* pw)
+{
+    create_account_packet p;
+    p.key = client_key;
+    p.size = sizeof(p);
+    p.type = PacketType::CS_create_account;
+    p.roomid = roomID;
+    strcpy_s(p.id, id);
+    strcpy_s(p.pw, pw);
+    p.canmake = 0;
+    SendPacket(reinterpret_cast<char*>(&p));
+}
 void CPacket::Swap_weapon(int key, PlayerType weapon)
 {
     if (key != InGamekey) {
@@ -561,6 +573,19 @@ void CPacket::ProcessPacket(char* buf)
     //printf("%d\n", buf[1]);
     switch (buf[1])
     {
+    case PacketType::SC_create_account: {
+        create_account_packet* p = reinterpret_cast<create_account_packet*>(buf);
+        if (p->canmake == false) {
+            m_pFramework->SetbError(true);
+            m_pFramework->SetErrorMsg("Creation account fail");
+            printf("Creation account fail\n");
+        }
+        else {
+            m_pFramework->SetbShowAccountWindow(false);
+            m_pFramework->SetbError(false);
+        }
+        break;
+    }
     case PacketType::SC_player_Lobbykey: {
         player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
         int key = p->key;
@@ -594,6 +619,8 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_player_loginFail: {
         printf("Login fail\n");
+        m_pFramework->SetbError(true);
+        m_pFramework->SetErrorMsg("Login fail");
         break;
     }
     case PacketType::SC_player_loginOK: {

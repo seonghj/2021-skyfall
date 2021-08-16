@@ -73,6 +73,8 @@ public:
 	void SetbError(bool b) { m_bError = b; }
 	void SetErrorMsg(string s) { m_ErrorMsg = s; }
 
+	void SetbShowAccountWindow(bool b) { m_bShowAccountWindow = b; }
+
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
 	float						m_DegreeY;

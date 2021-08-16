@@ -660,7 +660,7 @@ void CGameFramework::ShowAccountWindow(bool* p_open)
 		//ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
 
 		if (p_open && ImGui::Button("Create")) {
-			//m_pPacket->send_create_account(); 함수 추가해서 서버로 계정 정보 보내고 id 존재하면 이미 존재하는 id 창 띄우기
+            m_pPacket->Send_create_account_packet(m_bufID, m_bufPW);
 			::ZeroMemory(m_bufID, strlen(m_bufID));
 			::ZeroMemory(m_bufPW, strlen(m_bufPW));
 			*p_open = false;

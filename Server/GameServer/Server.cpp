@@ -2,7 +2,7 @@
 #pragma warning(disable : 4996)
 #include "Server.h"
 
-//#define Run_DB
+#define Run_DB
 //#define Run_Lobby
 
 void SESSION::init() 
@@ -254,7 +254,7 @@ void Server::Disconnected(int key)
     //printf("disconnected %d\n", gameroom[roomID].ID[i]);
 
 #ifdef Run_DB
-    m_pDB->Logout_player(Lobby_sessions[key].id);
+    m_pDB->Logout_player(sessions[key].id);
 #endif
     //sessions.clear();
 }
@@ -826,13 +826,10 @@ void Server::process_packet(int key, char* buf, int roomID)
         bool b;
 #ifdef Run_DB
         if (strcmp(p->id, "test") != 0) {
-            b = m_pDB->Search_ID(p->id, p->pw, &is_Login);
+            b = m_pDB->Search_ID(p->id, p->pw);
 
-            if (!b) send_player_loginFail_packet(client_key);
-
-            if (is_Login) {
-                send_player_loginFail_packet(client_key);
-                //Disconnected(client_key);
+            if (!b) {
+                send_player_loginFail_packet(client_key, INVALIDID);
                 break;
             }
         }
@@ -847,6 +844,22 @@ void Server::process_packet(int key, char* buf, int roomID)
             inet_ntoa(sessions[client_key].clientaddr.sin_addr)
             , ntohs(sessions[client_key].clientaddr.sin_port), client_key);
 
+        break;
+    }
+    case PacketType::CS_create_account: {
+        create_account_packet* p = reinterpret_cast<create_account_packet*>(buf);
+        int key = p->key;
+        bool b = true;
+        bool is_Login = false;
+
+#ifdef Run_DB
+        b = m_pDB->Insert_ID(p->id, p->pw);
+
+        if (!b)
+            p->canmake = false;
+        p->type = SC_create_account;
+        send_packet(key, reinterpret_cast<char*>(p), INVALIDID);
+#endif
         break;
     }
     case PacketType::CS_game_start: {
