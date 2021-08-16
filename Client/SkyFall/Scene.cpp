@@ -42,11 +42,14 @@ void CScene::BuildDefaultLightsAndMaterials()
 	m_pLights[0].m_bEnable = true;
 	m_pLights[0].m_nType = POINT_LIGHT;
 	m_pLights[0].m_fRange = 5000.0f;
+	/*m_pLights[0].m_xmf4Ambient = XMFLOAT4(1.f, 1.f, 1.f, 1.0f);
+	m_pLights[0].m_xmf4Diffuse = XMFLOAT4(1.f, 1.f, 1.f, 1.0f);
+	m_pLights[0].m_xmf4Specular = XMFLOAT4(1.f, 1.f, 1.f, 1.0f);*/
 	m_pLights[0].m_xmf4Ambient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
 	m_pLights[0].m_xmf4Diffuse = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
 	m_pLights[0].m_xmf4Specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.0f);
 	m_pLights[0].m_xmf3Position = XMFLOAT3(-100.0f, 500.0f, -100.0f);
-	m_pLights[0].m_xmf3Direction = XMFLOAT3(2.0f, -1.0f, 2.0f);
+	m_pLights[0].m_xmf3Direction = XMFLOAT3(0.4f, -1.0f, 0.4f);
 	m_pLights[0].m_xmf3Attenuation = XMFLOAT3(1.0f, 0.001f, 0.0001f);
 	m_pLights[1].m_bEnable = false;
 	m_pLights[1].m_nType = SPOT_LIGHT;
@@ -64,9 +67,9 @@ void CScene::BuildDefaultLightsAndMaterials()
 	m_pLights[2].m_nType = DIRECTIONAL_LIGHT;
 	m_pLights[2].m_xmf4Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 	m_pLights[2].m_xmf4Diffuse = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
-	m_pLights[2].m_xmf4Specular = XMFLOAT4(0.4f, 0.4f, 0.4f, 0.0f);
+	m_pLights[2].m_xmf4Specular = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
 	m_pLights[2].m_xmf3Direction = XMFLOAT3(1.0f, -1.0f, 1.0f);
-	m_pLights[3].m_bEnable = true;
+	m_pLights[3].m_bEnable = false;
 	m_pLights[3].m_nType = SPOT_LIGHT;
 	m_pLights[3].m_fRange = 1200.0f;
 	m_pLights[3].m_xmf4Ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
@@ -139,27 +142,19 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	}
 
 
-	m_nUIs = 4;
+	m_nUIs = 3;
 	m_ppUIObjects = new CUIObject * [m_nUIs];
-	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_FILL.dds", -0.93, -0.8, -0.85, 0.9, 0.8);
-	m_ppUIObjects[0]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_FILL.dds", -0.85, -0.95, 0.85, -0.85, 0.8);
 	m_ppUIObjects[0]->SetAlpha(0.8f);
-	m_ppUIObjects[0]->SetvPercent(1.f);
+	m_ppUIObjects[0]->SethPercent(1.f);
 
-	m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_BOX.dds", -0.98, -0.95, -0.80, -0.8, 0.8);
-	m_ppUIObjects[1]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
-	m_ppUIObjects[1]->SetAlpha(0.8f);
+	m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
+	m_ppUIObjects[1]->SetAlpha(0.0f);
 	m_ppUIObjects[1]->SetvPercent(1.f);
 
-	m_ppUIObjects[2] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
-	m_ppUIObjects[2]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	m_ppUIObjects[2] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Win_UI.dds", -1, -1, 1, 1, 0.8);
 	m_ppUIObjects[2]->SetAlpha(0.0f);
 	m_ppUIObjects[2]->SetvPercent(1.f);
-
-	m_ppUIObjects[3] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Win_UI.dds", -1, -1, 1, 1, 0.8);
-	m_ppUIObjects[3]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
-	m_ppUIObjects[3]->SetAlpha(0.0f);
-	m_ppUIObjects[3]->SetvPercent(1.f);
 
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
@@ -365,12 +360,37 @@ void CScene::ReleaseObjects()
 		delete[] m_ppGameObjects;
 	}
 
+	for (int i = 0; i < MAX_PLAYER; i++) {
+		if (m_mBowPlayer[i]) {
+			m_mBowPlayer[i]->Release();
+		}
+	}
+	for (int i = 0; i < MAX_PLAYER; i++) {
+		if (m_m1HswordPlayer[i]) {
+			m_m1HswordPlayer[i]->Release();
+		}
+	}
+	for (int i = 0; i < MAX_PLAYER; i++) {
+		if (m_m2HswordPlayer[i]) {
+			m_m2HswordPlayer[i]->Release();
+		}
+	}
+	for (int i = 0; i < MAX_PLAYER; i++) {
+		if (m_m2HspearPlayer[i]) {
+			m_m2HspearPlayer[i]->Release();
+		}
+	}
+
 	if (m_pMap)
 	{
 		m_pMap->Release();
 		delete m_pMap;
 	}
-
+	if (m_ppUIObjects) {
+		for (int i = 0; i < m_nUIs; ++i)
+			m_ppUIObjects[i]->Release();
+		delete[] m_ppUIObjects;
+	}
 	ReleaseShaderVariables();
 
 	if (m_pLights) delete[] m_pLights;
@@ -414,13 +434,13 @@ ID3D12RootSignature *CScene::CreateGraphicsRootSignature(ID3D12Device *pd3dDevic
 
 	pd3dDescriptorRanges[5].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	pd3dDescriptorRanges[5].NumDescriptors = 1;
-	pd3dDescriptorRanges[5].BaseShaderRegister = 11; //t11: gtxtEmissionTexture
+	pd3dDescriptorRanges[5].BaseShaderRegister = 10; //t10: empty
 	pd3dDescriptorRanges[5].RegisterSpace = 0;
 	pd3dDescriptorRanges[5].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	pd3dDescriptorRanges[6].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	pd3dDescriptorRanges[6].NumDescriptors = 1;
-	pd3dDescriptorRanges[6].BaseShaderRegister = 12; //t12: gtxtEmissionTexture
+	pd3dDescriptorRanges[6].BaseShaderRegister = 11; //t11: empty
 	pd3dDescriptorRanges[6].RegisterSpace = 0;
 	pd3dDescriptorRanges[6].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
@@ -674,8 +694,9 @@ void CScene::ReleaseUploadBuffers()
 			m_m2HspearPlayer[i]->ReleaseUploadBuffers();
 		}
 	}
-	for (int i = 0; i < m_nUIs; ++i)
-		if (m_ppUIObjects[i]) m_ppUIObjects[i]->ReleaseUploadBuffers();
+	if (m_ppUIObjects)
+		for (int i = 0; i < m_nUIs; ++i)
+			m_ppUIObjects[i]->ReleaseUploadBuffers();
 
 	
 }
@@ -777,6 +798,7 @@ void CScene::CheckBehavior(CMonster *pMonster)
 	//printf("%d 번째 크기 : %f\n", i, Vector3::Length(Vector3::Subtract(m_ppGameObjects[i]->GetPosition(), m_pPlayer->GetPosition())));
 
 }
+
 
 void CScene::CreateCbvSrvUavDescriptorHeaps(ID3D12Device *pd3dDevice, int nConstantBufferViews, int nShaderResourceViews, int nUnorderedAccessViews)
 {
@@ -1069,7 +1091,7 @@ void CScene::AnimateObjects(float fTimeElapsed)
 	}
 }
 
-void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
+void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, bool onlyTerrain)
 {
 	if (m_pd3dGraphicsRootSignature) pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);
 	if (m_pd3dCbvSrvDescriptorHeap) pd3dCommandList->SetDescriptorHeaps(1, &m_pd3dCbvSrvDescriptorHeap);
@@ -1094,7 +1116,9 @@ void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera
 		}
 	}
 	if (m_pMap) m_pMap->Render(pd3dCommandList, pCamera);
-	
+
+	if (onlyTerrain) return;
+
 	if (m_iState == SCENE::INROOM) {
 		m_pPlayer->Render(pd3dCommandList, NULL);
 		for(int i=0;i<4;++i)

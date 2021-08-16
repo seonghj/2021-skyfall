@@ -2044,6 +2044,8 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device *pd3dDevice, ID3D12GraphicsCom
 CHeightMapTerrain::~CHeightMapTerrain(void)
 {
 	if (m_pHeightMapImage) delete m_pHeightMapImage;
+
+	ReleaseShaderVariables();
 }
 
 float CHeightMapTerrain::GetHeight(float x, float z, bool bReverseQuad)
@@ -2813,8 +2815,35 @@ CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCo
 	m_ppMaterials[0] = NULL;
 
 	SetMaterial(0, pTerrainMaterial);
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+CUIObject::CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture, float l, float b, float r, float t, float a)
+{
+	CScene::CreateShaderResourceViews(pd3dDevice, pTexture, false);
+	pTexture->SetGraphicsSrvRootArgument(0, 7, 0);
+
+	CUIMesh* pMesh = new CUIMesh(pd3dDevice, pd3dCommandList, l, b, r, t, a);
+	SetMesh(pMesh);
+
+	CUIShader* pUIShader = new CUIShader();
+	pUIShader->CreateShader(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature);
+	pUIShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+
+	CMaterial* pTerrainMaterial = new CMaterial(1);
+	pTerrainMaterial->SetTexture(pTexture, 0);
+	pTerrainMaterial->SetShader(pUIShader);
+
+	m_nMaterials = 1;
+	m_ppMaterials = new CMaterial * [m_nMaterials];
+	m_ppMaterials[0] = NULL;
+
+	SetMaterial(0, pTerrainMaterial);
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
 CUIObject::~CUIObject()
 {
+	ReleaseShaderVariables();
+	delete m_pcbMappedUI;
 }

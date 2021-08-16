@@ -695,7 +695,7 @@ void CPacket::ProcessPacket(char* buf)
         }
         else {
             switch (p->MoveType) {
-            case PlayerMove::WAKING:
+            case PlayerMove::WALKING:
                 m_pScene->AnimatePlayer(key, PlayerState::Walk);
                 break;
             case PlayerMove::RUNNING:
@@ -936,7 +936,7 @@ void CPacket::ProcessPacket(char* buf)
 
         if (p->target == InGamekey) {
             m_pPlayer->SetHp(p->PlayerLeftHp);
-            //m_pScene->m_ppUIObjects[0]->SetvPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
+            m_pScene->m_ppUIObjects[0]->SethPercent(p->PlayerLeftHp / m_pPlayer->m_iMaxHp);
             cout << key << ": attack to " << p->target << " leftHP: " << p->PlayerLeftHp << endl;
             m_pPlayer->SetDamaged(true);
         }

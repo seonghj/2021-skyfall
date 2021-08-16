@@ -135,7 +135,7 @@ enum EventType {
 };
 
 enum PlayerMove {
-	WAKING,
+	WALKING,
 	RUNNING,
 	JUMP,
 	STAND

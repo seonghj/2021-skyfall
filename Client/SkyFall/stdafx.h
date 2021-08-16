@@ -25,6 +25,7 @@
 #include <array>
 #include <unordered_map>
 #include <thread>
+#include <iterator>
 
 #pragma comment(lib, "ws2_32")
 #include <WS2tcpip.h>
@@ -68,8 +69,8 @@ extern HINSTANCE					ghAppInstance;
 extern bool								gbShowBoundingBox;
 //#define _WITH_SWAPCHAIN_FULLSCREEN_STATE
 
-#define FRAME_BUFFER_WIDTH			640
-#define FRAME_BUFFER_HEIGHT			480
+#define FRAME_BUFFER_WIDTH			1024
+#define FRAME_BUFFER_HEIGHT			768
 
 #define SKINNED_ANIMATION_BONES		128
 
@@ -81,8 +82,11 @@ extern bool								gbShowBoundingBox;
 
 #define ANIMATION_CALLBACK_EPSILON	0.015f
 
+#define UI_CIRCLE 0x01
+#define UI_BLOOD 0x02
+
 #define _WITH_LEFT_HAND_COORDINATES
-#define _WITH_SOUND_RESOURCE
+//#define _WITH_SOUND_RESOURCE
 #define _WITH_SOUND_CALLBACK
 
 #pragma comment(lib, "d3dcompiler.lib")
@@ -107,8 +111,6 @@ extern ID3D12Resource *CreateBufferResource(ID3D12Device *pd3dDevice, ID3D12Grap
 extern ID3D12Resource *CreateTextureResourceFromDDSFile(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, wchar_t *pszFileName, ID3D12Resource **ppd3dUploadBuffer, D3D12_RESOURCE_STATES d3dResourceStates = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 extern ID3D12Resource *CreateTextureResourceFromWICFile(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, wchar_t *pszFileName, ID3D12Resource **ppd3dUploadBuffer, D3D12_RESOURCE_STATES d3dResourceStates = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 extern ID3D12Resource *CreateTexture2DResource(ID3D12Device* pd3dDevice, UINT nWidth, UINT nHeight, UINT nElements, UINT nMipLevels, DXGI_FORMAT dxgiFormat, D3D12_RESOURCE_FLAGS d3dResourceFlags, D3D12_RESOURCE_STATES d3dResourceStates, D3D12_CLEAR_VALUE* pd3dClearValue);
-
-#define RANDOM_COLOR				XMFLOAT4(rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX))
 
 #define EPSILON					1.0e-10f
 #define PI						3.141592f

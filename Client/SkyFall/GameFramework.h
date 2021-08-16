@@ -1,7 +1,5 @@
 #pragma once
 
-#define FRAME_BUFFER_WIDTH		640
-#define FRAME_BUFFER_HEIGHT		480
 
 #include "Timer.h"
 #include "Player.h"
@@ -67,9 +65,7 @@ public:
 	void SetCloud(float x, float z) { m_pcbMappedFog->gvFogPos = XMFLOAT2(x, z); }
 	void Restart();
 	void MouseHold(bool b) { m_bMouseHold = b; }
-	void ShowLoginWindow();
-	void ShowLobbyWindow();
-	void ShowRoomWindow();
+	void StartGame();
 
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
@@ -140,7 +136,6 @@ private:
 	bool						m_bMouseHold = false; 
 	vector<vector<int>>			m_vMapArrange;
 
-	CShadowMap					*m_pShadowMap;
 
 	ID3D12Resource				*m_pd3dcbFrameworkInfo = NULL;
 	CB_FRAMEWORK_INFO			*m_pcbMappedFrameworkInfo = NULL;
@@ -157,6 +152,8 @@ private:
 	unique_ptr<DescriptorHeap> m_resourceDescriptors;
 	unique_ptr<GraphicsMemory> m_graphicsMemory;
 
+	void DrawTimer();
+
 	enum Descriptors
 	{
 		SegoeFont,
@@ -165,8 +162,33 @@ private:
 	};
 
 	//imgui
+	void ShowLoginWindow();
+	void ShowLobbyWindow();
+	void ShowRoomWindow();
+	void ShowAccountWindow(bool* p_open);
+	void ShowCreateRoomWindow(bool* p_open);
+	void ShowError(const char* str);
 	void CreateFontAndGui();
 	char m_bufID[11];
 	char m_bufPW[21];
+	bool m_bShowAccountWindow = false;
+	bool m_bShowCreateRoomWindow = false;
+	bool m_bError = false;
+	vector<string> m_vRooms;
+	string m_ErrorMsg;
+
+	//miniMap
+	void RenderMiniMap() const;
+	void BuildMiniMap();
+	void UpdateMiniMap();
+	CUIObject* m_pMiniMap = NULL;
+	CTexture* m_pMiniMapTexture = NULL;
+	CCamera* m_pMiniMapCamera = NULL;
+
+	//Shadow
+	CShadowMap* m_pShadowMap;
+	void BuildShadowMap();
+	void UpdateShadowMap();
+
 };
 

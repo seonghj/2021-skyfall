@@ -52,8 +52,8 @@ protected:
 	bool						m_bHit = false;
 	// stat
 
-	LPVOID*						m_ppPlayerUpdatedContext = NULL;
-	LPVOID						m_pCameraUpdatedContext = NULL;
+	LPVOID						*m_ppPlayerUpdatedContext = NULL;
+	LPVOID						*m_ppCameraUpdatedContext = NULL;
 
 	CCamera						*m_pCamera = NULL;
 
@@ -79,7 +79,7 @@ public:
 	virtual void SetAttack(bool shoot) { m_isAttack = shoot; }
 	void SetCharging(bool charge) { m_isCharging = charge; }
 	void SetPlace(int nPlace) { m_nPlace = nPlace; }
-	void SetDamaged(bool damaged) { m_isDamaged = damaged; }
+	virtual void SetDamaged(bool damaged) { m_isDamaged = damaged; }
 	void SetPkill(int kill) { m_iPkill = kill; }
 	void SetMkill(int kill) { m_iMkill = kill; }
 	void SetRate(int rate) { m_iRate = rate; }
@@ -89,7 +89,7 @@ public:
 	virtual void RButtonDown() {};
 	virtual void RButtonUp() {};
 	virtual void LButtonDown() {};
-	virtual void LButtonUp() {};
+	virtual void LButtonUp(float fTime) {};
 
 	XMFLOAT3& GetVelocity() { return(m_xmf3Velocity); }
 	float GetYaw() const { return(m_fYaw); }
@@ -126,7 +126,7 @@ public:
 	void SetPlayerUpdatedContext(LPVOID* ppContext) { m_ppPlayerUpdatedContext = ppContext; }
 
 	virtual void OnCameraUpdateCallback(float fTimeElapsed) { }
-	void SetCameraUpdatedContext(LPVOID pContext) { m_pCameraUpdatedContext = pContext; }
+	void SetCameraUpdatedContext(LPVOID* ppContext) { m_ppCameraUpdatedContext = ppContext; }
 
 	virtual void CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
 	virtual void ReleaseShaderVariables();
@@ -163,7 +163,7 @@ public:
 class CTerrainPlayer : public CPlayer
 {
 public:
-	CTerrainPlayer() :CPlayer() {};
+	CTerrainPlayer();
 	CTerrainPlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, ID3D12RootSignature *pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void ** ppContext=NULL);
 	virtual ~CTerrainPlayer();
 
@@ -174,8 +174,15 @@ public:
 	virtual void OnCameraUpdateCallback(float fTimeElapsed);
 
 	virtual void Animate(float fTimeElapsed);
+	void SetBasicAnimation();
+	void SetBloodAlpha(float a) { m_pBloodUI->SetAlpha(a); }
+	virtual void SetDamaged(bool damaged) {
+		m_isDamaged = damaged;
+		m_pBloodUI->SetAlpha(1);
+	}
 
 #ifdef _WITH_SOUND_CALLBACK
+	virtual void SetAnimationSound();
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
 
@@ -183,7 +190,7 @@ public:
 
 protected:
 	CGameObject* pWeapon;
-
+	CUIObject* m_pBloodUI;
 #endif
 	enum PlayerState {
 		Idle = 0,
@@ -216,7 +223,7 @@ public:
 	virtual void RButtonDown();
 	virtual void RButtonUp();
 	virtual void LButtonDown();
-	virtual void LButtonUp();
+	virtual void LButtonUp(float fTimeCharge);
 
 	virtual bool CheckCollision(CGameObject* pObject, bool isMonster = true);
 
@@ -227,11 +234,9 @@ public:
 	const int nShotRelease = 11;
 
 protected:
-	int m_nBullets = 0;
-	//vector<CBullet*> m_vpBullets;
-	CBullet** m_ppBullets = 0;
+	vector<CBullet*> m_vpBullets;
 
-	const int MAX_BULLET = 1000;
+	const int MAX_BULLET = 10;
 	bool		m_isRelease;
 };
 
@@ -248,7 +253,7 @@ public:
 	virtual void RButtonDown();
 	virtual void RButtonUp();
 	virtual void LButtonDown();
-	virtual void LButtonUp();
+	virtual void LButtonUp(float fTime);
 
 	virtual bool CheckCollision(CGameObject* pObject, bool isMonster = true);
 
@@ -266,7 +271,6 @@ class C2HswordPlayer : public C1HswordPlayer
 public:
 	C2HswordPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
 	virtual ~C2HswordPlayer();
-
 };
 
 class C2HspearPlayer : public C1HswordPlayer

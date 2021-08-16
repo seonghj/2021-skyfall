@@ -10,6 +10,7 @@
 #define EXP_FOG 2.0f
 #define EXP2_FOG 3.0f
 
+
 CGameFramework::CGameFramework()
 {
     m_pdxgiFactory = NULL;
@@ -49,6 +50,7 @@ CGameFramework::CGameFramework()
 
 CGameFramework::~CGameFramework()
 {
+	ReleaseShaderVariables();
 }
 
 bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
@@ -198,14 +200,14 @@ void CGameFramework::CreateCommandQueueAndList()
 
 void CGameFramework::CreateRtvAndDsvDescriptorHeaps()
 {
-    D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
-    ::ZeroMemory(&d3dDescriptorHeapDesc, sizeof(D3D12_DESCRIPTOR_HEAP_DESC));
-    d3dDescriptorHeapDesc.NumDescriptors = m_nSwapChainBuffers;
-    d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    d3dDescriptorHeapDesc.NodeMask = 0;
-    HRESULT hResult = m_pd3dDevice->CreateDescriptorHeap(&d3dDescriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&m_pd3dRtvDescriptorHeap);
-    m_nRtvDescriptorIncrementSize = m_pd3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
+	::ZeroMemory(&d3dDescriptorHeapDesc, sizeof(D3D12_DESCRIPTOR_HEAP_DESC));
+	d3dDescriptorHeapDesc.NumDescriptors = m_nSwapChainBuffers + 1;	// nSwapChain + MiniMapTexture
+	d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	d3dDescriptorHeapDesc.NodeMask = 0;
+	HRESULT hResult = m_pd3dDevice->CreateDescriptorHeap(&d3dDescriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&m_pd3dRtvDescriptorHeap);
+	m_nRtvDescriptorIncrementSize = m_pd3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     d3dDescriptorHeapDesc.NumDescriptors = 1;
     d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
@@ -301,99 +303,99 @@ void CGameFramework::ChangeSwapChainState()
 
 void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
-    if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
+	if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
     if (m_pScene && m_pScene->GetState() == SCENE::LOBBY) return;
-    switch (nMessageID)
-    {
-    case WM_LBUTTONDOWN: {
-        if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
-            m_pPacket->Send_attack_packet(PlayerAttackType::BOWL);
-        else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
-            m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL1);
-        ::SetCapture(hWnd);
-        ::GetCursorPos(&m_ptOldCursorPos);
-        if (!m_bRotateEnable) {
-            m_ChargeTimer.Reset();
-            m_ChargeTimer.Start();
-            //m_pPlayer->LButtonDown();
-        }
-        break;
-    }
-    case WM_RBUTTONDOWN: {
-        if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
-            m_pPacket->Send_attack_packet(PlayerAttackType::BOWR);
-        else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
-            m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
-        ::SetCapture(hWnd);
-        ::GetCursorPos(&m_ptOldCursorPos);
-        if (!m_bRotateEnable) {
-            m_ChargeTimer.Reset();
-            m_ChargeTimer.Start();
-        }
-        break;
-    }
-    case WM_LBUTTONUP: {
-        //if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-        if(strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
-            m_pPacket->Send_stop_packet();
-        ::ReleaseCapture();
-        m_ChargeTimer.Stop();
-        m_pPlayer->LButtonUp();
-        m_DegreeX = 0;
-        m_DegreeY = 0;
-        break;
-    }
-    case WM_RBUTTONUP: {
-        //if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-        if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
-            m_pPacket->Send_stop_packet();
-        m_pPlayer->RButtonUp();
-        CCamera* pCamera = m_pPlayer->GetCamera();
-        m_pCamera = pCamera;
-        m_DegreeX = 0;
-        m_DegreeY = 0;
-        break;
-    }
-    case WM_MOUSEMOVE:
-        break;
-    default:
-        break;
-    }
+	switch (nMessageID)
+	{
+	case WM_LBUTTONDOWN: {
+		if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
+			m_pPacket->Send_attack_packet(PlayerAttackType::BOWL);
+		else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
+			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL1);
+		::SetCapture(hWnd);
+		::GetCursorPos(&m_ptOldCursorPos);
+		if (!m_bRotateEnable) {
+			m_ChargeTimer.Reset();
+			m_ChargeTimer.Start();
+			//m_pPlayer->LButtonDown();
+		}
+		break;
+	}
+	case WM_RBUTTONDOWN: {
+		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+			m_pPacket->Send_attack_packet(PlayerAttackType::BOWR);
+		else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
+			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
+		::SetCapture(hWnd);
+		::GetCursorPos(&m_ptOldCursorPos);
+		if (!m_bRotateEnable) {
+			m_ChargeTimer.Reset();
+			m_ChargeTimer.Start();
+		}
+		break;
+	}
+	case WM_LBUTTONUP: {
+		//if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+		if(strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
+			m_pPacket->Send_stop_packet();
+		::ReleaseCapture();
+		m_ChargeTimer.Stop(); 
+		m_pPlayer->LButtonUp(m_ChargeTimer.GetTotalTime());
+		m_DegreeX = 0;
+		m_DegreeY = 0;
+		break;
+	}
+	case WM_RBUTTONUP: {
+		//if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+		if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
+			m_pPacket->Send_stop_packet();
+		m_pPlayer->RButtonUp();
+		CCamera* pCamera = m_pPlayer->GetCamera();
+		m_pCamera = pCamera;
+		m_DegreeX = 0;
+		m_DegreeY = 0;
+		break;
+	}
+	case WM_MOUSEMOVE:
+		break;
+	default:
+		break;
+	}
 }
 
 void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
-    if (m_pScene) {
-        /*if (m_pScene->m_iState == SCENE::LOBBY) {
-            switch (nMessageID)
-            {
-            case WM_CHAR:
-                UCHAR ch = static_cast<unsigned char>(wParam);
-                m_charBuffer.push(ch);
-                break;
-            }
-            return;
-        }
-        else*/
-        m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
-    }
-    switch (nMessageID)
-    {
-        case WM_KEYUP:
-            switch (wParam)
-            {
-                case VK_CONTROL:
-                    m_bRotateEnable = false;
-                    m_pCamera->Rotate(-m_fPitch, -m_fYaw, 0);
-                    m_fPitch = 0;
-                    m_fYaw = 0;
-                    break;
-                case VK_ESCAPE:
-                    ::PostQuitMessage(0);
-                    break;
-                case VK_RETURN:
-                    break;
-                case VK_F1:
+	if (m_pScene) {
+		/*if (m_pScene->m_iState == SCENE::LOBBY) {
+			switch (nMessageID)
+			{
+			case WM_CHAR:
+				UCHAR ch = static_cast<unsigned char>(wParam);
+				m_charBuffer.push(ch);
+				break;
+			}
+			return;
+		}
+		else*/
+		m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
+	}
+	switch (nMessageID)
+	{
+		case WM_KEYUP:
+			switch (wParam)
+			{
+				case VK_CONTROL:
+					m_bRotateEnable = false;
+					m_pCamera->Rotate(-m_fPitch, -m_fYaw, 0);
+					m_fPitch = 0;
+					m_fYaw = 0;
+					break;
+				case VK_ESCAPE:
+					//::PostQuitMessage(0);
+					break;
+				case VK_RETURN:
+					break;
+				case VK_F1:
 
                     break;
                 case VK_F2:
@@ -476,7 +478,8 @@ void CGameFramework::OnProcessingKeyboardMessageForLogIn(HWND hWnd, UINT nMessag
 
 LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
-    if (m_pScene->GetState() == SCENE::LOGIN) return(0);
+    if (m_pScene->GetState() != SCENE::INGAME || m_pScene->GetState() != SCENE::INROOM) return(0);
+
     switch (nMessageID)
     {
     case WM_ACTIVATE:
@@ -513,126 +516,224 @@ void CGameFramework::CheckCollision()
 
 void CGameFramework::ShowLoginWindow()
 {
-    ImGui::Begin("Login", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
-
-    {
-        ImGui::SetWindowSize(ImVec2(400, 100));
-        ImGui::SetWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2 - 200, FRAME_BUFFER_HEIGHT / 2 - 50));
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
-        {
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
-            {
-                ImGui::Text("Login for playing SkyFall");
-            }
-
-            {
-                ImGui::SetCursorPosY(ImGui::GetTextLineHeight() + 20);
-                ImGui::Text("	  ID");
-                ImGui::SameLine();
-                ImGui::InputTextWithHint(" ", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank); //ImGuiInputTextFlags_::
-                ImGui::Text("Password");
-                ImGui::SameLine();
-                ImGui::InputTextWithHint("  ", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
-            }
-
-            ImGui::SetCursorPosX(80);
-            if (ImGui::Button("Login")) {
-                // 여기서 서버에 로그인
-                m_pPacket->Set_UserID(m_bufID);
-                m_pPacket->Send_login_packet(m_bufID, m_bufPW);
-            }
-            ImGui::SameLine(0, 50);
-            if (ImGui::Button("Create Account")) {
-                // 여기서 회원가입 창 띄워서 거기서 아이디 비번 넣고 보내고 할거임
-            }
-            ImGui::PopStyleVar();
-        }
-        ImGui::PopStyleVar();
+    if (m_bShowAccountWindow) {
+        ShowAccountWindow(&m_bShowAccountWindow);
+        return;
     }
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT / 2), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(300, 100), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Login", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_AlwaysAutoResize);
+	{
+		{
+			ImGui::Text("Login for playing SkyFall");
+		}
 
-    ImGui::End();
+		{
+			ImGui::SetCursorPosY(ImGui::GetTextLineHeight() + 20);
+			ImGui::Text("	  ID");
+			ImGui::SameLine();
+            ImGui::InputTextWithHint(" ", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank);
+
+			ImGui::Text("Password");
+			ImGui::SameLine();
+            ImGui::InputTextWithHint("  ", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
+		}
+
+		ImGui::SetCursorPosX(120);
+		if (ImGui::Button("Login")) {
+			if (strlen(m_bufID) == 0) {
+				printf("%zu\n", strlen(m_bufID));
+				m_bError = true;
+			}
+			else {
+                // 여기서 서버에 로그인
+				m_pPacket->Set_UserID(m_bufID);
+				m_pPacket->Send_login_packet(m_bufID, m_bufPW);
+			}
+		}
+		ImGui::SameLine(0, 10);
+		if (ImGui::Button("Create Account")) {
+			// 여기서 회원가입 창 띄워서 거기서 아이디 비번 넣고 보내고 할거임
+			m_bShowAccountWindow = true;
+		}
+	}
+
+	ImGui::End();
 }
 
 void CGameFramework::ShowLobbyWindow()
 {
-    ImGui::Begin("Lobby", false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x * 0.7f, viewport->Size.y * 0.1f), ImGuiCond_FirstUseEver );
+    ImGui::SetNextWindowSize(ImVec2(200, viewport->Size.y * 0.5f), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Lobby", false, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_AlwaysAutoResize);
+	{
+		static int room_current_idx = 0;
+		{
+			ImGui::Text("Rooms");
+            if (ImGui::BeginListBox("##Room List", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing()))) {
+				for (int n = 0; n < m_vRooms.size(); n++)
+				{
+					const bool is_selected = (room_current_idx == n);
+					if (ImGui::Selectable(m_vRooms[n].c_str(), is_selected))
+						room_current_idx = n;
 
-    {
-        ImGui::SetWindowSize(ImVec2(FRAME_BUFFER_WIDTH/2-10, FRAME_BUFFER_HEIGHT-100));
-        ImGui::SetWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2, 10));
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
-        {
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
-            static int room_current_idx = -1;
-            {
-                //const char* rooms[] = { "Room1","Room2", "Room3" };
-                ImGui::Text("Rooms");
-                if (ImGui::BeginListBox("##Room List", ImVec2(FRAME_BUFFER_WIDTH / 2 - 30, FRAME_BUFFER_HEIGHT / 2))) {
-                    for (int n = 0; n < rooms.size(); n++)
-                    {
-                        const bool is_selected = (room_current_idx == n);
-                        if (ImGui::Selectable(rooms[n], is_selected))
-                            room_current_idx = n;
+					// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
 
-                        // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                        if (is_selected)
-                            ImGui::SetItemDefaultFocus();
-                    }
+				ImGui::EndListBox();
+			}
+		}
 
-                    ImGui::EndListBox();
-                }
-            }
-
-            ImGui::SetCursorPosX(80);
-            if (ImGui::Button("Join")) {
-                // 여기서 방에 입장
-                // 임시로 state 변경해놓음
-                if (room_current_idx >= 0)
-                    m_pPacket->Send_room_select_packet(room_current_idx);
-                //m_pScene->SetState(SCENE::INROOM);
-
-            }
-            ImGui::SameLine(0, 50);
-            if (ImGui::Button("Create Room")) {
-                m_pPacket->Send_room_create_packet();
-                // 여기서 새로운 방을 만듦
-            }
-            ImGui::PopStyleVar();
+        ImGui::SetCursorPosX(20);
+		if (ImGui::Button("Join")) {
+			// 여기서 방에 입장
+			// 임시로 state 변경해놓음
+			if (room_current_idx >= 0)
+				m_pPacket->Send_room_select_packet(room_current_idx);
+		}
+		ImGui::SameLine(0, 20);
+		if (ImGui::Button("Create Room")) {
+			// 여기서 새로운 방을 만듦
+			m_bShowCreateRoomWindow = true;
+			::ZeroMemory(m_bufPW, strlen(m_bufPW));
+		}
+        ImGui::SameLine(0, 20);
+        if (ImGui::Button("Refresh")) {
+            // 여기서 방에 입장
+            // 임시로 state 변경해놓음
+            if (room_current_idx >= 0)
+                m_pPacket->Send_room_select_packet(room_current_idx);
         }
-        ImGui::PopStyleVar();
-    }
-
-    ImGui::End();
+	}
+	ImGui::End();
+	if (m_bShowCreateRoomWindow)
+		ShowCreateRoomWindow(&m_bShowCreateRoomWindow);
 }
 
 void CGameFramework::ShowRoomWindow()
 {
-    ImGui::Begin("Room", false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Room", false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
 
+	{
+		ImGui::SetCursorPosX(80);
+		if (ImGui::Button("Start")) {
+			// 여기서 게임 시작
+			// 모든 플레이어가 무기를 골랐다면, 시작 버튼을 누르면 게임 시작
+			// 임시로 state 변경해놓음
+			// m_pScene->SetState(SCENE::INGAME);
+			m_pPacket->Send_start_packet(m_pPacket->Get_StartWeapon());
+		}
+		ImGui::SameLine(0, 50);
+		if (ImGui::Button("Exit")) {
+			// 여기서 방을 나감
+			// 임시로 state 변경
+			m_pScene->SetState(SCENE::LOBBY);
+
+		}
+	}
+	ImGui::End();
+}
+
+void CGameFramework::ShowAccountWindow(bool* p_open)
+{
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar;
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(ImVec2(viewport->Size.x / 4, viewport->Size.y / 4), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(270, 100), ImGuiCond_FirstUseEver);
+
+    ImGui::Separator();
+	if (ImGui::Begin("Create Account", p_open, flags))
+	{
+		//ImGui::SetCursorPosY(viewport->Size.y / 4 - 40);
+		ImGui::Text("	  ID");
+		ImGui::SameLine();
+		ImGui::InputTextWithHint("##ID", "10 words maximum", m_bufID, IM_ARRAYSIZE(m_bufID), ImGuiInputTextFlags_CharsNoBlank);
+		ImGui::Text("Password");
+		ImGui::SameLine();
+		ImGui::InputTextWithHint("##Password", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsNoBlank);
+
+
+		ImGui::SetCursorPosX(ImGui::GetWindowSize().x/2 - 30);
+		//ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
+
+		if (p_open && ImGui::Button("Create")) {
+			//m_pPacket->send_create_account(); 함수 추가해서 서버로 계정 정보 보내고 id 존재하면 이미 존재하는 id 창 띄우기
+			::ZeroMemory(m_bufID, strlen(m_bufID));
+			::ZeroMemory(m_bufPW, strlen(m_bufPW));
+			*p_open = false;
+		}
+		/*서버에서 아이디 생성 완료하면 받는 패킷에서 m_bShowAccountWindow = false로 변경*/
+	}
+	ImGui::End();
+
+}
+
+void CGameFramework::ShowCreateRoomWindow(bool* p_open)
+{
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar;
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(viewport->WorkSize.x / 4, viewport->Size.y / 4), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(200, 80), ImGuiCond_FirstUseEver);
+
+    if (ImGui::Begin("Create Room", p_open, flags))
     {
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
-        {
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+        //ImGui::SetCursorPosY(viewport->Size.y / 4 - 40);
+        ImGui::Text("Name");
+        ImGui::SameLine();
+        ImGui::InputTextWithHint("##RoomName", "20 words maximum", m_bufPW, IM_ARRAYSIZE(m_bufPW), ImGuiInputTextFlags_CharsNoBlank| ImGuiInputTextFlags_EnterReturnsTrue);
 
-            ImGui::SetCursorPosX(80);
-            if (ImGui::Button("Start")) {
-                // 여기서 게임 시작
-                // 모든 플레이어가 무기를 골랐다면, 시작 버튼을 누르면 게임 시작
-                // 임시로 state 변경해놓음
-                // m_pScene->SetState(SCENE::INGAME);
-                m_pPacket->Send_start_packet(m_pPacket->Get_StartWeapon());
-            }
-            ImGui::SameLine(0, 50);
-            if (ImGui::Button("Exit")) {
-                // 여기서 방을 나감
-                // 임시로 state 변경
-                m_pScene->SetState(SCENE::LOBBY);
-            }
-            ImGui::PopStyleVar();
+
+        ImGui::SetCursorPosX(ImGui::GetWindowSize().x / 2 - 30);
+        //ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 40);
+
+        if (p_open && ImGui::Button("Create")) {
+            string str = m_bufPW;
+            if(find(m_vRooms.begin(),m_vRooms.end(),str)==m_vRooms.end())
+                m_vRooms.push_back(str);
+            ::ZeroMemory(m_bufPW, strlen(m_bufPW));
+            *p_open = false;
         }
-        ImGui::PopStyleVar();
     }
     ImGui::End();
+
+}
+
+void CGameFramework::ShowError(const char* str)
+{
+	ImGui::SetNextWindowSize(ImVec2(8 * strlen(str), 50), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT / 3), ImGuiCond_FirstUseEver);
+	
+	if (ImGui::Begin("Error", &m_bError, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar))
+	{
+		ImGui::Text(str);
+	}
+	ImGui::End();
+}
+
+void CGameFramework::DrawTimer()
+{
+	PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
+	char str[6] = "";
+	int t = m_pcbMappedFrameworkInfo->m_fCurrentTime;
+
+	char h[4];
+	_itoa_s(t / 60, h, 10);
+	strcat_s(str, h);
+	strcat_s(str, ":");
+	if (t % 60 < 10)
+		strcat_s(str, "0");
+
+	char m[3];
+	_itoa_s(t % 60, m, 10);
+	strcat_s(str, m);
+	m_pSprite->Begin(m_pd3dCommandList);
+	m_pFont->DrawString(m_pSprite.get(), str, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 10));
+	m_pSprite->End();
+	PIXEndEvent(m_pd3dCommandQueue);
 }
 
 void CGameFramework::CreateFontAndGui()
@@ -662,16 +763,98 @@ void CGameFramework::CreateFontAndGui()
         uploadResourcesFinished.wait();
     }
 
-    //Setup ImGui
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    ImGui::StyleColorsDark();
-    ImGui_ImplWin32_Init(m_hWnd);
-    ImGui_ImplDX12_Init(m_pd3dDevice, 2, DXGI_FORMAT_R8G8B8A8_UNORM, m_resourceDescriptors->Heap(),
-        m_resourceDescriptors->GetCpuHandle(Descriptors::ImGui), m_resourceDescriptors->GetGpuHandle(Descriptors::ImGui));
+	//Setup ImGui
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::StyleColorsDark();
+	ImGui_ImplWin32_Init(m_hWnd);
+	ImGui_ImplDX12_Init(m_pd3dDevice, 2, DXGI_FORMAT_R8G8B8A8_UNORM, m_resourceDescriptors->Heap(),
+		m_resourceDescriptors->GetCpuHandle(Descriptors::ImGui), m_resourceDescriptors->GetGpuHandle(Descriptors::ImGui));
 
-    m_pScene->SetState(SCENE::LOGIN);
+	m_pScene->SetState(SCENE::LOGIN);
+	m_vRooms = {};
+	m_ErrorMsg = "Error Message";
+}
+
+void CGameFramework::RenderMiniMap() const
+{
+	::SynchronizeResourceTransition(m_pd3dCommandList, m_pMiniMapTexture->GetTexture(0), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	FLOAT Color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dRtvCPUDescriptorHandle = m_pd3dRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	d3dRtvCPUDescriptorHandle.ptr += m_nRtvDescriptorIncrementSize * m_nSwapChainBuffers;
+	m_pd3dCommandList->ClearRenderTargetView(d3dRtvCPUDescriptorHandle, Color, 0, NULL);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dDsvCPUDescriptorHandle = m_pd3dDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);
+
+	m_pd3dCommandList->OMSetRenderTargets(1, &d3dRtvCPUDescriptorHandle, TRUE, &d3dDsvCPUDescriptorHandle);
+
+	m_pScene->Render(m_pd3dCommandList, m_pMiniMapCamera, true);
+	::SynchronizeResourceTransition(m_pd3dCommandList, m_pMiniMapTexture->GetTexture(0), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ);
+}
+
+void CGameFramework::BuildMiniMap()
+{
+	m_pMiniMapTexture = new CTexture(1, RESOURCE_TEXTURE2D);
+
+	D3D12_CLEAR_VALUE d3dClearValue = { DXGI_FORMAT_R8G8B8A8_UNORM, { 0.0f, 0.0f, 0.0f, 1.0f } };
+	m_pMiniMapTexture->CreateTexture(m_pd3dDevice, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ, &d3dClearValue, 0);
+
+	m_pMiniMap = new CUIObject(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), m_pMiniMapTexture, -0.98, 0.6, -0.7, 0.98, 0.8);
+	m_pMiniMap->SetAlpha(0.8f);
+	m_pMiniMap->SethPercent(1.f);
+	m_pMiniMap->SetInfo(UI_CIRCLE);
+	m_pMiniMap->UpdateShaderVariables(m_pd3dCommandList);
+
+	//D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
+	//::ZeroMemory(&d3dDescriptorHeapDesc, sizeof(D3D12_DESCRIPTOR_HEAP_DESC));
+	//d3dDescriptorHeapDesc.NumDescriptors = 1;
+	//d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	//d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	//d3dDescriptorHeapDesc.NodeMask = 0;
+	//HRESULT hResult = m_pd3dDevice->CreateDescriptorHeap(&d3dDescriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&m_pd3dRtvDescriptorHeap);
+
+	D3D12_RENDER_TARGET_VIEW_DESC RtvDesc;
+	RtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	RtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+	RtvDesc.Texture2D.MipSlice = 0;
+	RtvDesc.Texture2D.PlaneSlice = 0;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dRtvCPUDescriptorHandle = m_pd3dRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	d3dRtvCPUDescriptorHandle.ptr += m_nRtvDescriptorIncrementSize * m_nSwapChainBuffers;
+	m_pd3dDevice->CreateRenderTargetView(m_pMiniMapTexture->GetTexture(0), &RtvDesc, d3dRtvCPUDescriptorHandle);
+
+	m_pMiniMapCamera = new CCamera();
+	m_pMiniMapCamera->SetPosition(XMFLOAT3(0, 0, 0));
+	m_pMiniMapCamera->SetLookVector(XMFLOAT3(0, -1, 0));
+	m_pMiniMapCamera->RegenerateViewMatrix();
+	m_pMiniMapCamera->GenerateProjectionMatrixOrtho(1.01f, 2000.0f, m_nWndClientWidth, m_nWndClientHeight);
+	m_pMiniMapCamera->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
+}
+
+void CGameFramework::UpdateMiniMap()
+{
+
+	XMFLOAT3 pos = m_pPlayer->GetPosition();
+	//m_pMiniMapCamera->SetLookAtPosition(pos);
+	m_pMiniMapCamera->GenerateViewMatrix(XMFLOAT3(pos.x, 1000, pos.z), pos, m_pPlayer->GetLookVector());
+}
+
+void CGameFramework::BuildShadowMap()
+{
+	CCamera* pCamera = new CCamera();
+	pCamera->SetPosition(m_pScene->m_pLights[0].m_xmf3Position);
+	pCamera->SetLookVector(m_pScene->m_pLights[0].m_xmf3Direction);
+	pCamera->RegenerateViewMatrix();
+	pCamera->GenerateProjectionMatrixOrtho(1.01f, 1000.0f, m_nWndClientWidth * 3, m_nWndClientHeight * 3);
+	pCamera->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
+
+	m_pShadowMap = new CShadowMap(m_nWndClientWidth, m_nWndClientHeight, pCamera);
+	m_pShadowMap->CreateShader(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature());
+	m_pShadowMap->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
+	m_pShadowMap->CreateShadowMap(m_pd3dDevice);
 }
 
 void CGameFramework::OnDestroy()
@@ -697,6 +880,11 @@ void CGameFramework::OnDestroy()
     if (m_pd3dDevice) m_pd3dDevice->Release();
     if (m_pdxgiFactory) m_pdxgiFactory->Release();
 
+	if (m_pSprite)m_pSprite.release();
+	if (m_pFont)m_pFont.release();
+	if (m_resourceDescriptors)m_resourceDescriptors.release();
+	if (m_graphicsMemory)m_graphicsMemory.release();
+
 #if defined(_DEBUG)
     IDXGIDebug1* pdxgiDebug = NULL;
     DXGIGetDebugInterface1(0, __uuidof(IDXGIDebug1), (void**)&pdxgiDebug);
@@ -716,31 +904,21 @@ void CGameFramework::BuildObjects()
     m_vMapArrange = { { 0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}, {0, 2}, {1, 2}, {2, 2} };
     if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList, m_vMapArrange);
 
-    m_pd3dCommandList->SetGraphicsRootSignature(m_pScene->GetGraphicsRootSignature());
-    CCamera* pCamera = new CCamera();
-    pCamera->SetPosition(m_pScene->m_pLights[0].m_xmf3Position);
-    pCamera->SetLookVector(m_pScene->m_pLights[0].m_xmf3Direction);
-    pCamera->RegenerateViewMatrix();
-    pCamera->GenerateProjectionMatrixOrtho(1.01f, 2000.0f, m_nWndClientWidth*2, m_nWndClientHeight*2);
-    pCamera->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
+	m_pd3dCommandList->SetGraphicsRootSignature(m_pScene->GetGraphicsRootSignature());
 
-    m_pShadowMap = new CShadowMap(m_nWndClientWidth, m_nWndClientHeight, pCamera);
-    m_pShadowMap->CreateShader(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature());
-    m_pShadowMap->CreateShaderVariables(m_pd3dDevice, m_pd3dCommandList);
-    m_pShadowMap->CreateShadowMap(m_pd3dDevice);
+	BuildShadowMap();
+	BuildMiniMap();
+	CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Basic.bin", NULL);
+	CTerrainPlayer* pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pModel, (void**)m_pScene->m_ppTerrain);
+	delete pModel;
 
-
-    CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Basic.bin", NULL);
-    CTerrainPlayer* pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pModel, (void**)m_pScene->m_ppTerrain);
-    delete pModel;
-
-    m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
-    m_pScene->AddWeapon(m_pd3dDevice, m_pd3dCommandList);
-    m_pPlayer = m_pScene->m_pPlayer = pPlayer;
-    pPlayer->Rotate(60.0f, -90.f, 0);
-    //m_pPlayer->SetPlace(4);
-    
-    m_pCamera = pPlayer->GetCamera();
+	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
+	m_pScene->AddWeapon(m_pd3dDevice, m_pd3dCommandList);
+	m_pPlayer = m_pScene->m_pPlayer = pPlayer;
+	pPlayer->Rotate(20.0f, -90.f, 0);
+	//m_pPlayer->SetPlace(4);
+	
+	m_pCamera = pPlayer->GetCamera();
 
     m_pPacket->m_pScene = m_pScene;
     m_pPacket->m_pFramework = this;
@@ -766,9 +944,9 @@ void CGameFramework::BuildObjects()
 
 void CGameFramework::ReleaseObjects()
 {
-    if (m_pPlayer) m_pPlayer->Release();
-    /*if (m_p1HswordPlayer) m_p1HswordPlayer->Release();
-    if (m_pBowPlayer) m_pBowPlayer->Release();*/
+	//if (m_pPlayer) m_pPlayer->Release();
+	/*if (m_p1HswordPlayer) m_p1HswordPlayer->Release();
+	if (m_pBowPlayer) m_pBowPlayer->Release();*/
 
     if (m_pScene) {
         m_pScene->ReleaseObjects();
@@ -782,7 +960,7 @@ void CGameFramework::ReleaseObjects()
 
 void CGameFramework::ProcessInput()
 {
-    if (m_pScene->GetState() == SCENE::LOGIN || m_pScene->GetState() == SCENE::ENDGAME) return;
+    if (m_pScene->GetState() != SCENE::INGAME && m_pScene->GetState() != SCENE::INROOM) return;
 
     float fTimeElapsed = m_GameTimer.GetTimeElapsed();
     static UCHAR pKeysBuffer[256];
@@ -853,19 +1031,19 @@ void CGameFramework::ProcessInput()
                 SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
         }
 
-        if (m_pPlayer->GetAttack() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA&&
-            !strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
-        {
-            player_shot_packet p;
+		if (m_pPlayer->GetAttack() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA &&
+			!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow") && m_ChargeTimer.GetTotalTime() > 1.f)
+		{
+			player_shot_packet p;
             p.key = m_pPacket->InGamekey;
-            p.size = sizeof(p);
-            p.type = CS_allow_shot;
-            p.Look = m_pCamera->GetLookVector();
-            p.fTimeElapsed = fTimeElapsed;
-            p.ChargeTimer = m_ChargeTimer.GetTotalTime();
-            m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-            //printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
-        }
+			p.size = sizeof(p);
+			p.type = CS_allow_shot;
+			p.Look = m_pCamera->GetLookVector();
+			p.fTimeElapsed = fTimeElapsed;
+			p.ChargeTimer = m_ChargeTimer.GetTotalTime();
+			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+			//printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
+		}
 
         if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
         {
@@ -1000,27 +1178,30 @@ void CGameFramework::FrameAdvance()
 {
     m_GameTimer.Tick(60.0f);
 
-    ProcessInput();
-    CheckCollision();
-    m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
-    CCamera* pCamera = m_pShadowMap->GetCamera();
-    pCamera->SetPosition(XMFLOAT3(m_pPlayer->GetPosition().x, 0, m_pPlayer->GetPosition().z));
-    pCamera->Move(XMFLOAT3(-500, 200, -500));
-    m_pScene->m_pLights[0].m_xmf3Position = pCamera->GetPosition();
-    pCamera->RegenerateViewMatrix();
+	ProcessInput();
+	CheckCollision();
+
+	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
+	UpdateShadowMap();
+	if(m_pScene->GetState() == SCENE::INGAME)
+		UpdateMiniMap();
+
     AnimateObjects();
 
     HRESULT hResult = m_pd3dCommandAllocator->Reset();
     hResult = m_pd3dCommandList->Reset(m_pd3dCommandAllocator, NULL);
 
-    m_pShadowMap->Set(m_pd3dCommandList);
-    m_pScene->Set(m_pd3dCommandList);
+	m_pScene->Set(m_pd3dCommandList);
 
-    UpdateShaderVariables();
-    m_pShadowMap->UpdateShaderVariable(m_pd3dCommandList);
+	if (m_pScene->GetState() == SCENE::INGAME)
+		RenderMiniMap();
+
+	m_pShadowMap->Set(m_pd3dCommandList);
+	m_pShadowMap->UpdateShaderVariable(m_pd3dCommandList);
+	UpdateShaderVariables();
 
     m_pShadowMap->Render(m_pd3dCommandList, NULL);
-    if (m_pScene) m_pScene->RenderShadow(m_pd3dCommandList,pCamera);
+    if (m_pScene) m_pScene->RenderShadow(m_pd3dCommandList, m_pShadowMap->GetCamera());
     m_pPlayer->RenderShadow(m_pd3dCommandList, NULL);
 
     //if (m_pBowPlayer) m_pBowPlayer->RenderShadow(m_pd3dCommandList, m_pCamera);
@@ -1050,53 +1231,46 @@ void CGameFramework::FrameAdvance()
 
     m_pd3dCommandList->OMSetRenderTargets(1, &d3dRtvCPUDescriptorHandle, TRUE, &d3dDsvCPUDescriptorHandle);
 
-    m_pShadowMap->UpdateShaderVariables(m_pd3dCommandList);
-    if (m_pScene) m_pScene->Render(m_pd3dCommandList, m_pCamera);
+	m_pShadowMap->UpdateShaderVariables(m_pd3dCommandList);
+	if (m_pScene) m_pScene->Render(m_pd3dCommandList, m_pCamera);
+	if (m_pScene->GetState() == SCENE::INGAME && m_pMiniMap) {
+		m_pMiniMap->UpdateShaderVariables(m_pd3dCommandList);
+		m_pMiniMap->Render(m_pd3dCommandList, m_pCamera);
+	}
 
-    ID3D12DescriptorHeap* heaps = m_resourceDescriptors->Heap();
-    m_pd3dCommandList->SetDescriptorHeaps(1, &heaps);
-    
-    if (m_pScene && m_pScene->GetState() != SCENE::ENDGAME)
-    {
-        PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
-        m_pSprite->Begin(m_pd3dCommandList);
-        m_pFont->DrawString(m_pSprite.get(), L"SKYFALL", XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 20));
-        m_pSprite->End();
-        PIXEndEvent(m_pd3dCommandQueue);
-    }
-    else if (m_pScene && m_pScene->GetState() == SCENE::ENDGAME)
-    {
-        PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
-        m_pSprite->Begin(m_pd3dCommandList);
-        const wchar_t* wc;
-        string s = "\nRate           : ";
-        s += to_string(m_pPlayer->GetRate());
-        s += "\nPlayer Kill   : ";
-        s += to_string(m_pPlayer->GetPkill());
-        s += "\nMonster Kill : ";
-        s += to_string(m_pPlayer->GetMkill());
-        s += "\nProficiency  : ";
-        s += to_string(m_pPlayer->GetPro());
-        wstring ws = wstring(s.begin(), s.end());
-        wc = ws.c_str();
-        m_pFont->DrawString(m_pSprite.get(), wc, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 + 20, 200));
-        m_pSprite->End();
-        PIXEndEvent(m_pd3dCommandQueue);
-    }
-    // Start the Dear ImGui frame
-    ImGui_ImplDX12_NewFrame();
-    ImGui_ImplWin32_NewFrame();
-    ImGui::NewFrame();
-    
-    if (m_pScene->GetState() == SCENE::LOGIN)
-        ShowLoginWindow();
-    else if (m_pScene->GetState() == SCENE::LOBBY)
-        ShowLobbyWindow();
-    else if (m_pScene->GetState() == SCENE::INROOM)
-        ShowRoomWindow();
-    
-    ImGui::Render();
-    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_pd3dCommandList);
+	ID3D12DescriptorHeap* heaps = m_resourceDescriptors->Heap();
+	m_pd3dCommandList->SetDescriptorHeaps(1, &heaps);
+	
+	if (m_pScene->GetState() == SCENE::INGAME)
+	{
+		DrawTimer();
+	}
+
+	// Start the Dear ImGui frame
+	ImGui_ImplDX12_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+
+		if (m_pScene->GetState() == SCENE::LOGIN) {
+			ShowLoginWindow();
+		}
+		else if (m_pScene->GetState() == SCENE::LOBBY) {
+			ShowLobbyWindow();
+		}
+		else if (m_pScene->GetState() == SCENE::INROOM)
+			ShowRoomWindow();
+
+		if (m_bError) {
+			ShowError(m_ErrorMsg.c_str());
+		}
+		ImGui::PopStyleVar();
+		ImGui::PopStyleVar();
+	}
+	ImGui::Render();
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_pd3dCommandList);
 
 
 #ifdef _WITH_PLAYER_TOP
@@ -1280,4 +1454,23 @@ void CGameFramework::Restart()
     }
     m_pScene->m_ppUIObjects[2]->SetAlpha(0.0f);
     m_pScene->m_ppUIObjects[3]->SetAlpha(0.0f);
+}
+
+void CGameFramework::UpdateShadowMap()
+{
+    CCamera* pCamera = m_pShadowMap->GetCamera();
+    XMFLOAT3 look = pCamera->GetLookVector();
+    XMFLOAT3 pos = Vector3::Add(m_pPlayer->GetPosition(), m_pPlayer->GetLookVector(), 500);
+
+    pCamera->SetPosition(XMFLOAT3(pos.x, 0, pos.z));
+    pCamera->Move(Vector3::ScalarProduct(look, -500, false));
+    m_pScene->m_pLights[0].m_xmf3Position = pCamera->GetPosition();
+    pCamera->RegenerateViewMatrix();
+}
+
+void CGameFramework::StartGame()
+{
+    m_pScene->SetState(SCENE::INGAME);
+    MouseHold(false);
+    m_GameTimer.Reset();
 }

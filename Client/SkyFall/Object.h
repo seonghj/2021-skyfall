@@ -556,6 +556,7 @@ public:
 	void UpdateTime(float fTimeElapsed);
 	void Falling();
 	bool IsFalling() { return m_pcbMappedTerrainInfo->m_bFalling; }
+	float GetTime() const { return m_pcbMappedTerrainInfo->m_fTime; }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -634,8 +635,8 @@ public:
 	static CGameObject* m_pArrow;
 
 public:
-	CBullet(void* pContext = 0) :CGameObject(), m_fSpeed(300.f), m_xmf3MovingDirection(0.f, 0.f, 0.f), m_xmf3Gravity(0.f, -0.2f, 0.f) { SetMesh((CStandardMesh*)pContext); };
-	virtual ~CBullet() { CGameObject::~CGameObject(); };
+	CBullet(void* pContext = 0) :CGameObject(), m_fSpeed(300.f), m_xmf3MovingDirection(0.f, 0.f, 0.f), m_xmf3Gravity(0.f, -0.2f, 0.f) { if (pContext)SetMesh((CStandardMesh*)pContext); };
+	virtual ~CBullet() {};
 	void Animate(float fElapsedTime);
 	void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; };
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera=NULL);
@@ -772,6 +773,7 @@ struct CB_UI_INFO {
 	float gfAlpha;
 	float gfPercentVer;
 	float gfPercentHor;
+	UINT gnUiInfo;
 };
 
 class CUIObject : public CGameObject
@@ -781,6 +783,7 @@ protected:
 	CB_UI_INFO *m_pcbMappedUI = NULL;
 public:
 	CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, wchar_t* pstrTextureName, float l, float b, float r, float t, float a);
+	CUIObject(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CTexture* pTexture, float l, float b, float r, float t, float a);
 	~CUIObject();
 
 	float		 GetAlpha() { return m_pcbMappedUI->gfAlpha; }
@@ -788,6 +791,8 @@ public:
 	void SetAlpha(float a) { m_pcbMappedUI->gfAlpha = a; }
 	void SetvPercent(float p) { m_pcbMappedUI->gfPercentVer = p; }
 	void SethPercent(float p) { m_pcbMappedUI->gfPercentHor = p; }
+	void SetInfo(UINT n) { m_pcbMappedUI->gnUiInfo = n; }
+	void DecreaseAlpha(float fTimeElapsed) { m_pcbMappedUI->gfAlpha -= fTimeElapsed; }
 	virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void ReleaseShaderVariables();
