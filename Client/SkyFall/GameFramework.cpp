@@ -592,8 +592,8 @@ void CGameFramework::ShowLobbyWindow()
 		if (ImGui::Button("Join")) {
 			// 여기서 방에 입장
 			// 임시로 state 변경해놓음
-			if (room_current_idx >= 0)
-				m_pPacket->Send_room_select_packet(room_current_idx);
+            if (room_current_idx >= 0)
+                m_pPacket->Send_room_select_packet(room_current_idx);
 		}
 		ImGui::SameLine(0, 20);
 		if (ImGui::Button("Create Room")) {

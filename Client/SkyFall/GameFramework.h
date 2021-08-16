@@ -67,6 +67,7 @@ public:
 	void MouseHold(bool b) { m_bMouseHold = b; }
 	void StartGame();
 
+	array<char[20], 20> m_vRooms;
 	void SetRoomList(int idx, char* name) { strcpy_s(m_vRooms[idx], name); }
 	char* GetRoomName(int idx) { return m_vRooms[idx]; }
 
@@ -184,7 +185,6 @@ private:
 	bool m_bShowAccountWindow = false;
 	bool m_bShowCreateRoomWindow = false;
 	bool m_bError = false;
-	array<char[20], 20> m_vRooms;
 	string m_ErrorMsg;
 
 	//miniMap

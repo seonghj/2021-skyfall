@@ -244,7 +244,6 @@ void Server::Accept()
 
 void Server::Disconnected(int key)
 {
-    //std::lock_guard<std::mutex> lock_guard(sessions_lock);
     printf("client_end: IP =%s, port=%d Lobby key = %d\n",
         inet_ntoa(sessions[key].clientaddr.sin_addr)
         , ntohs(sessions[key].clientaddr.sin_port), key);
@@ -252,6 +251,29 @@ void Server::Disconnected(int key)
     closesocket(sessions[key].sock);
     sessions[key].connected = FALSE;
     sessions[key].key = INVALIDID;
+    std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
+    if (sessions[key].roomID != INVALIDID) {
+        if (sessions[key].InGamekey == INVALIDID) return;
+        GameRooms[sessions[key].roomID].pkeys[sessions[key].InGamekey] = INVALIDID;
+        int roomid = sessions[key].roomID;
+        int cnt = 0;
+        for (int i = 0; i < MAX_PLAYER; ++i) {
+            if (GameRooms[sessions[key].roomID].pkeys[i] == INVALIDID)
+                ++cnt;
+        }
+        if (cnt >= 20) {
+            GameRooms[roomid].CanJoin = false;
+            delete GameRooms[roomid].m_pMap;  
+            ZeroMemory(GameRooms[roomid].name, sizeof(GameRooms[roomid].name));
+            GameRooms.erase(roomid);
+            m_pBot->monsters_lock.lock();
+            m_pBot->monsters.erase(roomid);
+            m_pBot->monsterRun.erase(roomid);
+            m_pBot->monsters_lock.unlock();
+
+            printf("delete Room: %d\n", roomid);
+        }
+    }
     //printf("disconnected %d\n", gameroom[roomID].ID[i]);
 
 #ifdef Run_DB
@@ -355,6 +377,7 @@ void Server::send_room_list_packet(int key)
 {
     for (auto& g : GameRooms) {
         if (g.second.CanJoin == false) continue;
+        if (g.second.name == NULL) continue;
         room_list_packet p;
         p.key = key;
         p.size = sizeof(p);
@@ -1100,6 +1123,7 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_create_room: {
         room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
         int key = p->key;
+        if (sizeof(p->name) <= 0) break;
         if (GameRooms.size() >= MAX_ROOM) break;
         int cnt = 0;
         // 0 = 정상 1 = 꽉참 2 = 방이름 같음

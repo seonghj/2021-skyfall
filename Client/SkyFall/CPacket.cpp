@@ -789,6 +789,7 @@ void CPacket::ProcessPacket(char* buf)
         else {
             m_pFramework->SetbError(false);
         }
+
         printf("get room list num = %d\n", p->idx);
         m_pFramework->SetRoomList(p->idx, p->name);
         break;
