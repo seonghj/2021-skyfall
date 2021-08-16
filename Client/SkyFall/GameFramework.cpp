@@ -478,7 +478,7 @@ void CGameFramework::OnProcessingKeyboardMessageForLogIn(HWND hWnd, UINT nMessag
 
 LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
-    if (m_pScene->GetState() != SCENE::INGAME || m_pScene->GetState() != SCENE::INROOM) return(0);
+    //if (m_pScene->GetState() != SCENE::INGAME || m_pScene->GetState() != SCENE::INROOM) return(0);
 
     switch (nMessageID)
     {
@@ -974,6 +974,7 @@ void CGameFramework::ProcessInput()
         if (pKeysBuffer[VK_RIGHT] & 0xF0) dwDirection |= DIR_RIGHT;
         if (pKeysBuffer[VK_PRIOR] & 0xF0) dwDirection |= DIR_UP;
         if (pKeysBuffer[VK_NEXT] & 0xF0) dwDirection |= DIR_DOWN;*/
+        //if (m_pScene->GetState() != SCENE::INGAME || m_pScene->GetState() != SCENE::INROOM) return;
         if (m_pPlayer->GetGround()&&!m_pPlayer->GetCharging()) {
 
             if (pKeysBuffer['W'] & 0xF0) { dwDirection |= DIR_FORWARD; PressDirButton = true;}

@@ -277,6 +277,8 @@ void CPacket::Send_refresh_room_packet()
     p.roomid = roomID;
     p.size = sizeof(p);
     p.type = CS_refresh_lobby;
+
+    SendPacket(reinterpret_cast<char*>(&p));
 }
 
 void CPacket::Swap_weapon(int key, PlayerType weapon)
@@ -741,6 +743,14 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_room_list: {
         room_list_packet* p = reinterpret_cast<room_list_packet*>(buf);
+        if (p->idx == INVALIDID) {
+            m_pFramework->SetbError(true);
+            m_pFramework->SetErrorMsg("Room name already exists");
+            break;
+        }
+        else {
+            m_pFramework->SetbError(false);
+        }
         printf("get room list num = %d\n", p->idx);
         m_pFramework->SetRoomList(p->idx, p->name);
         break;
@@ -766,7 +776,6 @@ void CPacket::ProcessPacket(char* buf)
         player_attack_packet* p = reinterpret_cast<player_attack_packet*>(buf);
         int key = p->key;
         if (p->key == InGamekey) {
-            printf("tlqkf\n");
             switch (p->attack_type) {
             case SWORD1HL1: {
                 m_pPlayer->LButtonDown();

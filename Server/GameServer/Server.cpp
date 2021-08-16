@@ -129,9 +129,15 @@ int Server::SetroomID()
     //}
 }
 
-bool Server::CreateRoom(int key, char* name)
+int Server::CreateRoom(int key, char* name)
 {
-    if (GameRooms.find(key) != GameRooms.end()) return false;
+    if (GameRooms.find(key) != GameRooms.end()) return 1;
+
+    for (auto& g : GameRooms) {
+        if (strcmp(g.second.name, name) == 0) {
+            return 2;
+        }
+    }
 
     GameRooms_lock.lock();
     GameRooms.emplace(key, GameRoom{});
@@ -153,7 +159,7 @@ bool Server::CreateRoom(int key, char* name)
     //m_pBot->RunBot(key);
     GameRooms[key].CanJoin = true;
 
-    return true;
+    return 0;
 }
 
 void Server::Accept()
@@ -1064,17 +1070,29 @@ void Server::process_packet(int key, char* buf, int roomID)
      // Lobby
     case PacketType::CS_create_room: {
         room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
+        int key = p->key;
         if (GameRooms.size() >= MAX_ROOM) break;
         int cnt = 0;
-        bool b = 0;
-        while (1) {
-            b = CreateRoom(cnt, p->name);
-            if (b == true) break;
+        // 0 = 정상 1 = 꽉참 2 = 방이름 같음
+        int error = 0;
+        while (cnt < MAX_ROOM) {
+            error = CreateRoom(cnt, p->name);
+            if (error == 0) break;
+            if (error == 2) {
+                room_list_packet r;
+                r.key = key;
+                r.size = sizeof(r);
+                r.type = PacketType::SC_room_list;
+                r.roomid = INVALIDID;
+                r.idx = INVALIDID;
+                send_packet(key, reinterpret_cast<char*>(&r), INVALIDID);
+                break;
+            }
             ++cnt;
         }
-
+        if (error == 2) break;
+        
         printf("player key: %d create game room - %d\n", p->key, cnt);
-
         send_room_list_packet(p->key);
 
         break;
@@ -1094,6 +1112,11 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_return_lobby: {
         return_lobby_packet* p = reinterpret_cast<return_lobby_packet*>(buf);
         player_go_lobby(p->key, p->roomid);
+        break;
+    }
+    case PacketType::CS_refresh_lobby: {
+        refresh_lobby_packet* p = reinterpret_cast<refresh_lobby_packet*>(buf);
+        send_room_list_packet(p->key);
         break;
     }
     }

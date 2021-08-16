@@ -68,6 +68,10 @@ public:
 	void StartGame();
 
 	void SetRoomList(int idx, char* name) { strcpy_s(m_vRooms[idx], name); }
+	char* GetRoomName(int idx) { return m_vRooms[idx]; }
+
+	void SetbError(bool b) { m_bError = b; }
+	void SetErrorMsg(string s) { m_ErrorMsg = s; }
 
 	XMFLOAT3					m_BeforePosition;
 	float						m_DegreeX;
