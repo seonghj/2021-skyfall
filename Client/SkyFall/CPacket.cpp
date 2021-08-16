@@ -116,7 +116,7 @@ void CPacket::SendPacket(char* buf)
     int retval = 0;
     wsabuf.len = buf[0];
     wsabuf.buf = buf;
-    printf("%d\n",wsabuf.len);
+    //printf("%d\n",wsabuf.len);
     retval = WSASend(sock, &wsabuf, 1, &sendbytes, 0, NULL, NULL);
     if (retval == SOCKET_ERROR) {
         printf("%d: ", WSAGetLastError());
@@ -651,6 +651,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_add: {
         player_add_packet* p = reinterpret_cast<player_add_packet*>(buf);
         int key = p->key;
+        if (key < 0) break;
         printf("login key: %d weapon: %d\n", p->key, p->WeaponType);
         if (key != InGamekey) {
             Swap_weapon(p->key, p->WeaponType);
@@ -779,6 +780,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_room_list: {
         if (m_pScene->GetState() == SCENE::INGAME) break;
         room_list_packet* p = reinterpret_cast<room_list_packet*>(buf);
+        if (p->idx >= 20) break;
         if (p->idx == INVALIDID) {
             m_pFramework->SetbError(true);
             m_pFramework->SetErrorMsg("Room name already exists");
@@ -967,7 +969,7 @@ void CPacket::ProcessPacket(char* buf)
         p->Position = m_pScene->m_ppGameObjects[key]->GetPosition();
 
         //printf("%f, %f, %f\n", p->Position.x, p->Position.y, p->Position.z);
-
+        printf("%f\n", m_pScene->m_ppGameObjects[key]->GetPosition().y);
         SendPacket(reinterpret_cast<char*>(p));
         break;
     }
@@ -1112,7 +1114,6 @@ void CPacket::ProcessPacket(char* buf)
             }
         }
         CheckCollision(m_pScene->m_ppGameObjects[key]);
-        printf("%f\n", m_pScene->m_ppGameObjects[key]->GetPosition().y);
         break;
     }
     case PacketType::SC_monster_stop: {
