@@ -1334,7 +1334,7 @@ bool Server::Init()
     SYSTEM_INFO si;
     GetSystemInfo(&si);
 
-    for (int i = 0; i <(int)si.dwNumberOfProcessors * 2; i++)
+    for (int i = 0; i <(int)si.dwNumberOfProcessors; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
 

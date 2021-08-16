@@ -952,13 +952,15 @@ void CPacket::ProcessPacket(char* buf)
                 m_pScene->m_ppGameObjects[key]->SetPlace(nPlace + 3);
             }
 
-            if (m_pScene->m_ppGameObjects[key]->GetState() != MonsterState::m_Walk) {
-                if (m_pScene->m_ppGameObjects[key]->GetState() == MonsterState::m_Take_Damage) {
-                    if (m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->IsTrackFinish(MonsterState::m_Take_Damage) == true)
+            if (p->MonsterType != MonsterType::Dragon) {
+                if (m_pScene->m_ppGameObjects[key]->GetState() != MonsterState::m_Walk) {
+                    if (m_pScene->m_ppGameObjects[key]->GetState() == MonsterState::m_Take_Damage) {
+                        if (m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->IsTrackFinish(MonsterState::m_Take_Damage) == true)
+                            m_pScene->m_ppGameObjects[key]->ChangeState(MonsterState::m_Walk);
+                    }
+                    else {
                         m_pScene->m_ppGameObjects[key]->ChangeState(MonsterState::m_Walk);
-                }
-                else {
-                    m_pScene->m_ppGameObjects[key]->ChangeState(MonsterState::m_Walk);
+                    }
                 }
             }
         }
@@ -1127,6 +1129,8 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_damage: {
         player_damage_packet* p = reinterpret_cast<player_damage_packet*>(buf);
         m_pScene->m_mPlayer[p->target]->SetHp(p->leftHp);
+        if (p->target == InGamekey)
+            m_pScene->m_ppUIObjects[0]->SethPercent(p->leftHp / m_pPlayer->m_iMaxHp);
         cout << "player: " << p->target << " hp: " << m_pScene->m_mPlayer[p->target]->GetHp() << endl;
         //m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
 
