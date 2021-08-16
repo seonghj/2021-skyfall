@@ -117,4 +117,6 @@ private:
 		m_Walk,
 		m_Run,
 	};
+
+	int TotalPlayer = 0;
 };

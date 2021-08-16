@@ -659,6 +659,7 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_mPlayer[key]->Rotate(p->dx, p->dy, 0);
             m_pScene->AnimatePlayer(key, 2);
             m_pScene->AnimatePlayer(key, 0);
+            ++TotalPlayer;
         }
         else {
             Swap_weapon(p->key, p->WeaponType);
@@ -678,6 +679,7 @@ void CPacket::ProcessPacket(char* buf)
         Swap_weapon(p->ingamekey, start_weapon);
         m_pScene->SetState(SCENE::INGAME);
         m_pFramework->MouseHold(false);
+        TotalPlayer = 1;
         break;
     }
     case PacketType::SC_game_end: {

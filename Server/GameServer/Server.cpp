@@ -159,6 +159,7 @@ int Server::CreateRoom(int key, char* name)
     m_pBot->Init(key);
     //m_pBot->RunBot(key);
     GameRooms[key].CanJoin = true;
+    GameRooms[key].TotalPlayer = 0;
 
     return 0;
 }
@@ -254,14 +255,11 @@ void Server::Disconnected(int key)
     std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
     if (sessions[key].roomID != INVALIDID) {
         if (sessions[key].InGamekey == INVALIDID) return;
+        --GameRooms[key].TotalPlayer;
         GameRooms[sessions[key].roomID].pkeys[sessions[key].InGamekey] = INVALIDID;
         int roomid = sessions[key].roomID;
-        int cnt = 0;
-        for (int i = 0; i < MAX_PLAYER; ++i) {
-            if (GameRooms[sessions[key].roomID].pkeys[i] == INVALIDID)
-                ++cnt;
-        }
-        if (cnt >= 20) {
+
+        if (GameRooms[key].TotalPlayer < -0){
             GameRooms[roomid].CanJoin = false;
             delete GameRooms[roomid].m_pMap;  
             ZeroMemory(GameRooms[roomid].name, sizeof(GameRooms[roomid].name));
@@ -441,6 +439,7 @@ void Server::send_start_packet(int to, int roomID)
         m_pBot->monsterRun[roomID] = true;
         m_pBot->RunBot(roomID);
     }
+    ++GameRooms[roomID].TotalPlayer;
 }
 
 // In Game
@@ -642,6 +641,8 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
     if (sessions[GameRooms[roomID].pkeys[target]].hp.load() <= 0) {
         sessions[GameRooms[roomID].pkeys[target]].state = Death;
         send_player_dead_packet(target, roomID);
+        if (GameRooms[roomID].TotalPlayer >= 1)
+            game_end(roomID, NULL);
     }
 }
 
@@ -732,6 +733,7 @@ void Server::game_end(int roomnum, OVER_EX* over_ex)
     GameRooms[roomnum].CanJoin = false;
     GameRooms_lock.lock();
     delete GameRooms[roomnum].m_pMap;
+    ZeroMemory(GameRooms[roomnum].name, sizeof(GameRooms[roomnum].name));
     for (auto& key : GameRooms[roomnum].pkeys) {
         if (key == INVALIDID) continue;
         if (sessions[key].connected == false || sessions[key].playing == false) continue;
@@ -739,6 +741,7 @@ void Server::game_end(int roomnum, OVER_EX* over_ex)
         sessions[key].InGamekey = INVALIDID;
     }
     GameRooms.erase(roomnum);
+
     GameRooms_lock.unlock();
 
     /*maps_lock.lock();
@@ -1115,6 +1118,8 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (sessions[GameRooms[p->roomid].pkeys[target]].hp.load() <= 0) {
             sessions[GameRooms[p->roomid].pkeys[target]].state = Death;
             send_player_dead_packet(target, roomID);
+            if (GameRooms[p->roomid].TotalPlayer >= 1)
+                game_end(p->roomid, NULL);
         }
 
         break;
@@ -1158,6 +1163,8 @@ void Server::process_packet(int key, char* buf, int roomID)
             break;
         }
         GameRooms_lock.unlock();
+        if (GameRooms[p->room].CanJoin == false) break;
+        if (GameRooms[key].TotalPlayer >= MAX_PLAYER) break;
         p->type = SC_select_room;
         send_packet(p->key, reinterpret_cast<char*>(p), -1);
         break;
