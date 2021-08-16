@@ -969,7 +969,6 @@ void CPacket::ProcessPacket(char* buf)
         p->Position = m_pScene->m_ppGameObjects[key]->GetPosition();
 
         //printf("%f, %f, %f\n", p->Position.x, p->Position.y, p->Position.z);
-        printf("%f\n", m_pScene->m_ppGameObjects[key]->GetPosition().y);
         SendPacket(reinterpret_cast<char*>(p));
         break;
     }
@@ -1146,7 +1145,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_player_dead: {
         player_dead_packet* p = reinterpret_cast<player_dead_packet*>(buf);
         
-        printf("player dead %d %d\n", p->key, p->roomid);
+        printf("player dead key: %d\n", p->key);
         m_pScene->AnimatePlayer(p->key, PlayerState::Death);
         if (p->key != InGamekey)
         {
