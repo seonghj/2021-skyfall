@@ -198,6 +198,7 @@ class CAnimationLayer
 {
 public:
 	CAnimationLayer();
+	CAnimationLayer(const CAnimationLayer&);
 	~CAnimationLayer();
 
 public:
@@ -218,6 +219,7 @@ class CAnimationSet
 {
 public:
 	CAnimationSet(float fStartTime, float fEndTime, char* pstrName, int nType = ANIMATION_TYPE_LOOP);
+	CAnimationSet(const CAnimationSet&);
 	~CAnimationSet();
 
 public:
@@ -262,6 +264,7 @@ public:
 
 public:
 	CAnimationSets(int nAnimationSets);
+	CAnimationSets(const CAnimationSets&);
 	~CAnimationSets();
 
 public:
@@ -301,6 +304,7 @@ class CLoadedModelInfo
 {
 public:
 	CLoadedModelInfo() { }
+	CLoadedModelInfo(const CLoadedModelInfo& model);
 	~CLoadedModelInfo();
 
 public:
@@ -370,6 +374,7 @@ public:
 public:
 	CGameObject();
 	CGameObject(int nMaterials);
+	CGameObject(const CGameObject&);
     virtual ~CGameObject();
 
 public:

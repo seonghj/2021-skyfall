@@ -84,6 +84,8 @@ public:
 	void SetState(int state) { m_iState = state; }
 	int GetState() const { return m_iState; }
 
+	void TakeDamage(bool isDamaged);
+
 protected:
 	ID3D12RootSignature					*m_pd3dGraphicsRootSignature = NULL;
 

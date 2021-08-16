@@ -24,6 +24,8 @@ class CGameObject;
 #define VERTEXT_NORMAL_DETAIL			(VERTEXT_POSITION | VERTEXT_NORMAL | VERTEXT_TEXTURE_COORD0 | VERTEXT_TEXTURE_COORD1)
 #define VERTEXT_NORMAL_TANGENT__DETAIL	(VERTEXT_POSITION | VERTEXT_NORMAL | VERTEXT_TANGENT | VERTEXT_TEXTURE_COORD0 | VERTEXT_TEXTURE_COORD1)
 
+#define STANDARD_MESH 0x01
+#define SKINNED_MESH 0x02
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
@@ -132,6 +134,7 @@ public:
 class CStandardMesh : public CMesh
 {
 public:
+	CStandardMesh() {};
 	CStandardMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual ~CStandardMesh();
 
@@ -263,6 +266,7 @@ class CSkinnedMesh : public CStandardMesh
 {
 public:
 	CSkinnedMesh(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
+	CSkinnedMesh(CSkinnedMesh*);
 	virtual ~CSkinnedMesh();
 
 protected:
