@@ -86,6 +86,8 @@ public:
 
 	unordered_map<int, char[20]>	rooms;
 
+	int frametime = 0;
+
 private:
 	HINSTANCE					m_hInstance;
 	HWND						m_hWnd; 

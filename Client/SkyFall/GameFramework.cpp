@@ -1175,7 +1175,7 @@ void CGameFramework::MoveToNextFrame()
 void CGameFramework::FrameAdvance()
 {
     m_GameTimer.Tick(60.0f);
-
+    ++frametime;
 	ProcessInput();
 	CheckCollision();
 
@@ -1322,39 +1322,43 @@ void CGameFramework::FrameAdvance()
     {
         /*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
             m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
-        if (false == m_pPlayer->GetAttack()) {
-            player_pos_packet p;
-            p.key = m_pPacket->InGamekey;
-            p.roomid = m_pPacket->roomID;
-            p.Position.x = floor(NowPosition.x);
-            p.Position.y = floor(NowPosition.y);
-            p.Position.z = floor(NowPosition.z);
-            p.dx = floor(m_DegreeX);
-            p.dy = floor(m_DegreeY);
-            p.dir = dwDirection;
-            p.size = sizeof(p);
-            p.state = 1;
-            if (m_BeforePosition.x == NowPosition.x && m_BeforePosition.y == NowPosition.y && m_BeforePosition.z == NowPosition.z) {
-                p.MoveType = PlayerMove::STAND;
-                m_pPlayer->SetStanding(true);
-            }
-            else {
-                p.MoveType = m_pPlayer->GetRunning();
-                if (m_pPlayer->GetJump() == true || m_pPlayer->GetGround() == false)
-                    p.MoveType = PlayerMove::JUMP;
-                m_pPlayer->SetStanding(false);
-            }
-            p.type = CS_player_pos;
-            
-            if (m_pPacket->canmove == TRUE && m_bMouseHold == FALSE) {
-                m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-            }
+        if (frametime % 2 == 0) {
+            if (false == m_pPlayer->GetAttack()) {
+                player_pos_packet p;
+                p.key = m_pPacket->InGamekey;
+                p.roomid = m_pPacket->roomID;
+                p.Position.x = floor(NowPosition.x);
+                p.Position.y = floor(NowPosition.y);
+                p.Position.z = floor(NowPosition.z);
+                p.dx = floor(m_DegreeX) *2;
+                p.dy = floor(m_DegreeY)*2;
+                p.dir = dwDirection;
+                p.size = sizeof(player_pos_packet);
+                p.state = 1;
+                p.frame = frametime;
+                if (m_BeforePosition.x == NowPosition.x && m_BeforePosition.y == NowPosition.y && m_BeforePosition.z == NowPosition.z) {
+                    p.MoveType = PlayerMove::STAND;
+                    m_pPlayer->SetStanding(true);
+                }
+                else {
+                    p.MoveType = m_pPlayer->GetRunning();
+                    if (m_pPlayer->GetJump() == true || m_pPlayer->GetGround() == false)
+                        p.MoveType = PlayerMove::JUMP;
+                    m_pPlayer->SetStanding(false);
+                }
+                p.type = CS_player_pos;
 
-            m_BeforePosition = NowPosition;
+                if (m_pPacket->canmove == TRUE && m_bMouseHold == FALSE) {
+                    m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+                    //printf("frame: %d dx = %f dy = %f", frametime, p.dx, p.dy);
+                }
 
-            m_DegreeX = 0.0f;
-            m_DegreeY = 0.0f;
+                m_BeforePosition = NowPosition;
 
+                m_DegreeX = 0.0f;
+                m_DegreeY = 0.0f;
+
+            }
         }
     }
     else {
@@ -1364,6 +1368,8 @@ void CGameFramework::FrameAdvance()
             m_pPacket->Send_stop_packet();
         }
     }
+    if (frametime > 60)
+        frametime = 0;
 
     m_GameTimer.GetFrameRate(m_pszFrameRate + 9, 37);
     size_t nLength = _tcslen(m_pszFrameRate);

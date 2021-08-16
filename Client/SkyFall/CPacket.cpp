@@ -116,6 +116,7 @@ void CPacket::SendPacket(char* buf)
     int retval = 0;
     wsabuf.len = buf[0];
     wsabuf.buf = buf;
+    printf("%d\n",wsabuf.len);
     retval = WSASend(sock, &wsabuf, 1, &sendbytes, 0, NULL, NULL);
     if (retval == SOCKET_ERROR) {
         printf("%d: ", WSAGetLastError());
@@ -571,9 +572,11 @@ int CPacket::MonsterAttackCheck(CMonster* mon)
 void CPacket::ProcessPacket(char* buf)
 {
     //printf("%d\n", buf[1]);
+    if (buf[1] <= SC_NONE || buf[1] >= CS_NONE) return;
     switch (buf[1])
     {
     case PacketType::SC_create_account: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
         create_account_packet* p = reinterpret_cast<create_account_packet*>(buf);
         if (p->canmake == false) {
             m_pFramework->SetbError(true);
@@ -587,6 +590,7 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::SC_player_Lobbykey: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
         player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
         int key = p->key;
 
@@ -597,10 +601,11 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::SC_player_InGamekey: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
         player_key_packet* p = reinterpret_cast<player_key_packet*>(buf);
         int key = p->key;
 
-        //if (key < 0 || key > 20) break;
+        if (key <= 1000) break;
 
         InGamekey = key;
         roomID = p->roomid;
@@ -618,12 +623,14 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::SC_player_loginFail: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
         printf("Login fail\n");
         m_pFramework->SetbError(true);
         m_pFramework->SetErrorMsg("Login fail");
         break;
     }
     case PacketType::SC_player_loginOK: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
         player_loginOK_packet* p = reinterpret_cast<player_loginOK_packet*>(buf);
         int key = p->key;
         if (isLogin == TRUE) break;
@@ -762,6 +769,7 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::SC_select_room: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
         room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
         roomID = p->room;
         m_pScene->SetState(SCENE::INROOM);
@@ -769,6 +777,7 @@ void CPacket::ProcessPacket(char* buf)
         break;
     }
     case PacketType::SC_room_list: {
+        if (m_pScene->GetState() == SCENE::INGAME) break;
         room_list_packet* p = reinterpret_cast<room_list_packet*>(buf);
         if (p->idx == INVALIDID) {
             m_pFramework->SetbError(true);
@@ -903,15 +912,10 @@ void CPacket::ProcessPacket(char* buf)
         m_pPlayer->SetPosition(XMFLOAT3(m_pPlayer->GetPosition().x, 200, m_pPlayer->GetPosition().z));
         break;
     }
-    case PacketType::SC_bot_add: {
-        mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
-        int key = p->key;
-        //m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
-        break;
-    }
     case PacketType::SC_monster_pos: {
         mon_pos_packet* p = reinterpret_cast<mon_pos_packet*>(buf);
         int key = p->key;
+        if (key >= 15) break;
         {
             CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
             XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
@@ -970,6 +974,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_attack: {
         mon_attack_packet* p = reinterpret_cast<mon_attack_packet*>(buf);
         int key = p->key;
+        if (key >= 15) break;
         //if (m_pScene->m_ppGameObjects[key]->m_iReady == FALSE) break;
         m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->degree - m_pScene->m_ppGameObjects[key]->m_fRotateDegree);
         m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->degree;
@@ -987,6 +992,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_add: {
         mon_add_packet* p = reinterpret_cast<mon_add_packet*>(buf);
         int key = p->key;
+        if (key >= 15) break;
         {
             CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pScene->m_ppTerrain[m_pScene->m_ppGameObjects[key]->GetPlace()];
             XMFLOAT3 xmf3MonsterPosition = m_pScene->m_ppGameObjects[key]->GetPosition();
@@ -1031,6 +1037,7 @@ void CPacket::ProcessPacket(char* buf)
     }
     case PacketType::SC_monster_damaged:{
         mon_damaged_packet* p = reinterpret_cast<mon_damaged_packet*>(buf);
+        if (p->target >= 15) break;
         m_pScene->m_ppGameObjects[p->target]->SetHp(p->leftHp);
         cout << "Monster: " << p->target << " hp: " << m_pScene->m_ppGameObjects[p->target]->GetHp() << endl;
         m_pScene->m_ppGameObjects[p->target]->FindFrame("HpBar")->SetHp(m_pScene->m_ppGameObjects[p->target]->GetHp());
@@ -1049,6 +1056,7 @@ void CPacket::ProcessPacket(char* buf)
     case PacketType::SC_monster_respawn: {
         mon_respawn_packet* p = reinterpret_cast<mon_respawn_packet*>(buf);
         int key = p->key;
+        if (key >= 15) break;
         m_pScene->m_ppGameObjects[key]->ChangeState(0);
         m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->SetAllTrackDisable();
         m_pScene->m_ppGameObjects[key]->m_pSkinnedAnimationController->SetTrackPosition(
@@ -1087,7 +1095,6 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
             m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->dz - m_pScene->m_ppGameObjects[key]->m_fRotateDegree);
             m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->dz;
-
             XMFLOAT3 pos = m_pScene->m_ppGameObjects[key]->GetPosition();
             int nPlace = m_pScene->m_ppGameObjects[key]->GetPlace();
             if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
@@ -1105,11 +1112,14 @@ void CPacket::ProcessPacket(char* buf)
             }
         }
         CheckCollision(m_pScene->m_ppGameObjects[key]);
+        printf("%f\n", m_pScene->m_ppGameObjects[key]->GetPosition().y);
         break;
     }
     case PacketType::SC_monster_stop: {
         mon_stop_packet* p = reinterpret_cast<mon_stop_packet*>(buf);
+
         int key = p->key;
+        if (key >= 15) break;
         m_pScene->m_ppGameObjects[key]->ChangeState(MonsterState::m_Idle);
 
         break;

@@ -48,7 +48,7 @@ public:
     std::atomic<bool>        connected = false;
     bool                     isready = false;
     bool                     playing = false;
-    int                      prev_size;
+    int                      prev_size = 0;
     std::atomic<int>         key = -1;
     std::atomic<int>         roomID = -1;
     char                     id[50];
@@ -76,6 +76,8 @@ public:
     std::atomic<PlayerType>      using_weapon = PlayerType::PT_BASIC;
 
     std::atomic<short>      inventory[INVENTORY_MAX]{};
+
+    int moveframe = -1;
 
     void init();
 

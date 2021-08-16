@@ -2,7 +2,7 @@
 #pragma warning(disable : 4996)
 #include "Server.h"
 
-#define Run_DB
+//#define Run_DB
 //#define Run_Lobby
 
 void SESSION::init() 
@@ -36,6 +36,7 @@ void SESSION::init()
     lv = 0;
     att = 10;
     speed = 20;
+    moveframe = -1;
 
     for (int i = 0; i < INVENTORY_MAX; i++)
         inventory[i] = 0;
@@ -78,7 +79,7 @@ int Server::SetInGameKey(int roomID)
 
 int Server::SetLobbyKey()
 {
-    int cnt = 500;
+    int cnt = 0;
     while (true) {
         if (cnt == 1000)
             return -1;
@@ -289,6 +290,7 @@ void Server::do_recv(int key, int roomID)
 void Server::send_packet(int to, char* packet, int roomID)
 {
     if (SC_NONE >= packet[1] || packet[1] >= CS_NONE) return;
+    //printf("packet num = %d\n", packet[1]);
     SOCKET client_s = sessions[to].sock;
 
     OVER_EX* over = new OVER_EX;
@@ -447,6 +449,7 @@ void Server::send_add_player_packet(int key, int to, int roomID)
 
 void Server::send_remove_player_packet(int ingamekey, int roomID)
 {
+    if (ingamekey >= MAX_PLAYER || ingamekey < 0) return;
     player_remove_packet p;
     p.key = ingamekey;
     p.size = sizeof(player_remove_packet);
@@ -462,6 +465,7 @@ void Server::send_remove_player_packet(int ingamekey, int roomID)
 
 void Server::send_disconnect_player_packet(int ingamekey, int roomID)
 {
+    if (ingamekey >= MAX_PLAYER || ingamekey < 0) return;
     player_disconnect_packet p;
     p.key = ingamekey;
     p.size = sizeof(player_disconnect_packet);
@@ -477,6 +481,7 @@ void Server::send_disconnect_player_packet(int ingamekey, int roomID)
 
 void Server::send_packet_to_players(int ingamekey, char* buf, int roomID)
 {
+    if (ingamekey >= MAX_PLAYER || ingamekey < 0) return;
    //sessions_lock.lock();
     for (auto& k : GameRooms[roomID].pkeys) {
         if (k == INVALIDID) continue;
@@ -492,6 +497,7 @@ void Server::send_packet_to_players(int ingamekey, char* buf, int roomID)
 
 void Server::send_packet_to_allplayers(int roomID, char* buf)
 {
+    if (MAX_ROOM >= 20) return;
    //sessions_lock.lock();
     for (auto& k : GameRooms[roomID].pkeys) {
         if (k == INVALIDID) continue;
@@ -533,6 +539,7 @@ void Server::send_cloud_move_packet(float x, float z, int map_num)
 
 void Server::send_add_monster(int key, int roomID, int to)
 {
+    if (key >= 15) return;
     mon_add_packet p;
     p.size = sizeof(mon_add_packet);
     p.type = PacketType::SC_monster_add;
@@ -560,6 +567,7 @@ void Server::send_remove_monster(int key, int roomID, int to)
 
 void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction)
 {
+    if (mon.key >= 15) return;
     int roomID = mon.roomID;
 
     mon_pos_packet p;
@@ -587,6 +595,7 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction)
 
 void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int target)
 {
+    if (mon.key >= 15) return;
     int roomID = mon.roomID.load();
 
     mon_attack_packet p;
@@ -615,6 +624,7 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
 
 void Server::send_monster_stop(int key, int roomID)
 {
+    if (key >= 15) return;
     mon_stop_packet p;
     p.size = sizeof(p);
     p.type = PacketType::SC_monster_stop;
@@ -680,6 +690,7 @@ void Server::send_game_end_packet(int key, int roomID)
 
 void Server::send_player_dead_packet(int ingamekey, int roomID)
 {
+    if (ingamekey >= MAX_PLAYER || ingamekey < 0) return;
     player_dead_packet p;
     p.key = ingamekey;
     p.size = sizeof(p);
@@ -920,6 +931,9 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_player_pos: {
         player_pos_packet* p = reinterpret_cast<player_pos_packet*>(buf);
         if (0 > p->key || p->key >= 20) break;
+        if (p->frame == sessions[GameRooms[p->roomid].pkeys[p->key]].moveframe) break;
+        sessions[GameRooms[p->roomid].pkeys[p->key]].moveframe = p->frame;
+        //printf("frame: %d dx = %f dy = %f\n", p->frame, p->dx, p->dy);
         player_move(p->key, roomID, p->Position, p->dx, p->dy);
         player_pos_packet packet;
         packet.type = SC_player_pos;
@@ -940,10 +954,10 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         send_packet_to_players(key, reinterpret_cast<char*>(&packet), roomID);
 
-        if (sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position.load().y <= 5) {
+        /*if (sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position.load().y <= 5) {
             sessions[GameRooms[p->roomid].pkeys[p->key]].state = Death;
             send_player_dead_packet(p->key, p->roomid);
-        }
+        }*/
 
         break;
     }
@@ -1168,7 +1182,7 @@ void Server::WorkerFunc()
             //printf("%d\n", true);
             if (over_ex->is_recv) {
                 //printf("thread key: %d\n", Thread_key);
-                int rest_size = Transferred;
+                /*int rest_size = Transferred;
                 char* buf_ptr = over_ex->messageBuffer;
                 char packet_size = 0;
                 if (0 < sessions[key].prev_size)
@@ -1179,6 +1193,7 @@ void Server::WorkerFunc()
                     if (rest_size >= required) {
                         memcpy(sessions[key].packet_buf + sessions[key].
                             prev_size, buf_ptr, required);
+                        printf("tlqkf %d\n", rest_size);
                         process_packet(key, sessions[key].packet_buf, roomID);
                         rest_size -= required;
                         buf_ptr += required;
@@ -1189,7 +1204,27 @@ void Server::WorkerFunc()
                             buf_ptr, rest_size);
                         rest_size = 0;
                     }
+                }*/
+                char* packet_ptr = over_ex->messageBuffer;
+                int num_data = Transferred + sessions[key].prev_size;
+                int packet_size = packet_ptr[0];
+                while (num_data >= packet_size) {
+                    if (num_data >= BUFSIZE) break;
+                    if (packet_size <= 0) break;
+                    //printf("num_data: %d, packet_size: %d prev_size: %d\n", num_data, packet_size, sessions[key].prev_size);
+                    process_packet(key, packet_ptr, roomID);
+                    num_data -= packet_size;
+                    packet_ptr += packet_size;
+                    packet_size = packet_ptr[0];
+                    if (0 >= num_data) {
+                        //ZeroMemory(packet_ptr, sizeof(packet_ptr));
+                        packet_size = 0;
+                        break;
+                    }
                 }
+                sessions[key].prev_size = 0;
+                if (0 != num_data)
+                    memcpy(over_ex->messageBuffer, packet_ptr, num_data);
                 do_recv(key, roomID);
             }
             else {

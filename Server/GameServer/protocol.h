@@ -83,13 +83,6 @@ enum PacketType {
 	SC_map_set,
 	SC_map_collapse,
 	SC_cloud_move,
-	SC_bot_add,
-	SC_bot_remove,
-	SC_bot_info,
-	SC_bot_move,
-	SC_bot_pos,
-	SC_bot_attack,
-	SC_bot_damaged,
 	SC_monster_add,
 	SC_monster_remove,
 	SC_monster_info,
@@ -268,6 +261,7 @@ struct player_pos_packet : public Packet {
 	float dx, dy;
 	DWORD MoveType;
 	DWORD dir;
+	short frame;
 };
 
 struct player_start_pos : public Packet {
