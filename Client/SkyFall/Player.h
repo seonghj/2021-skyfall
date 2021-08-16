@@ -172,13 +172,15 @@ public:
 
 	virtual void OnPlayerUpdateCallback(float fTimeElapsed);
 	virtual void OnCameraUpdateCallback(float fTimeElapsed);
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 
 	virtual void Animate(float fTimeElapsed);
 	void SetBasicAnimation();
 	void SetBloodAlpha(float a) { m_pBloodUI->SetAlpha(a); }
 	virtual void SetDamaged(bool damaged) {
 		m_isDamaged = damaged;
-		m_pBloodUI->SetAlpha(1);
+		if(damaged)
+			m_pBloodUI->SetAlpha(1);
 	}
 
 #ifdef _WITH_SOUND_CALLBACK

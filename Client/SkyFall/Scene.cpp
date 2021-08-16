@@ -150,11 +150,11 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
 	m_ppUIObjects[1]->SetAlpha(0.0f);
-	m_ppUIObjects[1]->SetvPercent(1.f);
+	m_ppUIObjects[1]->SethPercent(1.f);
 
 	m_ppUIObjects[2] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Win_UI.dds", -1, -1, 1, 1, 0.8);
 	m_ppUIObjects[2]->SetAlpha(0.0f);
-	m_ppUIObjects[2]->SetvPercent(1.f);
+	m_ppUIObjects[2]->SethPercent(1.f);
 
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
@@ -1137,7 +1137,10 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 		}
 
 		for (int i = 0; i < MAX_PLAYER; ++i)
-			if (m_mPlayer[i]) m_mPlayer[i]->Render(pd3dCommandList, pCamera);
+			if (m_mPlayer[i]) {
+				m_mPlayer[i]->UpdateShaderVariables(pd3dCommandList);
+				m_mPlayer[i]->Render(pd3dCommandList, pCamera);
+			}
 		//for (auto p : m_mPlayer)
 		//{
 		//	if (p.second)
