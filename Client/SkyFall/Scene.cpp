@@ -126,35 +126,59 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 		if (i >= 6) m_ppTerrain[i]->MoveUp(125.f);
 	}
 
-	m_nGameObjects = 15;
-	m_ppGameObjects = new CMonster * [m_nGameObjects];
+	{
+		m_nGameObjects = 15;
+		m_ppGameObjects = new CMonster * [m_nGameObjects];
 
-	m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 9, (void**)m_ppTerrain,4);
-	m_ppGameObjects[0]->m_nkey = 0;
-	for (int i = 1; i < 8; ++i) {
-		m_ppGameObjects[i] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 11, (void**)m_ppTerrain, 4);
-		m_ppGameObjects[i]->m_nkey = i;
+		CLoadedModelInfo* pDragonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Dragon.bin", NULL);
+		CLoadedModelInfo* pWolfModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Wolf.bin", NULL);
+		CLoadedModelInfo* pMetalonModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Monster/Metalon.bin", NULL);
+
+		m_ppGameObjects[0] = new CDragon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pDragonModel, 16, (void**)m_ppTerrain, 4);
+		m_ppGameObjects[0]->m_nkey = 0;
+		for (int i = 1; i < 8; ++i) {
+			CLoadedModelInfo* pModel = new CLoadedModelInfo(*pWolfModel);
+			m_ppGameObjects[i] = new CWolf(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel, 11, (void**)m_ppTerrain, 4);
+			m_ppGameObjects[i]->m_nkey = i;
+			delete pModel;
+		}
+
+		for (int i = 8; i < m_nGameObjects; ++i) {
+			CLoadedModelInfo* pModel = new CLoadedModelInfo(*pMetalonModel);
+			m_ppGameObjects[i] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel, 11, (void**)m_ppTerrain, 4);
+			m_ppGameObjects[i]->m_nkey = i;
+			delete pModel;
+		}
+		delete pDragonModel;
+		delete pWolfModel;
+		delete pMetalonModel;
 	}
-	
-	for (int i = 8; i < m_nGameObjects; ++i) {
-		m_ppGameObjects[i] = new CMetalon(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, NULL, 6, (void**)m_ppTerrain, 4);
-		m_ppGameObjects[i]->m_nkey = i;
+
+	{
+		m_nUIs = 5;
+		m_ppUIObjects = new CUIObject * [m_nUIs];
+		m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_FILL.dds", -0.85, -0.97, 0.85, -0.90, 0.8);
+		m_ppUIObjects[0]->SetAlpha(0.8f);
+		m_ppUIObjects[0]->SethPercent(1.f);
+
+		m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
+		m_ppUIObjects[1]->SetAlpha(0.0f);
+		m_ppUIObjects[1]->SethPercent(1.f);
+
+		m_ppUIObjects[2] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Win_UI.dds", -1, -1, 1, 1, 0.8);
+		m_ppUIObjects[2]->SetAlpha(0.0f);
+		m_ppUIObjects[2]->SethPercent(1.f);
+
+		m_ppUIObjects[3] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -0.85, -0.885, 0.85, -0.835, 0.8);
+		m_ppUIObjects[3]->SetAlpha(0.8f);
+		m_ppUIObjects[3]->SethPercent(1.f);
+		m_ppUIObjects[3]->SetInfo(UI_STAMINA);
+
+		m_ppUIObjects[4] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
+		m_ppUIObjects[4]->SetAlpha(0.0f);
+		m_ppUIObjects[4]->SethPercent(1.f);
+		m_ppUIObjects[4]->SetInfo(UI_BLOOD);
 	}
-
-
-	m_nUIs = 3;
-	m_ppUIObjects = new CUIObject * [m_nUIs];
-	m_ppUIObjects[0] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/UI_HP_FILL.dds", -0.85, -0.95, 0.85, -0.85, 0.8);
-	m_ppUIObjects[0]->SetAlpha(0.8f);
-	m_ppUIObjects[0]->SethPercent(1.f);
-
-	m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
-	m_ppUIObjects[1]->SetAlpha(0.0f);
-	m_ppUIObjects[1]->SethPercent(1.f);
-
-	m_ppUIObjects[2] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Win_UI.dds", -1, -1, 1, 1, 0.8);
-	m_ppUIObjects[2]->SetAlpha(0.0f);
-	m_ppUIObjects[2]->SethPercent(1.f);
 
 	m_pMap = new CMap(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, arrange);
 
@@ -201,24 +225,26 @@ void CScene::AddWeapon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 
 void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	CLoadedModelInfo* p1HSwordModel;
-	CLoadedModelInfo* pBowModel;
-	CLoadedModelInfo* p2HSwordModel;
-	CLoadedModelInfo* p2HSpearModel;
+	CLoadedModelInfo* p1HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
+	CLoadedModelInfo* pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
+	CLoadedModelInfo* p2HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2Hsword.bin", NULL);
+	CLoadedModelInfo* p2HSpearModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2HSpear.bin", NULL);
 
 	for (int i = 0; i < MAX_PLAYER; ++i) {
-		p1HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
-		pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
-		p2HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2Hsword.bin", NULL);
-		p2HSpearModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2HSpear.bin", NULL);
-		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p1HSwordModel, (void**)m_ppTerrain);
-		m_mBowPlayer[i] = new CBowPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pBowModel, (void**)m_ppTerrain);
-		m_m2HswordPlayer[i] = new C2HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p2HSwordModel, (void**)m_ppTerrain);
-		m_m2HspearPlayer[i] = new C2HspearPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p2HSpearModel, (void**)m_ppTerrain);
+		CLoadedModelInfo* pModel = new CLoadedModelInfo(*p1HSwordModel);
+		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel, (void**)m_ppTerrain);
+		delete pModel;
+		pModel = new CLoadedModelInfo(*pBowModel);
+		m_mBowPlayer[i] = new CBowPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel, (void**)m_ppTerrain);
+		delete pModel;
+		pModel = new CLoadedModelInfo(*p2HSwordModel);
+		m_m2HswordPlayer[i] = new C2HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel, (void**)m_ppTerrain);
+		delete pModel;
+		pModel = new CLoadedModelInfo(*p2HSpearModel);
+		m_m2HspearPlayer[i] = new C2HspearPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel, (void**)m_ppTerrain);
+		delete pModel;
 		m_mPlayer[i] = m_m1HswordPlayer[i];
 		m_mPlayer[i]->m_nkey = i;
-		//m_mPlayer[i]->SetPosition(XMFLOAT3(350.0f, 124.0f, 650.0f));
-		//MovePlayer(i, XMFLOAT3(80.0f, 0.0f, 0.0f));
 	}	
 
 	if (p1HSwordModel) delete p1HSwordModel;
@@ -674,25 +700,27 @@ void CScene::ReleaseUploadBuffers()
 	//for (auto p : m_mPlayer) {
 	//	p.second->ReleaseUploadBuffers();
 	//}
-	for (int i = 0; i < MAX_PLAYER; i++) {
-		if (m_mBowPlayer[i]) {
-			m_mBowPlayer[i]->ReleaseUploadBuffers();
-		}
+
+	//Object들을 각 개체별로 인스턴싱 했기 때문에 ReleaseUploadBuffers를 객체당 한번만 호출
+
+	//Dragon
+	m_ppGameObjects[0]->ReleaseUploadBuffers();
+	//Wolf
+	m_ppGameObjects[1]->ReleaseUploadBuffers();
+	//Metalon
+	m_ppGameObjects[8]->ReleaseUploadBuffers();
+	
+	if (m_mBowPlayer[0]) {
+		m_mBowPlayer[0]->ReleaseUploadBuffers();
 	}
-	for (int i = 0; i < MAX_PLAYER; i++) {
-		if (m_m1HswordPlayer[i]) {
-			m_m1HswordPlayer[i]->ReleaseUploadBuffers();
-		}
+	if (m_m1HswordPlayer[0]) {
+		m_m1HswordPlayer[0]->ReleaseUploadBuffers();
 	}
-	for (int i = 0; i < MAX_PLAYER; i++) {
-		if (m_m2HswordPlayer[i]) {
-			m_m2HswordPlayer[i]->ReleaseUploadBuffers();
-		}
+	if (m_m2HswordPlayer[0]) {
+		m_m2HswordPlayer[0]->ReleaseUploadBuffers();
 	}
-	for (int i = 0; i < MAX_PLAYER; i++) {
-		if (m_m2HspearPlayer[i]) {
-			m_m2HspearPlayer[i]->ReleaseUploadBuffers();
-		}
+	if (m_m2HspearPlayer[0]) {
+		m_m2HspearPlayer[0]->ReleaseUploadBuffers();
 	}
 	if (m_ppUIObjects)
 		for (int i = 0; i < m_nUIs; ++i)
@@ -797,6 +825,14 @@ void CScene::CheckBehavior(CMonster *pMonster)
 		pMonster->SetBehaviorActivate(false);
 	//printf("%d 번째 크기 : %f\n", i, Vector3::Length(Vector3::Subtract(m_ppGameObjects[i]->GetPosition(), m_pPlayer->GetPosition())));
 
+}
+
+void CScene::TakeDamage(bool isDamaged)
+{
+	if (isDamaged)
+		m_ppUIObjects[4]->SetAlpha(1);
+	else
+		m_ppUIObjects[4]->SetAlpha(0);
 }
 
 
@@ -1050,20 +1086,16 @@ void CScene::AnimateObjects(float fTimeElapsed)
 {
 	m_fElapsedTime = fTimeElapsed;
 	if (m_iState == INROOM) {
-		m_pPlayer->Animate(fTimeElapsed);
-		/*m_mBowPlayer[0]->Update(fTimeElapsed);
-
-		m_m1HswordPlayer[0]->Animate(fTimeElapsed);
-		m_mBowPlayer[0]->Animate(fTimeElapsed);
-		m_m2HswordPlayer[0]->Animate(fTimeElapsed);
-		m_m2HspearPlayer[0]->Animate(fTimeElapsed);*/
-		//m_m1HswordPlayer[0]->UpdateTransform();
-		//m_mBowPlayer[0]->UpdateTransform();
-		//m_m2HswordPlayer[0]->UpdateTransform();
-		//m_m2HspearPlayer[0]->UpdateTransform();
-		
+		m_pPlayer->Animate(fTimeElapsed);		
 	}
 	else if (m_iState == INGAME) {
+		m_ppUIObjects[3]->SethPercent(m_pPlayer->GetStamina() / MAX_STAMINA);
+		if (m_pPlayer->GetDamaged()) {
+			m_ppUIObjects[4]->DecreaseAlpha(fTimeElapsed);
+		}
+		else
+			TakeDamage(false);
+
 		for (int i = 0; i < MAX_PLAYER; ++i) {
 			if (m_mPlayer[i]) {
 				m_mPlayer[i]->Animate(fTimeElapsed);
@@ -1106,9 +1138,6 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 
 	if (m_pSkyBox) m_pSkyBox->Render(pd3dCommandList, pCamera);
 
-	//if (m_pTerrain) m_pTerrain->Render(pd3dCommandList, pCamera);
-	//if (m_pForestTerrain) m_pForestTerrain->Render(pd3dCommandList, pCamera);
-	//if (m_pSnowTerrain) m_pSnowTerrain->Render(pd3dCommandList, pCamera);
 	for (int i = 0; i < 9; i++) {
 		if (m_ppTerrain[i]) {
 			m_ppTerrain[i]->UpdateShaderVariables(pd3dCommandList);

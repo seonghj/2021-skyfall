@@ -619,6 +619,7 @@ float4 PSHPBar(GS_HPBAR_GEOMETRY_OUTPUT input) : SV_TARGET
 
 #define UI_CIRCLE 0x01
 #define UI_BLOOD 0x02
+#define UI_STAMINA 0x04
 cbuffer cbUIInfo : register(b6)
 {
 	float		gfAlpha : packoffset(c0.x);
@@ -679,6 +680,12 @@ float4 PSUI(VS_UI_OUTPUT input) :SV_TARGET
 		}
 		else
 			cColor.a = 0;
+	}
+	else if (gnUiInfo & UI_STAMINA) {
+		cColor = float4(0.8, 0.8, 0.8, 0.8);
+		if (input.uv.x > gfPercentH)
+			cColor = float4(0.3, 0.3, 0.3, 0.5);
+
 	}
 
 	return cColor;

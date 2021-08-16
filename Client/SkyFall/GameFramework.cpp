@@ -305,62 +305,76 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 {
 	if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
     if (m_pScene && m_pScene->GetState() == SCENE::LOBBY) return;
-	switch (nMessageID)
-	{
-	case WM_LBUTTONDOWN: {
-		if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
-			m_pPacket->Send_attack_packet(PlayerAttackType::BOWL);
-		else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
-			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL1);
-		::SetCapture(hWnd);
-		::GetCursorPos(&m_ptOldCursorPos);
-		if (!m_bRotateEnable) {
-			m_ChargeTimer.Reset();
-			m_ChargeTimer.Start();
-			//m_pPlayer->LButtonDown();
-		}
-		break;
-	}
-	case WM_RBUTTONDOWN: {
-		if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
-			m_pPacket->Send_attack_packet(PlayerAttackType::BOWR);
-		else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
-			m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
-		::SetCapture(hWnd);
-		::GetCursorPos(&m_ptOldCursorPos);
-		if (!m_bRotateEnable) {
-			m_ChargeTimer.Reset();
-			m_ChargeTimer.Start();
-		}
-		break;
-	}
-	case WM_LBUTTONUP: {
-		//if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-		if(strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
-			m_pPacket->Send_stop_packet();
-		::ReleaseCapture();
-		m_ChargeTimer.Stop(); 
-		m_pPlayer->LButtonUp(m_ChargeTimer.GetTotalTime());
-		m_DegreeX = 0;
-		m_DegreeY = 0;
-		break;
-	}
-	case WM_RBUTTONUP: {
-		//if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-		if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
-			m_pPacket->Send_stop_packet();
-		m_pPlayer->RButtonUp();
-		CCamera* pCamera = m_pPlayer->GetCamera();
-		m_pCamera = pCamera;
-		m_DegreeX = 0;
-		m_DegreeY = 0;
-		break;
-	}
-	case WM_MOUSEMOVE:
-		break;
-	default:
-		break;
-	}
+    switch (nMessageID)
+    {
+    case WM_LBUTTONDOWN: {
+        if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
+            m_pPacket->Send_attack_packet(PlayerAttackType::BOWL);
+        else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
+            m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL1);
+        ::SetCapture(hWnd);
+        ::GetCursorPos(&m_ptOldCursorPos);
+        if (!m_bRotateEnable) {
+            m_ChargeTimer.Reset();
+            m_ChargeTimer.Start();
+            //m_pPlayer->LButtonDown();
+        }
+        break;
+    }
+    case WM_RBUTTONDOWN: {
+        if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+            m_pPacket->Send_attack_packet(PlayerAttackType::BOWR);
+        else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
+        {
+            if (m_pPlayer->GetGround() && m_pPlayer->GetRunning())
+            {
+                if (m_pPlayer->GetStamina() < 20.0f)
+                    break;
+                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 20.0f);
+            }
+            else if (m_pPlayer->GetGround() && !m_pPlayer->GetRunning())
+            {
+                if (m_pPlayer->GetStamina() < 30.0f)
+                    break;
+                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 30.0f);
+            }
+            m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
+        }
+        ::SetCapture(hWnd);
+        ::GetCursorPos(&m_ptOldCursorPos);
+        if (!m_bRotateEnable) {
+            m_ChargeTimer.Reset();
+            m_ChargeTimer.Start();
+        }
+        break;
+    }
+    case WM_LBUTTONUP: {
+        //if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+        if(strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
+            m_pPacket->Send_stop_packet();
+        ::ReleaseCapture();
+        m_ChargeTimer.Stop();
+        m_pPlayer->LButtonUp(m_ChargeTimer.GetTotalTime());
+        m_DegreeX = 0;
+        m_DegreeY = 0;
+        break;
+    }
+    case WM_RBUTTONUP: {
+        //if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
+        if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
+            m_pPacket->Send_stop_packet();
+        m_pPlayer->RButtonUp();
+        CCamera* pCamera = m_pPlayer->GetCamera();
+        m_pCamera = pCamera;
+        m_DegreeX = 0;
+        m_DegreeY = 0;
+        break;
+    }
+    case WM_MOUSEMOVE:
+        break;
+    default:
+        break;
+    }
 }
 
 void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
@@ -1000,7 +1014,7 @@ void CGameFramework::ProcessInput()
                 m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
                 m_pPlayer->SetFriction(0.f);
             }
-            else if (pKeysBuffer[VK_SHIFT] & 0xF0)
+            else if (pKeysBuffer[VK_SHIFT] & 0xF0 && m_pPlayer->GetStamina() > 10.0f)
             {
                 m_pPlayer->SetRunning(true);
             }
@@ -1430,7 +1444,7 @@ void CGameFramework::Restart()
     m_pPacket->Send_return_lobby_packet();
 
     m_pScene->m_iState = SCENE::LOBBY;
-    m_pScene->m_ppUIObjects[0]->SetvPercent(1.0f);
+    m_pScene->m_ppUIObjects[0]->SethPercent(1.0f);
     m_GameTimer.Reset();
     m_ChargeTimer.Reset();
     m_pPlayer->Reset();
@@ -1454,8 +1468,8 @@ void CGameFramework::Restart()
         m_pScene->m_mPlayer[i]->SetHp(m_pScene->m_mPlayer[i]->m_iMaxHp);
         m_pScene->m_mPlayer[i]->Reset();
     }
+    m_pScene->m_ppUIObjects[1]->SetAlpha(0.0f);
     m_pScene->m_ppUIObjects[2]->SetAlpha(0.0f);
-    m_pScene->m_ppUIObjects[3]->SetAlpha(0.0f);
 }
 
 void CGameFramework::UpdateShadowMap()

@@ -50,6 +50,7 @@ protected:
 	int							m_iProficiency = 0;
 	int							m_nPlace;
 	bool						m_bHit = false;
+	float						m_fStamina;
 	// stat
 
 	LPVOID						*m_ppPlayerUpdatedContext = NULL;
@@ -84,6 +85,7 @@ public:
 	void SetMkill(int kill) { m_iMkill = kill; }
 	void SetRate(int rate) { m_iRate = rate; }
 	void SetPro(int pro) { m_iProficiency = pro; }
+	void SetStamina(float sta) { m_fStamina = sta; }
 	void Reset();
 
 	virtual void RButtonDown() {};
@@ -107,6 +109,7 @@ public:
 	int   GetMkill() const{ return(m_iMkill); }
 	int   GetRate() const { return(m_iRate);}
 	int   GetPro() const { return(m_iProficiency); }
+	float GetStamina() const { return(m_fStamina); }
 
 	void SetScale(XMFLOAT3& xmf3Scale) { m_xmf3Scale = xmf3Scale; }
 
@@ -176,12 +179,6 @@ public:
 
 	virtual void Animate(float fTimeElapsed);
 	void SetBasicAnimation();
-	void SetBloodAlpha(float a) { m_pBloodUI->SetAlpha(a); }
-	virtual void SetDamaged(bool damaged) {
-		m_isDamaged = damaged;
-		if(damaged)
-			m_pBloodUI->SetAlpha(1);
-	}
 
 #ifdef _WITH_SOUND_CALLBACK
 	virtual void SetAnimationSound();
@@ -192,7 +189,6 @@ public:
 
 protected:
 	CGameObject* pWeapon;
-	CUIObject* m_pBloodUI;
 #endif
 	enum PlayerState {
 		Idle = 0,
