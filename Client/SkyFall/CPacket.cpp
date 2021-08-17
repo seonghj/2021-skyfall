@@ -879,7 +879,7 @@ void CPacket::ProcessPacket(char* buf)
             m_pPlayer->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);
             m_pPlayer->SetAttack(false);
             m_pPlayer->SetCharging(false);
-            m_pScene->AnimatePlayer(key, 11);
+            //m_pScene->AnimatePlayer(key, 11);
         }
         else {
             m_pScene->m_mPlayer[key]->Shot(p->fTimeElapsed, p->ChargeTimer * 100.f, p->Look);

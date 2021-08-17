@@ -543,10 +543,14 @@ CSkinnedMesh::CSkinnedMesh(CSkinnedMesh* other) : CSkinnedMesh(*other)
 		m_ppSkinningBoneFrameCaches = new CGameObject * [m_nSkinningBones];
 		for (int i = 0; i < m_nSkinningBones; i++)
 		{
-			strcpy_s(m_ppstrSkinningBoneNames[i], other->m_ppstrSkinningBoneNames[i]);
+			strcpy_s(m_ppstrSkinningBoneNames[i], 64, other->m_ppstrSkinningBoneNames[i]);
 			m_ppSkinningBoneFrameCaches[i] = NULL;
 		}
 	}
+	m_pcbxmf4x4MappedBindPoseBoneOffsets = NULL;
+
+	m_pd3dcbSkinningBoneTransforms = NULL;
+	m_pcbxmf4x4MappedSkinningBoneTransforms = NULL;
 }
 
 CSkinnedMesh::~CSkinnedMesh()
@@ -714,7 +718,6 @@ void CSkinnedMesh::OnPreRender(ID3D12GraphicsCommandList *pd3dCommandList, void 
 
 CStandardMesh::CStandardMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	m_nType |= STANDARD_MESH;
 }
 
 CStandardMesh::~CStandardMesh()

@@ -720,7 +720,7 @@ void CGameFramework::ShowError(const char* str)
 	ImGui::SetNextWindowSize(ImVec2(8 * strlen(str), 50), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT / 3), ImGuiCond_FirstUseEver);
 	
-	if (ImGui::Begin("Error", &m_bError, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar))
+    if (ImGui::Begin("Error", &m_bError, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::Text(str);
 	}
@@ -1197,6 +1197,7 @@ void CGameFramework::FrameAdvance()
 
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
 	UpdateShadowMap();
+    m_pScene->UpdateMap();
 	if(m_pScene->GetState() == SCENE::INGAME)
 		UpdateMiniMap();
 
@@ -1328,6 +1329,14 @@ void CGameFramework::FrameAdvance()
     //	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
     MoveToNextFrame();
 
+    for (int i = 0; i < MAX_PLAYER; ++i) {
+        if (m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->IsTrackFinish(3)) {
+            m_pScene->AnimatePlayer(i, 0);
+        }
+        if (m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->IsTrackFinish(4)) {
+            m_pScene->AnimatePlayer(i, 0);
+        }
+    }
 
     float fLength = sqrtf(m_pPlayer->GetVelocity().x * m_pPlayer->GetVelocity().x + m_pPlayer->GetVelocity().z * m_pPlayer->GetVelocity().z);
     if (::IsZero(fLength) && m_pPlayer->GetGround())
