@@ -1336,7 +1336,7 @@ void CGameFramework::FrameAdvance()
     if (floor(m_BeforePosition.x) != floor(NowPosition.x) || floor(m_BeforePosition.y) != floor(NowPosition.y) || floor(m_BeforePosition.z) != floor(NowPosition.z)
         || floor(m_DegreeX) != 0.0f || floor(m_DegreeY) != 0.0f)
     {
-        if (frametime % 2 == 0) {
+        //if (frametime % 2 == 0) {
             /*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
                 m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
             if (false == m_pPlayer->GetAttack()) {
@@ -1346,8 +1346,8 @@ void CGameFramework::FrameAdvance()
                 p.Position.x = floor(NowPosition.x);
                 p.Position.y = floor(NowPosition.y);
                 p.Position.z = floor(NowPosition.z);
-                p.dx = floor(m_DegreeX) * 1.5f;
-                p.dy = floor(m_DegreeY) * 1.5f;
+                p.dx = floor(m_DegreeX); //* 1.2f;
+                p.dy = floor(m_DegreeY); //* 1.2f;
                 p.dir = dwDirection;
                 p.size = sizeof(player_pos_packet);
                 p.state = 1;
@@ -1374,7 +1374,7 @@ void CGameFramework::FrameAdvance()
                 m_DegreeY = 0.0f;
 
             }
-        }
+       // }
     }
     else {
         if (m_pPlayer->GetGround() == true && false == m_pPlayer->GetStanding() && false == PressDirButton) {

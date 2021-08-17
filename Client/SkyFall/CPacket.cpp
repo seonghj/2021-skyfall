@@ -762,6 +762,7 @@ void CPacket::ProcessPacket(char* buf)
                 m_pScene->AnimatePlayer(key, PlayerState::Idle);
                 break;
             default:
+                m_pScene->AnimatePlayer(key, PlayerState::Idle);
                 break;
             }
             m_pScene->MovePlayer(key, p->Position);
