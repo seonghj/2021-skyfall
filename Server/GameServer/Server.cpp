@@ -644,6 +644,7 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
     if (sessions[GameRooms[roomID].pkeys[target]].hp.load() <= 0) {
         sessions[GameRooms[roomID].pkeys[target]].state = Death;
         send_player_dead_packet(target, roomID);
+        --GameRooms[roomID].TotalPlayer;
         if (GameRooms[roomID].TotalPlayer >= 1)
             game_end(roomID, NULL);
     }
@@ -1140,6 +1141,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (sessions[GameRooms[p->roomid].pkeys[target]].hp.load() <= 0) {
             sessions[GameRooms[p->roomid].pkeys[target]].state = Death;
             send_player_dead_packet(target, roomID);
+            --GameRooms[p->roomid].TotalPlayer;
             sessions[GameRooms[p->roomid].pkeys[target]].playing = false;
             if (GameRooms[p->roomid].TotalPlayer >= 1)
                 game_end(p->roomid, NULL);
@@ -1151,6 +1153,10 @@ void Server::process_packet(int key, char* buf, int roomID)
         player_dead_packet* p = reinterpret_cast<player_dead_packet*>(buf);
         p->type = PacketType::SC_player_dead;
         send_packet_to_allplayers(p->roomid, reinterpret_cast<char*>(p));
+        --GameRooms[p->roomid].TotalPlayer;
+        sessions[GameRooms[p->roomid].pkeys[p->key]].playing = false;
+        if (GameRooms[p->roomid].TotalPlayer >= 1)
+            game_end(p->roomid, NULL);
         break;
     }
     case PacketType::CS_create_room: {
