@@ -718,7 +718,7 @@ void CGameFramework::ShowError(const char* str)
 	ImGui::SetNextWindowSize(ImVec2(8 * strlen(str), 50), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowPos(ImVec2(FRAME_BUFFER_WIDTH / 2, FRAME_BUFFER_HEIGHT / 3), ImGuiCond_FirstUseEver);
 	
-	if (ImGui::Begin("Error", &m_bError, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar))
+    if (ImGui::Begin("Error", &m_bError, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::Text(str);
 	}
@@ -1195,6 +1195,7 @@ void CGameFramework::FrameAdvance()
 
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
 	UpdateShadowMap();
+    m_pScene->UpdateMap();
 	if(m_pScene->GetState() == SCENE::INGAME)
 		UpdateMiniMap();
 

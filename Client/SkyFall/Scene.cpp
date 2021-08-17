@@ -187,10 +187,10 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 void CScene::AddWeapon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	CLoadedModelInfo* p1HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL);
-	CLoadedModelInfo* pBowModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL);
-	CLoadedModelInfo* p2HSwordModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2Hsword.bin", NULL);
-	CLoadedModelInfo* p2HSpearModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2HSpear.bin", NULL);
+	CLoadedModelInfo* p1HSwordModel = new CLoadedModelInfo(*CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_1Hsword.bin", NULL));
+	CLoadedModelInfo* pBowModel = new CLoadedModelInfo(*CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_Bow.bin", NULL));
+	CLoadedModelInfo* p2HSwordModel = new CLoadedModelInfo(*CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2Hsword.bin", NULL));
+	CLoadedModelInfo* p2HSpearModel = new CLoadedModelInfo(*CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2HSpear.bin", NULL));
 
 	for (int i = 0; i < 4; ++i) {
 		m_ppWeapons[i] = new CGameObject();
@@ -200,10 +200,15 @@ void CScene::AddWeapon(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		m_ppWeapons[i]->FindFrame("HpBar")->m_iHp = 0;
 		m_ppWeapons[i]->SetActive("HpBar", false);
 	}
-	m_ppWeapons[0]->SetChild(p1HSwordModel->m_pModelRootObject->FindFrame("Sword_Pivot"));
-	m_ppWeapons[1]->SetChild(pBowModel->m_pModelRootObject->FindFrame("Bow_Pivot"));
-	m_ppWeapons[2]->SetChild(p2HSwordModel->m_pModelRootObject->FindFrame("Long_Sword_Pivot"));
-	m_ppWeapons[3]->SetChild(p2HSpearModel->m_pModelRootObject->FindFrame("Spear_Pivot"));
+	CGameObject* pSword = p1HSwordModel->m_pModelRootObject->FindFrame("Sword_Pivot");
+	CGameObject* pBow = pBowModel->m_pModelRootObject->FindFrame("Bow_Pivot");
+	CGameObject* pSword2 = p2HSwordModel->m_pModelRootObject->FindFrame("Long_Sword_Pivot");
+	CGameObject* pSpear = p2HSpearModel->m_pModelRootObject->FindFrame("Spear_Pivot");
+
+	m_ppWeapons[0]->SetChild(pSword);
+	m_ppWeapons[1]->SetChild(pBow);
+	m_ppWeapons[2]->SetChild(pSword2);
+	m_ppWeapons[3]->SetChild(pSpear);
 
 	XMFLOAT3 pos = m_ppTerrain[2]->GetPosition();
 	m_ppWeapons[0]->SetPosition(Vector3::Add(pos, XMFLOAT3(1135, 190, 1370)));
@@ -231,21 +236,26 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 	CLoadedModelInfo* p2HSpearModel = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, "Model/Player/Player_2HSpear.bin", NULL);
 
 	for (int i = 0; i < MAX_PLAYER; ++i) {
-		CLoadedModelInfo* pModel = new CLoadedModelInfo(*p1HSwordModel);
-		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel, (void**)m_ppTerrain);
-		delete pModel;
-		pModel = new CLoadedModelInfo(*pBowModel);
-		m_mBowPlayer[i] = new CBowPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel, (void**)m_ppTerrain);
-		delete pModel;
-		pModel = new CLoadedModelInfo(*p2HSwordModel);
-		m_m2HswordPlayer[i] = new C2HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel, (void**)m_ppTerrain);
-		delete pModel;
-		pModel = new CLoadedModelInfo(*p2HSpearModel);
-		m_m2HspearPlayer[i] = new C2HspearPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel, (void**)m_ppTerrain);
-		delete pModel;
-		m_mPlayer[i] = m_m1HswordPlayer[i];
+		CLoadedModelInfo* pModel1 = new CLoadedModelInfo(*p1HSwordModel);
+		CLoadedModelInfo* pModel2 = new CLoadedModelInfo(*pBowModel);
+		CLoadedModelInfo* pModel3 = new CLoadedModelInfo(*p2HSwordModel);
+		CLoadedModelInfo* pModel4 = new CLoadedModelInfo(*p2HSpearModel);
+		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p1HSwordModel, (void**)m_ppTerrain);
+		m_mBowPlayer[i] = new CBowPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel2, (void**)m_ppTerrain);
+		m_m2HswordPlayer[i] = new C2HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel3, (void**)m_ppTerrain);
+		m_m2HspearPlayer[i] = new C2HspearPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel4, (void**)m_ppTerrain);
+		if (i % 3 == 0)
+			m_mPlayer[i] = m_mBowPlayer[i];
+		if (i % 3 == 1)
+			m_mPlayer[i] = m_m2HswordPlayer[i];
+		if (i % 3 == 2)
+			m_mPlayer[i] = m_m2HspearPlayer[i];
 		m_mPlayer[i]->m_nkey = i;
-	}	
+		delete pModel1;
+		delete pModel2;
+		delete pModel3;
+		delete pModel4;
+	}
 
 	if (p1HSwordModel) delete p1HSwordModel;
 	if (pBowModel) delete pBowModel;
@@ -835,6 +845,25 @@ void CScene::TakeDamage(bool isDamaged)
 		m_ppUIObjects[4]->SetAlpha(0);
 }
 
+void CScene::UpdateMap()
+{
+	for (int i = 0; i < m_pMap->m_nMaps; ++i) {
+		if (m_ppTerrain[i/3]->IsFalling()) {
+			CGameObject* pObject = m_pMap->GetMap(i)->FindFrame("RootNode")->m_pChild->m_pChild;
+			while (true) {
+				XMFLOAT3 pos = pObject->GetPosition();
+				pos.y -= m_ppTerrain[i]->GetFalling(pos.x, pos.z);
+				pObject->SetPosition(pos);
+
+				if (pObject->m_pSibling)
+					pObject = pObject->m_pSibling;
+				else
+					return;
+			}
+		}
+	}
+}
+
 
 void CScene::CreateCbvSrvUavDescriptorHeaps(ID3D12Device *pd3dDevice, int nConstantBufferViews, int nShaderResourceViews, int nUnorderedAccessViews)
 {
@@ -1170,15 +1199,6 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 				m_mPlayer[i]->UpdateShaderVariables(pd3dCommandList);
 				m_mPlayer[i]->Render(pd3dCommandList, pCamera);
 			}
-		//for (auto p : m_mPlayer)
-		//{
-		//	if (p.second)
-		//	{
-		//		p.second->Animate(m_fElapsedTime);
-		//		if (!p.second->m_pSkinnedAnimationController) p.second->UpdateTransform(NULL);
-		//		p.second->Render(pd3dCommandList, pCamera);
-		//	}
-		//}
 
 		for (int i = 0; i < m_nShaders; i++) if (m_ppShaders[i]) m_ppShaders[i]->Render(pd3dCommandList, pCamera);
 

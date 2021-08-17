@@ -182,6 +182,7 @@ class CAnimationCurve
 {
 public:
 	CAnimationCurve(int nKeys);
+	CAnimationCurve(const CAnimationCurve&);
 	~CAnimationCurve();
 
 public:
@@ -374,7 +375,7 @@ public:
 public:
 	CGameObject();
 	CGameObject(int nMaterials);
-	CGameObject(const CGameObject&);
+	CGameObject(const CGameObject&, CGameObject* pParent);
     virtual ~CGameObject();
 
 public:
@@ -562,6 +563,7 @@ public:
 	void Falling();
 	bool IsFalling() { return m_pcbMappedTerrainInfo->m_bFalling; }
 	float GetTime() const { return m_pcbMappedTerrainInfo->m_fTime; }
+	float GetFalling(float x, float z);
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -590,12 +592,13 @@ public:
 	virtual void ReleaseUploadBuffers();
 	virtual void Release();
 	CGameObject* GetMap(int idx) const;
+	void Update();
 
 		
 private:
 	CGameObject** m_ppMaps;
-	int m_nMaps;
 public:
+	int m_nMaps;
 	static CGameObject** m_ppObjectInstance;
 	static int m_nObjectInstance;
 };

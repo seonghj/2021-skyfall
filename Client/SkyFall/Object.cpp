@@ -259,6 +259,15 @@ CAnimationCurve::CAnimationCurve(int nKeys)
 	m_pfKeyValues = new float[nKeys];
 }
 
+CAnimationCurve::CAnimationCurve(const CAnimationCurve& other)
+{
+	m_nKeys = other.m_nKeys;
+	m_pfKeyTimes = new float[m_nKeys];
+	m_pfKeyValues = new float[m_nKeys];
+	memcpy(m_pfKeyTimes, other.m_pfKeyTimes, sizeof(float) * m_nKeys);
+	memcpy(m_pfKeyValues, other.m_pfKeyValues, sizeof(float) * m_nKeys);
+}
+
 CAnimationCurve::~CAnimationCurve()
 {
 	if (m_pfKeyTimes) delete[] m_pfKeyTimes;
@@ -362,11 +371,7 @@ CAnimationSet::CAnimationSet(const CAnimationSet& other)
 	
 	strcpy_s(m_pstrAnimationSetName, 64, other.m_pstrAnimationSetName);
 
-	//m_pAnimationCallbackHandler = new CAnimationCallbackHandler(*other.m_pAnimationCallbackHandler);
 	//m_pAnimationLayers = new CAnimationLayer(*other.m_pAnimationLayers);
-
-
-	//m_pCallbackKeys = new CALLBACKKEY(*other.m_pCallbackKeys);
 }
 
 CAnimationSet::~CAnimationSet()
@@ -624,9 +629,11 @@ float CAnimationController::GetTrackPosition(int nAnimationTrack)
 	return m_pAnimationSets->m_ppAnimationSets[m_pAnimationTracks[nAnimationTrack].m_nAnimationSet]->m_fPosition;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 CLoadedModelInfo::CLoadedModelInfo(const CLoadedModelInfo& other)
 {
-	m_pModelRootObject = new CGameObject(*other.m_pModelRootObject);
+	m_pModelRootObject = new CGameObject(*other.m_pModelRootObject, NULL);
 	m_pAnimationSets = new CAnimationSets(*other.m_pAnimationSets);
 	for (int i = 0; i < m_pAnimationSets->m_nAnimationSets; ++i) {
 		CAnimationSet* pAnimationSet = m_pAnimationSets->m_ppAnimationSets[i];
@@ -653,13 +660,11 @@ CLoadedModelInfo::CLoadedModelInfo(const CLoadedModelInfo& other)
 						pAnimationLayer->m_ppAnimationCurves[k][p] = NULL;
 
 				}
-
 				pAnimationLayer->m_ppAnimatedBoneFrameCaches[k] = m_pModelRootObject->FindFrame(
-					other.m_pAnimationSets->m_ppAnimationSets[i]->m_pAnimationLayers[j].m_ppAnimatedBoneFrameCaches[k]->m_pstrFrameName);			
+					other.m_pAnimationSets->m_ppAnimationSets[i]->m_pAnimationLayers[j].m_ppAnimatedBoneFrameCaches[k]->m_pstrFrameName);
 			}
 		}
 	}
-
 
 
 
@@ -667,8 +672,6 @@ CLoadedModelInfo::CLoadedModelInfo(const CLoadedModelInfo& other)
 	PrepareSkinning();
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
 CLoadedModelInfo::~CLoadedModelInfo()
 {
 	if (m_ppSkinnedMeshes) delete[] m_ppSkinnedMeshes;
@@ -701,9 +704,9 @@ CGameObject::CGameObject(int nMaterials) : CGameObject()
 	}
 }
 
-CGameObject::CGameObject(const CGameObject& object) :CGameObject()
+CGameObject::CGameObject(const CGameObject& object,CGameObject* pParent)
 {
-	strcpy(m_pstrFrameName, object.m_pstrFrameName);
+	strcpy_s(m_pstrFrameName, 64, object.m_pstrFrameName);
 	m_nMaterials = object.m_nMaterials;
 	if (m_nMaterials > 0) {
 		m_ppMaterials = new CMaterial * [m_nMaterials];
@@ -712,29 +715,30 @@ CGameObject::CGameObject(const CGameObject& object) :CGameObject()
 			SetMaterial(i, object.m_ppMaterials[i]);
 		}
 	}
-	
+
+	m_pMesh = NULL;
 	if (object.m_pMesh) {
 		CMesh* pMesh;
-		if (object.m_pMesh->GetType() & SKINNED_MESH)
+		if (object.m_pMesh->GetType() & SKINNED_MESH)	
 			pMesh = new CSkinnedMesh((CSkinnedMesh*)object.m_pMesh);
 		else
 			pMesh = new CStandardMesh((CStandardMesh&)*object.m_pMesh);
-		m_pMesh = NULL;
 		SetMesh(pMesh);
 	}
 	m_xmf4x4ToParent = object.m_xmf4x4ToParent;
 	m_xmf3Scale = object.m_xmf3Scale;
 	m_xmf3Rotation = object.m_xmf3Rotation;
-	m_xmf3Translation = object.m_xmf3Rotation;
+	m_xmf3Translation = object.m_xmf3Translation;
+
+	if(pParent)
+		m_pParent = pParent;
 
 	if (object.m_pSibling) {
-		m_pSibling = new CGameObject(*object.m_pSibling);
-		m_pSibling->m_pParent = this;
+		m_pSibling = new CGameObject(*object.m_pSibling, pParent);
 	}
 	if (object.m_pChild) {
-		m_pChild = new CGameObject(*object.m_pChild);
-		m_pChild->m_pParent = this;
-
+		m_pChild = new CGameObject(*object.m_pChild, this);
+		
 	}
 }
 
@@ -2160,13 +2164,14 @@ float CHeightMapTerrain::GetHeight(float x, float z, bool bReverseQuad)
 	float h = m_pHeightMapImage->GetHeight(x, z, bReverseQuad) * m_xmf3Scale.y;
 
 	if (IsFalling()) {
-		x = x - 2048 * (int)(x / 2048);
-		z = z - 2048 * (int)(z / 2048);
-		float r = Vector3::Length(Vector3::Subtract(XMFLOAT3(1024, 0, 1024), XMFLOAT3(x, 0, z)));
-		float time = m_pcbMappedTerrainInfo->m_fTime;
-		if (r < time * 100) {
-			h -= 50 * (time - r) + 9.8f * (time - r) * (time - r);
-		}
+		h += GetFalling(x, z);
+		//x = x - 2048 * (int)(x / 2048);
+		//z = z - 2048 * (int)(z / 2048);
+		//float r = Vector3::Length(Vector3::Subtract(XMFLOAT3(1024, 0, 1024), XMFLOAT3(x, 0, z)));
+		//float time = m_pcbMappedTerrainInfo->m_fTime;
+		//if (r < time * 100) {
+		//	h -= 50 * (time - r) + 9.8f * (time - r) * (time - r);
+		//}
 	}
 	return(h);
 }
@@ -2202,6 +2207,19 @@ void CHeightMapTerrain::UpdateTime(float fTimeElapsed)
 void CHeightMapTerrain::Falling()
 {
 	m_pcbMappedTerrainInfo->m_bFalling = true;
+}
+
+float CHeightMapTerrain::GetFalling(float x, float z)
+{
+	float dist = 0;
+	x = x - 2048 * (int)(x / 2048);
+	z = z - 2048 * (int)(z / 2048);
+	float r = Vector3::Length(Vector3::Subtract(XMFLOAT3(1024, 0, 1024), XMFLOAT3(x, 0, z)));
+	float time = m_pcbMappedTerrainInfo->m_fTime;
+	if (r < time * 100) {
+		dist -= 50 * (time - r) + 9.8f * (time - r) * (time - r);
+	}
+	return dist;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2387,6 +2405,10 @@ void CMap::Release()
 CGameObject* CMap::GetMap(int idx) const
 {
 	return m_ppMaps[idx];
+}
+
+void CMap::Update()
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
