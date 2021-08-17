@@ -175,9 +175,6 @@ private:
 	};
 
 	//imgui
-	void ShowLoginWindow();
-	void ShowLobbyWindow();
-	void ShowRoomWindow();
 	void ShowAccountWindow(bool* p_open);
 	void ShowCreateRoomWindow(bool* p_open);
 	void ShowError(const char* str);

@@ -1515,7 +1515,6 @@ void CGameFramework::StartGame()
     m_pScene->SetState(SCENE::INGAME);
     MouseHold(false);
     m_GameTimer.Reset();
-}
     m_pScene->m_ppUIObjects[3]->SetAlpha(0.0f);
 }
 
