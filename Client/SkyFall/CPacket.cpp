@@ -705,6 +705,7 @@ void CPacket::ProcessPacket(char* buf)
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
         int key = p->key;
         if (key >= MAX_PLAYER) break;
+
         if (p->key == client_key) {
             switch (p->MoveType) {
             case PlayerMove::JUMP: {
@@ -769,7 +770,6 @@ void CPacket::ProcessPacket(char* buf)
 
             if (m_pScene->m_mPlayer[key]->GetType() != p->playertype) {
                 Swap_weapon(p->key, p->playertype);
-                printf("´Þ¶ó¼­ ¹Ù²Þ\n");
             }
         }
         m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(PlayerState::Take_Damage, 0);

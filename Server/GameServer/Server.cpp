@@ -1002,7 +1002,7 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         send_packet_to_players(key, reinterpret_cast<char*>(&packet), roomID);
 
-        if (sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position.load().y <= -1000) {
+        if (sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position.load().y <= -10) {
             sessions[GameRooms[p->roomid].pkeys[p->key]].state = Death;
             sessions[GameRooms[p->roomid].pkeys[p->key]].playing = false;
             send_player_dead_packet(p->key, p->roomid);
@@ -1174,7 +1174,14 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (error == 2) break;
         
         printf("player key: %d create game room - %d\n", p->key, cnt);
-        send_room_list_packet(p->key);
+        //send_room_list_packet(p->key);
+        room_select_packet s;
+        s.key = key;
+        s.room = cnt;
+        s.roomid = cnt;
+        s.size = sizeof(s);
+        s.type = SC_select_room;
+        send_packet(p->key, reinterpret_cast<char*>(&s), -1);
         break;
     }
     case PacketType::CS_room_select: {
@@ -1391,7 +1398,7 @@ bool Server::Init()
     SYSTEM_INFO si;
     GetSystemInfo(&si);
 
-    for (int i = 0; i <(int)si.dwNumberOfProcessors * 4; i++)
+    for (int i = 0; i <(int)si.dwNumberOfProcessors * 2; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
 
