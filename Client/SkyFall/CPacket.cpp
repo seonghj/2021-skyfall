@@ -677,7 +677,7 @@ void CPacket::ProcessPacket(char* buf)
         InGamekey = p->ingamekey;
         Swap_weapon(p->ingamekey, start_weapon);
         m_pScene->SetState(SCENE::INGAME);
-        m_pFramework->MouseHold(false);
+        m_pFramework->StartGame();
         break;
     }
     case PacketType::SC_game_end: {

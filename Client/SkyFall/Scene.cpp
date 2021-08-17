@@ -858,7 +858,7 @@ void CScene::UpdateMap()
 				if (pObject->m_pSibling)
 					pObject = pObject->m_pSibling;
 				else
-					return;
+					break;
 			}
 		}
 	}
