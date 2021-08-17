@@ -109,6 +109,7 @@ enum PacketType {
 	CS_weapon_swap,
 	CS_player_move,
 	CS_player_pos,
+	CS_player_dead,
 	CS_start_pos,
 	CS_player_attack,
 	CS_player_damage,

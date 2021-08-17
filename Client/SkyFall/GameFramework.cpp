@@ -1345,6 +1345,16 @@ void CGameFramework::FrameAdvance()
     if (floor(m_BeforePosition.x) != floor(NowPosition.x) || floor(m_BeforePosition.y) != floor(NowPosition.y) || floor(m_BeforePosition.z) != floor(NowPosition.z)
         || floor(m_DegreeX) != 0.0f || floor(m_DegreeY) != 0.0f)
     {
+
+        if (NowPosition.y >= -10 && m_pScene->GetState() == SCENE::LOBBY) {
+            player_dead_packet p;
+            p.key = m_pPacket->InGamekey;
+            p.type = CS_player_dead;
+            p.roomid = m_pPacket->roomID;
+            p.size = sizeof(p);
+
+            m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+        }
         //if (frametime % 2 == 0) {
             /*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
                 m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
