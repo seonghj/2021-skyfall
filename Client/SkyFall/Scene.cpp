@@ -852,7 +852,7 @@ void CScene::UpdateMap()
 			CGameObject* pObject = m_pMap->GetMap(i)->FindFrame("RootNode")->m_pChild->m_pChild;
 			while (true) {
 				XMFLOAT3 pos = pObject->GetPosition();
-				pos.y -= m_ppTerrain[i]->GetFalling(pos.x, pos.z);
+				pos.y -= m_ppTerrain[i / 3]->GetFalling(pos.x, pos.z);
 				pObject->SetPosition(pos);
 
 				if (pObject->m_pSibling)
