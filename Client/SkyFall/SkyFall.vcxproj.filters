@@ -66,6 +66,12 @@
     <ClInclude Include="protocol.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Monster.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Sound.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SkyFall.cpp">
@@ -124,6 +130,9 @@
     </ClCompile>
     <ClCompile Include="includes\imgui\imgui_widgets.cpp">
       <Filter>리소스 파일\소스 파일\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Sound.cpp">
+      <Filter>리소스 파일\소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

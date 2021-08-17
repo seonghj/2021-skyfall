@@ -5,6 +5,7 @@
 #include "Player.h"
 #include "Scene.h"
 #include "CPacket.h"
+#include "Sound.h"
 
 struct CB_FRAMEWORK_INFO
 {
@@ -196,5 +197,10 @@ private:
 	void BuildShadowMap();
 	void UpdateShadowMap();
 
+
+	CSound* m_bgm[BGM_NUM];
+	CSound* m_se[SE_NUM];
+	void TrunOnBGM(int n);
+	void TurnOnSE(int n);
 };
 

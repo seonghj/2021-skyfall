@@ -46,6 +46,18 @@ CGameFramework::CGameFramework()
     m_ptOldCursorPos.x = FRAME_BUFFER_WIDTH / 2;
     m_ptOldCursorPos.y = FRAME_BUFFER_HEIGHT / 2;
     _tcscpy_s(m_pszFrameRate, _T("SkyFall ("));
+
+    CSound::Init();
+    m_bgm[BGM::FinalBoss] = new CSound("Sound/FinalBoss.wav", true);
+    m_bgm[BGM::Gothic_Vigilante] = new CSound("Sound/Gothic_Vigilante.wav", true);
+    m_bgm[BGM::Poisoned_Rose] = new CSound("Sound/Poisoned_Rose.wav", true);
+    m_bgm[BGM::The_Battle_of_1066] = new CSound("Sound/The_Battle_of_1066.wav", true);
+
+    m_se[SE::Walk] = new CSound("Sound/Footstep01.wav", false);
+    m_se[SE::Arrow_Hit] = new CSound("Sound/Arrow_Hit.wav", false);
+    m_se[SE::Knife_Attack] = new CSound("Sound/Knife_Attack.wav", false);
+    m_se[SE::Monster_Hit] = new CSound("Sound/Monster_Hit.wav", false);
+    m_se[SE::Spear_Attack] = new CSound("Sound/Spear_Attack.wav", false);
 }
 
 CGameFramework::~CGameFramework()
@@ -897,7 +909,7 @@ void CGameFramework::OnDestroy()
 	if (m_pFont)m_pFont.release();
 	if (m_resourceDescriptors)m_resourceDescriptors.release();
 	if (m_graphicsMemory)m_graphicsMemory.release();
-
+    CSound::Release();
 #if defined(_DEBUG)
     IDXGIDebug1* pdxgiDebug = NULL;
     DXGIGetDebugInterface1(0, __uuidof(IDXGIDebug1), (void**)&pdxgiDebug);
@@ -937,8 +949,6 @@ void CGameFramework::BuildObjects()
     m_pPacket->m_pFramework = this;
     m_pPacket->m_pPlayer = m_pPlayer;
     m_pPacket->m_pMap = m_pScene->m_pMap;
-
-
     
 
 
@@ -1076,7 +1086,7 @@ void CGameFramework::ProcessInput()
             }
             if (dwDirection && (false == m_pPlayer->GetAttack())) {
                 m_pPlayer->Move(dwDirection, 50.25f, true);
-
+                TurnOnSE(SE::Walk);
                 //int Yaw = 0;
                 //if (dwDirection & DIR_BACKWARD) {
                 //	Yaw = 180;
@@ -1392,6 +1402,14 @@ void CGameFramework::FrameAdvance()
     XMFLOAT3 xmf3Position = m_pPlayer->GetPosition();
     _stprintf_s(m_pszFrameRate + nLength, 70 - nLength, _T("(%4f, %4f, %4f)"), xmf3Position.x, xmf3Position.y, xmf3Position.z);
     ::SetWindowText(m_hWnd, m_pszFrameRate);
+    for (int i = 0; i < BGM_NUM; i++)
+    {
+        m_bgm[i]->Update();
+    }
+    for (int i = 0; i < SE_NUM; i++)
+    {
+        m_se[i]->Update();
+    }
 }
 
 void CGameFramework::CreateShaderVariables()
@@ -1500,4 +1518,20 @@ void CGameFramework::StartGame()
     m_pScene->SetState(SCENE::INGAME);
     MouseHold(false);
     m_GameTimer.Reset();
+    m_pScene->m_ppUIObjects[3]->SetAlpha(0.0f);
+}
+
+void CGameFramework::TrunOnBGM(int n)
+{
+    for (int i = 0; i < BGM_NUM; i++) {
+        m_bgm[i]->stop();
+    }
+    if(!m_bgm[n]->playing)
+        m_bgm[n]->play();
+}
+
+void CGameFramework::TurnOnSE(int n)
+{
+    if(!m_se[n]->playing)
+        m_se[n]->play();
 }
