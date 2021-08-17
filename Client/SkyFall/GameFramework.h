@@ -67,8 +67,7 @@ public:
 	void MouseHold(bool b) { m_bMouseHold = b; }
 	void StartGame();
 
-	void SetRoomList(int idx, char* name) { strcpy_s(m_vRooms[idx], name); }
-	char* GetRoomName(int idx) { return m_vRooms[idx]; }
+	vector<pair<short, string>> m_vRooms;
 
 	void SetbError(bool b) { m_bError = b; }
 	void SetErrorMsg(string s) { m_ErrorMsg = s; }
@@ -83,8 +82,6 @@ public:
 	CTerrainPlayer*				m_pPlayer = NULL;
 	CCamera*					m_pCamera = NULL;
 	CScene*						m_pScene = NULL;
-
-	unordered_map<int, char[20]>	rooms;
 
 	int frametime = 0;
 
@@ -184,7 +181,6 @@ private:
 	bool m_bShowAccountWindow = false;
 	bool m_bShowCreateRoomWindow = false;
 	bool m_bError = false;
-	array<char[20], 20> m_vRooms;
 	string m_ErrorMsg;
 
 	//miniMap

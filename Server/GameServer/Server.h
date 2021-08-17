@@ -104,7 +104,7 @@ public:
     int pkeys[20];
     char name[20];
     bool CanJoin = false;
-
+    int TotalPlayer = 0;
     Map* m_pMap;
 };
 
