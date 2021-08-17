@@ -632,6 +632,7 @@ void CGameFramework::ShowLobbyWindow()
             // 방 목록 새로고침
             m_vRooms.clear();
             m_pPacket->Send_refresh_room_packet();
+            printf("room list refresh\n");
         }
 	}
 	ImGui::End();
@@ -1359,7 +1360,6 @@ void CGameFramework::FrameAdvance()
             p.dir = dwDirection;
             p.size = sizeof(player_pos_packet);
             p.state = 1;
-            p.frame = frametime;
             if (m_BeforePosition.x == NowPosition.x && m_BeforePosition.y == NowPosition.y && m_BeforePosition.z == NowPosition.z) {
                 p.MoveType = PlayerMove::STAND;
                 m_pPlayer->SetStanding(true);

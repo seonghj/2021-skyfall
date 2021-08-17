@@ -9,6 +9,7 @@
 
 #include "Object.h"
 #include "Camera.h"
+#include "protocol.h"
 
 class CPacket;
 
@@ -57,6 +58,8 @@ protected:
 	LPVOID						*m_ppCameraUpdatedContext = NULL;
 
 	CCamera						*m_pCamera = NULL;
+
+	PlayerType					m_type = PT_SWORD1H;
 
 public:
 	CPlayer();
@@ -110,6 +113,7 @@ public:
 	int   GetRate() const { return(m_iRate);}
 	int   GetPro() const { return(m_iProficiency); }
 	float GetStamina() const { return(m_fStamina); }
+	PlayerType GetType() const { return(m_type); }
 
 	void SetScale(XMFLOAT3& xmf3Scale) { m_xmf3Scale = xmf3Scale; }
 
@@ -236,6 +240,7 @@ protected:
 
 	const int MAX_BULLET = 10;
 	bool		m_isRelease;
+
 };
 
 class C1HswordPlayer : public CTerrainPlayer
@@ -276,6 +281,4 @@ class C2HspearPlayer : public C1HswordPlayer
 public:
 	C2HspearPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, CLoadedModelInfo* pModel, void** ppContext = NULL);
 	virtual ~C2HspearPlayer();
-
-
 };

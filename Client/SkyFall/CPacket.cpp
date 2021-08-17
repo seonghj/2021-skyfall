@@ -666,9 +666,7 @@ void CPacket::ProcessPacket(char* buf)
             Swap_weapon(p->key, p->WeaponType);
             m_pScene->MovePlayer(key, p->Position);
             m_pScene->m_mPlayer[key]->Rotate(p->dx, p->dy, 0);
-            m_pScene->AnimatePlayer(key, 2);
             m_pScene->AnimatePlayer(key, 0);
-            ++TotalPlayer;
         }
         else {
             Swap_weapon(p->key, p->WeaponType);
@@ -689,7 +687,6 @@ void CPacket::ProcessPacket(char* buf)
         m_pScene->SetState(SCENE::INGAME);
         m_pFramework->TrunOnBGM(BGM::The_Battle_of_1066);
         m_pFramework->MouseHold(false);
-        TotalPlayer = 1;
         break;
     }
     case PacketType::SC_game_end: {
@@ -779,6 +776,11 @@ void CPacket::ProcessPacket(char* buf)
             m_pScene->MovePlayer(key, p->Position);
             m_pScene->m_mPlayer[key]->Rotate(p->dx - m_pScene->m_mPlayer[key]->GetPitch()
                 , p->dy - m_pScene->m_mPlayer[key]->GetYaw(), 0);
+
+            if (m_pScene->m_mPlayer[key]->GetType() != p->playertype) {
+                Swap_weapon(p->key, p->playertype);
+                printf("´Þ¶ó¼­ ¹Ù²Þ\n");
+            }
         }
         m_pScene->m_mPlayer[key]->m_pSkinnedAnimationController->SetTrackPosition(PlayerState::Take_Damage, 0);
         break;
@@ -1032,7 +1034,7 @@ void CPacket::ProcessPacket(char* buf)
             if (p->MonsterType == MonsterType::Wolf)
                 p->Position.y = p->Position.y + 50;
             else if (p->MonsterType == MonsterType::Metalon)
-                p->Position.y = p->Position.y + 20;
+                p->Position.y = p->Position.y + 30;
             m_pScene->m_ppGameObjects[key]->SetPosition(p->Position);
             m_pScene->m_ppGameObjects[key]->Rotate(0, 0, p->dz - m_pScene->m_ppGameObjects[key]->m_fRotateDegree);
             m_pScene->m_ppGameObjects[key]->m_fRotateDegree = p->dz;

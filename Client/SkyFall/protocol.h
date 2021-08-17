@@ -262,7 +262,7 @@ struct player_pos_packet : public Packet {
 	float dx, dy;
 	DWORD MoveType;
 	DWORD dir;
-	short frame;
+	PlayerType playertype;
 };
 
 struct player_start_pos : public Packet {
