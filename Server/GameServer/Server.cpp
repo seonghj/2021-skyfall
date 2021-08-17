@@ -42,6 +42,17 @@ void SESSION::init()
         inventory[i] = 0;
 }
 
+void SESSION::Reset()
+{
+    hp = 100;
+    def = 0;
+    lv = 0;
+    att = 10;
+    speed = 20;
+    proficiency = 0.0f;
+    using_weapon = PlayerType::PT_BASIC;
+}
+
 Server::Server()
 {
 
@@ -781,7 +792,7 @@ void Server::player_go_lobby(int key, int roomID)
         if (key == GameRooms[roomID].pkeys[i])
             GameRooms[roomID].pkeys[i] = INVALIDID;
     }
-
+    sessions[key].Reset();
     sessions[key].roomID = INVALIDID;
     sessions[key].over.roomID = INVALUED_ID;
     sessions[key].playing = false;

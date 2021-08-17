@@ -86,6 +86,7 @@ public:
     void TakeDamage(int iDamage) { hp -= iDamage * (100 - def) / 100; };
     void AddProficiency() { proficiency += 0.06; }
     float GetAtkDamage() const { return(att + att * (proficiency * proficiency)); }
+    void Reset();
 
 public:
     std::unordered_set<int> near_monster;

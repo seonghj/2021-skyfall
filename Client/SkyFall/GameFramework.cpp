@@ -1482,17 +1482,16 @@ void CGameFramework::ReleaseShaderVariables()
 
 void CGameFramework::Restart()
 {
-    m_pScene->m_iState = SCENE::LOBBY;
     m_pScene->m_ppUIObjects[0]->SethPercent(1.0f);
     m_GameTimer.Reset();
     m_ChargeTimer.Reset();
     m_pPlayer->Reset();
     m_pPlayer->SetHp(m_pPlayer->m_iMaxHp);
-    m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
-    XMFLOAT3 pos = m_pPlayer->GetPosition();
-    m_pCamera->SetPosition(Vector3::Add(pos, m_pCamera->GetOffset()));
-    pos.y += 50.0f;
-    m_pCamera->SetLookAt(pos);
+    //m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
+    //XMFLOAT3 pos = m_pPlayer->GetPosition();
+    //m_pCamera->SetPosition(Vector3::Add(pos, m_pCamera->GetOffset()));
+    //pos.y += 50.0f;
+    //m_pCamera->SetLookAt(pos);
     m_bMouseHold = true;
     m_pScene->rate = MAX_PLAYER;
     for (int i = 0; i < m_pScene->m_nGameObjects; i++)
@@ -1509,15 +1508,24 @@ void CGameFramework::Restart()
     }
     m_pScene->m_ppUIObjects[1]->SetAlpha(0.0f);
     m_pScene->m_ppUIObjects[2]->SetAlpha(0.0f);
+    CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Basic.bin", NULL);
+    CTerrainPlayer* pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pModel, (void**)m_pScene->m_ppTerrain);
+    delete pModel;
+    m_pPlayer = m_pScene->m_pPlayer = pPlayer;
+    pPlayer->Rotate(20.0f, -90.f, 0);
+    m_pCamera = pPlayer->GetCamera();
+
+    m_pScene->m_iState = SCENE::LOBBY;
 
     m_pPacket->Send_return_lobby_packet();
-
-    for (int i = 0; i < MAX_ROOM; i++) {
-        if (m_vRooms[i].first == m_pPacket->roomID) {
-            m_vRooms.erase(m_vRooms.begin() + i);
-            break;
-        }
-    }
+    //cout << "패킷 룸 아이디 : " << m_pPacket->roomID << endl;
+    //for (int i = 0; i < MAX_ROOM; i++) {
+    //    cout << i << "번째 : " << m_vRooms[i].first << endl;
+    //    if (m_vRooms[i].first == m_pPacket->roomID) {
+    //        m_vRooms.erase(m_vRooms.begin() + i);
+    //        break;
+    //    }
+    //}
 }
 
 void CGameFramework::UpdateShadowMap()
