@@ -852,7 +852,7 @@ void CScene::UpdateMap()
 			CGameObject* pObject = m_pMap->GetMap(i)->FindFrame("RootNode")->m_pChild->m_pChild;
 			while (true) {
 				XMFLOAT3 pos = pObject->GetPosition();
-				pos.y -= m_ppTerrain[i / 3]->GetFalling(pos.x, pos.z);
+				pos.y = m_ppTerrain[i / 3]->GetHeight(pos.x, pos.z);
 				pObject->SetPosition(pos);
 
 				if (pObject->m_pSibling)
@@ -861,6 +861,16 @@ void CScene::UpdateMap()
 					break;
 			}
 		}
+	}
+}
+
+void CScene::Reset()
+{
+	for (int i = 0; i < 9; ++i)
+		m_ppTerrain[i]->Reset();
+	m_pMap->Reset();
+	for (int i = 0; i < MAX_PLAYER; ++i) {
+		m_mPlayer[i]->Reset();
 	}
 }
 
@@ -1065,31 +1075,7 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 		case 'z': case 'Z':
 			gbShowBoundingBox = !gbShowBoundingBox;
 			break;
-		case '5':
-			m_ppUIObjects[2]->SetAlpha(0.0f);
-			m_ppUIObjects[3]->SetAlpha(0.0f);
-		case '9':
-			m_ppUIObjects[2]->SetAlpha(1.0f);
-			m_ppUIObjects[3]->SetAlpha(0.0f);
-			//CB_UI_INFO ui;
-			//ui.gfAlpha = m_ppUIObjects[0]->GetAlpha() + 0.1f;
-			//m_ppUIObjects[0]->SetUI(&ui);
-			//m_ppGameObjects[0]->FindFrame("HpBar")->MoveStrafe(10.f);
-			break;
-		case '0':
-			m_ppUIObjects[2]->SetAlpha(0.0f);
-			m_ppUIObjects[3]->SetAlpha(1.0f);
-			//m_ppGameObjects[0]->FindFrame("HpBar")->MoveStrafe(-10.f);
-			break;
-		case '1':
-			AnimatePlayer(0, 1);
-			break;
-		case '2':
-			AnimatePlayer(0, 2);
-			break;
-		case '3':
-			AnimatePlayer(0, 3);
-			break;
+
 		/*case 'W': m_ppGameObjects[0]->MoveForward(+3.0f); break;
 		case 'S': m_ppGameObjects[0]->MoveForward(-3.0f); break;
 		case 'A': m_ppGameObjects[0]->MoveStrafe(-3.0f); break;
@@ -1186,7 +1172,7 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 
 		for (int i = 0; i < m_nGameObjects; i++)
 		{
-			if (m_ppGameObjects[i])
+			if (m_ppGameObjects[i] && !m_ppTerrain[m_ppGameObjects[i]->GetPlace()]->IsFalling())
 			{
 				m_ppGameObjects[i]->Animate(m_fElapsedTime);
 				m_ppGameObjects[i]->UpdateTransform(NULL);
@@ -1197,7 +1183,8 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 		for (int i = 0; i < MAX_PLAYER; ++i)
 			if (m_mPlayer[i]) {
 				m_mPlayer[i]->UpdateShaderVariables(pd3dCommandList);
-				m_mPlayer[i]->Render(pd3dCommandList, pCamera);
+				if (m_mPlayer[i]->GetPosition().y > 0)
+					m_mPlayer[i]->Render(pd3dCommandList, pCamera);
 			}
 
 		for (int i = 0; i < m_nShaders; i++) if (m_ppShaders[i]) m_ppShaders[i]->Render(pd3dCommandList, pCamera);

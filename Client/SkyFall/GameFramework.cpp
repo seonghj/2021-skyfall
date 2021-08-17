@@ -934,16 +934,16 @@ void CGameFramework::BuildObjects()
 	BuildShadowMap();
 	BuildMiniMap();
 	CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Basic.bin", NULL);
-	CTerrainPlayer* pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pModel, (void**)m_pScene->m_ppTerrain);
+	pBasicPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pModel, (void**)m_pScene->m_ppTerrain);
 	delete pModel;
 
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
 	m_pScene->AddWeapon(m_pd3dDevice, m_pd3dCommandList);
-	m_pPlayer = m_pScene->m_pPlayer = pPlayer;
-	pPlayer->Rotate(20.0f, -90.f, 0);
+	m_pPlayer = m_pScene->m_pPlayer = pBasicPlayer;
+	pBasicPlayer->Rotate(20.0f, -90.f, 0);
 	//m_pPlayer->SetPlace(4);
 	
-	m_pCamera = pPlayer->GetCamera();
+	m_pCamera = pBasicPlayer->GetCamera();
 
     m_pPacket->m_pScene = m_pScene;
     m_pPacket->m_pFramework = this;
@@ -1487,6 +1487,7 @@ void CGameFramework::Restart()
     m_GameTimer.Reset();
     m_ChargeTimer.Reset();
     m_pPlayer->Reset();
+    m_pPlayer = pBasicPlayer;
     m_pPlayer->SetHp(m_pPlayer->m_iMaxHp);
     m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
     XMFLOAT3 pos = m_pPlayer->GetPosition();
@@ -1510,14 +1511,15 @@ void CGameFramework::Restart()
     m_pScene->m_ppUIObjects[1]->SetAlpha(0.0f);
     m_pScene->m_ppUIObjects[2]->SetAlpha(0.0f);
 
+    m_pScene->Reset();
     m_pPacket->Send_return_lobby_packet();
 
-    for (int i = 0; i < MAX_ROOM; i++) {
+    /*for (int i = 0; i < MAX_ROOM; i++) {
         if (m_vRooms[i].first == m_pPacket->roomID) {
             m_vRooms.erase(m_vRooms.begin() + i);
             break;
         }
-    }
+    }*/
 }
 
 void CGameFramework::UpdateShadowMap()
@@ -1537,7 +1539,7 @@ void CGameFramework::StartGame()
     m_pScene->SetState(SCENE::INGAME);
     MouseHold(false);
     m_GameTimer.Reset();
-    m_pScene->m_ppUIObjects[3]->SetAlpha(0.0f);
+    m_pScene->m_ppUIObjects[4]->SetAlpha(0.0f);
 }
 
 void CGameFramework::TrunOnBGM(int n)

@@ -564,6 +564,7 @@ public:
 	bool IsFalling() { return m_pcbMappedTerrainInfo->m_bFalling; }
 	float GetTime() const { return m_pcbMappedTerrainInfo->m_fTime; }
 	float GetFalling(float x, float z);
+	void Reset();
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -593,6 +594,7 @@ public:
 	virtual void Release();
 	CGameObject* GetMap(int idx) const;
 	void Update();
+	void Reset();
 
 		
 private:

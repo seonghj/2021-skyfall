@@ -82,7 +82,8 @@ public:
 	float						m_DegreeY;
 	float						m_DegreeZ;
 
-	CTerrainPlayer*				m_pPlayer = NULL;
+	CTerrainPlayer*				m_pPlayer = NULL; 
+	CTerrainPlayer*				pBasicPlayer = NULL;
 	CCamera*					m_pCamera = NULL;
 	CScene*						m_pScene = NULL;
 

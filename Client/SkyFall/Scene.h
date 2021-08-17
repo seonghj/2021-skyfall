@@ -86,6 +86,7 @@ public:
 
 	void TakeDamage(bool isDamaged);
 	void UpdateMap();
+	void Reset();
 
 protected:
 	ID3D12RootSignature					*m_pd3dGraphicsRootSignature = NULL;
