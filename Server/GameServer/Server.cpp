@@ -1147,7 +1147,12 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         break;
     }
-     // Lobby
+    case PacketType::CS_player_dead: {
+        player_dead_packet* p = reinterpret_cast<player_dead_packet*>(buf);
+        p->type = PacketType::SC_player_dead;
+        send_packet_to_allplayers(p->roomid, reinterpret_cast<char*>(p));
+        break;
+    }
     case PacketType::CS_create_room: {
         room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
         int key = p->key;

@@ -82,6 +82,8 @@ public:
 
 	int roomID = INVALIDID;
 	int InGamekey = INVALIDID;
+
+	bool isfalling = false;
 private:
 	int client_key = INVALIDID;
 	char userID[50];

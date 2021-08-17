@@ -1339,6 +1339,25 @@ void CGameFramework::FrameAdvance()
     //	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
     MoveToNextFrame();
 
+    for (int i = 0; i < MAX_PLAYER; ++i) {
+        if (m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->IsTrackFinish(3)) {
+            m_pScene->AnimatePlayer(i, 0);
+        }
+        if (m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->IsTrackFinish(4)) {
+            m_pScene->AnimatePlayer(i, 0);
+        }
+    }
+
+    if (m_pPlayer->GetPosition().y <= -10 && m_pPacket->isfalling == false) {
+        m_pPacket->isfalling = true;
+        player_dead_packet p;
+        p.key = m_pPacket->InGamekey;
+        p.type = CS_player_dead;
+        p.roomid = m_pPacket->roomID;
+        p.size = sizeof(p);
+        m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+        printf("player falling\n");
+    }
 
     float fLength = sqrtf(m_pPlayer->GetVelocity().x * m_pPlayer->GetVelocity().x + m_pPlayer->GetVelocity().z * m_pPlayer->GetVelocity().z);
     if (::IsZero(fLength) && m_pPlayer->GetGround())
@@ -1347,7 +1366,7 @@ void CGameFramework::FrameAdvance()
     if (floor(m_BeforePosition.x) != floor(NowPosition.x) || floor(m_BeforePosition.y) != floor(NowPosition.y) || floor(m_BeforePosition.z) != floor(NowPosition.z)
         || floor(m_DegreeX) != 0.0f || floor(m_DegreeY) != 0.0f)
     {
-        if (frametime % 2 == 0) {
+        //if (frametime % 2 == 0) {
             /*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
                 m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
             if (false == m_pPlayer->GetAttack()) {
@@ -1357,8 +1376,8 @@ void CGameFramework::FrameAdvance()
                 p.Position.x = floor(NowPosition.x);
                 p.Position.y = floor(NowPosition.y);
                 p.Position.z = floor(NowPosition.z);
-                p.dx = floor(m_DegreeX) * 1.5f;
-                p.dy = floor(m_DegreeY) * 1.5f;
+                p.dx = floor(m_DegreeX); //* 1.2f;
+                p.dy = floor(m_DegreeY); //* 1.2f;
                 p.dir = dwDirection;
                 p.size = sizeof(player_pos_packet);
                 p.state = 1;
@@ -1385,7 +1404,7 @@ void CGameFramework::FrameAdvance()
                 m_DegreeY = 0.0f;
 
             }
-        }
+       // }
     }
     else {
         if (m_pPlayer->GetGround() == true && false == m_pPlayer->GetStanding() && false == PressDirButton) {
