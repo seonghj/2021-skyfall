@@ -848,7 +848,7 @@ void CScene::TakeDamage(bool isDamaged)
 void CScene::UpdateMap()
 {
 	for (int i = 0; i < m_pMap->m_nMaps; ++i) {
-		if (m_ppTerrain[i/3]->IsFalling()) {
+		if (m_ppTerrain[i / 3]->IsFalling() && m_ppTerrain[1 / 3]->GetTime() < 20) {
 			CGameObject* pObject = m_pMap->GetMap(i)->FindFrame("RootNode")->m_pChild->m_pChild;
 			while (true) {
 				XMFLOAT3 pos = pObject->GetPosition();
