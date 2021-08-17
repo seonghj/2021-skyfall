@@ -67,6 +67,8 @@ public:
 	void Restart();
 	void MouseHold(bool b) { m_bMouseHold = b; }
 	void StartGame();
+	void TrunOnBGM(int n);
+	void TurnOnSE(int n);
 
 	vector<pair<short, string>> m_vRooms;
 
@@ -200,7 +202,5 @@ private:
 
 	CSound* m_bgm[BGM_NUM];
 	CSound* m_se[SE_NUM];
-	void TrunOnBGM(int n);
-	void TurnOnSE(int n);
 };
 
