@@ -989,6 +989,18 @@ void CGameFramework::ProcessInput()
     static UCHAR pKeysBuffer[256];
     bool bProcessedByScene = true;
     if (GetKeyboardState(pKeysBuffer) && m_pScene) bProcessedByScene = m_pScene->ProcessInput(pKeysBuffer);
+    
+    if ((GetAsyncKeyState('W') & 0x8000) ? 0 : 1
+        && (GetAsyncKeyState('A') & 0x8000) ? 0 : 1
+        && (GetAsyncKeyState('S') & 0x8000) ? 0 : 1
+        && (GetAsyncKeyState('D') & 0x8000) ? 0 : 1){
+        if (PressDirButton == true) {
+            PressDirButton = false;
+            printf("잉\n");
+        }
+    }
+
+
     if (!bProcessedByScene)
     {
         dwDirection = 0;
@@ -1003,10 +1015,10 @@ void CGameFramework::ProcessInput()
         //if (m_pScene->GetState() != SCENE::INGAME || m_pScene->GetState() != SCENE::INROOM) return;
         if (m_pPlayer->GetGround()&&!m_pPlayer->GetCharging()) {
 
-            if (pKeysBuffer['W'] & 0xF0) { dwDirection |= DIR_FORWARD; PressDirButton = true;}
-            if (pKeysBuffer['S'] & 0xF0) { dwDirection |= DIR_BACKWARD; PressDirButton = true;}
-            if (pKeysBuffer['A'] & 0xF0) { dwDirection |= DIR_LEFT; PressDirButton = true;}
-            if (pKeysBuffer['D'] & 0xF0) { dwDirection |= DIR_RIGHT; PressDirButton = true;}
+            if (pKeysBuffer['W'] & 0xF0) { dwDirection |= DIR_FORWARD;}
+            if (pKeysBuffer['S'] & 0xF0) { dwDirection |= DIR_BACKWARD;}
+            if (pKeysBuffer['A'] & 0xF0) { dwDirection |= DIR_LEFT;}
+            if (pKeysBuffer['D'] & 0xF0) { dwDirection |= DIR_RIGHT;}
             
             /*if (pKeysBuffer['Q'] & 0xF0) dwDirection |= DIR_UP;
             if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_DOWN;*/
@@ -1015,7 +1027,6 @@ void CGameFramework::ProcessInput()
             p.key = m_pPacket->InGamekey;
             p.dx = m_DegreeX;
             p.dy = m_DegreeY;
-            //p.MoveType = dwDirection;
             p.size = sizeof(p);
             p.state = 1;
             p.type = CS_player_move;
@@ -1035,7 +1046,24 @@ void CGameFramework::ProcessInput()
             else {
                 p.MoveType = PlayerMove::WALKING;
             }
-            m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+            
+            if (PressDirButton == false && dwDirection != 0) {
+                printf("move\n");
+                PressDirButton = true;
+                m_pPacket->beforedir = dwDirection;
+                m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+            }
+
+            if ((m_pPacket->beforedir != dwDirection && PressDirButton == true)
+                || (m_pPacket->beforeRun != m_pPlayer->GetRunning() && PressDirButton == true)
+                || (m_pPacket->beforeJump != m_pPlayer->GetJump() && PressDirButton == true)
+                ) {
+                printf("move gg\n");
+                m_pPacket->beforedir = dwDirection;
+                m_pPacket->beforeRun = m_pPlayer->GetRunning();
+                m_pPacket->beforeJump = m_pPlayer->GetJump();
+                m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+            }
         }
         
         if (!(pKeysBuffer[VK_SHIFT] & 0xF0) && m_pPlayer->GetRunning())
@@ -1083,6 +1111,7 @@ void CGameFramework::ProcessInput()
                     m_fPitch += cyDelta;
                     m_fYaw += cxDelta;
                     m_pCamera->Rotate(cyDelta, cxDelta, 0);
+                    m_pPlayer->Rotate(cyDelta, cxDelta, 0);
                     //m_pShadowMap->Rotate(cyDelta, cxDelta, 0);
                 }
                 else {
@@ -1090,38 +1119,38 @@ void CGameFramework::ProcessInput()
                     m_DegreeY = cxDelta;
                 }
             }
-            if (dwDirection && (false == m_pPlayer->GetAttack())) {
+            if (dwDirection && (false == m_pPlayer->GetAttack())){
                 m_pPlayer->Move(dwDirection, 50.25f, true);
-                TurnOnSE(SE::Walk);
-                //int Yaw = 0;
-                //if (dwDirection & DIR_BACKWARD) {
-                //	Yaw = 180;
-                //	if (dwDirection & DIR_LEFT) {
-                //		Yaw += 45;
-                //	}
-                //	else if (dwDirection & DIR_RIGHT) {
-                //		Yaw -= 45;
-                //	}
-                //}
-                //else if (dwDirection & DIR_FORWARD) {
-                //	Yaw = 0.f;
-                //	if (dwDirection & DIR_LEFT) {
-                //		Yaw -= 45;
-                //	}
-                //	else if (dwDirection & DIR_RIGHT) {
-                //		Yaw += 45;
-                //	}
-                //}
-                //else if (dwDirection & DIR_RIGHT) {
-                //	Yaw = 90;
-                //}
-                //else if (dwDirection & DIR_LEFT) {
-                //	Yaw = -90;
-                //}
-                //if (m_pPlayer->m_iRotate != Yaw) {
-                //	//m_pPlayer->RotatePlayer(Yaw - m_pPlayer->m_iRotate);
-                //	m_pPlayer->m_iRotate = Yaw;
-                //}
+                //TurnOnSE(SE::Walk);
+                /*int Yaw = 0;
+                if (dwDirection & DIR_BACKWARD) {
+                	Yaw = 180;
+                	if (dwDirection & DIR_LEFT) {
+                		Yaw += 45;
+                	}
+                	else if (dwDirection & DIR_RIGHT) {
+                		Yaw -= 45;
+                	}
+                }
+                else if (dwDirection & DIR_FORWARD) {
+                	Yaw = 0.f;
+                	if (dwDirection & DIR_LEFT) {
+                		Yaw -= 45;
+                	}
+                	else if (dwDirection & DIR_RIGHT) {
+                		Yaw += 45;
+                	}
+                }
+                else if (dwDirection & DIR_RIGHT) {
+                	Yaw = 90;
+                }
+                else if (dwDirection & DIR_LEFT) {
+                	Yaw = -90;
+                }
+                if (m_pPlayer->m_iRotate != Yaw) {
+                	m_pPlayer->RotatePlayer(Yaw - m_pPlayer->m_iRotate);
+                	m_pPlayer->m_iRotate = Yaw;
+                }*/
             }
         }
     }
@@ -1366,60 +1395,38 @@ void CGameFramework::FrameAdvance()
     }
 
     float fLength = sqrtf(m_pPlayer->GetVelocity().x * m_pPlayer->GetVelocity().x + m_pPlayer->GetVelocity().z * m_pPlayer->GetVelocity().z);
-    if (::IsZero(fLength) && m_pPlayer->GetGround())
-        PressDirButton = false;
-    XMFLOAT3 NowPosition = m_pPlayer->GetPosition();
-    if (m_BeforePosition.x != NowPosition.x || m_BeforePosition.y != NowPosition.y || m_BeforePosition.z != NowPosition.z
-        || m_DegreeX != 0.0f || m_DegreeY != 0.0f)
-    {
-        if (frametime % 60 == 0) {
-            /*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
-                m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
-            if (false == m_pPlayer->GetAttack()) {
-                player_pos_packet p;
-                p.key = m_pPacket->InGamekey;
-                p.roomid = m_pPacket->roomID;
-                p.Position.x = NowPosition.x;
-                p.Position.y = NowPosition.y;
-                p.Position.z = NowPosition.z;
-                p.dx = m_DegreeX; 
-                p.dy = m_DegreeY; 
-                p.dir = dwDirection;
-                p.size = sizeof(player_pos_packet);
-                p.state = 1;
-                if (m_BeforePosition.x == NowPosition.x && m_BeforePosition.y == NowPosition.y && m_BeforePosition.z == NowPosition.z) {
-                    p.MoveType = PlayerMove::STAND;
-                    m_pPlayer->SetStanding(true);
-                }
-                else {
-                    p.MoveType = m_pPlayer->GetRunning();
-                    if (m_pPlayer->GetJump() == true || m_pPlayer->GetGround() == false)
-                        p.MoveType = PlayerMove::JUMP;
-                    m_pPlayer->SetStanding(false);
-                }
-                p.type = CS_player_pos;
+    if (frametime == 60) {
+        /*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
+            m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
+        if (false == m_pPlayer->GetAttack()) {
+            player_pos_packet p;
+            p.key = m_pPacket->InGamekey;
+            p.roomid = m_pPacket->roomID;
+            p.Position = m_pPlayer->GetPosition();
+            p.dx = m_DegreeX;
+            p.dy = m_DegreeY;
+            p.dir = dwDirection;
+            p.size = sizeof(player_pos_packet);
+            p.state = 1;
+            p.type = CS_player_pos;
 
-                if (m_pPacket->canmove == TRUE && m_bMouseHold == FALSE) {
-                    m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-                    //printf("frame: %d dx = %f dy = %f", frametime, p.dx, p.dy);
-                }
-
-                m_BeforePosition = NowPosition;
-
-                m_DegreeX = 0.0f;
-                m_DegreeY = 0.0f;
-
+            if (m_pPacket->canmove == TRUE && m_bMouseHold == FALSE) {
+                m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+                //printf("frame: %d dx = %f dy = %f", frametime, p.dx, p.dy);
             }
+            m_DegreeX = 0.0f;
+            m_DegreeY = 0.0f;
+
         }
     }
     
     if (frametime > 60)
         frametime = 0;
 
-    if (m_pPlayer->GetGround() == true && false == m_pPlayer->GetStanding() && false == PressDirButton) {
+    if (m_pPlayer->GetGround() == true && false == PressDirButton) {
         dwDirection = 0;
         m_pPlayer->SetStanding(true);
-        m_pPacket->Send_stop_packet();
+        //m_pPacket->Send_stop_packet();
     }
 
     m_GameTimer.GetFrameRate(m_pszFrameRate + 9, 37);
@@ -1525,14 +1532,6 @@ void CGameFramework::Restart()
     m_pScene->m_iState = SCENE::LOBBY;
 
     m_pPacket->Send_return_lobby_packet();
-    //cout << "패킷 룸 아이디 : " << m_pPacket->roomID << endl;
-    //for (int i = 0; i < MAX_ROOM; i++) {
-    //    cout << i << "번째 : " << m_vRooms[i].first << endl;
-    //    if (m_vRooms[i].first == m_pPacket->roomID) {
-    //        m_vRooms.erase(m_vRooms.begin() + i);
-    //        break;
-    //    }
-    //}
 }
 
 void CGameFramework::UpdateShadowMap()

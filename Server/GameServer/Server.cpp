@@ -686,13 +686,13 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
         }
     }
 
-    if (sessions[GameRooms[roomID].pkeys[target]].hp.load() <= 0) {
+    /*if (sessions[GameRooms[roomID].pkeys[target]].hp.load() <= 0) {
         sessions[GameRooms[roomID].pkeys[target]].state = Death;
         send_player_dead_packet(target, roomID);
         --GameRooms[roomID].TotalPlayer;
         if (GameRooms[roomID].TotalPlayer >= 1)
             game_end(roomID, NULL);
-    }
+    }*/
 }
 
 void Server::send_monster_stop(int key, int roomID)
@@ -1183,25 +1183,25 @@ void Server::process_packet(int key, char* buf, int roomID)
         sessions[GameRooms[p->roomid].pkeys[key]].AddProficiency();
         send_packet_to_players(key, reinterpret_cast<char*>(p), p->roomid);
 
-        if (sessions[GameRooms[p->roomid].pkeys[target]].hp.load() <= 0) {
+       /* if (sessions[GameRooms[p->roomid].pkeys[target]].hp.load() <= 0) {
             sessions[GameRooms[p->roomid].pkeys[target]].state = Death;
             send_player_dead_packet(target, roomID);
             --GameRooms[p->roomid].TotalPlayer;
             sessions[GameRooms[p->roomid].pkeys[target]].playing = false;
             if (GameRooms[p->roomid].TotalPlayer >= 1)
                 game_end(p->roomid, NULL);
-        }
+        }*/
 
         break;
     }
     case PacketType::CS_player_dead: {
         player_dead_packet* p = reinterpret_cast<player_dead_packet*>(buf);
         p->type = PacketType::SC_player_dead;
-        send_packet_to_allplayers(p->roomid, reinterpret_cast<char*>(p));
+       /* send_packet_to_allplayers(p->roomid, reinterpret_cast<char*>(p));
         --GameRooms[p->roomid].TotalPlayer;
         sessions[GameRooms[p->roomid].pkeys[p->key]].playing = false;
         if (GameRooms[p->roomid].TotalPlayer >= 1)
-            game_end(p->roomid, NULL);
+            game_end(p->roomid, NULL);*/
         break;
     }
     case PacketType::CS_create_room: {
@@ -1413,14 +1413,14 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::game_end: {
-                std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
+                /*std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
                 if (GameRooms[roomID].m_pMap == NULL) break;
                 if (GameRooms[roomID].m_pMap->game_start == false) break;
                 game_end_event* e = reinterpret_cast<game_end_event*>(over_ex->messageBuffer);
                 int roomID = e->roomid;
                 printf("room: %d gameover\n", roomID);
-                game_end(roomID, over_ex);
-                //delete over_ex;
+                game_end(roomID, over_ex);*/
+                delete over_ex;
                 break;
             }
             }

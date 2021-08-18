@@ -84,6 +84,10 @@ public:
 	int InGamekey = INVALIDID;
 
 	bool isfalling = false;
+
+	DWORD beforedir;
+	bool beforeRun = false;
+	bool beforeJump = false;
 private:
 	int client_key = INVALIDID;
 	char userID[50];
