@@ -53,6 +53,40 @@ void SESSION::Reset()
     using_weapon = PlayerType::PT_BASIC;
 }
 
+void SESSION::Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity, bool isRun)
+{
+    if (dwDirection)
+    {
+        XMFLOAT3 xmf3Shift = XMFLOAT3(0, 0, 0);
+        if (dwDirection & DIR_FORWARD) xmf3Shift = Vector3::Add(xmf3Shift, m_xmf3Look, +fDistance);
+        if (dwDirection & DIR_BACKWARD) xmf3Shift = Vector3::Add(xmf3Shift, m_xmf3Look, -fDistance);
+        if (dwDirection & DIR_RIGHT) xmf3Shift = Vector3::Add(xmf3Shift, m_xmf3Right, +fDistance);
+        if (dwDirection & DIR_LEFT) xmf3Shift = Vector3::Add(xmf3Shift, m_xmf3Right, -fDistance);
+
+        Move(xmf3Shift, bUpdateVelocity, isRun);
+    }
+}
+
+void SESSION::Move(const XMFLOAT3& xmf3Shift, bool bUpdateVelocity, bool isRun)
+{
+    /*if (bUpdateVelocity)
+    {
+        m_xmf3Velocity.x = 0;
+        m_xmf3Velocity.z = 0;
+        m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, xmf3Shift);
+        if (m_isRunning)
+        {
+            m_xmf3Velocity.x *= 3.3;
+            m_xmf3Velocity.z *= 3.3;
+        }
+    }
+    else
+    {
+        m_xmf3Position = Vector3::Add(m_xmf3Position, xmf3Shift);
+        m_pCamera->Move(xmf3Shift);
+    }*/
+}
+
 Server::Server()
 {
 

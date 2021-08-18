@@ -1011,25 +1011,31 @@ void CGameFramework::ProcessInput()
             /*if (pKeysBuffer['Q'] & 0xF0) dwDirection |= DIR_UP;
             if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_DOWN;*/
 
+            player_move_packet p;
+            p.key = m_pPacket->InGamekey;
+            p.dx = m_DegreeX;
+            p.dy = m_DegreeY;
+            //p.MoveType = dwDirection;
+            p.size = sizeof(p);
+            p.state = 1;
+            p.type = CS_player_move;
+            p.direction = dwDirection;
+
             if (pKeysBuffer[VK_SPACE] & 0xF0)
             {
                 m_pPlayer->SetJump(true);
-                player_move_packet p;
-                p.key = m_pPacket->InGamekey;
-                p.dx = m_DegreeX;
-                p.dy = m_DegreeY;
-                //p.MoveType = dwDirection;
-                p.size = sizeof(p);
-                p.state = 1;
                 p.MoveType = PlayerMove::JUMP;
-                p.type = CS_player_move;
-                m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
                 m_pPlayer->SetFriction(0.f);
             }
             else if (pKeysBuffer[VK_SHIFT] & 0xF0 && m_pPlayer->GetStamina() > 10.0f)
             {
+                p.MoveType = PlayerMove::RUNNING;
                 m_pPlayer->SetRunning(true);
             }
+            else {
+                p.MoveType = PlayerMove::WALKING;
+            }
+            m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
         }
         
         if (!(pKeysBuffer[VK_SHIFT] & 0xF0) && m_pPlayer->GetRunning())
@@ -1363,21 +1369,21 @@ void CGameFramework::FrameAdvance()
     if (::IsZero(fLength) && m_pPlayer->GetGround())
         PressDirButton = false;
     XMFLOAT3 NowPosition = m_pPlayer->GetPosition();
-    if (floor(m_BeforePosition.x) != floor(NowPosition.x) || floor(m_BeforePosition.y) != floor(NowPosition.y) || floor(m_BeforePosition.z) != floor(NowPosition.z)
-        || floor(m_DegreeX) != 0.0f || floor(m_DegreeY) != 0.0f)
+    if (m_BeforePosition.x != NowPosition.x || m_BeforePosition.y != NowPosition.y || m_BeforePosition.z != NowPosition.z
+        || m_DegreeX != 0.0f || m_DegreeY != 0.0f)
     {
-        //if (frametime % 2 == 0) {
+        if (frametime % 60 == 0) {
             /*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
                 m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
             if (false == m_pPlayer->GetAttack()) {
                 player_pos_packet p;
                 p.key = m_pPacket->InGamekey;
                 p.roomid = m_pPacket->roomID;
-                p.Position.x = floor(NowPosition.x);
-                p.Position.y = floor(NowPosition.y);
-                p.Position.z = floor(NowPosition.z);
-                p.dx = floor(m_DegreeX); //* 1.2f;
-                p.dy = floor(m_DegreeY); //* 1.2f;
+                p.Position.x = NowPosition.x;
+                p.Position.y = NowPosition.y;
+                p.Position.z = NowPosition.z;
+                p.dx = m_DegreeX; 
+                p.dy = m_DegreeY; 
                 p.dir = dwDirection;
                 p.size = sizeof(player_pos_packet);
                 p.state = 1;
@@ -1404,17 +1410,17 @@ void CGameFramework::FrameAdvance()
                 m_DegreeY = 0.0f;
 
             }
-       // }
-    }
-    else {
-        if (m_pPlayer->GetGround() == true && false == m_pPlayer->GetStanding() && false == PressDirButton) {
-            dwDirection = 0;
-            m_pPlayer->SetStanding(true);
-            m_pPacket->Send_stop_packet();
         }
     }
+    
     if (frametime > 60)
         frametime = 0;
+
+    if (m_pPlayer->GetGround() == true && false == m_pPlayer->GetStanding() && false == PressDirButton) {
+        dwDirection = 0;
+        m_pPlayer->SetStanding(true);
+        m_pPacket->Send_stop_packet();
+    }
 
     m_GameTimer.GetFrameRate(m_pszFrameRate + 9, 37);
     size_t nLength = _tcslen(m_pszFrameRate);

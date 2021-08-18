@@ -59,6 +59,9 @@ public:
     std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<float>      m_fPitch = 0;
     std::atomic<float>      m_fYaw = 0;
+    XMFLOAT3			    m_xmf3Right = XMFLOAT3(1.0f, 0.0f, 0.0f);
+    XMFLOAT3				m_xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
+    XMFLOAT3				m_xmf3Look = XMFLOAT3(0.0f, 0.0f, 1.0f);
     
     std::atomic<PlayerType>      weapon1 = PlayerType::PT_BASIC;
     std::atomic<PlayerType>      weapon2 = PlayerType::PT_BASIC;
@@ -87,6 +90,9 @@ public:
     void AddProficiency() { proficiency += 0.06; }
     float GetAtkDamage() const { return(att + att * (proficiency * proficiency)); }
     void Reset();
+
+    void Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity, bool isRun);
+    void Move(const XMFLOAT3& xmf3Shift, bool bUpdateVelocity, bool isRun);
 
 public:
     std::unordered_set<int> near_monster;
