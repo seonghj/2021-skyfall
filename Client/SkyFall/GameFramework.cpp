@@ -1118,18 +1118,13 @@ void CGameFramework::ProcessInput()
                     m_DegreeX += cyDelta;
                     m_DegreeY += cxDelta;
 
-                    if (abs(m_DegreeX) >= 5.f || abs(m_DegreeY) >= 5.f) {
+                    m_pPlayer->Rotate(cyDelta, cxDelta, 0);
+                    if (abs(m_DegreeX) >= 10.f || abs(m_DegreeY) >= 10.f) {
                         //printf("%f %f\n", m_pCamera->GetPitch(), m_pCamera->GetYaw());
-                        m_pPlayer->Rotate(m_DegreeX, m_DegreeY, 0);
-                        m_pCamera->Rotate(m_pPlayer->GetPitch() - m_pCamera->GetPitch()
-                            , m_pPlayer->GetYaw() - m_pCamera->GetYaw(), 0);
                         m_DegreeX = 0;
                         m_DegreeY = 0;
                         m_pPacket->Send_Rotate(m_pPlayer->GetPitch(), m_pPlayer->GetYaw());
                         //printf("rotate\n");
-                    }
-                    else {
-                        m_pCamera->Rotate(cyDelta, cxDelta, 0);
                     }
                     //m_pShadowMap->Rotate(cyDelta, cxDelta, 0);
                 }
@@ -1455,8 +1450,7 @@ void CGameFramework::FrameAdvance()
             p.type = CS_player_pos;
 
             if (m_pPacket->canmove == TRUE && m_bMouseHold == FALSE) {
-                //m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-                //printf("frame: %d dx = %f dy = %f", frametime, p.dx, p.dy);
+                m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
             }
             m_DegreeX = 0.0f;
             m_DegreeY = 0.0f;
