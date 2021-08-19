@@ -49,6 +49,8 @@ public:
 	void Send_refresh_room_packet();
 	void Send_create_account_packet(char* id, char* pw);
 
+	void OtherPlayerMove(float fTimeElapsed);
+	void Send_Rotate(float pitch, float yaw);
 	void Swap_weapon(int key, PlayerType weapon);
 	void Map_set(map_block_set* p);
 	void CheckCollision(CMonster* mon);
@@ -88,6 +90,10 @@ public:
 	DWORD beforedir;
 	bool beforeRun = false;
 	bool beforeJump = false;
+
+	DWORD MoveDir[MAX_PLAYER];
+	bool isMove[MAX_PLAYER];
+
 private:
 	int client_key = INVALIDID;
 	char userID[50];

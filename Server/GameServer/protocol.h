@@ -272,6 +272,7 @@ struct player_start_pos : public Packet {
 
 struct player_move_packet : public Packet {
 	char state;
+	DirectX::XMFLOAT3 Position;
 	DWORD MoveType;
 	DWORD direction;
 	float dx, dy;

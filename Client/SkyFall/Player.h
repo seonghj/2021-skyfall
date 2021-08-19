@@ -113,6 +113,9 @@ public:
 	int   GetRate() const { return(m_iRate);}
 	int   GetPro() const { return(m_iProficiency); }
 	float GetStamina() const { return(m_fStamina); }
+	XMFLOAT3 GetGravity() const { return m_xmf3Gravity; }
+	float GetMaxVelocityXZ() const { return m_fMaxVelocityXZ; }
+	float GetMaxVelocityY() const { return m_fMaxVelocityY; }
 	PlayerType GetType() const { return(m_type); }
 
 	void SetScale(XMFLOAT3& xmf3Scale) { m_xmf3Scale = xmf3Scale; }

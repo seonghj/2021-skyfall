@@ -164,6 +164,7 @@ void CCamera::Rotate(float fPitch, float fYaw, float fRoll)
 {
 	if ((fPitch != 0.0f))
 	{
+		m_fPitch += fPitch;
 		XMFLOAT3 xmf3Right = m_xmf3Right;
 		XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&xmf3Right), XMConvertToRadians(fPitch));
 		m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, xmmtxRotate);
@@ -173,6 +174,7 @@ void CCamera::Rotate(float fPitch, float fYaw, float fRoll)
 	}
 	if ((fYaw != 0.0f))
 	{
+		m_fYaw += fYaw;
 		XMFLOAT3 xmf3Up = XMFLOAT3(0, 1, 0);
 		XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&xmf3Up), XMConvertToRadians(fYaw));
 		m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, xmmtxRotate);
@@ -182,6 +184,7 @@ void CCamera::Rotate(float fPitch, float fYaw, float fRoll)
 	}
 	if (fRoll != 0.0f)
 	{
+		m_fRoll += fRoll;
 		XMFLOAT3 xmf3Look = m_xmf3Look;
 		XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&xmf3Look), XMConvertToRadians(fRoll));
 		m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, xmmtxRotate);
@@ -374,6 +377,7 @@ void CThirdPersonCamera::Rotate(float x, float y, float z)
 {
 	if (x != 0.0f)
 	{
+		m_fPitch += x;
 		XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Right), XMConvertToRadians(x));
 		m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, xmmtxRotate);
 		m_xmf3Up = Vector3::TransformNormal(m_xmf3Up, xmmtxRotate);
@@ -385,6 +389,7 @@ void CThirdPersonCamera::Rotate(float x, float y, float z)
 	}
 	if (m_pPlayer && (y != 0.0f))
 	{
+		m_fYaw += y;
 		XMFLOAT3 xmf3Up = m_pPlayer->GetUpVector();
 		XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&xmf3Up), XMConvertToRadians(y));
 		m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, xmmtxRotate);

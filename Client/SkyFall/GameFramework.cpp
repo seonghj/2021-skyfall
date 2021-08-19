@@ -446,6 +446,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
                     break;
                 case VK_F8:
                     m_bMouseHold = !m_bMouseHold;
+                    m_bRotateEnable = !m_bRotateEnable;
                     break;
                 case VK_F9:
                     ChangeSwapChainState();
@@ -996,7 +997,8 @@ void CGameFramework::ProcessInput()
         && (GetAsyncKeyState('D') & 0x8000) ? 0 : 1){
         if (PressDirButton == true) {
             PressDirButton = false;
-            printf("잉\n");
+            if (m_pPlayer->GetGround() == true)
+                m_pPacket->Send_stop_packet();
         }
     }
 
@@ -1031,6 +1033,7 @@ void CGameFramework::ProcessInput()
             p.state = 1;
             p.type = CS_player_move;
             p.direction = dwDirection;
+            p.Position = m_pPlayer->GetPosition();
 
             if (pKeysBuffer[VK_SPACE] & 0xF0)
             {
@@ -1048,21 +1051,23 @@ void CGameFramework::ProcessInput()
             }
             
             if (PressDirButton == false && dwDirection != 0) {
-                printf("move\n");
+                //printf("move\n");
                 PressDirButton = true;
                 m_pPacket->beforedir = dwDirection;
-                m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+                if (m_pScene->GetState() == SCENE::INGAME)
+                    m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
             }
 
             if ((m_pPacket->beforedir != dwDirection && PressDirButton == true)
                 || (m_pPacket->beforeRun != m_pPlayer->GetRunning() && PressDirButton == true)
                 || (m_pPacket->beforeJump != m_pPlayer->GetJump() && PressDirButton == true)
                 ) {
-                printf("move gg\n");
+                //printf("move gg\n");
                 m_pPacket->beforedir = dwDirection;
                 m_pPacket->beforeRun = m_pPlayer->GetRunning();
                 m_pPacket->beforeJump = m_pPlayer->GetJump();
-                m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+                if (m_pScene->GetState() == SCENE::INGAME)
+                    m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
             }
         }
         
@@ -1110,13 +1115,23 @@ void CGameFramework::ProcessInput()
                 if (m_bRotateEnable) {
                     m_fPitch += cyDelta;
                     m_fYaw += cxDelta;
-                    m_pCamera->Rotate(cyDelta, cxDelta, 0);
-                    m_pPlayer->Rotate(cyDelta, cxDelta, 0);
+                    m_DegreeX += cyDelta;
+                    m_DegreeY += cxDelta;
+
+                    if (abs(m_DegreeX) >= 5.f || abs(m_DegreeY) >= 5.f) {
+                        //printf("%f %f\n", m_pCamera->GetPitch(), m_pCamera->GetYaw());
+                        m_pPlayer->Rotate(m_DegreeX, m_DegreeY, 0);
+                        m_pCamera->Rotate(m_pPlayer->GetPitch() - m_pCamera->GetPitch()
+                            , m_pPlayer->GetYaw() - m_pCamera->GetYaw(), 0);
+                        m_DegreeX = 0;
+                        m_DegreeY = 0;
+                        m_pPacket->Send_Rotate(m_pPlayer->GetPitch(), m_pPlayer->GetYaw());
+                        //printf("rotate\n");
+                    }
+                    else {
+                        m_pCamera->Rotate(cyDelta, cxDelta, 0);
+                    }
                     //m_pShadowMap->Rotate(cyDelta, cxDelta, 0);
-                }
-                else {
-                    m_DegreeX = cyDelta;
-                    m_DegreeY = cxDelta;
                 }
             }
             if (dwDirection && (false == m_pPlayer->GetAttack())){
@@ -1198,6 +1213,27 @@ void CGameFramework::AnimateObjects()
                 m_pScene->m_ppGameObjects[i]->SetPlace(nPlace + 3);
             }
         }
+
+        for (int i = 0; i < MAX_PLAYER; i++) {
+            if (m_pPacket->isMove[i] == true) {
+                XMFLOAT3 pos = m_pScene->m_mPlayer[i]->GetPosition();
+
+                int nPlace = m_pScene->m_mPlayer[i]->GetPlace();
+                if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+                    m_pScene->m_mPlayer[i]->SetPlace(nPlace - 1);
+                }
+                else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+                    m_pScene->m_mPlayer[i]->SetPlace(nPlace + 1);
+                }
+
+                if (pos.z < m_vMapArrange[nPlace][1] * 2048 && nPlace>2) {
+                    m_pScene->m_mPlayer[i]->SetPlace(nPlace - 3);
+                }
+                else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+                    m_pScene->m_mPlayer[i]->SetPlace(nPlace + 3);
+                }
+            }
+        }
     }
     /*if(m_p1HswordPlayer)
         m_p1HswordPlayer->Animate(fTimeElapsed);
@@ -1241,6 +1277,14 @@ void CGameFramework::FrameAdvance()
 	CheckCollision();
 
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
+
+    m_pPacket->OtherPlayerMove(m_GameTimer.GetTimeElapsed());
+    for (int i = 0; i < MAX_PLAYER; ++i) {
+        if (m_pPacket->isMove[i] == true && i != m_pPacket->InGamekey)
+            m_pScene->m_mPlayer[i]->Update(m_GameTimer.GetTimeElapsed());
+    }
+
+
 	UpdateShadowMap();
     m_pScene->UpdateMap();
 	if(m_pScene->GetState() == SCENE::INGAME)
@@ -1403,15 +1447,15 @@ void CGameFramework::FrameAdvance()
             p.key = m_pPacket->InGamekey;
             p.roomid = m_pPacket->roomID;
             p.Position = m_pPlayer->GetPosition();
-            p.dx = m_DegreeX;
-            p.dy = m_DegreeY;
+            p.dx = m_pPlayer->GetPitch();
+            p.dy = m_pPlayer->GetYaw();
             p.dir = dwDirection;
             p.size = sizeof(player_pos_packet);
             p.state = 1;
             p.type = CS_player_pos;
 
             if (m_pPacket->canmove == TRUE && m_bMouseHold == FALSE) {
-                m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+                //m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
                 //printf("frame: %d dx = %f dy = %f", frametime, p.dx, p.dy);
             }
             m_DegreeX = 0.0f;
@@ -1552,6 +1596,7 @@ void CGameFramework::StartGame()
     MouseHold(false);
     m_GameTimer.Reset();
     m_pScene->m_ppUIObjects[4]->SetAlpha(0.0f);
+    m_bRotateEnable = true;
 }
 
 void CGameFramework::TrunOnBGM(int n)

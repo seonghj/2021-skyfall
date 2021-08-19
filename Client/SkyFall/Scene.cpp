@@ -742,8 +742,13 @@ void CScene::ReleaseUploadBuffers()
 
 void CScene::CheckCollision(CPacket* pPacket)
 {
-	if (m_pMap)
+	if (m_pMap) {
 		m_pMap->CheckCollision(m_pPlayer);
+		for (int i = 0; i < MAX_PLAYER; i++) {
+			if (pPacket->isMove[i] == true)
+				m_pMap->CheckCollision(m_mPlayer[i]);
+		}
+	}
 
 	if (m_iState == INROOM) {
 		for (int i = 0; i < 4; ++i) {

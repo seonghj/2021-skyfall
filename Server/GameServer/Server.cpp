@@ -873,8 +873,8 @@ void Server::player_move(int InGamekey, int roomID, DirectX::XMFLOAT3 pos, float
 {
     int client_key = GameRooms[roomID].pkeys[InGamekey];
 
-    sessions[client_key].m_fPitch.store(fmodf(sessions[client_key].m_fPitch.load() + dx, 360.f));
-    sessions[client_key].m_fYaw.store(fmodf(sessions[client_key].m_fYaw.load() + dy, 360.f));
+    sessions[client_key].m_fPitch.store(dx);
+    sessions[client_key].m_fYaw.store(dy);
     
     if (sessions[client_key].f3Position.load().x == pos.x
         && sessions[client_key].f3Position.load().z == pos.z) {
@@ -991,11 +991,7 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         send_start_packet(key, p->roomid);
 
-        //send_map_packet(client_key, roomID);
-
-        sessions[key].isready = true;
         sessions[key].playing = true;
-
 
         for (auto& k : GameRooms[p->roomid].pkeys) {
             if ((TRUE == sessions[k].connected) && (k != client_key)) {
@@ -1072,16 +1068,9 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_player_move: {
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
+        if (0 > p->key || p->key >= 20) break;
         p->type = SC_player_move;
-        switch (p->MoveType) {
-        case PlayerMove::JUMP:{
-            send_packet_to_players(key, reinterpret_cast<char*>(p), roomID);
-                break;
-            }
-        default: {
-            break;
-        }
-        }
+        send_packet_to_players(key, reinterpret_cast<char*>(p), roomID);
         break;
     }
     case PacketType::CS_player_attack:{
@@ -1099,10 +1088,9 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_player_stop: {
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
-        if (p->key == -1) break;
-        if (roomID == -1) break;
+        if (p->key >= MAX_PLAYER && p->key < 0) break;
         p->type = SC_player_stop;
-        p->Position = sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position;
+        //p->Position = sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position;
         send_packet_to_players(p->key, reinterpret_cast<char*>(p), roomID);
         break;
     }
