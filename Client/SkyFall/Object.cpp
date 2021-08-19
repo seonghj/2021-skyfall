@@ -2248,7 +2248,7 @@ void CSkyBox::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 
 CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, vector<vector<int>> arrange, void* pContext)
 {
-	m_nMaps = 27;
+	m_nMaps = 18;
 	m_ppMaps = new CGameObject * [m_nMaps];
 
 
@@ -2258,47 +2258,38 @@ CMap::CMap(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 
 	for (int i = 0; i < 3; i++)
 	{
-		CLoadedModelInfo* pDesert_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Collision_0807.bin", NULL);
-		CLoadedModelInfo* pDesert_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Passable_0807.bin", NULL);
-		CLoadedModelInfo* pDesert_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Passable_0807.bin", NULL);
+		CLoadedModelInfo* pDesert_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Collision.bin", NULL);
+		CLoadedModelInfo* pDesert_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Desert_Passable.bin", NULL);
 
-		m_ppMaps[0 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
-		m_ppMaps[1 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Steppable);
-		m_ppMaps[2 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
+		m_ppMaps[0 + i * 2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Collision, true);
+		m_ppMaps[1 + i * 2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pDesert_Passable);
 
-		m_ppMaps[0 + i * 3]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
-		m_ppMaps[1 + i * 3]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
-		m_ppMaps[2 + i * 3]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
+		m_ppMaps[0 + i * 2]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
+		m_ppMaps[1 + i * 2]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
 	}
 
 	for (int i = 3; i < 6; i++)
 	{
-		CLoadedModelInfo* pForest_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Delete_Forest_Collision.bin", NULL);
-		CLoadedModelInfo* pForest_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Delete_Forest_Passable.bin", NULL);
-		CLoadedModelInfo* pForest_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Delete_Forest_Passable.bin", NULL);
+		CLoadedModelInfo* pForest_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Forest_Collision.bin", NULL);
+		CLoadedModelInfo* pForest_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Forest_Passable.bin", NULL);
 
-		m_ppMaps[0 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Collision, true);
-		m_ppMaps[1 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Steppable);
-		m_ppMaps[2 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable);
+		m_ppMaps[0 + i * 2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Collision, true);
+		m_ppMaps[1 + i * 2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pForest_Passable);
 
-		m_ppMaps[0 + i * 3]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
-		m_ppMaps[1 + i * 3]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
-		m_ppMaps[2 + i * 3]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
+		m_ppMaps[0 + i * 2]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
+		m_ppMaps[1 + i * 2]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
 	}
 
 	for (int i = 6; i < 9; i++)
 	{
-		CLoadedModelInfo* pSnow_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Collision_0807.bin", NULL);
-		CLoadedModelInfo* pSnow_Steppable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Passable_Probuilder_0807.bin", NULL);
-		CLoadedModelInfo* pSnow_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Passable_Probuilder_0807.bin", NULL);
+		CLoadedModelInfo* pSnow_Collision = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Collision.bin", NULL);
+		CLoadedModelInfo* pSnow_Passable = CGameObject::LoadGeometryAndAnimationFromFile(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, "Model/Map/Snow_Passable.bin", NULL);
 
-		m_ppMaps[0 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Collision, true);
-		m_ppMaps[1 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Steppable);
-		m_ppMaps[2 + i * 3] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable);
+		m_ppMaps[0 + i * 2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Collision, true);
+		m_ppMaps[1 + i * 2] = new CMapObject(pd3dDevice, pd3dCommandList, pd3dGraphicsRootSignature, pSnow_Passable);
 
-		m_ppMaps[0 + i * 3]->SetPosition(2048.0f * arrange[i][0], 60.0f, 2048.0f * arrange[i][1]);
-		m_ppMaps[1 + i * 3]->SetPosition(2048.0f * arrange[i][0], 60.0f, 2048.0f * arrange[i][1]);
-		m_ppMaps[2 + i * 3]->SetPosition(2048.0f * arrange[i][0], 60.0f, 2048.0f * arrange[i][1]);
+		m_ppMaps[0 + i * 2]->SetPosition(2048.0f * arrange[i][0], 60.0f, 2048.0f * arrange[i][1]);
+		m_ppMaps[1 + i * 2]->SetPosition(2048.0f * arrange[i][0], 60.0f, 2048.0f * arrange[i][1]);
 	}
 	gbInstancing = false;
 
@@ -2355,7 +2346,7 @@ void CMap::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCa
 void CMap::CheckCollision(CPlayer* pPlayer)
 {
 	CGameObject* pObject;
-	pObject = m_ppMaps[3 * pPlayer->GetPlace()]->FindFrame("RootNode")->m_pChild->m_pChild;
+	pObject = m_ppMaps[2 * pPlayer->GetPlace()]->FindFrame("RootNode")->m_pChild->m_pChild;
 	while (true) {
 		if (pPlayer->isCollide(pObject)) {
 			XMFLOAT3 d = Vector3::Subtract(pPlayer->GetPosition(), pObject->GetPosition());

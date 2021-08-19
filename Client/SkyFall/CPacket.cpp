@@ -548,7 +548,7 @@ void CPacket::Map_set(map_block_set* p)
 
 void CPacket::CheckCollision(CMonster * mon)
 {
-    CGameObject* pObject = pObject = m_pMap->GetMap(3 * mon->GetPlace())->FindFrame("RootNode")->m_pChild->m_pChild;
+    CGameObject* pObject = pObject = m_pMap->GetMap(2 * mon->GetPlace())->FindFrame("RootNode")->m_pChild->m_pChild;
     while (true) {
 
         if (mon->isCollide(pObject)) {
