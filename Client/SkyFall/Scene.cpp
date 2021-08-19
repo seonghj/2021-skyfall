@@ -872,6 +872,10 @@ void CScene::Reset()
 	for (int i = 0; i < MAX_PLAYER; ++i) {
 		m_mPlayer[i]->Reset();
 	}
+	for (int i = 0; i < 4; ++i)
+	{
+		m_ppWeapons[i]->FindFrame("HpBar")->m_iHp = 0;
+	}
 }
 
 
