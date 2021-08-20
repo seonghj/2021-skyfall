@@ -67,9 +67,6 @@ public:
 	void Restart();
 	void MouseHold(bool b) { m_bMouseHold = b; }
 	void StartGame();
-	void ShowLoginWindow();
-	void ShowLobbyWindow();
-	void ShowRoomWindow();
 	void TrunOnBGM(int n);
 	void TurnOnSE(int n);
 
@@ -85,7 +82,8 @@ public:
 	float						m_DegreeY;
 	float						m_DegreeZ;
 
-	CTerrainPlayer*				m_pPlayer = NULL;
+	CTerrainPlayer*				m_pPlayer = NULL; 
+	CTerrainPlayer*				pBasicPlayer = NULL;
 	CCamera*					m_pCamera = NULL;
 	CScene*						m_pScene = NULL;
 
@@ -175,6 +173,9 @@ private:
 	};
 
 	//imgui
+	void ShowLoginWindow();
+	void ShowLobbyWindow();
+	void ShowRoomWindow();
 	void ShowAccountWindow(bool* p_open);
 	void ShowCreateRoomWindow(bool* p_open);
 	void ShowError(const char* str);

@@ -16,7 +16,7 @@ constexpr int MAX_STAMINA = 100;
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 6144;
 constexpr int MAP_BLOCK_SIZE = 2048;
-constexpr int MAP_BREAK_TIME = 90000;
+constexpr int MAP_BREAK_TIME = 300000;
 
 constexpr int MON_SPAWN_TIME = 10000;
 
@@ -109,6 +109,7 @@ enum PacketType {
 	CS_weapon_swap,
 	CS_player_move,
 	CS_player_pos,
+	CS_player_dead,
 	CS_start_pos,
 	CS_player_attack,
 	CS_player_damage,
@@ -271,6 +272,7 @@ struct player_start_pos : public Packet {
 
 struct player_move_packet : public Packet {
 	char state;
+	DirectX::XMFLOAT3 Position;
 	DWORD MoveType;
 	DWORD direction;
 	float dx, dy;
