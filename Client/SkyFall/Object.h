@@ -358,6 +358,7 @@ public:
 	void SetAllTrackDisable();
 	void SetTrackType(int nAnimationTrack, int nType);
 	bool IsTrackFinish(int nAnimationTrack);
+	bool IsTrackPlaying();
 	float GetTrackPosition(int nAnimationTrack);
 };
 

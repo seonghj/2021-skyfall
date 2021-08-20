@@ -340,15 +340,15 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
         {
             if (m_pPlayer->GetGround() && m_pPlayer->GetRunning())
             {
-                if (m_pPlayer->GetStamina() < 20.0f)
+                if (m_pPlayer->GetStamina() < 10.0f)
                     break;
-                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 20.0f);
+                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 10.0f);
             }
             else if (m_pPlayer->GetGround() && !m_pPlayer->GetRunning())
             {
-                if (m_pPlayer->GetStamina() < 30.0f)
+                if (m_pPlayer->GetStamina() < 15.0f)
                     break;
-                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 30.0f);
+                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 15.0f);
             }
             m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
         }
@@ -507,6 +507,15 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 {
     //if (m_pScene->GetState() != SCENE::INGAME || m_pScene->GetState() != SCENE::INROOM) return(0);
 
+    if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+    {
+        for (int i = 0; i < 13; i++)
+            if (m_pPlayer->m_pSkinnedAnimationController->IsTrackFinish(i))
+            {
+                cout << i << "번째 " << "드디어 리턴 했다." << endl;
+                return(0);
+            }
+    }
     switch (nMessageID)
     {
     case WM_ACTIVATE:
