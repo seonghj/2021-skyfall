@@ -1037,9 +1037,12 @@ void CGameFramework::ProcessInput()
 
             if (pKeysBuffer[VK_SPACE] & 0xF0)
             {
-                m_pPlayer->SetJump(true);
-                p.MoveType = PlayerMove::JUMP;
-                m_pPlayer->SetFriction(0.f);
+                if (m_pPlayer->GetGround() == true) {
+                    m_pPlayer->SetJump(true);
+                    p.MoveType = PlayerMove::JUMP;
+                    m_pPlayer->SetFriction(0.f);
+                    PressDirButton = true;
+                }
             }
             else if (pKeysBuffer[VK_SHIFT] & 0xF0 && m_pPlayer->GetStamina() > 10.0f)
             {
@@ -1062,7 +1065,6 @@ void CGameFramework::ProcessInput()
                 || (m_pPacket->beforeRun != m_pPlayer->GetRunning() && PressDirButton == true)
                 || (m_pPacket->beforeJump != m_pPlayer->GetJump() && PressDirButton == true)
                 ) {
-                //printf("move gg\n");
                 m_pPacket->beforedir = dwDirection;
                 m_pPacket->beforeRun = m_pPlayer->GetRunning();
                 m_pPacket->beforeJump = m_pPlayer->GetJump();
@@ -1119,7 +1121,7 @@ void CGameFramework::ProcessInput()
                     m_DegreeY += cxDelta;
 
                     m_pPlayer->Rotate(cyDelta, cxDelta, 0);
-                    if (abs(m_DegreeX) >= 10.f || abs(m_DegreeY) >= 10.f) {
+                    if (abs(m_DegreeX) >= 6.f || abs(m_DegreeY) >= 6.f) {
                         //printf("%f %f\n", m_pCamera->GetPitch(), m_pCamera->GetYaw());
                         m_DegreeX = 0;
                         m_DegreeY = 0;
@@ -1270,6 +1272,11 @@ void CGameFramework::FrameAdvance()
     ++frametime;
 	ProcessInput();
 	CheckCollision();
+
+    if ((m_pPacket->beforeJump != m_pPlayer->GetJump()) && m_pPlayer->GetGround()) {
+        m_pPacket->beforeJump = m_pPlayer->GetJump();
+        m_pPacket->Send_stop_packet();
+    }
 
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
 
