@@ -320,22 +320,21 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
     switch (nMessageID)
     {
     case WM_LBUTTONDOWN: {
-        if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
+        if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow")) {
             m_pPacket->Send_attack_packet(PlayerAttackType::BOWL);
+        }
         else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
             m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL1);
         ::SetCapture(hWnd);
         ::GetCursorPos(&m_ptOldCursorPos);
-        if (!m_bRotateEnable) {
-            m_ChargeTimer.Reset();
-            m_ChargeTimer.Start();
-            //m_pPlayer->LButtonDown();
-        }
+        m_ChargeTimer.Reset();
+        m_ChargeTimer.Start();
         break;
     }
     case WM_RBUTTONDOWN: {
-        if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+        if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow")) {
             m_pPacket->Send_attack_packet(PlayerAttackType::BOWR);
+        }
         else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
         {
             if (m_pPlayer->GetGround() && m_pPlayer->GetRunning())
@@ -369,6 +368,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
         m_pPlayer->LButtonUp(m_ChargeTimer.GetTotalTime());
         m_DegreeX = 0;
         m_DegreeY = 0;
+
         break;
     }
     case WM_RBUTTONUP: {
@@ -1107,7 +1107,7 @@ void CGameFramework::ProcessInput()
 			p.fTimeElapsed = fTimeElapsed;
 			p.ChargeTimer = m_ChargeTimer.GetTotalTime();
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-			//printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
+			printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
 		}
 
         if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
