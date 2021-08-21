@@ -996,10 +996,9 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_game_start: {
         game_start_packet* p = reinterpret_cast<game_start_packet*>(buf);
-        std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
+
         int client_key = p->key;
         if (sessions[client_key].playing == true) break;
-        bool is_Login = false;
 
         sessions[client_key].roomID = p->roomid;
         sessions[client_key].over.roomID = p->roomid;
@@ -1009,11 +1008,33 @@ void Server::process_packet(int key, char* buf, int roomID)
             inet_ntoa(sessions[key].clientaddr.sin_addr)
             , ntohs(sessions[key].clientaddr.sin_port), key, p->roomid
             , sessions[key].InGamekey.load());
+
         sessions[key].state = Alive;
 
+        send_start_packet(key, p->roomid);
+
+        //send_map_packet(client_key, roomID);
+
+        sessions[key].isready = true;
+        sessions[key].playing = true;
+
+
         for (auto& k : GameRooms[p->roomid].pkeys) {
-            if ((TRUE == sessions[k].playing) && (k != client_key)) {
+            if ((TRUE == sessions[k].connected) && (k != client_key)) {
                 send_add_player_packet(client_key, k, p->roomid);
+            }
+        }
+
+        for (auto& k : GameRooms[p->roomid].pkeys) {
+            if ((TRUE == sessions[k].connected) && (k != client_key)) {
+                send_add_player_packet(k, client_key, p->roomid);
+            }
+        }
+
+        for (int i = 0; i < 15; ++i) {
+            if (m_pBot->monsters[p->roomid][i].state == 1) {
+                //printf("send monster %d\n", i);
+                send_add_monster(i, p->roomid, key);
             }
         }
 
