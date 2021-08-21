@@ -659,8 +659,7 @@ void CGameFramework::ShowRoomWindow()
 		if (ImGui::Button("Exit")) {
 			// 여기서 방을 나감
 			// 임시로 state 변경
-			m_pScene->SetState(SCENE::LOBBY);
-
+            m_pPacket->Send_return_lobby_packet();
 		}
 	}
 	ImGui::End();

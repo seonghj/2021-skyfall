@@ -112,6 +112,7 @@ public:
     char name[20];
     bool CanJoin = false;
     int TotalPlayer = 0;
+    int master = INVALIDID;
     Map* m_pMap;
 };
 
@@ -183,6 +184,8 @@ public:
     void send_map_packet(int to, int roomID);
 
     void game_end(int roomnum, OVER_EX* over_ex);
+
+    void Delete_room(int roomID);
 
     bool in_VisualField(SESSION a, SESSION b, int roomID);
     bool in_VisualField(Monster a, SESSION b, int roomID);

@@ -62,6 +62,7 @@ enum PacketType {
 	SC_create_room,
 	SC_room_list,
 	SC_select_room,
+	SC_return_lobby,
 	SC_player_InGamekey,
 	SC_player_loginOK,
 	SC_player_loginFail,

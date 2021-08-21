@@ -254,7 +254,7 @@ void Bot::CheckBehavior(int roomID)
 					}
 				}
 				else if (range > distance) {
-					mon.Move(subtract, 3.f);
+					mon.Move(subtract, 5.f);
 					m_pServer->send_monster_pos(mon, cross);
 				}
 			}
@@ -276,7 +276,7 @@ void Bot::RunBot(int roomID)
 		e.type = EventType::Mon_move_to_player;
 		e.key = 0;
 		e.roomid = roomID;
-		m_pTimer->push_event(roomID, OE_gEvent, 66, reinterpret_cast<char*>(&e));
+		m_pTimer->push_event(roomID, OE_gEvent, 100, reinterpret_cast<char*>(&e));
 	}
 }
 

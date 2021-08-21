@@ -185,9 +185,7 @@ int Server::CreateRoom(int key, char* name)
         }
     }
 
-    GameRooms_lock.lock();
     GameRooms.emplace(key, GameRoom{});
-    GameRooms_lock.unlock();
     for (int i = 0; i < MAX_PLAYER; ++i)
         GameRooms[key].pkeys[i] = INVALIDID;
 
@@ -487,7 +485,6 @@ void Server::send_start_packet(int to, int roomID)
         m_pBot->monsterRun[roomID] = true;
         m_pBot->RunBot(roomID);
     }
-    ++GameRooms[roomID].TotalPlayer;
 }
 
 // In Game
@@ -818,20 +815,51 @@ void Server::game_end(int roomnum, OVER_EX* over_ex)
     delete over_ex;
 }
 
+void Server::Delete_room(int roomID)
+{
+    GameRooms[roomID].CanJoin = false;
+    GameRooms_lock.lock();
+    delete GameRooms[roomID].m_pMap;
+    ZeroMemory(GameRooms[roomID].name, sizeof(GameRooms[roomID].name));
+    for (auto& key : GameRooms[roomID].pkeys)
+        if (key != -1)
+            send_room_list_packet(key);
+    GameRooms.erase(roomID);
+
+    GameRooms_lock.unlock();
+
+    /*maps_lock.lock();
+    maps.erase(roomnum);
+    maps_lock.unlock();*/
+
+    m_pBot->monsters_lock.lock();
+    m_pBot->monsters.erase(roomID);
+    m_pBot->monsterRun.erase(roomID);
+    m_pBot->monsters_lock.unlock();
+
+    printf("delete room %d\n", roomID);
+}
+
 void Server::player_go_lobby(int key, int roomID)
 {
     //send_game_end_packet(key, roomID);
+    int lkey = GameRooms[roomID].pkeys[key];
 
-    for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (key == GameRooms[roomID].pkeys[i])
-            GameRooms[roomID].pkeys[i] = INVALIDID;
-    }
-    sessions[key].Reset();
-    sessions[key].roomID = INVALIDID;
-    sessions[key].over.roomID = INVALUED_ID;
-    sessions[key].playing = false;
-    sessions[key].InGamekey = INVALIDID;
+    sessions[lkey].Reset();
+    sessions[lkey].roomID = INVALIDID;
+    sessions[lkey].over.roomID = INVALUED_ID;
+    sessions[lkey].playing = false;
+    sessions[lkey].InGamekey = INVALIDID;
 
+    GameRooms[roomID].pkeys[key] = INVALIDID;
+
+    return_lobby_packet p;
+    p.key = key;
+    p.roomid = roomID;
+    p.size = sizeof(p);
+    p.type = SC_return_lobby;
+    send_packet(key, reinterpret_cast<char*>(&p), roomID);
+    
     send_room_list_packet(key);
 }
 
@@ -968,50 +996,124 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_game_start: {
         game_start_packet* p = reinterpret_cast<game_start_packet*>(buf);
-
+        std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
         int client_key = p->key;
         if (sessions[client_key].playing == true) break;
         bool is_Login = false;
 
-        int nkey = SetInGameKey(p->roomid);
-
-        GameRooms[p->roomid].pkeys[nkey] = client_key;
-        sessions[client_key].InGamekey = nkey;
         sessions[client_key].roomID = p->roomid;
         sessions[client_key].over.roomID = p->roomid;
         sessions[client_key].using_weapon = p->weaponType;
-       
-        send_player_InGamekey_packet(client_key, p->roomid);
 
         printf("connected to Game: IP =%s, port=%d key = %d Room = %d / nkey: %d\n",
             inet_ntoa(sessions[key].clientaddr.sin_addr)
-            , ntohs(sessions[key].clientaddr.sin_port), key, p->roomid, nkey);
-
+            , ntohs(sessions[key].clientaddr.sin_port), key, p->roomid
+            , sessions[key].InGamekey.load());
         sessions[key].state = Alive;
 
-        send_start_packet(key, p->roomid);
-
-        sessions[key].playing = true;
-
         for (auto& k : GameRooms[p->roomid].pkeys) {
-            if ((TRUE == sessions[k].connected) && (k != client_key)) {
+            if ((TRUE == sessions[k].playing) && (k != client_key)) {
                 send_add_player_packet(client_key, k, p->roomid);
             }
         }
 
-        for (auto& k : GameRooms[p->roomid].pkeys) {
-            if ((TRUE == sessions[k].connected) && (k != client_key)) {
-                send_add_player_packet(k, client_key, p->roomid);
+        break;
+    }
+    case PacketType::CS_create_room: {
+        room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
+        int key = p->key;
+        std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
+        if (sizeof(p->name) <= 0) break;
+        if (GameRooms.size() >= MAX_ROOM) break;
+        int cnt = 0;
+        // 0 = 정상 1 = 꽉참 2 = 방이름 같음
+        int error = 0;
+        while (cnt < MAX_ROOM) {
+            error = CreateRoom(cnt, p->name);
+            if (error == 0) break;
+            if (error == 2) {
+                room_list_packet r;
+                r.key = key;
+                r.size = sizeof(r);
+                r.type = PacketType::SC_room_list;
+                r.roomid = INVALIDID;
+                r.idx = INVALIDID;
+                send_packet(key, reinterpret_cast<char*>(&r), INVALIDID);
+                break;
             }
+            ++cnt;
         }
+        if (error == 2) break;
 
-        for (int i = 0; i < 15; ++i) {
-            if (m_pBot->monsters[p->roomid][i].state == 1) {
-                //printf("send monster %d\n", i);
-                send_add_monster(i, p->roomid, key);
+        GameRooms[cnt].master = key;
+        ++GameRooms[cnt].TotalPlayer;
+
+        int nkey = SetInGameKey(cnt);
+        GameRooms[cnt].pkeys[nkey] = key;
+        sessions[key].InGamekey = nkey;
+        sessions[key].roomID = cnt;
+        sessions[key].over.roomID = cnt;
+        printf("player key: %d create game room - %d\n", key, cnt);
+        room_select_packet s;
+        s.key = nkey;
+        s.room = cnt;
+        s.roomid = cnt;
+        s.size = sizeof(s);
+        s.type = SC_select_room;
+        send_packet(p->key, reinterpret_cast<char*>(&s), -1);
+        break;
+    }
+    case PacketType::CS_room_select: {
+        room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
+        GameRooms_lock.lock();
+        if (GameRooms.find(p->room) == GameRooms.end()) {
+            GameRooms_lock.unlock();
+            break;
+        }
+        GameRooms_lock.unlock();
+
+        if (GameRooms[p->room].CanJoin == false) break;
+        if (GameRooms[key].TotalPlayer >= MAX_PLAYER) break;
+
+        p->type = SC_select_room;
+
+        std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
+        int nkey = SetInGameKey(p->room);
+        GameRooms[p->room].pkeys[nkey] = p->key;
+        p->key = nkey;
+        sessions[p->key].InGamekey = nkey;
+        sessions[p->key].roomID = p->room;
+        sessions[p->key].over.roomID = p->room;
+        ++GameRooms[p->room].TotalPlayer;
+
+        send_packet(p->key, reinterpret_cast<char*>(p), -1);
+        break;
+    }
+    case PacketType::CS_return_lobby: {
+        return_lobby_packet* p = reinterpret_cast<return_lobby_packet*>(buf);
+        //std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
+        printf("master %d %d %d\n", GameRooms[p->roomid].master, GameRooms[p->roomid].pkeys[p->key], p->key);
+        if (GameRooms[p->roomid].pkeys[p->key] == GameRooms[p->roomid].master) {
+            GameRooms[p->roomid].CanJoin = false;
+            for (int k : GameRooms[p->roomid].pkeys) {
+                if (k != INVALIDID) {
+                    player_go_lobby(k, p->roomid);
+                }
             }
+            Delete_room(p->roomid);
         }
-
+        else {
+            GameRooms[p->roomid].pkeys[p->key] = INVALIDID;
+            --GameRooms[p->roomid].TotalPlayer;
+            if (GameRooms[p->roomid].TotalPlayer == 0)
+                Delete_room(p->roomid);
+            player_go_lobby(p->key, p->roomid);
+        }
+        break;
+    }
+    case PacketType::CS_refresh_lobby: {
+        refresh_lobby_packet* p = reinterpret_cast<refresh_lobby_packet*>(buf);
+        send_room_list_packet(p->key);
         break;
     }
     case PacketType::CS_player_info:{
@@ -1060,6 +1162,7 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_weapon_swap :{
          Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
+         printf("swap\n");
          p->type = SC_weapon_swap;
          sessions[GameRooms[p->roomid].pkeys[p->key]].using_weapon = p->weapon;
          
@@ -1192,66 +1295,6 @@ void Server::process_packet(int key, char* buf, int roomID)
             game_end(p->roomid, NULL);*/
         break;
     }
-    case PacketType::CS_create_room: {
-        room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
-        int key = p->key;
-        if (sizeof(p->name) <= 0) break;
-        if (GameRooms.size() >= MAX_ROOM) break;
-        int cnt = 0;
-        // 0 = 정상 1 = 꽉참 2 = 방이름 같음
-        int error = 0;
-        while (cnt < MAX_ROOM) {
-            error = CreateRoom(cnt, p->name);
-            if (error == 0) break;
-            if (error == 2) {
-                room_list_packet r;
-                r.key = key;
-                r.size = sizeof(r);
-                r.type = PacketType::SC_room_list;
-                r.roomid = INVALIDID;
-                r.idx = INVALIDID;
-                send_packet(key, reinterpret_cast<char*>(&r), INVALIDID);
-                break;
-            }
-            ++cnt;
-        }
-        if (error == 2) break;
-        
-        printf("player key: %d create game room - %d\n", p->key, cnt);
-        //send_room_list_packet(p->key);
-        room_select_packet s;
-        s.key = key;
-        s.room = cnt;
-        s.roomid = cnt;
-        s.size = sizeof(s);
-        s.type = SC_select_room;
-        send_packet(p->key, reinterpret_cast<char*>(&s), -1);
-        break;
-    }
-    case PacketType::CS_room_select: {
-        room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
-        GameRooms_lock.lock();
-        if (GameRooms.find(p->room) == GameRooms.end()) {
-            GameRooms_lock.unlock();
-            break;
-        }
-        GameRooms_lock.unlock();
-        if (GameRooms[p->room].CanJoin == false) break;
-        if (GameRooms[key].TotalPlayer >= MAX_PLAYER) break;
-        p->type = SC_select_room;
-        send_packet(p->key, reinterpret_cast<char*>(p), -1);
-        break;
-    }
-    case PacketType::CS_return_lobby: {
-        return_lobby_packet* p = reinterpret_cast<return_lobby_packet*>(buf);
-        player_go_lobby(p->key, p->roomid);
-        break;
-    }
-    case PacketType::CS_refresh_lobby: {
-        refresh_lobby_packet* p = reinterpret_cast<refresh_lobby_packet*>(buf);
-        send_room_list_packet(p->key);
-        break;
-    }
     }
 }
 
@@ -1330,7 +1373,7 @@ void Server::WorkerFunc()
                 ep.roomid = key;
                 ep.size = sizeof(ep);
                 ep.type = EventType::game_end;
-                m_pTimer->push_event(ep.roomid, OE_gEvent, 1000 * (MAP_BREAK_TIME*9), reinterpret_cast<char*>(&ep));
+                m_pTimer->push_event(ep.roomid, OE_gEvent, (MAP_BREAK_TIME*9), reinterpret_cast<char*>(&ep));
                 //delete over_ex;
                 break;
             }
@@ -1401,13 +1444,13 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::game_end: {
-                /*std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
+                //std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
                 if (GameRooms[roomID].m_pMap == NULL) break;
                 if (GameRooms[roomID].m_pMap->game_start == false) break;
                 game_end_event* e = reinterpret_cast<game_end_event*>(over_ex->messageBuffer);
                 int roomID = e->roomid;
                 printf("room: %d gameover\n", roomID);
-                game_end(roomID, over_ex);*/
+                game_end(roomID, over_ex);
                 delete over_ex;
                 break;
             }
