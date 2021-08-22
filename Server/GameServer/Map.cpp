@@ -49,12 +49,12 @@ void Map::init_Map(Server* s, Timer* t)
 	//cloud_move();
 
 	// 테스트용
-	/*game_end_event e;
+	game_end_event e;
 	e.type = EventType::game_end;
 	e.size = sizeof(e);
 	e.key = roomnum;
 	e.roomid = roomnum;
-	m_pTimer->push_event(roomnum, OE_gEvent, 50000, reinterpret_cast<char*>(&e));*/
+	m_pTimer->push_event(roomnum, OE_gEvent, 30000, reinterpret_cast<char*>(&e));
 }
 
 void Map::Set_map()
@@ -251,6 +251,6 @@ void Map::Map_collapse()
 	//print_Map();
 
 	if (num == 9) {
-		m_pServer->game_end(roomnum, NULL);
+		m_pServer->game_end(roomnum);
 	}
 }

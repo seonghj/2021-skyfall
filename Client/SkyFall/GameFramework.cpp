@@ -1025,7 +1025,8 @@ void CGameFramework::ProcessInput()
             if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_DOWN;*/
 
             player_move_packet p;
-            p.key = m_pPacket->InGamekey;
+            p.key = m_pPacket->Get_clientkey();
+            p.ingamekey = m_pPacket->InGamekey;
             p.dx = m_DegreeX;
             p.dy = m_DegreeY;
             p.size = sizeof(p);
@@ -1099,7 +1100,8 @@ void CGameFramework::ProcessInput()
 			!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow") && m_ChargeTimer.GetTotalTime() > 1.f)
 		{
 			player_shot_packet p;
-            p.key = m_pPacket->InGamekey;
+            p.key = m_pPacket->Get_clientkey();
+            p.ingamekey = m_pPacket->InGamekey;
 			p.size = sizeof(p);
 			p.type = CS_allow_shot;
 			p.Look = m_pCamera->GetLookVector();
@@ -1431,7 +1433,8 @@ void CGameFramework::FrameAdvance()
     if (m_pPlayer->GetPosition().y <= -10 && m_pPacket->isfalling == false) {
         m_pPacket->isfalling = true;
         player_dead_packet p;
-        p.key = m_pPacket->InGamekey;
+        p.key = m_pPacket->Get_clientkey();
+        p.ingamekey = m_pPacket->InGamekey;
         p.type = CS_player_dead;
         p.roomid = m_pPacket->roomID;
         p.size = sizeof(p);
@@ -1445,7 +1448,8 @@ void CGameFramework::FrameAdvance()
             m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
         if (false == m_pPlayer->GetAttack()) {
             player_pos_packet p;
-            p.key = m_pPacket->InGamekey;
+            p.key = m_pPacket->Get_clientkey();
+            p.ingamekey = m_pPacket->InGamekey;
             p.roomid = m_pPacket->roomID;
             p.Position = m_pPlayer->GetPosition();
             p.dx = m_pPlayer->GetPitch();

@@ -228,7 +228,7 @@ void Bot::CheckBehavior(int roomID)
 						m_pServer->sessions[player].TakeDamage(mon.att.load());
 						//player.s_lock.unlock();
 						m_pServer->send_monster_attack(mon, cross
-							, m_pServer->sessions[player].InGamekey.load());
+							, m_pServer->sessions[player].InGamekey);
 						mon.CanAttack = false;
 
 						mon_attack_cooltime_event e;
