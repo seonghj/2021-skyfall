@@ -1015,12 +1015,14 @@ void Server::process_packet(int key, char* buf, int roomID)
         for (auto& k : GameRooms[p->roomid].pkeys) {
             if ((TRUE == sessions[k].connected) && (k != client_key)) {
                 send_add_player_packet(client_key, k, p->roomid);
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
         }
 
         for (auto& k : GameRooms[p->roomid].pkeys) {
             if ((TRUE == sessions[k].connected) && (k != client_key)) {
                 send_add_player_packet(k, client_key, p->roomid);
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
         }
 
