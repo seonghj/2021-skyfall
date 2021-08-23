@@ -49,10 +49,10 @@ public:
     bool                     isready = false;
     bool                     playing = false;
     int                      prev_size = 0;
-    std::atomic<int>         key = -1;
+    int                      key = -1;
     std::atomic<int>         roomID = -1;
     char                     id[50];
-    std::atomic<int>         InGamekey = -1;
+    int                      InGamekey = -1;
 
     // 0 Á×À½ / 1 »ýÁ¸
     std::atomic<bool>       state = 0;
@@ -112,6 +112,7 @@ public:
     char name[20];
     bool CanJoin = false;
     int TotalPlayer = 0;
+    int master = INVALIDID;
     Map* m_pMap;
 };
 
@@ -182,7 +183,9 @@ public:
     void send_player_record(int key, int roomID, const SESSION& s, int time, int rank);
     void send_map_packet(int to, int roomID);
 
-    void game_end(int roomnum, OVER_EX* over_ex);
+    void game_end(int roomnum);
+
+    void Delete_room(int roomID);
 
     bool in_VisualField(SESSION a, SESSION b, int roomID);
     bool in_VisualField(Monster a, SESSION b, int roomID);

@@ -62,6 +62,7 @@ enum PacketType {
 	SC_create_room,
 	SC_room_list,
 	SC_select_room,
+	SC_return_lobby,
 	SC_player_InGamekey,
 	SC_player_loginOK,
 	SC_player_loginFail,
@@ -205,6 +206,7 @@ struct room_create_packet :public Packet {
 
 struct room_select_packet :public Packet {
 	short room;
+	short ingamekey;
 };
 
 struct room_list_packet :public Packet {
@@ -258,6 +260,7 @@ struct player_info_packet : public Packet {
 };
 
 struct player_pos_packet : public Packet {
+	short ingamekey;
 	char state;
 	DirectX::XMFLOAT3 Position;
 	float dx, dy;
@@ -271,6 +274,7 @@ struct player_start_pos : public Packet {
 };
 
 struct player_move_packet : public Packet {
+	short ingamekey;
 	char state;
 	DirectX::XMFLOAT3 Position;
 	DWORD MoveType;
@@ -279,45 +283,54 @@ struct player_move_packet : public Packet {
 };
 
 struct player_rotate_packet : public Packet {
+	short ingamekey;
 	float dx, dy;
 };
 
 struct player_status_packet : public Packet {
+	short ingamekey;
 	char state;
 };
 
 struct player_stat_packet : public Packet {
+	short ingamekey;
 	float hp;
 	float lv;
 	float speed;
 };
 
 struct Weapon_swap_packet : public Packet {
+	short ingamekey;
 	PlayerType weapon;
 };
 
 struct player_equipment_packet : public Packet {
+	short ingamekey;
 	char armor;
 	char helmet;
 	char shoes;
 };
 
 struct player_attack_packet : public Packet {
+	short ingamekey;
 	char attack_type;
 };
 
 struct player_shot_packet : public Packet {
+	short ingamekey;
 	DirectX::XMFLOAT3 Look;
 	float fTimeElapsed;
 	float ChargeTimer;
 };
 
 struct player_arrow_packet : public Packet {
+	short ingamekey;
 	char attack_type;
 	float fSpeed;
 };
 
 struct player_damage_packet : public Packet {
+	short ingamekey;
 	unsigned short damage;
 	short target;
 	short nAttack;
@@ -325,11 +338,12 @@ struct player_damage_packet : public Packet {
 };
 
 struct player_stop_packet : public Packet {
+	short ingamekey;
 	DirectX::XMFLOAT3 Position;
 };
 
 struct player_dead_packet : public Packet {
-
+	short ingamekey;
 };
 
 struct map_block_set : public Packet {
@@ -373,6 +387,7 @@ struct mon_attack_packet : public Packet {
 };
 
 struct mon_damaged_packet : public Packet {
+	short ingamekey;
 	unsigned short damage;
 	short target;
 	short nAttack;
