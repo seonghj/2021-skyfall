@@ -339,15 +339,15 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
         {
             if (m_pPlayer->GetGround() && m_pPlayer->GetRunning())
             {
-                if (m_pPlayer->GetStamina() < 10.0f)
+                if (m_pPlayer->GetStamina() < 5.0f)
                     break;
-                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 10.0f);
+                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 5.0f);
             }
             else if (m_pPlayer->GetGround() && !m_pPlayer->GetRunning())
             {
-                if (m_pPlayer->GetStamina() < 15.0f)
+                if (m_pPlayer->GetStamina() < 10.0f)
                     break;
-                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 15.0f);
+                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 10.0f);
             }
             m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
         }
