@@ -1283,8 +1283,10 @@ void CGameFramework::FrameAdvance()
 
     m_pPacket->OtherPlayerMove(m_GameTimer.GetTimeElapsed());
     for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (m_pPacket->isMove[i] == true && i != m_pPacket->InGamekey)
+        if (m_pPacket->isMove[i] == true && i != m_pPacket->InGamekey) {
+            m_pScene->m_mPlayer[i]->SetStamina(MAX_STAMINA);
             m_pScene->m_mPlayer[i]->Update(m_GameTimer.GetTimeElapsed());
+        }
     }
 
 

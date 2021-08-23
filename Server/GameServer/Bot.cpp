@@ -73,13 +73,13 @@ void Bot::Init(int roomID)
 
 		// wolf
 		monsters[roomID][1].type = MonsterType::Wolf;
-		monsters[roomID][1].SpawnPos = XMFLOAT3{ 3116, 124, 2216 };
+		monsters[roomID][1].SpawnPos = XMFLOAT3{ 1116, 124, 2216 };
 		monsters[roomID][1].f3Position = monsters[roomID][1].SpawnPos.load();
 		monsters[roomID][1].Rotate(-90.0f, -40.0f, 0.0f);
 		monsters[roomID][1].state = 1;
 
 		monsters[roomID][2].type = MonsterType::Wolf;
-		monsters[roomID][2].SpawnPos = XMFLOAT3{ 2461, 124, 2398 };
+		monsters[roomID][2].SpawnPos = XMFLOAT3{ 1161, 124, 3300 };
 		monsters[roomID][2].f3Position = monsters[roomID][2].SpawnPos.load();
 		monsters[roomID][2].Rotate(-90.0f, -40.0f, 0.0f);
 		monsters[roomID][2].state = 1;
@@ -97,7 +97,7 @@ void Bot::Init(int roomID)
 		monsters[roomID][4].state = 1;
 
 		monsters[roomID][5].type = MonsterType::Wolf;
-		monsters[roomID][5].SpawnPos = XMFLOAT3{ 3116, 124, 3828 };
+		monsters[roomID][5].SpawnPos = XMFLOAT3{ 2960, 124, 3837 };
 		monsters[roomID][5].f3Position = monsters[roomID][5].SpawnPos.load();
 		monsters[roomID][5].Rotate(-90.0f, -40.0f, 0.0f);
 		monsters[roomID][5].state = 1;
@@ -109,20 +109,20 @@ void Bot::Init(int roomID)
 		monsters[roomID][6].state = 1;
 
 		monsters[roomID][7].type = MonsterType::Wolf;
-		monsters[roomID][7].SpawnPos = XMFLOAT3{ 3868, 124, 3763 };
+		monsters[roomID][7].SpawnPos = XMFLOAT3{ 5368, 124, 3763 };
 		monsters[roomID][7].f3Position = monsters[roomID][7].SpawnPos.load();
 		monsters[roomID][7].Rotate(-90.0f, -40.0f, 0.0f);
 		monsters[roomID][7].state = 1;
 
 		//Metalon
 		monsters[roomID][8].type = MonsterType::Metalon;
-		monsters[roomID][8].SpawnPos = XMFLOAT3{ 2307, 124, 160 };
+		monsters[roomID][8].SpawnPos = XMFLOAT3{ 1202, 124, 615 };
 		monsters[roomID][8].f3Position = monsters[roomID][8].SpawnPos.load();
 		monsters[roomID][8].Rotate(-90.0f, 0.0f, 0.0f);
 		monsters[roomID][8].state = 1;
 
 		monsters[roomID][9].type = MonsterType::Metalon;
-		monsters[roomID][9].SpawnPos = XMFLOAT3{ 3798, 124, 835 };
+		monsters[roomID][9].SpawnPos = XMFLOAT3{ 2798, 124, 835 };
 		monsters[roomID][9].f3Position = monsters[roomID][9].SpawnPos.load();
 		monsters[roomID][9].Rotate(-90.0f, 0.0f, 0.0f);
 		monsters[roomID][9].state = 1;
@@ -135,27 +135,27 @@ void Bot::Init(int roomID)
 
 
 		monsters[roomID][11].type = MonsterType::Metalon;
-		monsters[roomID][11].SpawnPos = XMFLOAT3{ 2508, 240,  490};
+		monsters[roomID][11].SpawnPos = XMFLOAT3{ 3243, 240,  490 };
 		monsters[roomID][11].f3Position = monsters[roomID][11].SpawnPos.load();
 		monsters[roomID][11].Rotate(-90.0f, 0.0f, 0.0f);
 		monsters[roomID][11].state = 1;
 
 
 		monsters[roomID][12].type = MonsterType::Metalon;
-		monsters[roomID][12].SpawnPos = XMFLOAT3{ 2708, 124, 1925 };
+		monsters[roomID][12].SpawnPos = XMFLOAT3{ 3708, 124, 1925 };
 		monsters[roomID][12].f3Position = monsters[roomID][12].SpawnPos.load();
 		monsters[roomID][12].Rotate(-90.0f, 0.0f, 0.0f);
 		monsters[roomID][12].state = 1;
 
 
 		monsters[roomID][13].type = MonsterType::Metalon;
-		monsters[roomID][13].SpawnPos = XMFLOAT3{ 2288, 124, 1925 };
+		monsters[roomID][13].SpawnPos = XMFLOAT3{ 4288, 124, 1245 };
 		monsters[roomID][13].f3Position = monsters[roomID][13].SpawnPos.load();
 		monsters[roomID][13].Rotate(-90.0f, 0.0f, 0.0f);
 		monsters[roomID][13].state = 1;
 
 		monsters[roomID][14].type = MonsterType::Metalon;
-		monsters[roomID][14].SpawnPos = XMFLOAT3{ 3058, 124, 75 };
+		monsters[roomID][14].SpawnPos = XMFLOAT3{ 5375, 124, 875 };
 		monsters[roomID][14].f3Position = monsters[roomID][14].SpawnPos.load();
 		monsters[roomID][14].Rotate(-90.0f, 0.0f, 0.0f);
 		monsters[roomID][14].state = 1;
@@ -254,14 +254,14 @@ void Bot::CheckBehavior(int roomID)
 					}
 				}
 				else if (range > distance) {
-					mon.Move(subtract, 5.f);
+					mon.Move(subtract, 2.f);
 					m_pServer->send_monster_pos(mon, cross);
 				}
 			}
 			else {
 				if (mon.isTrace == true) {
 					mon.isTrace = false;
-					m_pServer->send_monster_stop(mon.key, mon.roomID.load());
+					//m_pServer->send_monster_stop(mon.key, mon.roomID.load());
 				}
 			}
 		}
@@ -276,7 +276,7 @@ void Bot::RunBot(int roomID)
 		e.type = EventType::Mon_move_to_player;
 		e.key = 0;
 		e.roomid = roomID;
-		m_pTimer->push_event(roomID, OE_gEvent, 100, reinterpret_cast<char*>(&e));
+		m_pTimer->push_event(roomID, OE_gEvent, 50, reinterpret_cast<char*>(&e));
 	}
 }
 
