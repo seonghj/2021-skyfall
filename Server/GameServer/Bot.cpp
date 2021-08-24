@@ -58,7 +58,7 @@ DirectX::XMFLOAT3 Monster::GetUp()
 
 void Bot::Init(int roomID)
 {
-	for (int i = 0; i < 15; i++) {
+	for (int i = 0; i < MAX_MONSTER; i++) {
 		monsters[roomID][i].init();
 		monsters[roomID][i].key = i;
 		monsters[roomID][i].roomID = roomID;
@@ -276,7 +276,7 @@ void Bot::CheckBehavior(int roomID)
 			else {
 				if (mon.isTrace == true) {
 					mon.isTrace = false;
-					//m_pServer->send_monster_stop(mon.key, mon.roomID.load());
+					m_pServer->send_monster_stop(mon.key, mon.roomID.load());
 				}
 			}
 		}
