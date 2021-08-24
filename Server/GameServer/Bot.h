@@ -44,7 +44,7 @@ public:
     std::atomic<float>      speed = 20;
 
     bool                    CanAttack = TRUE;
-    bool                    isTrace = false;
+    short                   TraceTarget = INVALIDID;
 
     void init();
     void SetPosition(float x, float y, float z);
