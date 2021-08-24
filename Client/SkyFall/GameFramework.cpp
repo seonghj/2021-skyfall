@@ -481,6 +481,21 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
             case 'r':
                 if (m_pScene->GetState() == SCENE::ENDGAME)
                     Restart();
+                break;
+            case 'T':
+            case 't':
+                for (int i = 0; i < BGM_NUM; i++)
+                    m_bgm[i]->turnoff();
+                for (int i = 0; i < SE_NUM; i++)
+                    m_se[i]->turnoff();
+                break;
+            case 'Y':
+            case'y':
+                for (int i = 0; i < BGM_NUM; i++)
+                    m_bgm[i]->turnon();
+                for (int i = 0; i < SE_NUM; i++)
+                    m_se[i]->turnon();
+                break;
             }
             break;
         default:
