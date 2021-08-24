@@ -590,7 +590,6 @@ void CGameFramework::ShowLoginWindow()
 		}
 		ImGui::SameLine(0, 10);
 		if (ImGui::Button("Create Account")) {
-			// 여기서 회원가입 창 띄워서 거기서 아이디 비번 넣고 보내고 할거임
 			m_bShowAccountWindow = true;
 		}
 	}

@@ -152,7 +152,7 @@ int Server::SetroomID()
     //        //maps[cnt].init_Map(this, m_pTimer);
     //        maps_lock.unlock();
 
-    //        m_pBot->monsters.emplace(cnt, std::array<Monster, 15>{});
+    //        m_pBot->monsters.emplace(cnt, std::array<Monster, MAX_MONSTER>{});
     //        m_pBot->monsterRun.emplace(cnt, false);
     //        m_pBot->Init(cnt);
 
@@ -198,7 +198,7 @@ int Server::CreateRoom(int key, char* name)
     //maps[key].init_Map(this, m_pTimer);
     maps_lock.unlock();
 
-    m_pBot->monsters.emplace(key, std::array<Monster, 15>{});
+    m_pBot->monsters.emplace(key, std::array<Monster, MAX_MONSTER>{});
     //m_pBot->monsterRun = TRUE;
     m_pBot->Init(key);
     //m_pBot->RunBot(key);
@@ -608,7 +608,7 @@ void Server::send_cloud_move_packet(float x, float z, int map_num)
 
 void Server::send_add_monster(int key, int roomID, int to)
 {
-    if (key >= 15) return;
+    if (key >= MAX_MONSTER) return;
     mon_add_packet p;
     p.size = sizeof(mon_add_packet);
     p.type = PacketType::SC_monster_add;
@@ -636,7 +636,7 @@ void Server::send_remove_monster(int key, int roomID, int to)
 
 void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction)
 {
-    if (mon.key >= 15) return;
+    if (mon.key >= MAX_MONSTER) return;
     int roomID = mon.roomID;
 
     mon_pos_packet p;
@@ -665,7 +665,7 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction)
 
 void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int target)
 {
-    if (mon.key >= 15) return;
+    if (mon.key >= MAX_MONSTER) return;
     int roomID = mon.roomID.load();
 
     mon_attack_packet p;
@@ -697,7 +697,7 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
 
 void Server::send_monster_stop(int key, int roomID)
 {
-    if (key >= 15) return;
+    if (key >= MAX_MONSTER) return;
     mon_stop_packet p;
     p.size = sizeof(p);
     p.type = PacketType::SC_monster_stop;
@@ -802,6 +802,7 @@ void Server::game_end(int roomnum)
     delete GameRooms[roomnum].m_pMap;
     ZeroMemory(GameRooms[roomnum].name, sizeof(GameRooms[roomnum].name));
     GameRooms_lock.lock();
+    GameRooms[roomnum].master = INVALIDID;
     GameRooms.erase(roomnum);
     GameRooms_lock.unlock();
 
@@ -1026,7 +1027,7 @@ void Server::process_packet(int key, char* buf, int roomID)
             }
         }
 
-        for (int i = 0; i < 15; ++i) {
+        for (int i = 0; i < MAX_MONSTER; ++i) {
             if (m_pBot->monsters[p->roomid][i].state == 1) {
                 //printf("send monster %d\n", i);
                 send_add_monster(i, p->roomid, key);
@@ -1123,7 +1124,7 @@ void Server::process_packet(int key, char* buf, int roomID)
                 Delete_room(p->roomid);
             player_go_lobby(p->key, p->roomid);
         }*/
-        if (GameRooms.find(p->roomid) != GameRooms.end()) {
+        if (GameRooms[p->roomid].master != INVALIDID) {
             GameRooms[p->roomid].pkeys[p->key] = INVALIDID;
             --GameRooms[p->roomid].TotalPlayer;
             if (GameRooms[p->roomid].TotalPlayer == 0)

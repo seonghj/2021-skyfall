@@ -12,6 +12,7 @@ constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
 constexpr int AI_ID = 5000;
 constexpr int MAX_STAMINA = 100;
+constexpr int MAX_MONSTER = 15;
 
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 6144;
