@@ -27,9 +27,9 @@ constexpr int INVENTORY_MAX = 20;
 
 constexpr int MAX_ROOM = 20;
 
-constexpr float Atack_Distance_Dragon = 72.6425f;
-constexpr float Atack_Distance_Wolf = 48.9831f;
-constexpr float Atack_Distance_Metalon = 96.9755f;
+constexpr float Atack_Distance_Dragon = 80.f;
+constexpr float Atack_Distance_Wolf = 55.f;
+constexpr float Atack_Distance_Metalon = 97.f;
 
 
 #define SERVERIP   "127.0.0.1"
