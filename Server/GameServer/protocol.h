@@ -156,11 +156,11 @@ enum PlayerAttackType {
 };
 
 enum PlayerType {
+	PT_BASIC,
 	PT_SWORD1H,
 	PT_BOW,
 	PT_SWORD2H,
-	PT_SPEAR2H,
-	PT_BASIC,
+	PT_SPEAR2H
 };
 
 enum MonsterType {

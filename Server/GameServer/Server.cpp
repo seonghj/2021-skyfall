@@ -1260,7 +1260,6 @@ void Server::process_packet(int key, char* buf, int roomID)
         mon_attack_packet* p = reinterpret_cast<mon_attack_packet*>(buf);
         sessions[GameRooms[p->roomid].pkeys[p->target]].hp
             = p->PlayerLeftHp;
-        printf("key %d left %f\n", p->target, p->PlayerLeftHp);
         break;
     }
     case PacketType::CS_monster_damaged: {

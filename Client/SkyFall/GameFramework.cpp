@@ -660,7 +660,7 @@ void CGameFramework::ShowRoomWindow()
 			// 모든 플레이어가 무기를 골랐다면, 시작 버튼을 누르면 게임 시작
 			// 임시로 state 변경해놓음
 			// m_pScene->SetState(SCENE::INGAME);
-            if (m_pPacket->Get_StartWeapon() < PlayerType::PT_BASIC)
+            if (m_pPacket->Get_StartWeapon() != PlayerType::PT_BASIC)
 			    m_pPacket->Send_start_packet(m_pPacket->Get_StartWeapon());
 		}
 		ImGui::SameLine(0, 50);
@@ -1296,7 +1296,6 @@ void CGameFramework::FrameAdvance()
             m_pScene->m_mPlayer[i]->Update(m_GameTimer.GetTimeElapsed());
         }
     }
-
 
 	UpdateShadowMap();
     m_pScene->UpdateMap();
