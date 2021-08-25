@@ -676,7 +676,16 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
     p.direction = direction;
     p.degree = mon.m_fRoll.load();
     p.target = target;
-    p.PlayerLeftHp = sessions[GameRooms[roomID].pkeys[target]].hp.load();
+    p.PlayerLeftHp = sessions[GameRooms[roomID].pkeys[target]].hp.load()
+        - CalcDamageToMon(sessions[GameRooms[roomID].pkeys[target]].att,
+            sessions[GameRooms[roomID].pkeys[target]].def);
+
+    if (mon.type == MonsterType::Dragon)
+        p.attack_dis = Atack_Distance_Dragon;
+    else if (mon.type == MonsterType::Wolf)
+        p.attack_dis = Atack_Distance_Wolf;
+    else if (mon.type == MonsterType::Metalon)
+        p.attack_dis = Atack_Distance_Metalon;
 
     for (auto& k : GameRooms[roomID].pkeys) {
         if (sessions[k].connected == FALSE) continue;
@@ -1249,8 +1258,9 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_monster_attack: {
         mon_attack_packet* p = reinterpret_cast<mon_attack_packet*>(buf);
-
-        //std::cout << "target: " << p->target << " key: " << p->key << std::endl;
+        sessions[GameRooms[p->roomid].pkeys[p->target]].hp
+            = p->PlayerLeftHp;
+        printf("key %d left %f\n", p->target, p->PlayerLeftHp);
         break;
     }
     case PacketType::CS_monster_damaged: {

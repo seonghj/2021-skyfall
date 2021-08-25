@@ -12,6 +12,7 @@ constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
 constexpr int AI_ID = 5000;
 constexpr int MAX_STAMINA = 100;
+constexpr int MAX_MONSTER = 15;
 
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 6144;
@@ -25,6 +26,10 @@ constexpr float VIEWING_DISTANCE = 1000.f;
 constexpr int INVENTORY_MAX = 20;
 
 constexpr int MAX_ROOM = 20;
+
+constexpr float Atack_Distance_Dragon = 72.6425f;
+constexpr float Atack_Distance_Wolf = 48.9831f;
+constexpr float Atack_Distance_Metalon = 96.9755f;
 
 
 #define SERVERIP   "127.0.0.1"
@@ -384,6 +389,7 @@ struct mon_attack_packet : public Packet {
 	DWORD MoveType;
 	int target;
 	float PlayerLeftHp;
+	float attack_dis;
 };
 
 struct mon_damaged_packet : public Packet {

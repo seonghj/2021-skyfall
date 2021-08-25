@@ -240,10 +240,6 @@ void Bot::CheckBehavior(int roomID)
 					// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
 					if (range <= distance && rotation <= 5) {
 						if (mon.CanAttack == TRUE) {
-							//printf("%d -> %d\n", mon.key, player.key.load());
-							//player.s_lock.lock();
-							m_pServer->sessions[player].TakeDamage(mon.att.load());
-							//player.s_lock.unlock();
 							m_pServer->send_monster_attack(mon, cross
 								, m_pServer->sessions[player].InGamekey);
 							mon.CanAttack = false;

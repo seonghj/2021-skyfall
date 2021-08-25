@@ -191,6 +191,8 @@ public:
     bool in_VisualField(Monster a, SESSION b, int roomID);
     unsigned short calc_attack(int key, char attacktype);
 
+    float CalcDamageToMon(int att, int def) { return (att * (100 - def) / 100); }
+
     void player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy);
 
     //std::unordered_map <int, SESSION> Lobby_sessions;

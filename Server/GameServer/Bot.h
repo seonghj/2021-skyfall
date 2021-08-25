@@ -8,10 +8,6 @@ class SESSION;
 class Server;
 class Timer;
 
-constexpr float Atack_Distance_Dragon = 72.6425f;
-constexpr float Atack_Distance_Wolf = 48.9831f;
-constexpr float Atack_Distance_Metalon = 96.9755f;
-
 class Monster{
 public:
 
