@@ -481,6 +481,21 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
             case 'r':
                 if (m_pScene->GetState() == SCENE::ENDGAME)
                     Restart();
+                break;
+            case 'T':
+            case 't':
+                for (int i = 0; i < BGM_NUM; i++)
+                    m_bgm[i]->turnoff();
+                for (int i = 0; i < SE_NUM; i++)
+                    m_se[i]->turnoff();
+                break;
+            case 'Y':
+            case'y':
+                for (int i = 0; i < BGM_NUM; i++)
+                    m_bgm[i]->turnon();
+                for (int i = 0; i < SE_NUM; i++)
+                    m_se[i]->turnon();
+                break;
             }
             break;
         default:
@@ -507,15 +522,15 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 {
     //if (m_pScene->GetState() != SCENE::INGAME || m_pScene->GetState() != SCENE::INROOM) return(0);
 
-    if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
-    {
-        for (int i = 0; i < 13; i++)
-            if (m_pPlayer->m_pSkinnedAnimationController->IsTrackFinish(i))
-            {
-                cout << i << "번째 " << "드디어 리턴 했다." << endl;
-                return(0);
-            }
-    }
+    //if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+    //{
+    //    for (int i = 0; i < 13; i++)
+    //        if (m_pPlayer->m_pSkinnedAnimationController->IsTrackFinish(i))
+    //        {
+    //            cout << i << "번째 " << "드디어 리턴 했다." << endl;
+    //            return(0);
+    //        }
+    //}
     switch (nMessageID)
     {
     case WM_ACTIVATE:
@@ -1563,6 +1578,7 @@ void CGameFramework::Restart()
     //pos.y += 50.0f;
     //m_pCamera->SetLookAt(pos);
     m_bMouseHold = true;
+    m_bRotateEnable = false;
     m_pScene->rate = MAX_PLAYER;
     for (int i = 0; i < m_pScene->m_nGameObjects; i++)
     {
@@ -1570,11 +1586,6 @@ void CGameFramework::Restart()
         CGameObject* pHpBar = m_pScene->m_ppGameObjects[i]->FindFrame("HpBar");
         pHpBar->m_iHp = m_pScene->m_ppGameObjects[i]->m_iMaxHp;
         pHpBar->m_bActive = false;
-    }
-    for (int i = 0; i < MAX_PLAYER; i++)
-    {
-        m_pScene->m_mPlayer[i]->SetHp(m_pScene->m_mPlayer[i]->m_iMaxHp);
-        m_pScene->m_mPlayer[i]->Reset();
     }
     m_pScene->m_ppUIObjects[1]->SetAlpha(0.0f);
     m_pScene->m_ppUIObjects[2]->SetAlpha(0.0f);
@@ -1616,8 +1627,7 @@ void CGameFramework::TrunOnBGM(int n)
 {
     for (int i = 0; i < BGM_NUM; i++) {
         m_bgm[i]->stop();
-    }
-    if(!m_bgm[n]->playing)
+    }        
         m_bgm[n]->play();
 }
 

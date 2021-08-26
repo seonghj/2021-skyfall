@@ -381,6 +381,7 @@ struct mon_pos_packet : public Packet {
 	float degree;
 	DWORD MoveType;
 	short MonsterType;
+	short target;
 };
 
 struct mon_attack_packet : public Packet {

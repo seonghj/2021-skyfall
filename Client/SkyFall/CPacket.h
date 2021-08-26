@@ -53,7 +53,7 @@ public:
 	void Send_Rotate(float pitch, float yaw);
 	void Swap_weapon(int key, PlayerType weapon);
 	void Map_set(map_block_set* p);
-	void CheckCollision(CMonster* mon);
+	bool CheckCollision(CMonster* mon);
 	int MonsterAttackCheck(CMonster* mon);
 
 	void ProcessPacket(char* buf);

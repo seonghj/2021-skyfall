@@ -634,7 +634,7 @@ void Server::send_remove_monster(int key, int roomID, int to)
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
-void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction)
+void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction, int target)
 {
     if (mon.key >= MAX_MONSTER) return;
     int roomID = mon.roomID;
@@ -650,6 +650,7 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction)
     p.MoveType = 0;
     p.state = 0;
     p.MonsterType = mon.type.load();
+    p.target = target;
 
     //printf("%d\n", mon.key);
 

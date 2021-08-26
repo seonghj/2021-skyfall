@@ -32,6 +32,7 @@ private:
     FMOD_SOUND* m_sound;
     FMOD_CHANNEL* m_channel;
 
+    float m_beforevolume;
     float m_volume;
     FMOD_BOOL m_bool;
 public:
@@ -47,6 +48,8 @@ public:
     int stop();
     int volumeUp();
     int volumeDown();
+    void turnoff();
+    void turnon();
 
     int Update();
     bool playing = false;

@@ -268,7 +268,7 @@ void Bot::CheckBehavior(int roomID)
 					}
 					else if (range > distance) {
 						mon.Move(subtract, mon.speed / 2);
-						m_pServer->send_monster_pos(mon, cross);
+						m_pServer->send_monster_pos(mon, cross, player);
 					}
 				}
 			}
