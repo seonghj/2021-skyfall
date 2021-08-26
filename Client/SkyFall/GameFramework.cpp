@@ -1623,6 +1623,10 @@ void CGameFramework::StartGame()
     m_GameTimer.Reset();
     m_pScene->m_ppUIObjects[4]->SetAlpha(0.0f);
     m_bRotateEnable = true;
+    XMFLOAT3 pos = m_pPlayer->GetPosition();
+    m_pCamera->SetPosition(Vector3::Add(pos, m_pCamera->GetOffset()));
+    pos.y += 50.0f;
+    m_pCamera->SetLookAt(pos);
 }
 
 void CGameFramework::TrunOnBGM(int n)
