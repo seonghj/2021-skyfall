@@ -1022,6 +1022,13 @@ void Server::process_packet(int key, char* buf, int roomID)
         sessions[client_key].isready = true;
         sessions[client_key].playing = true;
 
+        sessions[client_key].hp = 100;
+        sessions[client_key].def = 0;
+        sessions[client_key].lv = 0;
+        sessions[client_key].att = 10;
+        sessions[client_key].speed = 20;
+        sessions[client_key].proficiency = 0.0f;
+
 
         for (auto& k : GameRooms[p->roomid].pkeys) {
             if ((TRUE == sessions[k].connected) && (k != client_key)) {
@@ -1077,6 +1084,11 @@ void Server::process_packet(int key, char* buf, int roomID)
         ++GameRooms[cnt].TotalPlayer;
 
         int nkey = SetInGameKey(cnt);
+        if (nkey == INVALIDID) {
+            printf("Room %d no empty nkey\n", cnt);
+            Disconnected(key);
+            break;
+        }
         GameRooms[cnt].pkeys[nkey] = key;
         sessions[key].InGamekey = nkey;
         sessions[key].roomID = cnt;
@@ -1088,6 +1100,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         s.roomid = cnt;
         s.size = sizeof(s);
         s.type = SC_select_room;
+        s.ingamekey = nkey;
         send_packet(p->key, reinterpret_cast<char*>(&s), -1);
         break;
     }
@@ -1104,6 +1117,11 @@ void Server::process_packet(int key, char* buf, int roomID)
         p->type = SC_select_room;
 
         int nkey = SetInGameKey(p->room);
+        if (nkey == INVALIDID) {
+            printf("Room %d no empty nkey\n", p->room);
+            Disconnected(key);
+            break;
+        }
         printf("player key: %d in game room - %d nkey %d\n", key, p->room, nkey);
         GameRooms[p->room].pkeys[nkey] = p->key;
         sessions[p->key].InGamekey = nkey;
