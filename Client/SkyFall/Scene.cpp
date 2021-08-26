@@ -876,6 +876,15 @@ void CScene::Reset()
 	m_pMap->Reset();
 	for (int i = 0; i < MAX_PLAYER; ++i) {
 		m_mPlayer[i]->Reset();
+		m_m1HswordPlayer[i]->Reset();
+		m_mBowPlayer[i]->Reset();
+		m_m2HswordPlayer[i]->Reset();
+		m_m2HspearPlayer[i]->Reset();
+	}
+	for (int i = 0; i < 4; ++i) {
+		CGameObject* pHpBar = m_ppWeapons[i]->FindFrame("HpBar");
+		pHpBar->m_iHp = 0;
+		pHpBar->m_bActive = false;
 	}
 }
 
