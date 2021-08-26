@@ -1081,7 +1081,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         sessions[key].InGamekey = nkey;
         sessions[key].roomID = cnt;
         sessions[key].over.roomID = cnt;
-        printf("player key: %d create game room - %d\n", key, cnt);
+        printf("player key: %d create game room - %d nkey %d\n", key, cnt, nkey);
         room_select_packet s;
         s.key = nkey;
         s.room = cnt;
@@ -1104,6 +1104,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         p->type = SC_select_room;
 
         int nkey = SetInGameKey(p->room);
+        printf("player key: %d in game room - %d nkey %d\n", key, p->room, nkey);
         GameRooms[p->room].pkeys[nkey] = p->key;
         sessions[p->key].InGamekey = nkey;
         sessions[p->key].roomID = p->room;
@@ -1314,10 +1315,10 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         if (sessions[GameRooms[p->roomid].pkeys[target]].hp.load() <= 0) {
             sessions[GameRooms[p->roomid].pkeys[target]].state = Death;
-            printf("Room: %d player: %d Dead\n", p->roomid, target);
+            //printf("Room: %d player: %d Dead\n", p->roomid, target);
             send_player_dead_packet(target, roomID);
             --GameRooms[p->roomid].TotalPlayer;
-            printf("left %d\n", GameRooms[p->roomid].TotalPlayer);
+            //printf("left %d\n", GameRooms[p->roomid].TotalPlayer);
             if (GameRooms[p->roomid].TotalPlayer <= 1)
                 game_end(p->roomid);
         }

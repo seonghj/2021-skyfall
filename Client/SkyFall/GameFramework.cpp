@@ -1572,6 +1572,7 @@ void CGameFramework::Restart()
     m_ChargeTimer.Reset();
     m_pPlayer->Reset();
     m_pPlayer->SetHp(m_pPlayer->m_iMaxHp);
+    pBasicPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
     //m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
     //XMFLOAT3 pos = m_pPlayer->GetPosition();
     //m_pCamera->SetPosition(Vector3::Add(pos, m_pCamera->GetOffset()));
@@ -1589,15 +1590,12 @@ void CGameFramework::Restart()
     }
     m_pScene->m_ppUIObjects[1]->SetAlpha(0.0f);
     m_pScene->m_ppUIObjects[2]->SetAlpha(0.0f);
-    CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Basic.bin", NULL);
-    CTerrainPlayer* pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pModel, (void**)m_pScene->m_ppTerrain);
-    delete pModel;
-    m_pPlayer = m_pScene->m_pPlayer = pPlayer;
-    pPlayer->Rotate(20.0f, -90.f, 0);
-    m_pCamera = pPlayer->GetCamera();
 
     m_pScene->Reset();
     m_pScene->m_iState = SCENE::LOBBY;
+
+    m_pPlayer = m_pScene->m_pPlayer = pBasicPlayer;
+    m_pCamera = m_pPlayer->GetCamera();
 
     m_pPacket->Send_return_lobby_packet();
 }
