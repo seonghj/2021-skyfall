@@ -27,6 +27,10 @@ constexpr int INVENTORY_MAX = 20;
 
 constexpr int MAX_ROOM = 20;
 
+constexpr float Atack_Distance_Dragon = 80.f;
+constexpr float Atack_Distance_Wolf = 55.f;
+constexpr float Atack_Distance_Metalon = 97.f;
+
 
 #define SERVERIP   "127.0.0.1"
 //#define SERVERIP   "39.120.192.92"
@@ -152,11 +156,11 @@ enum PlayerAttackType {
 };
 
 enum PlayerType {
+	PT_BASIC,
 	PT_SWORD1H,
 	PT_BOW,
 	PT_SWORD2H,
-	PT_SPEAR2H,
-	PT_BASIC,
+	PT_SPEAR2H
 };
 
 enum MonsterType {
@@ -377,6 +381,7 @@ struct mon_pos_packet : public Packet {
 	float degree;
 	DWORD MoveType;
 	short MonsterType;
+	short target;
 };
 
 struct mon_attack_packet : public Packet {
@@ -385,6 +390,7 @@ struct mon_attack_packet : public Packet {
 	DWORD MoveType;
 	int target;
 	float PlayerLeftHp;
+	float attack_dis;
 };
 
 struct mon_damaged_packet : public Packet {

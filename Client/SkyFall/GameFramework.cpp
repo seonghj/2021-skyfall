@@ -433,16 +433,16 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
                     /*m_pCamera = m_pPlayer->ChangeCamera((DWORD)(wParam - VK_F1 + 1), m_GameTimer.GetTimeElapsed());*/
                     break;
                 case VK_F4: 
-                    m_pPacket->Send_swap_weapon_packet(PT_BOW);
+                    //m_pPacket->Send_swap_weapon_packet(PT_BOW);
                     break;
                 case VK_F5: 
-                    m_pPacket->Send_swap_weapon_packet(PT_SWORD1H);
+                    //m_pPacket->Send_swap_weapon_packet(PT_SWORD1H);
                     break;
                 case VK_F6:
-                    m_pPacket->Send_swap_weapon_packet(PT_SWORD2H);
+                    //m_pPacket->Send_swap_weapon_packet(PT_SWORD2H);
                     break;
                 case VK_F7:
-                    m_pPacket->Send_swap_weapon_packet(PT_SPEAR2H);
+                    //m_pPacket->Send_swap_weapon_packet(PT_SPEAR2H);
                     break;
                 case VK_F8:
                     m_bMouseHold = !m_bMouseHold;
@@ -675,7 +675,7 @@ void CGameFramework::ShowRoomWindow()
 			// 모든 플레이어가 무기를 골랐다면, 시작 버튼을 누르면 게임 시작
 			// 임시로 state 변경해놓음
 			// m_pScene->SetState(SCENE::INGAME);
-            if (m_pPacket->Get_StartWeapon() < PlayerType::PT_BASIC)
+            if (m_pPacket->Get_StartWeapon() != PlayerType::PT_BASIC)
 			    m_pPacket->Send_start_packet(m_pPacket->Get_StartWeapon());
 		}
 		ImGui::SameLine(0, 50);
@@ -1313,7 +1313,6 @@ void CGameFramework::FrameAdvance()
             m_pScene->m_mPlayer[i]->Update(m_GameTimer.GetTimeElapsed());
         }
     }
-
 
 	UpdateShadowMap();
     m_pScene->UpdateMap();

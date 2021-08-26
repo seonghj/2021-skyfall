@@ -214,68 +214,67 @@ void Bot::CheckBehavior(int roomID)
 
 			if (range < 300.0f)
 			{
-				mon.isTrace = true;
-				subtract = Vector3::Normalize(subtract);
-				/*mon.SetPosition(floor(mon.GetPosition().x)
-					, floor(mon.GetPosition().y), floor(mon.GetPosition().z));*/
+				if (mon.TraceTarget == INVALIDID)
+					mon.TraceTarget = player;
+				if (mon.TraceTarget == player) {
+					subtract = Vector3::Normalize(subtract);
+					/*mon.SetPosition(floor(mon.GetPosition().x)
+						, floor(mon.GetPosition().y), floor(mon.GetPosition().z));*/
 
-				// 실제 몬스터의 look 벡터
-				XMFLOAT3 look = Vector3::ScalarProduct((XMFLOAT3&)mon.GetUp(), -1);
+						// 실제 몬스터의 look 벡터
+					XMFLOAT3 look = Vector3::ScalarProduct((XMFLOAT3&)mon.GetUp(), -1);
 
-				rotation = acosf(Vector3::DotProduct(subtract, look)) * 180 / PI;
-				//printf("rotation : %f\n", rotation);
+					rotation = acosf(Vector3::DotProduct(subtract, look)) * 180 / PI;
+					//printf("rotation : %f\n", rotation);
 
-				// 외적에 따라 가까운 방향으로 회전하도록
-				XMFLOAT3 cross = Vector3::CrossProduct(subtract, look);
+					// 외적에 따라 가까운 방향으로 회전하도록
+					XMFLOAT3 cross = Vector3::CrossProduct(subtract, look);
 
-				float rotate_degree = -cross.y * rotation / 10;
-				if (EPSILON <= rotation)
-					mon.Rotate(0.0f, 0.0f, rotate_degree);
-				else
-					rotate_degree = 0;
-				mon.recv_pos = false;
+					float rotate_degree = -cross.y * rotation / 10;
+					if (EPSILON <= rotation)
+						mon.Rotate(0.0f, 0.0f, rotate_degree);
+					else
+						rotate_degree = 0;
+					mon.recv_pos = false;
 
-				// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
-				if (range <= distance && rotation <= 5) {
-					if (mon.CanAttack == TRUE) {
-						//printf("%d -> %d\n", mon.key, player.key.load());
-						//player.s_lock.lock();
-						m_pServer->sessions[player].TakeDamage(mon.att.load());
-						//player.s_lock.unlock();
-						m_pServer->send_monster_attack(mon, cross
-							, m_pServer->sessions[player].InGamekey);
-						mon.CanAttack = false;
+					// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
+					if (range <= distance && rotation <= 5) {
+						if (mon.CanAttack == TRUE) {
+							m_pServer->send_monster_attack(mon, cross
+								, m_pServer->sessions[player].InGamekey);
+							mon.CanAttack = false;
 
-						mon_attack_cooltime_event e;
-						e.size = sizeof(e);
-						e.type = EventType::Mon_attack_cooltime;
-						e.key = mon.key;
-						e.roomid = roomID;
+							mon_attack_cooltime_event e;
+							e.size = sizeof(e);
+							e.type = EventType::Mon_attack_cooltime;
+							e.key = mon.key;
+							e.roomid = roomID;
 
-						int cooltime = 0;
+							int cooltime = 0;
 
-						switch (mon.type) {
-						case MonsterType::Dragon:
-							cooltime = 1000;
-							break;
-						case MonsterType::Wolf:
-							cooltime = 2000;
-							break;
-						case MonsterType::Metalon:
-							cooltime = 3000;
-							break;
+							switch (mon.type) {
+							case MonsterType::Dragon:
+								cooltime = 1000;
+								break;
+							case MonsterType::Wolf:
+								cooltime = 2000;
+								break;
+							case MonsterType::Metalon:
+								cooltime = 3000;
+								break;
+							}
+							m_pTimer->push_event(roomID, OE_gEvent, cooltime, reinterpret_cast<char*>(&e));
 						}
-						m_pTimer->push_event(roomID, OE_gEvent, cooltime, reinterpret_cast<char*>(&e));
 					}
-				}
-				else if (range > distance) {
-					mon.Move(subtract, mon.speed/2);
-					m_pServer->send_monster_pos(mon, cross);
+					else if (range > distance) {
+						mon.Move(subtract, mon.speed / 2);
+						m_pServer->send_monster_pos(mon, cross, player);
+					}
 				}
 			}
 			else {
-				if (mon.isTrace == true) {
-					mon.isTrace = false;
+				if (mon.TraceTarget == player) {
+					mon.TraceTarget = INVALIDID;
 					m_pServer->send_monster_stop(mon.key, mon.roomID.load());
 				}
 			}

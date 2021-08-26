@@ -760,7 +760,7 @@ void CScene::CheckCollision(CPacket* pPacket)
 					// m_iState = INGAME;
 					//for (int i = 0; i < 4; ++i)
 					//	m_ppWeapons[i]->Release();
-					pPacket->Set_StartWeapon((PlayerType)i);
+					pPacket->Set_StartWeapon((PlayerType)(i + 1));
 					//pPacket->Send_ready_packet((PlayerType)i);
 				}
 				pHpBar->m_bActive = true;

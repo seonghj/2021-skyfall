@@ -8,10 +8,6 @@ class SESSION;
 class Server;
 class Timer;
 
-constexpr float Atack_Distance_Dragon = 72.6425f;
-constexpr float Atack_Distance_Wolf = 48.9831f;
-constexpr float Atack_Distance_Metalon = 96.9755f;
-
 class Monster{
 public:
 
@@ -44,7 +40,7 @@ public:
     std::atomic<float>      speed = 20;
 
     bool                    CanAttack = TRUE;
-    bool                    isTrace = false;
+    short                   TraceTarget = INVALIDID;
 
     void init();
     void SetPosition(float x, float y, float z);

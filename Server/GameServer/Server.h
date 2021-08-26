@@ -176,7 +176,7 @@ public:
 
     void send_add_monster(int key, int roomID, int to);
     void send_remove_monster(int key, int roomID, int to);
-    void send_monster_pos(const Monster& mon, XMFLOAT3 direction);
+    void send_monster_pos(const Monster& mon, XMFLOAT3 direction, int target);
     void send_monster_attack(const Monster& mon, XMFLOAT3 direction, int target);
     void send_monster_stop(int key, int roomID);
 
@@ -190,6 +190,8 @@ public:
     bool in_VisualField(SESSION a, SESSION b, int roomID);
     bool in_VisualField(Monster a, SESSION b, int roomID);
     unsigned short calc_attack(int key, char attacktype);
+
+    float CalcDamageToMon(int att, int def) { return (att * (100 - def) / 100); }
 
     void player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy);
 
