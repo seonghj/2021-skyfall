@@ -1080,8 +1080,10 @@ void CGameFramework::ProcessInput()
                 //printf("move\n");
                 PressDirButton = true;
                 m_pPacket->beforedir = dwDirection;
-                if (m_pScene->GetState() == SCENE::INGAME)
+                if (m_pScene->GetState() == SCENE::INGAME) {
                     m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+                    //printf("Send x : %f / y : %f / z : %f\n", p.Position.x, p.Position.y, p.Position.z);
+                }
             }
 
             if ((m_pPacket->beforedir != dwDirection && PressDirButton == true)
@@ -1593,9 +1595,9 @@ void CGameFramework::Restart()
     CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Basic.bin", NULL);
     CTerrainPlayer* pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pModel, (void**)m_pScene->m_ppTerrain);
     delete pModel;
-    m_pPlayer = m_pScene->m_pPlayer = pPlayer;
-    pPlayer->Rotate(20.0f, -90.f, 0);
-    m_pCamera = pPlayer->GetCamera();
+    m_pPlayer = m_pScene->m_pPlayer = pBasicPlayer;
+    pBasicPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
+    m_pCamera = pBasicPlayer->GetCamera();
 
     m_pScene->Reset();
     m_pScene->m_iState = SCENE::LOBBY;
