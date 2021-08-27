@@ -177,7 +177,7 @@ int Server::SetroomID()
 
 int Server::CreateRoom(int key, char* name)
 {
-    if (GameRooms.find(key) != GameRooms.end()) return 1;
+    if (GameRooms.count(key) != 0) return 1;
 
     for (auto& g : GameRooms) {
         if (strcmp(g.second.name, name) == 0) {
@@ -848,15 +848,15 @@ void Server::Delete_room(int roomID)
 void Server::player_go_lobby(int key, int roomID)
 {
     //send_game_end_packet(key, roomID);
-    int lkey = GameRooms[roomID].pkeys[key];
+    if (GameRooms.find(roomID) != GameRooms.end())
+        GameRooms[roomID].pkeys[sessions[key].InGamekey] = INVALIDID;
 
-    sessions[lkey].Reset();
-    sessions[lkey].roomID = INVALIDID;
-    sessions[lkey].over.roomID = INVALUED_ID;
-    sessions[lkey].playing = false;
-    sessions[lkey].InGamekey = INVALIDID;
+    sessions[key].Reset();
+    sessions[key].roomID = INVALIDID;
+    sessions[key].over.roomID = INVALUED_ID;
+    sessions[key].playing = false;
+    sessions[key].InGamekey = INVALIDID;
 
-    GameRooms[roomID].pkeys[key] = INVALIDID;
 
     return_lobby_packet p;
     p.key = key;
@@ -1147,7 +1147,7 @@ void Server::process_packet(int key, char* buf, int roomID)
             player_go_lobby(p->key, p->roomid);
         }*/
         if (GameRooms[p->roomid].master != INVALIDID) {
-            GameRooms[p->roomid].pkeys[p->key] = INVALIDID;
+            GameRooms[p->roomid].pkeys[sessions[p->key].InGamekey] = INVALIDID;
             --GameRooms[p->roomid].TotalPlayer;
             if (GameRooms[p->roomid].TotalPlayer == 0)
                 Delete_room(p->roomid);
