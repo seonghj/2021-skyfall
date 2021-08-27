@@ -695,14 +695,6 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
             send_packet(k, reinterpret_cast<char*>(&p), roomID);
         }
     }
-
-    if (sessions[GameRooms[roomID].pkeys[target]].hp.load() <= 0) {
-        sessions[GameRooms[roomID].pkeys[target]].state = Death;
-        send_player_dead_packet(target, roomID);
-        --GameRooms[roomID].TotalPlayer;
-        if (GameRooms[roomID].TotalPlayer <= 1)
-            game_end(roomID);
-    }
 }
 
 void Server::send_monster_stop(int key, int roomID)
@@ -825,7 +817,7 @@ void Server::game_end(int roomnum)
     m_pBot->monsterRun.erase(roomnum);
     m_pBot->monsters_lock.unlock();
 
-    printf("Room %d Game End\n", roomnum);
+    printf("Room %d Game End Left room %d\n", roomnum, (int)GameRooms.size());
 }
 
 void Server::Delete_room(int roomID)
@@ -1094,6 +1086,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         sessions[key].roomID = cnt;
         sessions[key].over.roomID = cnt;
         printf("player key: %d create game room - %d nkey %d\n", key, cnt, nkey);
+        printf("Left room %d\n", (int)GameRooms.size());
         room_select_packet s;
         s.key = nkey;
         s.room = cnt;
@@ -1280,6 +1273,14 @@ void Server::process_packet(int key, char* buf, int roomID)
         mon_attack_packet* p = reinterpret_cast<mon_attack_packet*>(buf);
         sessions[GameRooms[p->roomid].pkeys[p->target]].hp
             = p->PlayerLeftHp;
+
+        if (sessions[GameRooms[roomID].pkeys[p->target]].hp.load() <= 0) {
+            sessions[GameRooms[roomID].pkeys[p->target]].state = Death;
+            send_player_dead_packet(p->target, roomID);
+            --GameRooms[roomID].TotalPlayer;
+            if (GameRooms[roomID].TotalPlayer <= 1)
+                game_end(roomID);
+        }
         break;
     }
     case PacketType::CS_monster_damaged: {
