@@ -177,7 +177,7 @@ int Server::SetroomID()
 
 int Server::CreateRoom(int key, char* name)
 {
-    if (GameRooms.find(key) != GameRooms.end()) return 1;
+    if (GameRooms.count(key) != 0) return 1;
 
     for (auto& g : GameRooms) {
         if (strcmp(g.second.name, name) == 0) {
@@ -695,14 +695,6 @@ void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int tar
             send_packet(k, reinterpret_cast<char*>(&p), roomID);
         }
     }
-
-    if (sessions[GameRooms[roomID].pkeys[target]].hp.load() <= 0) {
-        sessions[GameRooms[roomID].pkeys[target]].state = Death;
-        send_player_dead_packet(target, roomID);
-        --GameRooms[roomID].TotalPlayer;
-        if (GameRooms[roomID].TotalPlayer <= 1)
-            game_end(roomID);
-    }
 }
 
 void Server::send_monster_stop(int key, int roomID)
@@ -825,7 +817,7 @@ void Server::game_end(int roomnum)
     m_pBot->monsterRun.erase(roomnum);
     m_pBot->monsters_lock.unlock();
 
-    printf("Room %d Game End\n", roomnum);
+    printf("Room %d Game End Left room %d\n", roomnum, (int)GameRooms.size());
 }
 
 void Server::Delete_room(int roomID)
@@ -856,15 +848,15 @@ void Server::Delete_room(int roomID)
 void Server::player_go_lobby(int key, int roomID)
 {
     //send_game_end_packet(key, roomID);
-    int lkey = GameRooms[roomID].pkeys[key];
+    if (GameRooms.find(roomID) != GameRooms.end())
+        GameRooms[roomID].pkeys[sessions[key].InGamekey] = INVALIDID;
 
-    sessions[lkey].Reset();
-    sessions[lkey].roomID = INVALIDID;
-    sessions[lkey].over.roomID = INVALUED_ID;
-    sessions[lkey].playing = false;
-    sessions[lkey].InGamekey = INVALIDID;
+    sessions[key].Reset();
+    sessions[key].roomID = INVALIDID;
+    sessions[key].over.roomID = INVALUED_ID;
+    sessions[key].playing = false;
+    sessions[key].InGamekey = INVALIDID;
 
-    GameRooms[roomID].pkeys[key] = INVALIDID;
 
     return_lobby_packet p;
     p.key = key;
@@ -1022,6 +1014,13 @@ void Server::process_packet(int key, char* buf, int roomID)
         sessions[client_key].isready = true;
         sessions[client_key].playing = true;
 
+        sessions[client_key].hp = 100;
+        sessions[client_key].def = 0;
+        sessions[client_key].lv = 0;
+        sessions[client_key].att = 10;
+        sessions[client_key].speed = 20;
+        sessions[client_key].proficiency = 0.0f;
+
 
         for (auto& k : GameRooms[p->roomid].pkeys) {
             if ((TRUE == sessions[k].connected) && (k != client_key)) {
@@ -1077,17 +1076,24 @@ void Server::process_packet(int key, char* buf, int roomID)
         ++GameRooms[cnt].TotalPlayer;
 
         int nkey = SetInGameKey(cnt);
+        if (nkey == INVALIDID) {
+            printf("Room %d no empty nkey\n", cnt);
+            Disconnected(key);
+            break;
+        }
         GameRooms[cnt].pkeys[nkey] = key;
         sessions[key].InGamekey = nkey;
         sessions[key].roomID = cnt;
         sessions[key].over.roomID = cnt;
         printf("player key: %d create game room - %d nkey %d\n", key, cnt, nkey);
+        printf("Left room %d\n", (int)GameRooms.size());
         room_select_packet s;
         s.key = nkey;
         s.room = cnt;
         s.roomid = cnt;
         s.size = sizeof(s);
         s.type = SC_select_room;
+        s.ingamekey = nkey;
         send_packet(p->key, reinterpret_cast<char*>(&s), -1);
         break;
     }
@@ -1104,6 +1110,11 @@ void Server::process_packet(int key, char* buf, int roomID)
         p->type = SC_select_room;
 
         int nkey = SetInGameKey(p->room);
+        if (nkey == INVALIDID) {
+            printf("Room %d no empty nkey\n", p->room);
+            Disconnected(key);
+            break;
+        }
         printf("player key: %d in game room - %d nkey %d\n", key, p->room, nkey);
         GameRooms[p->room].pkeys[nkey] = p->key;
         sessions[p->key].InGamekey = nkey;
@@ -1136,7 +1147,7 @@ void Server::process_packet(int key, char* buf, int roomID)
             player_go_lobby(p->key, p->roomid);
         }*/
         if (GameRooms[p->roomid].master != INVALIDID) {
-            GameRooms[p->roomid].pkeys[p->key] = INVALIDID;
+            GameRooms[p->roomid].pkeys[sessions[p->key].InGamekey] = INVALIDID;
             --GameRooms[p->roomid].TotalPlayer;
             if (GameRooms[p->roomid].TotalPlayer == 0)
                 Delete_room(p->roomid);
@@ -1262,6 +1273,14 @@ void Server::process_packet(int key, char* buf, int roomID)
         mon_attack_packet* p = reinterpret_cast<mon_attack_packet*>(buf);
         sessions[GameRooms[p->roomid].pkeys[p->target]].hp
             = p->PlayerLeftHp;
+
+        if (sessions[GameRooms[roomID].pkeys[p->target]].hp.load() <= 0) {
+            sessions[GameRooms[roomID].pkeys[p->target]].state = Death;
+            send_player_dead_packet(p->target, roomID);
+            --GameRooms[roomID].TotalPlayer;
+            if (GameRooms[roomID].TotalPlayer <= 1)
+                game_end(roomID);
+        }
         break;
     }
     case PacketType::CS_monster_damaged: {

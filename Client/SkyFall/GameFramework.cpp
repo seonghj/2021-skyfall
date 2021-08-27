@@ -1621,7 +1621,7 @@ void CGameFramework::StartGame()
     m_bRotateEnable = true;
     XMFLOAT3 pos = m_pPlayer->GetPosition();
     m_pCamera->SetPosition(Vector3::Add(pos, m_pCamera->GetOffset()));
-    pos.y += 50.0f;
+    pos.y += 60.0f;
     m_pCamera->SetLookAt(pos);
 }
 
