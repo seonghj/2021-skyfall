@@ -113,9 +113,6 @@ public:
 	int   GetRate() const { return(m_iRate);}
 	int   GetPro() const { return(m_iProficiency); }
 	float GetStamina() const { return(m_fStamina); }
-	XMFLOAT3 GetGravity() const { return m_xmf3Gravity; }
-	float GetMaxVelocityXZ() const { return m_fMaxVelocityXZ; }
-	float GetMaxVelocityY() const { return m_fMaxVelocityY; }
 	PlayerType GetType() const { return(m_type); }
 
 	void SetScale(XMFLOAT3& xmf3Scale) { m_xmf3Scale = xmf3Scale; }
@@ -187,7 +184,6 @@ public:
 	virtual void Animate(float fTimeElapsed);
 	void SetBasicAnimation();
 
-#ifdef _WITH_SOUND_CALLBACK
 	virtual void SetAnimationSound();
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
@@ -196,7 +192,6 @@ public:
 
 protected:
 	CGameObject* pWeapon;
-#endif
 	enum PlayerState {
 		Idle = 0,
 		Death,
