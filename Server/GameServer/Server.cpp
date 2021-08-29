@@ -788,6 +788,7 @@ void Server::send_player_dead_packet(int ingamekey, int roomID)
 
 void Server::game_end(int roomnum)
 {
+    if (GameRooms.count(roomnum) == 0) return;
     GameRooms[roomnum].CanJoin = false;
     for (int key : GameRooms[roomnum].pkeys) {
         if (key == INVALIDID) continue;
@@ -848,7 +849,7 @@ void Server::Delete_room(int roomID)
 void Server::player_go_lobby(int key, int roomID)
 {
     //send_game_end_packet(key, roomID);
-    if (GameRooms.find(roomID) != GameRooms.end())
+    if (GameRooms.count(roomID) != 0)
         GameRooms[roomID].pkeys[sessions[key].InGamekey] = INVALIDID;
 
     sessions[key].Reset();
@@ -1049,14 +1050,20 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_create_room: {
         room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
         int key = p->key;
-        std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
         if (sizeof(p->name) <= 0) break;
         if (GameRooms.size() >= MAX_ROOM) break;
+        for (auto& room : GameRooms) {
+            if (room.second.TotalPlayer == 0)
+                GameRooms.erase(room.first);
+        }
+
         int cnt = 0;
         // 0 = 정상 1 = 꽉참 2 = 방이름 같음
         int error = 0;
         while (cnt < MAX_ROOM) {
+            GameRooms_lock.lock();
             error = CreateRoom(cnt, p->name);
+            GameRooms_lock.unlock();
             if (error == 0) break;
             if (error == 2) {
                 room_list_packet r;
@@ -1068,6 +1075,7 @@ void Server::process_packet(int key, char* buf, int roomID)
                 send_packet(key, reinterpret_cast<char*>(&r), INVALIDID);
                 break;
             }
+
             ++cnt;
         }
         if (error == 2) break;
@@ -1146,11 +1154,13 @@ void Server::process_packet(int key, char* buf, int roomID)
                 Delete_room(p->roomid);
             player_go_lobby(p->key, p->roomid);
         }*/
-        if (GameRooms[p->roomid].master != INVALIDID) {
-            GameRooms[p->roomid].pkeys[sessions[p->key].InGamekey] = INVALIDID;
-            --GameRooms[p->roomid].TotalPlayer;
-            if (GameRooms[p->roomid].TotalPlayer == 0)
-                Delete_room(p->roomid);
+        if (GameRooms.count(p->roomid) != 0) {
+            if (GameRooms[p->roomid].master != INVALIDID) {
+                GameRooms[p->roomid].pkeys[sessions[p->key].InGamekey] = INVALIDID;
+                --GameRooms[p->roomid].TotalPlayer;
+                if (GameRooms[p->roomid].TotalPlayer == 0)
+                    Delete_room(p->roomid);
+            }
         }
         player_go_lobby(p->key, p->roomid);
         break;
