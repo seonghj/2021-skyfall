@@ -44,6 +44,11 @@ void SESSION::init()
 
 void SESSION::Reset()
 {
+    state = 0;
+    f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+    m_fPitch = 0;
+    m_fYaw = 0;
+
     hp = 100;
     def = 0;
     lv = 0;
@@ -1055,15 +1060,18 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_create_room: {
         room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
         int key = p->key;
-        if (sizeof(p->name) <= 0) break;
+        printf("create room\n");
+        //if (sizeof(p->name) <= 0) break;
         if (GameRooms.size() >= MAX_ROOM) break;
-        GameRooms_lock.lock();
-        for (auto& room : GameRooms) {
-            if (room.second.TotalPlayer == 0)
-                GameRooms.erase(room.first);
+       /* GameRooms_lock.lock();
+        if (GameRooms.size() > 0) {
+            for (auto& room : GameRooms) {
+                if (room.second.TotalPlayer <= 0)
+                    GameRooms.erase(room.first);
+            }
         }
         printf("Left room %d\n", (int)GameRooms.size());
-        GameRooms_lock.unlock();
+        GameRooms_lock.unlock();*/
         int cnt = 0;
         // 0 = 정상 1 = 꽉참 2 = 방이름 같음
         int error = 0;
