@@ -790,6 +790,7 @@ void Server::game_end(int roomnum)
 {
     if (GameRooms.count(roomnum) == 0) return;
     GameRooms[roomnum].CanJoin = false;
+    GameRooms[roomnum].TotalPlayer = 0;
     for (int key : GameRooms[roomnum].pkeys) {
         if (key == INVALIDID) continue;
         //if (sessions[key].connected == false || sessions[key].playing == false) continue;
@@ -824,6 +825,7 @@ void Server::game_end(int roomnum)
 void Server::Delete_room(int roomID)
 {
     GameRooms[roomID].CanJoin = false;
+    GameRooms[roomID].TotalPlayer = 0;
     GameRooms_lock.lock();
     delete GameRooms[roomID].m_pMap;
     ZeroMemory(GameRooms[roomID].name, sizeof(GameRooms[roomID].name));
@@ -1060,6 +1062,7 @@ void Server::process_packet(int key, char* buf, int roomID)
             if (room.second.TotalPlayer == 0)
                 GameRooms.erase(room.first);
         }
+        printf("Left room %d\n", (int)GameRooms.size());
         GameRooms_lock.unlock();
         int cnt = 0;
         // 0 = 정상 1 = 꽉참 2 = 방이름 같음
@@ -1146,7 +1149,6 @@ void Server::process_packet(int key, char* buf, int roomID)
             GameRooms[p->roomid].CanJoin = false;
             for (int k : GameRooms[p->roomid].pkeys) {
                 if (k != INVALIDID) {
-                    printf("goto lobby to key %d\n", k);
                     player_go_lobby(k, p->roomid);
                 }
             }

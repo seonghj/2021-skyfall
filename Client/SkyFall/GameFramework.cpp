@@ -673,7 +673,6 @@ void CGameFramework::ShowRoomWindow()
         std::random_device rd;
         std::mt19937_64 gen(rd());
         std::uniform_int_distribution<int> dis(1, 4);
-        m_pPacket->Set_StartWeapon(PlayerType::PT_BASIC);
 		ImGui::SetCursorPosX(80);
 		if (ImGui::Button("Start")) {
 			// 여기서 게임 시작
@@ -968,11 +967,11 @@ void CGameFramework::BuildObjects()
 
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
 	m_pScene->AddWeapon(m_pd3dDevice, m_pd3dCommandList);
-	m_pPlayer = m_pScene->m_pPlayer = pBasicPlayer;
-	pBasicPlayer->Rotate(20.0f, -90.f, 0);
 	//m_pPlayer->SetPlace(4);
-	
+    m_pPlayer = m_pScene->m_pPlayer = pBasicPlayer;
 	m_pCamera = pBasicPlayer->GetCamera();
+    pBasicPlayer->Rotate(20.0f, -90.f, 0);
+    m_pScene->Reset();
 
     m_pPacket->m_pScene = m_pScene;
     m_pPacket->m_pFramework = this;
