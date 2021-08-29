@@ -1052,11 +1052,12 @@ void Server::process_packet(int key, char* buf, int roomID)
         int key = p->key;
         if (sizeof(p->name) <= 0) break;
         if (GameRooms.size() >= MAX_ROOM) break;
+        GameRooms_lock.lock();
         for (auto& room : GameRooms) {
             if (room.second.TotalPlayer == 0)
                 GameRooms.erase(room.first);
         }
-
+        GameRooms_lock.unlock();
         int cnt = 0;
         // 0 = 정상 1 = 꽉참 2 = 방이름 같음
         int error = 0;
@@ -1094,7 +1095,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         sessions[key].roomID = cnt;
         sessions[key].over.roomID = cnt;
         printf("player key: %d create game room - %d nkey %d\n", key, cnt, nkey);
-        printf("Left room %d\n", (int)GameRooms.size());
+        //printf("Left room %d\n", (int)GameRooms.size());
         room_select_packet s;
         s.key = nkey;
         s.room = cnt;
