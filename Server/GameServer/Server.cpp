@@ -1063,19 +1063,21 @@ void Server::process_packet(int key, char* buf, int roomID)
         printf("create room\n");
         //if (sizeof(p->name) <= 0) break;
         if (GameRooms.size() >= MAX_ROOM) break;
-       /* GameRooms_lock.lock();
+        GameRooms_lock.lock();
         if (GameRooms.size() > 0) {
-            for (auto& room : GameRooms) {
-                if (room.second.TotalPlayer <= 0)
-                    GameRooms.erase(room.first);
+            for (int i = 1; i <= MAX_ROOM; i++) {
+                if (GameRooms.count(i) > 0) {
+                    if (GameRooms[i].TotalPlayer <= 0)
+                        GameRooms.erase(i);
+               }
             }
         }
         printf("Left room %d\n", (int)GameRooms.size());
-        GameRooms_lock.unlock();*/
-        int cnt = 0;
+        GameRooms_lock.unlock();
+        int cnt = 1;
         // 0 = 정상 1 = 꽉참 2 = 방이름 같음
         int error = 0;
-        while (cnt < MAX_ROOM) {
+        while (cnt <= MAX_ROOM) {
             GameRooms_lock.lock();
             error = CreateRoom(cnt, p->name);
             GameRooms_lock.unlock();
