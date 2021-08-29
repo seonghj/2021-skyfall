@@ -1060,7 +1060,6 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_create_room: {
         room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
         int key = p->key;
-        printf("create room\n");
         //if (sizeof(p->name) <= 0) break;
         if (GameRooms.size() >= MAX_ROOM) break;
         GameRooms_lock.lock();
@@ -1072,7 +1071,6 @@ void Server::process_packet(int key, char* buf, int roomID)
                }
             }
         }
-        printf("Left room %d\n", (int)GameRooms.size());
         GameRooms_lock.unlock();
         int cnt = 1;
         // 0 = 정상 1 = 꽉참 2 = 방이름 같음
