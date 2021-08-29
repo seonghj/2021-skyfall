@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include "GameFramework.h"
+#include <random>
 
 #define NO_FOG 0.0f
 #define LINEAR_FOG 1.0f
@@ -669,14 +670,19 @@ void CGameFramework::ShowRoomWindow()
     ImGui::Begin("Room", false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
 
 	{
+        std::random_device rd;
+        std::mt19937_64 gen(rd());
+        std::uniform_int_distribution<int> dis(1, 4);
+        m_pPacket->Set_StartWeapon(PlayerType::PT_BASIC);
 		ImGui::SetCursorPosX(80);
 		if (ImGui::Button("Start")) {
 			// 여기서 게임 시작
 			// 모든 플레이어가 무기를 골랐다면, 시작 버튼을 누르면 게임 시작
 			// 임시로 state 변경해놓음
 			// m_pScene->SetState(SCENE::INGAME);
-            if (m_pPacket->Get_StartWeapon() != PlayerType::PT_BASIC)
-			    m_pPacket->Send_start_packet(m_pPacket->Get_StartWeapon());
+            if (m_pPacket->Get_StartWeapon() == PlayerType::PT_BASIC)
+                m_pPacket->Set_StartWeapon((PlayerType)dis(gen));
+			m_pPacket->Send_start_packet(m_pPacket->Get_StartWeapon());
 		}
 		ImGui::SameLine(0, 50);
 		if (ImGui::Button("Exit")) {

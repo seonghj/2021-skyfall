@@ -866,7 +866,7 @@ void Server::player_go_lobby(int key, int roomID)
     p.type = SC_return_lobby;
     send_packet(key, reinterpret_cast<char*>(&p), roomID);
     
-    send_room_list_packet(key);
+    //send_room_list_packet(key);
 }
 
 bool Server::in_VisualField(SESSION a, SESSION b, int roomID)
@@ -993,58 +993,61 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_game_start: {
         game_start_packet* p = reinterpret_cast<game_start_packet*>(buf);
+        if (p->key == GameRooms[p->roomid].master) {
+            GameRooms[p->roomid].CanJoin = false;
+            for (int client_key : GameRooms[p->roomid].pkeys) {
+                if (client_key == INVALIDID) continue;
+                if (sessions[client_key].playing == true) continue;
 
-        int client_key = p->key;
-        if (sessions[client_key].playing == true) break;
+                sessions[client_key].roomID = p->roomid;
+                sessions[client_key].over.roomID = p->roomid;
+                sessions[client_key].using_weapon = p->weaponType;
 
-        sessions[client_key].roomID = p->roomid;
-        sessions[client_key].over.roomID = p->roomid;
-        sessions[client_key].using_weapon = p->weaponType;
+                printf("connected to Game: IP =%s, port=%d key = %d Room = %d / nkey: %d\n",
+                    inet_ntoa(sessions[client_key].clientaddr.sin_addr)
+                    , ntohs(sessions[client_key].clientaddr.sin_port), key, p->roomid
+                    , sessions[client_key].InGamekey);
 
-        printf("connected to Game: IP =%s, port=%d key = %d Room = %d / nkey: %d\n",
-            inet_ntoa(sessions[client_key].clientaddr.sin_addr)
-            , ntohs(sessions[client_key].clientaddr.sin_port), key, p->roomid
-            , sessions[client_key].InGamekey);
+                sessions[client_key].state = Alive;
 
-        sessions[client_key].state = Alive;
+                send_start_packet(client_key, p->roomid);
 
-        send_start_packet(key, p->roomid);
+                //send_map_packet(client_key, roomID);
 
-        //send_map_packet(client_key, roomID);
+                sessions[client_key].isready = true;
+                sessions[client_key].playing = true;
 
-        sessions[client_key].isready = true;
-        sessions[client_key].playing = true;
-
-        sessions[client_key].hp = 100;
-        sessions[client_key].def = 0;
-        sessions[client_key].lv = 0;
-        sessions[client_key].att = 10;
-        sessions[client_key].speed = 20;
-        sessions[client_key].proficiency = 0.0f;
+                sessions[client_key].hp = 100;
+                sessions[client_key].def = 0;
+                sessions[client_key].lv = 0;
+                sessions[client_key].att = 10;
+                sessions[client_key].speed = 20;
+                sessions[client_key].proficiency = 0.0f;
 
 
-        for (auto& k : GameRooms[p->roomid].pkeys) {
-            if ((TRUE == sessions[k].connected) && (k != client_key)) {
-                send_add_player_packet(client_key, k, p->roomid);
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                for (auto& k : GameRooms[p->roomid].pkeys) {
+                    if ((TRUE == sessions[k].connected) && (k != client_key)) {
+                        send_add_player_packet(client_key, k, p->roomid);
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    }
+                }
+
+                for (auto& k : GameRooms[p->roomid].pkeys) {
+                    if ((TRUE == sessions[k].connected) && (k != client_key)) {
+                        send_add_player_packet(k, client_key, p->roomid);
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    }
+                }
+
+                for (int i = 0; i < MAX_MONSTER; ++i) {
+                    if (m_pBot->monsters[p->roomid][i].state == 1) {
+                        //printf("send monster %d\n", i);
+                        send_add_monster(i, p->roomid, client_key);
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    }
+                }
             }
         }
-
-        for (auto& k : GameRooms[p->roomid].pkeys) {
-            if ((TRUE == sessions[k].connected) && (k != client_key)) {
-                send_add_player_packet(k, client_key, p->roomid);
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            }
-        }
-
-        for (int i = 0; i < MAX_MONSTER; ++i) {
-            if (m_pBot->monsters[p->roomid][i].state == 1) {
-                //printf("send monster %d\n", i);
-                send_add_monster(i, p->roomid, key);
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            }
-        }
-
         break;
     }
     case PacketType::CS_create_room: {
@@ -1138,11 +1141,12 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_return_lobby: {
         return_lobby_packet* p = reinterpret_cast<return_lobby_packet*>(buf);
         //std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
-        /*if (GameRooms[p->roomid].pkeys[p->key] == GameRooms[p->roomid].master
-            && sessions[GameRooms[p->roomid].pkeys[p->key]].playing == false) {
+        if (p->key == GameRooms[p->roomid].master
+            && sessions[p->key].playing == false) {
             GameRooms[p->roomid].CanJoin = false;
             for (int k : GameRooms[p->roomid].pkeys) {
                 if (k != INVALIDID) {
+                    printf("goto lobby to key %d\n", k);
                     player_go_lobby(k, p->roomid);
                 }
             }
@@ -1154,16 +1158,16 @@ void Server::process_packet(int key, char* buf, int roomID)
             if (GameRooms[p->roomid].TotalPlayer == 0)
                 Delete_room(p->roomid);
             player_go_lobby(p->key, p->roomid);
-        }*/
-        if (GameRooms.count(p->roomid) != 0) {
+        }
+        /*if (GameRooms.count(p->roomid) != 0) {
             if (GameRooms[p->roomid].master != INVALIDID) {
                 GameRooms[p->roomid].pkeys[sessions[p->key].InGamekey] = INVALIDID;
                 --GameRooms[p->roomid].TotalPlayer;
                 if (GameRooms[p->roomid].TotalPlayer == 0)
                     Delete_room(p->roomid);
             }
-        }
-        player_go_lobby(p->key, p->roomid);
+        }*/
+        //player_go_lobby(p->key, p->roomid);
         break;
     }
     case PacketType::CS_refresh_lobby: {
