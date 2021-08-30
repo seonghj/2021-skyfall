@@ -467,6 +467,10 @@ void Server::send_player_loginFail_packet(int key, int roomID)
 
 void Server::send_start_packet(int to, int roomID)
 {
+    std::random_device rd;
+    std::mt19937_64 gen(rd());
+    std::uniform_int_distribution<int> dis(100, MAP_SIZE - 100);
+
     game_start_packet p;
     p.type = PacketType::SC_start_ok;
     p.size = sizeof(p);
@@ -474,6 +478,10 @@ void Server::send_start_packet(int to, int roomID)
     p.roomid = roomID;
     p.weaponType = sessions[to].using_weapon;
     p.ingamekey = sessions[to].InGamekey;
+    p.pos.x = dis(gen);
+    p.pos.y = 500;
+    p.pos.z = dis(gen);
+    sessions[to].f3Position = p.pos;
 
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 

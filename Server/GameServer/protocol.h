@@ -236,6 +236,7 @@ struct game_ready_packet :public Packet {
 struct game_start_packet :public Packet {
 	PlayerType weaponType;
 	short ingamekey;
+	XMFLOAT3 pos;
 };
 
 struct start_ok_packet :public Packet {
