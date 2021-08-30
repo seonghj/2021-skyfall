@@ -87,6 +87,8 @@ public:
 	CCamera*					m_pCamera = NULL;
 	CScene*						m_pScene = NULL;
 
+	bool						m_bRotateEnable = 0;
+
 	int frametime = 0;
 
 private:
@@ -137,7 +139,6 @@ private:
 
 	_TCHAR						m_pszFrameRate[70];
 
-	bool						m_bRotateEnable = 0;
 	float						m_fPitch = 0;
 	float						m_fYaw = 0;
 

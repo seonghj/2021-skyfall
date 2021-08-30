@@ -426,7 +426,7 @@ void Server::send_room_list_packet(int key)
 {
     for (int i = 0; i < MAX_ROOM; ++i) {
         if (sessions[key].playing == true) break;
-        if (GameRooms.find(i) == GameRooms.end()) break;
+        if (GameRooms.count(i) == 0) continue;
         if (GameRooms[i].CanJoin == false) continue;
         if (GameRooms[i].name == NULL) continue;
         room_list_packet p;
@@ -505,17 +505,9 @@ void Server::send_start_packet(int to, int roomID)
 // In Game
 void Server::send_add_player_packet(int key, int to, int roomID)
 {
-    int nkey = 0;
-    for (int i = 0; i < MAX_PLAYER; ++i) {
-        if (GameRooms[roomID].pkeys[i] == key) {
-            nkey = i;
-            break;
-        }
-    }
-
     player_add_packet p;
 
-    p.key = nkey;
+    p.key = sessions[key].InGamekey;
     p.size = sizeof(player_add_packet);
     p.type = PacketType::SC_player_add;
     p.roomid = roomID;
@@ -1009,6 +1001,12 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_game_start: {
         game_start_packet* p = reinterpret_cast<game_start_packet*>(buf);
         if (p->key == GameRooms[p->roomid].master) {
+
+            bool ready = false;
+            for (int client_key : GameRooms[p->roomid].pkeys) {
+
+            }
+
             GameRooms[p->roomid].CanJoin = false;
             for (int client_key : GameRooms[p->roomid].pkeys) {
                 if (client_key == INVALIDID) continue;
@@ -1016,7 +1014,8 @@ void Server::process_packet(int key, char* buf, int roomID)
 
                 sessions[client_key].roomID = p->roomid;
                 sessions[client_key].over.roomID = p->roomid;
-                sessions[client_key].using_weapon = p->weaponType;
+
+                //sessions[client_key].using_weapon = p->weaponType;
 
                 printf("connected to Game: IP =%s, port=%d key = %d Room = %d / nkey: %d\n",
                     inet_ntoa(sessions[client_key].clientaddr.sin_addr)
