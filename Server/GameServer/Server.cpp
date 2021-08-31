@@ -1003,9 +1003,6 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (p->key == GameRooms[p->roomid].master) {
 
             bool ready = false;
-            for (int client_key : GameRooms[p->roomid].pkeys) {
-
-            }
 
             GameRooms[p->roomid].CanJoin = false;
             for (int client_key : GameRooms[p->roomid].pkeys) {
@@ -1079,7 +1076,7 @@ void Server::process_packet(int key, char* buf, int roomID)
             }
         }
         GameRooms_lock.unlock();
-        int cnt = 1;
+        int cnt = 0;
         // 0 = 정상 1 = 꽉참 2 = 방이름 같음
         int error = 0;
         while (cnt <= MAX_ROOM) {
