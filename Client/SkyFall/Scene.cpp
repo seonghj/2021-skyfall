@@ -1087,7 +1087,7 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 		switch (wParam)
 		{
 		case 'z': case 'Z':
-			gbShowBoundingBox = !gbShowBoundingBox;
+			//gbShowBoundingBox = !gbShowBoundingBox;
 			break;
 
 		/*case 'W': m_ppGameObjects[0]->MoveForward(+3.0f); break;

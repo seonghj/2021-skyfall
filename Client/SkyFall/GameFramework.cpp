@@ -1088,10 +1088,8 @@ void CGameFramework::ProcessInput()
                 //printf("move\n");
                 PressDirButton = true;
                 m_pPacket->beforedir = dwDirection;
-                if (m_pScene->GetState() == SCENE::INGAME) {
+                if (m_pScene->GetState() == SCENE::INGAME)
                     m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-                    //printf("Send x : %f / y : %f / z : %f\n", p.Position.x, p.Position.y, p.Position.z);
-                }
             }
 
             if ((m_pPacket->beforedir != dwDirection && PressDirButton == true)
