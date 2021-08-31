@@ -1239,8 +1239,8 @@ void Server::process_packet(int key, char* buf, int roomID)
          if (0 > p->ingamekey || p->ingamekey >= 20) break;
          p->type = SC_weapon_swap;
          sessions[p->key].using_weapon = p->weapon;
-         
-         send_packet_to_allplayers(roomID, reinterpret_cast<char*>(&p));
+         //printf("player %d swap to %d\n", p->key, p->weapon);
+         send_packet_to_allplayers(roomID, reinterpret_cast<char*>(p));
          break;
     }
     case PacketType::CS_player_move: {
