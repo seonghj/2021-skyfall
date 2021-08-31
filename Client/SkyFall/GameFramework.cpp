@@ -1304,8 +1304,9 @@ void CGameFramework::FrameAdvance()
 {
     m_GameTimer.Tick(60.0f);
     ++frametime;
-	ProcessInput();
-	CheckCollision();
+    ProcessInput();
+    m_pPacket->OtherPlayerMove(m_GameTimer.GetTimeElapsed());
+    CheckCollision();
 
     if ((m_pPacket->beforeJump != m_pPlayer->GetJump()) && m_pPlayer->GetGround()) {
         m_pPacket->beforeJump = m_pPlayer->GetJump();
@@ -1314,7 +1315,6 @@ void CGameFramework::FrameAdvance()
 
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
 
-    m_pPacket->OtherPlayerMove(m_GameTimer.GetTimeElapsed());
     for (int i = 0; i < MAX_PLAYER; ++i) {
         if (m_pPacket->isMove[i] == true && i != m_pPacket->InGamekey) {
             m_pScene->m_mPlayer[i]->SetStamina(MAX_STAMINA);
