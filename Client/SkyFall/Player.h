@@ -52,6 +52,7 @@ protected:
 	int							m_nPlace;
 	bool						m_bHit = false;
 	float						m_fStamina;
+	bool						m_bKeyup = false;
 	// stat
 
 	LPVOID						*m_ppPlayerUpdatedContext = NULL;
@@ -89,6 +90,7 @@ public:
 	void SetRate(int rate) { m_iRate = rate; }
 	void SetPro(int pro) { m_iProficiency = pro; }
 	void SetStamina(float sta) { m_fStamina = sta; }
+	void SetKeyup(bool key) { m_bKeyup = key; }
 	void Reset();
 
 	virtual void RButtonDown() {};
