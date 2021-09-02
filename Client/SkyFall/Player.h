@@ -60,7 +60,7 @@ protected:
 
 	CCamera						*m_pCamera = NULL;
 
-	PlayerType					m_type = PT_SWORD1H;
+	PlayerType					m_type = PT_BASIC;
 
 public:
 	CPlayer();

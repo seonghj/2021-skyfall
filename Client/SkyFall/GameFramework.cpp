@@ -338,7 +338,6 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
         }
         else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
         {
-            m_pPlayer->SetKeyup(false);
             if (m_pPlayer->GetGround() && m_pPlayer->GetRunning())
             {
                 if (m_pPlayer->GetStamina() < 5.0f)
@@ -364,9 +363,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
     case WM_LBUTTONUP: {
         //if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
         if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
-        {
             m_pPlayer->SetKeyup(true);
-        }
         ::ReleaseCapture();
         m_ChargeTimer.Stop();
         if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
@@ -379,8 +376,9 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
     case WM_RBUTTONUP: {
         //if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
         if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
-            m_pPacket->Send_stop_packet();
-        m_pPlayer->RButtonUp();
+            m_pPlayer->SetKeyup(true);
+        if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+            m_pPlayer->RButtonUp();
         CCamera* pCamera = m_pPlayer->GetCamera();
         m_pCamera = pCamera;
         m_DegreeX = 0;
@@ -1088,14 +1086,16 @@ void CGameFramework::ProcessInput()
                 p.MoveType = PlayerMove::WALKING;
             }
             
+            // 이동 시작
             if (PressDirButton == false && dwDirection != 0) {
                 //printf("move\n");
                 PressDirButton = true;
                 m_pPacket->beforedir = dwDirection;
-                if (m_pScene->GetState() == SCENE::INGAME)
+                if (m_pScene->GetState() == SCENE::INGAME && m_pPlayer->GetAttack() == false)
                     m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
             }
 
+            // 이동방향 변경
             if ((m_pPacket->beforedir != dwDirection && PressDirButton == true)
                 || (m_pPacket->beforeRun != m_pPlayer->GetRunning() && PressDirButton == true)
                 || (m_pPacket->beforeJump != m_pPlayer->GetJump() && PressDirButton == true)
@@ -1103,7 +1103,7 @@ void CGameFramework::ProcessInput()
                 m_pPacket->beforedir = dwDirection;
                 m_pPacket->beforeRun = m_pPlayer->GetRunning();
                 m_pPacket->beforeJump = m_pPlayer->GetJump();
-                if (m_pScene->GetState() == SCENE::INGAME)
+                if (m_pScene->GetState() == SCENE::INGAME && m_pPlayer->GetAttack() == false)
                     m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
             }
         }
