@@ -639,7 +639,7 @@ void Server::send_remove_monster(int key, int roomID, int to)
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 }
 
-void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction, int target)
+void Server::send_monster_pos(Monster& mon, XMFLOAT3 direction, int target)
 {
     if (mon.key >= MAX_MONSTER) return;
     int roomID = mon.roomID;
@@ -669,7 +669,7 @@ void Server::send_monster_pos(const Monster& mon, XMFLOAT3 direction, int target
     }
 }
 
-void Server::send_monster_attack(const Monster& mon, XMFLOAT3 direction, int target)
+void Server::send_monster_attack(Monster& mon, XMFLOAT3 direction, int target)
 {
     if (mon.key >= MAX_MONSTER) return;
     int roomID = mon.roomID.load();
@@ -876,10 +876,10 @@ void Server::player_go_lobby(int key, int roomID)
     //send_room_list_packet(key);
 }
 
-bool Server::in_VisualField(SESSION a, SESSION b, int roomID)
+bool Server::in_VisualField(SESSION& a, SESSION& b, int roomID)
 {
-    float value = pow(((short)a.f3Position.load().x - (short)b.f3Position.load().x), 2)
-        + pow(((short)a.f3Position.load().z - (short)b.f3Position.load().z), 2);
+    float value = pow((a.f3Position.load().x - b.f3Position.load().x), 2)
+        + pow((a.f3Position.load().z - b.f3Position.load().z), 2);
 
     if (value < 0) {
         if (sqrt(-value) <= VIEWING_DISTANCE) return true;
@@ -890,16 +890,21 @@ bool Server::in_VisualField(SESSION a, SESSION b, int roomID)
     return false;
 }
 
-bool Server::in_VisualField(Monster a, SESSION b, int roomID)
+bool Server::in_VisualField(Monster& a, SESSION& b, int roomID)
 {
-    float value = pow(((short)a.f3Position.load().x - (short)b.f3Position.load().x), 2)
-        + pow(((short)a.f3Position.load().z - (short)b.f3Position.load().z), 2);
-
+    float value = pow((a.f3Position.load().x - b.f3Position.load().x), 2)
+        + pow((a.f3Position.load().z - b.f3Position.load().z), 2);
     if (value < 0) {
-        if (sqrt(-value) <= VIEWING_DISTANCE) return true;
+        if (sqrt(-value) <= VIEWING_DISTANCE) {
+            //printf("dis %f\n", sqrt(-value));
+            return true;
+        }
     }
     else {
-        if (sqrt(value) <= VIEWING_DISTANCE) return true;
+        if (sqrt(value) <= VIEWING_DISTANCE) {
+            //printf("dis %f\n", sqrt(value));
+            return true;
+        }
     }
     return false;
 }
@@ -914,36 +919,43 @@ void Server::player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, f
 {
     sessions[key].m_fPitch.store(dx);
     sessions[key].m_fYaw.store(dy);
+
+    if (sessions[key].f3Position.load().x == pos.x 
+        && sessions[key].f3Position.load().z == pos.z
+        && sessions[key].f3Position.load().y == pos.y) return;
+
     sessions[key].f3Position = pos;
 
-    /*std::lock_guard <std::mutex> lg(sessions[client_key].nm_lock);
+    std::lock_guard <std::mutex> lg(sessions[key].nm_lock);
     std::unordered_set<int> old_nm;
     std::unordered_set<int> new_nm;
 
-    old_nm = sessions[client_key].near_monster;
+    old_nm = sessions[key].near_monster;
 
     for (auto& m : m_pBot->monsters[roomID]) {
         if (m.state == 0) continue;
-        if (in_VisualField(m, sessions[client_key], roomID)) {
-            new_nm.insert(m.key.load());
+        if (in_VisualField(m, sessions[key], roomID)) {
+            new_nm.insert(m.key);
         }
     }
 
     for (auto m : new_nm) {
         if (m_pBot->monsters[roomID][m].state == 0) continue;
-        if (old_nm.find(m) == old_nm.end()) {
-            sessions[client_key].near_monster.insert(m);
+        if (old_nm.count(m) == 0) {
+            sessions[key].near_monster.insert(m);
             send_add_monster(m, roomID, key);
+            //printf("send add monster: %d to %d\n", m, key);
         }
     }
 
     for (auto m : old_nm) {
         if (m_pBot->monsters[roomID][m].state == 0) continue;
-        if (new_nm.find(m) == new_nm.end()) {
-            sessions[client_key].near_monster.erase(m);
-            send_remove_monster(m, roomID, client_key);
+        if (new_nm.count(m) == 0) {
+            sessions[key].near_monster.erase(m);
         }
-    }*/
+    }
+
+    //printf("player: %d \ near_monster: %d\n", key, (int)sessions[key].near_monster.size());
 }
 
 void Server::process_packet(int key, char* buf, int roomID)
@@ -1034,7 +1046,7 @@ void Server::process_packet(int key, char* buf, int roomID)
                 sessions[client_key].att = 10;
                 sessions[client_key].speed = 20;
                 sessions[client_key].proficiency = 0.0f;
-
+                sessions[client_key].near_monster.clear();
 
                 for (auto& k : GameRooms[p->roomid].pkeys) {
                     if ((TRUE == sessions[k].connected) && (k != client_key)) {
