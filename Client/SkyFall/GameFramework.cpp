@@ -1202,17 +1202,18 @@ void CGameFramework::AnimateObjects()
         XMFLOAT3 pos = m_pPlayer->GetPosition();
         
         int nPlace = m_pPlayer->GetPlace();
-        if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+        cout << "현재 플레이스 : " << nPlace << endl;
+        if (pos.x < m_vMapArrange[nPlace][0] * 2045 && nPlace % 3>0) {
             m_pPlayer->SetPlace(nPlace - 1);
         }
-        else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+        else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2045 && nPlace % 3 < 2) {
             m_pPlayer->SetPlace(nPlace + 1);
         }
 
-        if (pos.z < m_vMapArrange[nPlace][1] * 2048&&nPlace>2) {
+        if (pos.z < m_vMapArrange[nPlace][1] * 2045&&nPlace>2) {
             m_pPlayer->SetPlace(nPlace - 3);
         }
-        else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+        else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2045 && nPlace < 6) {
             m_pPlayer->SetPlace(nPlace + 3);
         }
 
@@ -1220,17 +1221,17 @@ void CGameFramework::AnimateObjects()
         {
             pos = m_pScene->m_ppGameObjects[i]->GetPosition();
             nPlace = m_pScene->m_ppGameObjects[i]->GetPlace();
-            if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+            if (pos.x < m_vMapArrange[nPlace][0] * 2045 && nPlace % 3>0) {
                 m_pScene->m_ppGameObjects[i]->SetPlace(nPlace - 1);
             }
-            else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+            else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2045 && nPlace % 3 < 2) {
                 m_pScene->m_ppGameObjects[i]->SetPlace(nPlace + 1);
             }
 
-            if (pos.z < m_vMapArrange[nPlace][1] * 2048 && nPlace>2) {
+            if (pos.z < m_vMapArrange[nPlace][1] * 2045 && nPlace>2) {
                 m_pScene->m_ppGameObjects[i]->SetPlace(nPlace - 3);
             }
-            else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+            else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2045 && nPlace < 6) {
                 m_pScene->m_ppGameObjects[i]->SetPlace(nPlace + 3);
             }
         }
@@ -1240,17 +1241,17 @@ void CGameFramework::AnimateObjects()
                 XMFLOAT3 pos = m_pScene->m_mPlayer[i]->GetPosition();
 
                 int nPlace = m_pScene->m_mPlayer[i]->GetPlace();
-                if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+                if (pos.x < m_vMapArrange[nPlace][0] * 2045 && nPlace % 3>0) {
                     m_pScene->m_mPlayer[i]->SetPlace(nPlace - 1);
                 }
-                else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+                else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2045 && nPlace % 3 < 2) {
                     m_pScene->m_mPlayer[i]->SetPlace(nPlace + 1);
                 }
 
-                if (pos.z < m_vMapArrange[nPlace][1] * 2048 && nPlace>2) {
+                if (pos.z < m_vMapArrange[nPlace][1] * 2045 && nPlace>2) {
                     m_pScene->m_mPlayer[i]->SetPlace(nPlace - 3);
                 }
-                else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+                else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2045 && nPlace < 6) {
                     m_pScene->m_mPlayer[i]->SetPlace(nPlace + 3);
                 }
             }

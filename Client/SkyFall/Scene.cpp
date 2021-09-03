@@ -121,7 +121,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 		{
 			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Snow_0807.raw"), 257, 257, xmf3Scale, xmf4Color, 2);
 		}
-		m_ppTerrain[i]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
+		m_ppTerrain[i]->SetPosition(2045.0f * arrange[i][0], 0.0f, 2045.0f * arrange[i][1]);
 		m_ppTerrain[i]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 		if (i >= 6) m_ppTerrain[i]->MoveUp(125.f);
 	}
