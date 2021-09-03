@@ -178,6 +178,7 @@ int Server::SetroomID()
     //       ++cnt;
     //    }
     //}
+    return 0;
 }
 
 int Server::CreateRoom(int key, char* name)
@@ -695,7 +696,8 @@ void Server::send_monster_attack(Monster& mon, XMFLOAT3 direction, int target)
     else if (mon.type == MonsterType::Metalon)
         p.attack_dis = Atack_Distance_Metalon;
 
-    for (auto& k : GameRooms[roomID].pkeys) {
+    for (int k : GameRooms[roomID].pkeys) {
+        if (k <= INVALIDID) continue;
         if (sessions[k].connected == FALSE) continue;
         if (sessions[k].playing == FALSE) continue;
         if (in_VisualField(mon, sessions[k], roomID)) {
@@ -714,7 +716,8 @@ void Server::send_monster_stop(int key, int roomID)
     p.roomid = roomID;
     p.Position = m_pBot->monsters[roomID][key].f3Position.load();
 
-    for (auto& k : GameRooms[roomID].pkeys) {
+    for (int k : GameRooms[roomID].pkeys) {
+        if (k <= INVALIDID) continue;
         if (sessions[k].connected == FALSE) continue;
         if (sessions[k].playing == FALSE) continue;
         if (in_VisualField(m_pBot->monsters[roomID][key], sessions[k], roomID)) {
@@ -1050,14 +1053,16 @@ void Server::process_packet(int key, char* buf, int roomID)
                 sessions[client_key].proficiency = 0.0f;
                 sessions[client_key].near_monster.clear();
 
-                for (auto& k : GameRooms[p->roomid].pkeys) {
+                for (int k : GameRooms[p->roomid].pkeys) {
+                    if (k == INVALIDID) continue;
                     if ((TRUE == sessions[k].connected) && (k != client_key)) {
                         send_add_player_packet(client_key, k, p->roomid);
                         std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     }
                 }
 
-                for (auto& k : GameRooms[p->roomid].pkeys) {
+                for (int k : GameRooms[p->roomid].pkeys) {
+                    if (k == INVALIDID) continue;
                     if ((TRUE == sessions[k].connected) && (k != client_key)) {
                         send_add_player_packet(k, client_key, p->roomid);
                         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -1252,7 +1257,7 @@ void Server::process_packet(int key, char* buf, int roomID)
          if (0 > p->ingamekey || p->ingamekey >= 20) break;
          p->type = SC_weapon_swap;
          sessions[p->key].using_weapon = p->weapon;
-         printf("player %d swap to %d\n", p->key, p->weapon);
+         //printf("player %d swap to %d\n", p->key, p->weapon);
          send_packet_to_allplayers(roomID, reinterpret_cast<char*>(p));
          break;
     }
@@ -1439,12 +1444,23 @@ void Server::ProcessEvent(OVER_EX* over_ex, int roomID, int key)
         delete over_ex;
         break;
     }
-    case EventType::Mon_move_to_player: {
-        mon_move_to_player_event* e = reinterpret_cast<mon_move_to_player_event*>(over_ex->messageBuffer);
+    case EventType::Mon_behavior: {
+        mon_behavior_event* e = reinterpret_cast<mon_behavior_event*>(over_ex->messageBuffer);
         if (m_pBot->monsterRun[roomID] == false) break;
         if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
         //m_pBot->CheckTarget(e->roomid);
         m_pBot->CheckBehavior(e->roomid);
+        delete over_ex;
+        break;
+    }
+    case EventType::Mon_move_to_player: {
+        mon_move_event* e = reinterpret_cast<mon_move_event*>(over_ex->messageBuffer);
+        if (m_pBot->monsterRun[roomID] == false) break;
+        if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
+        m_pBot->monsters[e->roomid][e->key].Move(e->subtract
+            , m_pBot->monsters[e->roomid][e->key].speed);
+        send_monster_pos(m_pBot->monsters[e->roomid][e->key]
+            , e->direction, e->target);
         delete over_ex;
         break;
     }
@@ -1462,6 +1478,29 @@ void Server::ProcessEvent(OVER_EX* over_ex, int roomID, int key)
         if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
         send_monster_attack(m_pBot->monsters[e->roomid][e->key]
             , e->direction, e->target);
+
+        /*mon_attack_cooltime_event ce;
+        ce.size = sizeof(e);
+        ce.type = EventType::Mon_attack_cooltime;
+        ce.key = e->key;
+        ce.roomid = e->roomid;
+        ce.GameStartTime = m_pBot->StartTime[e->roomid];
+
+        int cooltime = 0;
+
+        switch (m_pBot->monsters[e->roomid][e->key].type) {
+        case MonsterType::Dragon:
+            cooltime = 1000;
+            break;
+        case MonsterType::Wolf:
+            cooltime = 2000;
+            break;
+        case MonsterType::Metalon:
+            cooltime = 3000;
+            break;
+        }
+        m_pTimer->push_event(e->roomid, OE_gEvent, cooltime, reinterpret_cast<char*>(&ce));*/
+
         delete over_ex;
         break;
     }

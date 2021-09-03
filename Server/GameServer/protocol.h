@@ -133,6 +133,7 @@ enum EventType {
 	Mapset,
 	Cloud_move,
 	game_end,
+	Mon_behavior,
 	Mon_move_to_player,
 	Mon_attack_cooltime,
 	Mon_respawn,
@@ -439,7 +440,14 @@ struct create_account_packet :public Packet {
 	bool canmake;
 };
 
-struct mon_move_to_player_event : public Packet {
+struct mon_behavior_event : public Packet {
+	std::chrono::system_clock::time_point GameStartTime;
+};
+
+struct mon_move_event : public Packet {
+	XMFLOAT3 subtract;
+	XMFLOAT3 direction;
+	short target;
 	std::chrono::system_clock::time_point GameStartTime;
 };
 

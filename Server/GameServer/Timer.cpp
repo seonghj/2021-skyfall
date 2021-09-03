@@ -46,7 +46,7 @@ void Timer::Timer_main()
 		}
 		else {
 			m_timer_lock.unlock();
-			std::this_thread::sleep_for(10ms);
+			std::this_thread::sleep_for(100ms);
 		}
 	}
 }
