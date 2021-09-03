@@ -1405,6 +1405,129 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
 }
 
+void Server::ProcessEvent(OVER_EX* over_ex, int roomID, int key)
+{
+    switch (over_ex->messageBuffer[1]) {
+    case EventType::Mapset: {
+        std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
+        if (GameRooms[roomID].m_pMap == NULL) break;
+        if (GameRooms[roomID].m_pMap->game_start == false) break;
+        map_block_set* p = reinterpret_cast<map_block_set*>(over_ex->messageBuffer);
+        if (p->GameStartTime != GameRooms[roomID].m_pMap->StartTime) break;
+        GameRooms[roomID].m_pMap->Set_map();
+
+        /* game_end_event ep;
+         ep.roomid = key;
+         ep.size = sizeof(ep);
+         ep.type = EventType::game_end;
+         ep.GameStartTime = p->GameStartTime;
+         m_pTimer->push_event(ep.roomid, OE_gEvent, (MAP_BREAK_TIME*9), reinterpret_cast<char*>(&ep));*/
+         //delete over_ex;
+        break;
+    }
+    case EventType::Cloud_move: {
+        std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
+        if (GameRooms[roomID].m_pMap == NULL) break;
+        if (GameRooms[roomID].m_pMap->game_start == false) break;
+        GameRooms[roomID].m_pMap->ismove = true;
+        cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(over_ex->messageBuffer);
+        if (p->GameStartTime != GameRooms[roomID].m_pMap->StartTime) break;
+        send_cloud_move_packet(p->x, p->z, p->roomid);
+        //printf("room: %d cloud x: %f | y: %f\n\n", p->roomid, p->x, p->z);
+        GameRooms[roomID].m_pMap->cloud_move();
+        delete over_ex;
+        break;
+    }
+    case EventType::Mon_move_to_player: {
+        mon_move_to_player_event* e = reinterpret_cast<mon_move_to_player_event*>(over_ex->messageBuffer);
+        if (m_pBot->monsterRun[roomID] == false) break;
+        if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
+        //m_pBot->CheckTarget(e->roomid);
+        m_pBot->CheckBehavior(e->roomid);
+        delete over_ex;
+        break;
+    }
+    case EventType::Mon_attack_cooltime: {
+        if (m_pBot->monsterRun[roomID] == false) break;
+        mon_attack_cooltime_event* e = reinterpret_cast<mon_attack_cooltime_event*>(over_ex->messageBuffer);
+        if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
+        m_pBot->monsters[e->roomid][e->key].CanAttack = TRUE;
+        delete over_ex;
+        break;
+    }
+    case EventType::Mon_attack: {
+        mon_attack_event* e = reinterpret_cast<mon_attack_event*>(over_ex->messageBuffer);
+        if (m_pBot->monsterRun[roomID] == false) break;
+        if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
+        send_monster_attack(m_pBot->monsters[e->roomid][e->key]
+            , e->direction, e->target);
+        delete over_ex;
+        break;
+    }
+    case EventType::Mon_stop: {
+        if (m_pBot->monsterRun[roomID] == false) break;
+        mon_stop_event* e = reinterpret_cast<mon_stop_event*>(over_ex->messageBuffer);
+        if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
+        send_monster_stop(e->key, e->roomid);
+        delete over_ex;
+        break;
+    }
+    case EventType::MapBreak: {
+        std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
+        if (GameRooms[roomID].m_pMap == NULL) break;
+        if (GameRooms[roomID].m_pMap->game_start == false) break;
+        Mapbreak_event* p = reinterpret_cast<Mapbreak_event*>(over_ex->messageBuffer);
+        if (p->GameStartTime != GameRooms[roomID].m_pMap->StartTime) break;
+        GameRooms[roomID].m_pMap->Map_collapse();
+
+        Mapbreak_event e;
+        e.roomid = key;
+        e.size = sizeof(e);
+        e.type = EventType::MapBreak;
+        e.GameStartTime = p->GameStartTime;
+        m_pTimer->push_event(key, OE_gEvent, MAP_BREAK_TIME, reinterpret_cast<char*>(&e));
+        delete over_ex;
+        break;
+    }
+    case EventType::Mon_respawn: {
+        if (m_pBot->monsterRun[roomID] == false) break;
+        mon_respawn_event* e = reinterpret_cast<mon_respawn_event*>(over_ex->messageBuffer);
+        if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
+        m_pBot->monsters[e->roomid][e->key].hp = 100;
+        m_pBot->monsters[e->roomid][e->key].f3Position = m_pBot->monsters[e->roomid][e->key].SpawnPos.load();
+
+        mon_respawn_packet p;
+        p.key = e->key;
+        p.roomid = e->roomid;
+        p.type = SC_monster_respawn;
+        p.size = sizeof(p);
+        p.Position = m_pBot->monsters[e->roomid][e->key].SpawnPos.load();
+        p.dx = 0;
+        p.dy = 0;
+        p.dz = 0;
+        p.MonsterType = m_pBot->monsters[e->roomid][e->key].type;
+
+        send_packet_to_allplayers(e->roomid, reinterpret_cast<char*>(&p));
+
+        m_pBot->monsters[e->roomid][e->key].state = 1;
+        delete over_ex;
+        break;
+    }
+    case EventType::game_end: {
+        //std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
+        if (GameRooms[roomID].m_pMap == NULL) break;
+        if (GameRooms[roomID].m_pMap->game_start == false) break;
+        game_end_event* e = reinterpret_cast<game_end_event*>(over_ex->messageBuffer);
+        if (e->GameStartTime != GameRooms[roomID].m_pMap->StartTime) break;
+        int roomID = e->roomid;
+        printf("room: %d gameover\n", roomID);
+        game_end(roomID);
+        delete over_ex;
+        break;
+    }
+    }
+}
+
 void Server::WorkerFunc()
 {
     DWORD Transferred;
@@ -1468,125 +1591,8 @@ void Server::WorkerFunc()
             // key = 방번호
             if (FALSE == retval)
                 continue;
-            switch (over_ex->messageBuffer[1]) {
-            case EventType::Mapset:{
-                std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
-                if (GameRooms[roomID].m_pMap == NULL) break;
-                if (GameRooms[roomID].m_pMap->game_start == false) break;
-                map_block_set* p = reinterpret_cast<map_block_set*>(over_ex->messageBuffer);
-                if (p->GameStartTime != GameRooms[roomID].m_pMap->StartTime) break;
-                GameRooms[roomID].m_pMap->Set_map();
-                
-               /* game_end_event ep;
-                ep.roomid = key;
-                ep.size = sizeof(ep);
-                ep.type = EventType::game_end;
-                ep.GameStartTime = p->GameStartTime;
-                m_pTimer->push_event(ep.roomid, OE_gEvent, (MAP_BREAK_TIME*9), reinterpret_cast<char*>(&ep));*/
-                //delete over_ex;
-                break;
-            }
-            case EventType::Cloud_move: {
-                std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
-                if (GameRooms[roomID].m_pMap == NULL) break;
-                if (GameRooms[roomID].m_pMap->game_start == false) break;
-                GameRooms[roomID].m_pMap->ismove = true;
-                cloud_move_packet* p = reinterpret_cast<cloud_move_packet*>(over_ex->messageBuffer);
-                if (p->GameStartTime != GameRooms[roomID].m_pMap->StartTime) break;
-                send_cloud_move_packet(p->x, p->z, p->roomid);
-                //printf("room: %d cloud x: %f | y: %f\n\n", p->roomid, p->x, p->z);
-                GameRooms[roomID].m_pMap->cloud_move();
-                delete over_ex;
-                break;
-            }
-            case EventType::Mon_move_to_player: {
-                mon_move_to_player_event* e = reinterpret_cast<mon_move_to_player_event*>(over_ex->messageBuffer);
-                if (m_pBot->monsterRun[roomID] == false) break;
-                if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
-                //m_pBot->CheckTarget(e->roomid);
-                m_pBot->CheckBehavior(e->roomid);
-                delete over_ex;
-                break;
-            }
-            case EventType::Mon_attack_cooltime: {
-                if (m_pBot->monsterRun[roomID] == false) break;
-                mon_attack_cooltime_event* e = reinterpret_cast<mon_attack_cooltime_event*>(over_ex->messageBuffer);
-                if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
-                m_pBot->monsters[e->roomid][e->key].CanAttack = TRUE;
-                delete over_ex;
-                break;
-            }
-            case EventType::Mon_attack: {
-                mon_attack_event* e = reinterpret_cast<mon_attack_event*>(over_ex->messageBuffer);
-                if (m_pBot->monsterRun[roomID] == false) break;
-                if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
-                send_monster_attack(m_pBot->monsters[e->roomid][e->key]
-                    , e->direction, e->target);
-                delete over_ex;
-                break;
-            }
-            case EventType::Mon_stop: {
-                if (m_pBot->monsterRun[roomID] == false) break;
-                mon_stop_event* e = reinterpret_cast<mon_stop_event*>(over_ex->messageBuffer);
-                if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
-                send_monster_stop(e->key, e->roomid);
-                delete over_ex;
-                break;
-            }
-            case EventType::MapBreak: {
-                std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
-                if (GameRooms[roomID].m_pMap == NULL) break;
-                if (GameRooms[roomID].m_pMap->game_start == false) break;
-                Mapbreak_event* p = reinterpret_cast<Mapbreak_event*>(over_ex->messageBuffer);
-                if (p->GameStartTime != GameRooms[roomID].m_pMap->StartTime) break;
-                GameRooms[roomID].m_pMap->Map_collapse();
-
-                Mapbreak_event e;
-                e.roomid = key;
-                e.size = sizeof(e);
-                e.type = EventType::MapBreak;
-                e.GameStartTime = p->GameStartTime;
-                m_pTimer->push_event(key, OE_gEvent, MAP_BREAK_TIME, reinterpret_cast<char*>(&e));
-                delete over_ex;
-                break;
-            }
-            case EventType::Mon_respawn: {
-                if (m_pBot->monsterRun[roomID] == false) break;
-                mon_respawn_event* e = reinterpret_cast<mon_respawn_event*>(over_ex->messageBuffer);
-                if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
-                m_pBot->monsters[e->roomid][e->key].hp = 100;
-                m_pBot->monsters[e->roomid][e->key].f3Position = m_pBot->monsters[e->roomid][e->key].SpawnPos.load();
-                
-                mon_respawn_packet p;
-                p.key = e->key;
-                p.roomid = e->roomid;
-                p.type = SC_monster_respawn;
-                p.size = sizeof(p);
-                p.Position = m_pBot->monsters[e->roomid][e->key].SpawnPos.load();
-                p.dx = 0;
-                p.dy = 0;
-                p.dz = 0;
-                p.MonsterType = m_pBot->monsters[e->roomid][e->key].type;
-
-                send_packet_to_allplayers(e->roomid, reinterpret_cast<char*>(&p));
-
-                m_pBot->monsters[e->roomid][e->key].state = 1;
-                delete over_ex;
-                break;
-            }
-            case EventType::game_end: {
-                //std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
-                if (GameRooms[roomID].m_pMap == NULL) break;
-                if (GameRooms[roomID].m_pMap->game_start == false) break;
-                game_end_event* e = reinterpret_cast<game_end_event*>(over_ex->messageBuffer);
-                if (e->GameStartTime != GameRooms[roomID].m_pMap->StartTime) break;
-                int roomID = e->roomid;
-                printf("room: %d gameover\n", roomID);
-                game_end(roomID);
-                delete over_ex;
-                break;
-            }
-            }
+            ProcessEvent(over_ex, roomID, key);
+            break;
         }
         break;
         }
@@ -1617,7 +1623,7 @@ bool Server::Init()
     SYSTEM_INFO si;
     GetSystemInfo(&si);
 
-    for (int i = 0; i <(int)si.dwNumberOfProcessors * 2; i++)
+    for (int i = 0; i <(int)si.dwNumberOfProcessors; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
 

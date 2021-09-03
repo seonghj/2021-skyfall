@@ -17,16 +17,13 @@ void Timer::init(HANDLE h_cp)
 
 void Timer::push_event(int key, int event_type, int delaytime_ms, char* message)
 {
-	//std::lock_guard <std::mutex> lg{ m_timer_lock };
+	std::lock_guard <std::mutex> lg{ m_timer_lock };
 	Timer_event te;
 	te.key = key;
 	te.OE_Type = event_type;
 	te.start_time = system_clock::now() + milliseconds(delaytime_ms);
 	memcpy(te.event_message, message, message[0]);
-
-	m_timer_lock.lock();
 	m_Timer_queue.push(te);
-	m_timer_lock.unlock();
 }
 
 void Timer::Timer_main()
@@ -49,7 +46,7 @@ void Timer::Timer_main()
 		}
 		else {
 			m_timer_lock.unlock();
-			std::this_thread::sleep_for(1ms);
+			std::this_thread::sleep_for(10ms);
 		}
 	}
 }

@@ -249,7 +249,7 @@ void Bot::CheckBehavior(int roomID)
 							ae.GameStartTime = StartTime[roomID];
 							ae.direction = cross;
 							ae.target = m_pServer->sessions[player].InGamekey;
-							m_pTimer->push_event(roomID, OE_gEvent, 10, reinterpret_cast<char*>(&ae));
+							m_pTimer->push_event(roomID, OE_gEvent, 100, reinterpret_cast<char*>(&ae));
 
 							mon.CanAttack = false;
 
@@ -285,13 +285,14 @@ void Bot::CheckBehavior(int roomID)
 			else {
 				if (mon.TraceTarget == player) {
 					mon.TraceTarget = INVALIDID;
-					mon_stop_event se;
+					m_pServer->send_monster_stop(mon.key, roomID);
+					/*mon_stop_event se;
 					se.size = sizeof(se);
 					se.type = EventType::Mon_stop;
 					se.key = mon.key;
 					se.roomid = roomID;
 					se.GameStartTime = StartTime[roomID];
-					m_pTimer->push_event(roomID, OE_gEvent, 10, reinterpret_cast<char*>(&se));
+					m_pTimer->push_event(roomID, OE_gEvent, 30, reinterpret_cast<char*>(&se));*/
 				}
 			}
 		}

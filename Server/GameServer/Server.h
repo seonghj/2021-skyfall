@@ -147,6 +147,7 @@ public:
     void do_recv(int key, int roomID);
     void send_packet(int to, char* packet, int roomID);
     void process_packet(int key, char* buf, int roomID);
+    void ProcessEvent(OVER_EX* over_ex, int roomID, int key);
 
     void send_Lobby_key_packet(int key);
     void send_Lobby_loginOK_packet(int key);
