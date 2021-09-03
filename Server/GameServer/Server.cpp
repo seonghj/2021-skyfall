@@ -1018,6 +1018,7 @@ void Server::process_packet(int key, char* buf, int roomID)
             bool ready = false;
 
             GameRooms[p->roomid].CanJoin = false;
+            sessions[p->key].using_weapon = p->weaponType;
             for (int client_key : GameRooms[p->roomid].pkeys) {
                 if (client_key == INVALIDID) continue;
                 if (sessions[client_key].playing == true) continue;
@@ -1251,7 +1252,7 @@ void Server::process_packet(int key, char* buf, int roomID)
          if (0 > p->ingamekey || p->ingamekey >= 20) break;
          p->type = SC_weapon_swap;
          sessions[p->key].using_weapon = p->weapon;
-         //printf("player %d swap to %d\n", p->key, p->weapon);
+         printf("player %d swap to %d\n", p->key, p->weapon);
          send_packet_to_allplayers(roomID, reinterpret_cast<char*>(p));
          break;
     }
@@ -1283,7 +1284,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         p->type = SC_player_stop;
         sessions[p->key].f3Position = p->Position;
         //p->Position = sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position;
-        send_packet_to_players(p->ingamekey, reinterpret_cast<char*>(p), roomID);
+        send_packet_to_allplayers(roomID, reinterpret_cast<char*>(p));
         break;
     }
     case PacketType::CS_player_getitem: {

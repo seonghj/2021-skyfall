@@ -1087,7 +1087,7 @@ void CGameFramework::ProcessInput()
             }
             
             // 이동 시작
-            if (PressDirButton == false && dwDirection != 0) {
+            if (PressDirButton == false && dwDirection != 0 && (false == m_pPlayer->GetAttack())) {
                 //printf("move\n");
                 PressDirButton = true;
                 m_pPacket->beforedir = dwDirection;
@@ -1099,7 +1099,7 @@ void CGameFramework::ProcessInput()
             if ((m_pPacket->beforedir != dwDirection && PressDirButton == true)
                 || (m_pPacket->beforeRun != m_pPlayer->GetRunning() && PressDirButton == true)
                 || (m_pPacket->beforeJump != m_pPlayer->GetJump() && PressDirButton == true)
-                ) {
+                && (false == m_pPlayer->GetAttack())) {
                 m_pPacket->beforedir = dwDirection;
                 m_pPacket->beforeRun = m_pPlayer->GetRunning();
                 m_pPacket->beforeJump = m_pPlayer->GetJump();
