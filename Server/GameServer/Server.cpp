@@ -1281,6 +1281,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         player_stop_packet* p = reinterpret_cast<player_stop_packet*>(buf);
         if (0 > p->ingamekey || p->ingamekey >= 20) break;
         p->type = SC_player_stop;
+        sessions[p->key].f3Position = p->Position;
         //p->Position = sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position;
         send_packet_to_players(p->ingamekey, reinterpret_cast<char*>(p), roomID);
         break;

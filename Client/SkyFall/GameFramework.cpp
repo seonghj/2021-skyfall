@@ -1214,7 +1214,7 @@ void CGameFramework::AnimateObjects()
         XMFLOAT3 pos = m_pPlayer->GetPosition();
         
         int nPlace = m_pPlayer->GetPlace();
-        cout << "현재 플레이스 : " << nPlace << endl;
+        //cout << "현재 플레이스 : " << nPlace << endl;
         if (pos.x < m_vMapArrange[nPlace][0] * 2045 && nPlace % 3>0) {
             m_pPlayer->SetPlace(nPlace - 1);
         }

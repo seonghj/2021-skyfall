@@ -214,6 +214,7 @@ void Bot::CheckBehavior(int roomID)
 
 			if (range < 300.0f)
 			{
+				//printf("%d dis %f\n", mon.key, range);
 				if (mon.TraceTarget == INVALIDID)
 					mon.TraceTarget = player;
 				if (mon.TraceTarget == player) {
