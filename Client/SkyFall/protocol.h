@@ -17,7 +17,7 @@ constexpr int MAX_MONSTER = 15;
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 6135;
 constexpr int MAP_BLOCK_SIZE = 2045;
-constexpr int MAP_BREAK_TIME = 120000;
+constexpr int MAP_BREAK_TIME = 90000;
 
 constexpr int MON_SPAWN_TIME = 10000;
 
@@ -136,6 +136,8 @@ enum EventType {
 	Mon_move_to_player,
 	Mon_attack_cooltime,
 	Mon_respawn,
+	Mon_attack,
+	Mon_stop,
 	MapBreak,
 };
 
@@ -446,6 +448,14 @@ struct mon_attack_cooltime_event : public Packet {
 };
 
 struct mon_respawn_event : public Packet {
+	std::chrono::system_clock::time_point GameStartTime;
+};
+
+struct mon_attack_event : public Packet {
+	std::chrono::system_clock::time_point GameStartTime;
+};
+
+struct mon_stop_event : public Packet {
 	std::chrono::system_clock::time_point GameStartTime;
 };
 

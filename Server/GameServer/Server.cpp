@@ -1500,12 +1500,11 @@ void Server::WorkerFunc()
                 break;
             }
             case EventType::Mon_move_to_player: {
-                if (m_pBot->monsterRun[roomID] == false) break;
                 mon_move_to_player_event* e = reinterpret_cast<mon_move_to_player_event*>(over_ex->messageBuffer);
+                if (m_pBot->monsterRun[roomID] == false) break;
                 if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
                 //m_pBot->CheckTarget(e->roomid);
                 m_pBot->CheckBehavior(e->roomid);
-                m_pBot->RunBot(e->roomid);
                 delete over_ex;
                 break;
             }
@@ -1514,6 +1513,23 @@ void Server::WorkerFunc()
                 mon_attack_cooltime_event* e = reinterpret_cast<mon_attack_cooltime_event*>(over_ex->messageBuffer);
                 if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
                 m_pBot->monsters[e->roomid][e->key].CanAttack = TRUE;
+                delete over_ex;
+                break;
+            }
+            case EventType::Mon_attack: {
+                mon_attack_event* e = reinterpret_cast<mon_attack_event*>(over_ex->messageBuffer);
+                if (m_pBot->monsterRun[roomID] == false) break;
+                if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
+                send_monster_attack(m_pBot->monsters[e->roomid][e->key]
+                    , e->direction, e->target);
+                delete over_ex;
+                break;
+            }
+            case EventType::Mon_stop: {
+                if (m_pBot->monsterRun[roomID] == false) break;
+                mon_stop_event* e = reinterpret_cast<mon_stop_event*>(over_ex->messageBuffer);
+                if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
+                send_monster_stop(e->key, e->roomid);
                 delete over_ex;
                 break;
             }

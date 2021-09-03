@@ -241,8 +241,16 @@ void Bot::CheckBehavior(int roomID)
 					// 플레이어 쪽으로 이동, 일정 거리 안까지 들어가면 공격, 이동 종료
 					if (range <= distance && rotation <= 5) {
 						if (mon.CanAttack == TRUE) {
-							m_pServer->send_monster_attack(mon, cross
-								, m_pServer->sessions[player].InGamekey);
+							mon_attack_event ae;
+							ae.size = sizeof(ae);
+							ae.type = EventType::Mon_attack;
+							ae.key = mon.key;
+							ae.roomid = roomID;
+							ae.GameStartTime = StartTime[roomID];
+							ae.direction = cross;
+							ae.target = m_pServer->sessions[player].InGamekey;
+							m_pTimer->push_event(roomID, OE_gEvent, 10, reinterpret_cast<char*>(&ae));
+
 							mon.CanAttack = false;
 
 							mon_attack_cooltime_event e;
@@ -271,18 +279,31 @@ void Bot::CheckBehavior(int roomID)
 					else if (range > distance) {
 						mon.Move(subtract, mon.speed / 2);
 						m_pServer->send_monster_pos(mon, cross, player);
-						//printf("monster %d move\n", mon.key);
 					}
 				}
 			}
 			else {
 				if (mon.TraceTarget == player) {
 					mon.TraceTarget = INVALIDID;
-					m_pServer->send_monster_stop(mon.key, mon.roomID.load());
+					mon_stop_event se;
+					se.size = sizeof(se);
+					se.type = EventType::Mon_stop;
+					se.key = mon.key;
+					se.roomid = roomID;
+					se.GameStartTime = StartTime[roomID];
+					m_pTimer->push_event(roomID, OE_gEvent, 10, reinterpret_cast<char*>(&se));
 				}
 			}
 		}
 	}
+
+	mon_move_to_player_event e;
+	e.size = sizeof(e);
+	e.type = EventType::Mon_move_to_player;
+	e.key = 0;
+	e.roomid = roomID;
+	e.GameStartTime = StartTime[roomID];
+	m_pTimer->push_event(roomID, OE_gEvent, 66, reinterpret_cast<char*>(&e));
 }
 
 void Bot::RunBot(int roomID)
@@ -295,6 +316,7 @@ void Bot::RunBot(int roomID)
 		e.roomid = roomID;
 		e.GameStartTime = StartTime[roomID];
 		m_pTimer->push_event(roomID, OE_gEvent, 66, reinterpret_cast<char*>(&e));
+		monsterRun[roomID] = true;
 	}
 }
 
