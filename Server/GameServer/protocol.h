@@ -17,7 +17,7 @@ constexpr int MAX_MONSTER = 15;
 constexpr int MAX_MAP_BLOCK = 9;
 constexpr int MAP_SIZE = 6144;
 constexpr int MAP_BLOCK_SIZE = 2048;
-constexpr int MAP_BREAK_TIME = 300000;
+constexpr int MAP_BREAK_TIME = 120000;
 
 constexpr int MON_SPAWN_TIME = 10000;
 
@@ -354,7 +354,7 @@ struct player_dead_packet : public Packet {
 
 struct map_block_set : public Packet {
 	char block_type[9];
-
+	std::chrono::system_clock::time_point GameStartTime;
 };
 
 struct map_collapse_packet : public Packet {
@@ -364,6 +364,7 @@ struct map_collapse_packet : public Packet {
 
 struct cloud_move_packet : public Packet {
 	float x, z;
+	std::chrono::system_clock::time_point GameStartTime;
 };
 
 struct mon_add_packet : public Packet {
@@ -437,22 +438,22 @@ struct create_account_packet :public Packet {
 };
 
 struct mon_move_to_player_event : public Packet {
-
+	std::chrono::system_clock::time_point GameStartTime;
 };
 
 struct mon_attack_cooltime_event : public Packet {
-
+	std::chrono::system_clock::time_point GameStartTime;
 };
 
 struct mon_respawn_event : public Packet {
-
+	std::chrono::system_clock::time_point GameStartTime;
 };
 
 struct Mapbreak_event : public Packet {
-
+	std::chrono::system_clock::time_point GameStartTime;
 };
 
 struct game_end_event : public Packet {
-
+	std::chrono::system_clock::time_point GameStartTime;
 };
 #pragma pack(pop)

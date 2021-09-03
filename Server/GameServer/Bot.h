@@ -77,6 +77,8 @@ public:
 
     std::mutex               monsters_lock;
 
+    std::unordered_map <int, std::chrono::system_clock::time_point> StartTime;
+
 private:
     Server* m_pServer = NULL;
     Timer* m_pTimer = NULL;

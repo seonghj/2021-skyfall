@@ -2,6 +2,7 @@
 
 void Map::init_Map(Server* s, Timer* t)
 {
+	StartTime = std::chrono::system_clock::now();
 	m_pServer = s;
 	m_pTimer = t;
 
@@ -37,6 +38,7 @@ void Map::init_Map(Server* s, Timer* t)
 	p.type = EventType::Mapset;
 	p.size = sizeof(p);
 	p.key = roomnum;
+	p.GameStartTime = StartTime;
 	over.dataBuffer.len = sizeof(p);
 	memcpy(over.dataBuffer.buf, reinterpret_cast<char*>(&p), sizeof(p));
 	DWORD Transferred = 0;
@@ -190,6 +192,7 @@ void Map::cloud_move()
 	p.roomid = roomnum;
 	p.x = Cloud.x;
 	p.z = Cloud.y;
+	p.GameStartTime = StartTime;
 	m_pTimer->push_event(roomnum, OE_gEvent, 1000, reinterpret_cast<char*>(&p));
 	
 	/*++game_time;
@@ -218,7 +221,7 @@ void Map::Map_collapse()
 		}
 	}
 
-	printf("collapse block: %d\n", num);
+	printf("Room: %d collapse block: %d\n", roomnum, num);
 	//printf("cloud x: %f | y: %f\n\n", Cloud.x, Cloud.y);
 	atm[num] = 1000;
 	Set_wind();

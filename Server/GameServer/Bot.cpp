@@ -249,6 +249,7 @@ void Bot::CheckBehavior(int roomID)
 							e.type = EventType::Mon_attack_cooltime;
 							e.key = mon.key;
 							e.roomid = roomID;
+							e.GameStartTime = StartTime[roomID];
 
 							int cooltime = 0;
 
@@ -269,6 +270,7 @@ void Bot::CheckBehavior(int roomID)
 					else if (range > distance) {
 						mon.Move(subtract, mon.speed / 2);
 						m_pServer->send_monster_pos(mon, cross, player);
+						//printf("monster %d move\n", mon.key);
 					}
 				}
 			}
@@ -290,7 +292,8 @@ void Bot::RunBot(int roomID)
 		e.type = EventType::Mon_move_to_player;
 		e.key = 0;
 		e.roomid = roomID;
-		m_pTimer->push_event(roomID, OE_gEvent, 50, reinterpret_cast<char*>(&e));
+		e.GameStartTime = StartTime[roomID];
+		m_pTimer->push_event(roomID, OE_gEvent, 66, reinterpret_cast<char*>(&e));
 	}
 }
 
