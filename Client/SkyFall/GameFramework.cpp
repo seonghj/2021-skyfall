@@ -1060,8 +1060,8 @@ void CGameFramework::ProcessInput()
             player_move_packet p;
             p.key = m_pPacket->Get_clientkey();
             p.ingamekey = m_pPacket->InGamekey;
-            p.dx = m_DegreeX;
-            p.dy = m_DegreeY;
+            p.dx = m_pPlayer->GetPitch();
+            p.dy = m_pPlayer->GetYaw();
             p.size = sizeof(p);
             p.state = 1;
             p.type = CS_player_move;
@@ -1157,7 +1157,7 @@ void CGameFramework::ProcessInput()
                     m_DegreeY += cxDelta;
 
                     m_pPlayer->Rotate(cyDelta, cxDelta, 0);
-                    if (abs(m_DegreeX) >= 6.f || abs(m_DegreeY) >= 6.f) {
+                    if (abs(m_DegreeX) >= 12.f || abs(m_DegreeY) >= 12.f) {
                         //printf("%f %f\n", m_pCamera->GetPitch(), m_pCamera->GetYaw());
                         m_DegreeX = 0;
                         m_DegreeY = 0;

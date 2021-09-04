@@ -240,16 +240,18 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		CLoadedModelInfo* pModel2 = new CLoadedModelInfo(*pBowModel);
 		CLoadedModelInfo* pModel3 = new CLoadedModelInfo(*p2HSwordModel);
 		CLoadedModelInfo* pModel4 = new CLoadedModelInfo(*p2HSpearModel);
-		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p1HSwordModel, (void**)m_ppTerrain);
+		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel1, (void**)m_ppTerrain);
 		m_mBowPlayer[i] = new CBowPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel2, (void**)m_ppTerrain);
 		m_m2HswordPlayer[i] = new C2HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel3, (void**)m_ppTerrain);
 		m_m2HspearPlayer[i] = new C2HspearPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel4, (void**)m_ppTerrain);
-		if (i % 3 == 0)
+		if (i % 4 == 0)
 			m_mPlayer[i] = m_mBowPlayer[i];
-		if (i % 3 == 1)
+		if (i % 4 == 1)
 			m_mPlayer[i] = m_m2HswordPlayer[i];
-		if (i % 3 == 2)
+		if (i % 4 == 2)
 			m_mPlayer[i] = m_m2HspearPlayer[i];
+		if (i % 4 == 3)
+			m_mPlayer[i] = m_m1HswordPlayer[i];
 		m_mPlayer[i]->m_nkey = i;
 		delete pModel1;
 		delete pModel2;

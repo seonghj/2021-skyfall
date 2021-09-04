@@ -323,6 +323,7 @@ struct player_equipment_packet : public Packet {
 struct player_attack_packet : public Packet {
 	short ingamekey;
 	char attack_type;
+	float dx, dy;
 };
 
 struct player_shot_packet : public Packet {
@@ -330,6 +331,7 @@ struct player_shot_packet : public Packet {
 	DirectX::XMFLOAT3 Look;
 	float fTimeElapsed;
 	float ChargeTimer;
+	float dx, dy;
 };
 
 struct player_arrow_packet : public Packet {
@@ -349,6 +351,7 @@ struct player_damage_packet : public Packet {
 struct player_stop_packet : public Packet {
 	short ingamekey;
 	DirectX::XMFLOAT3 Position;
+	float dx, dy;
 };
 
 struct player_dead_packet : public Packet {
