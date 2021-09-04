@@ -300,6 +300,7 @@ void Server::Disconnected(int key)
         , ntohs(sessions[key].clientaddr.sin_port), key);
     //send_disconnect_player_packet(key);
     closesocket(sessions[key].sock);
+    int roomid = sessions[key].roomID;
     sessions[key].connected = FALSE;
     sessions[key].key = INVALIDID;
     std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
@@ -307,9 +308,9 @@ void Server::Disconnected(int key)
         if (sessions[key].InGamekey == INVALIDID) return;
         --GameRooms[key].TotalPlayer;
         GameRooms[sessions[key].roomID].pkeys[sessions[key].InGamekey] = INVALIDID;
-        int roomid = sessions[key].roomID;
+        sessions[key].roomID = INVALIDID;
 
-        if (GameRooms[key].TotalPlayer < -0){
+        if (GameRooms[roomid].TotalPlayer <= 1){
             GameRooms[roomid].CanJoin = false;
             delete GameRooms[roomid].m_pMap;  
             ZeroMemory(GameRooms[roomid].name, sizeof(GameRooms[roomid].name));
