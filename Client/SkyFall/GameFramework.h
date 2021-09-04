@@ -88,8 +88,9 @@ public:
 	CScene*						m_pScene = NULL;
 
 	bool						m_bRotateEnable = 0;
+	BOOL						PressDirButton = false;
 
-	int frametime = 0;
+	int							frametime = 0;
 
 private:
 	HINSTANCE					m_hInstance;
@@ -156,7 +157,6 @@ private:
 	CB_FOG_INFO					*m_pcbMappedFog = NULL;
 
 	DWORD						dwDirection = 0;
-	BOOL						PressDirButton = false;
 
 	//Font
 	unique_ptr<SpriteBatch>		m_pSprite;
