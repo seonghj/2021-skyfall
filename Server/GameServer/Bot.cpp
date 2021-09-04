@@ -231,7 +231,7 @@ void Bot::CheckBehavior(int roomID)
 					// 외적에 따라 가까운 방향으로 회전하도록
 					XMFLOAT3 cross = Vector3::CrossProduct(subtract, look);
 
-					float rotate_degree = -cross.y * rotation / 10;
+					float rotate_degree = -cross.y * rotation /*/ 10*/;
 					if (EPSILON <= rotation)
 						mon.Rotate(0.0f, 0.0f, rotate_degree);
 					else
