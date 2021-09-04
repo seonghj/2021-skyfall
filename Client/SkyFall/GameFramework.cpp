@@ -776,9 +776,12 @@ void CGameFramework::DrawTimer()
 {
 	PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
 	char str[6] = "";
+    char h[4];
+    char c_player[12] = "Player : ";
+    char p[3];
+    int  p_num = 20;     // 여기에 남은 플레이어수 넣으면 됨
 	int t = m_pcbMappedFrameworkInfo->m_fCurrentTime;
 
-	char h[4];
 	_itoa_s(t / 60, h, 10);
 	strcat_s(str, h);
 	strcat_s(str, ":");
@@ -788,8 +791,12 @@ void CGameFramework::DrawTimer()
 	char m[3];
 	_itoa_s(t % 60, m, 10);
 	strcat_s(str, m);
+
+    _itoa_s(p_num, p, 10);
+    strcat_s(c_player, p);
 	m_pSprite->Begin(m_pd3dCommandList);
 	m_pFont->DrawString(m_pSprite.get(), str, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 10));
+    m_pFont->DrawString(m_pSprite.get(), c_player, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 70, 40));
 	m_pSprite->End();
 	PIXEndEvent(m_pd3dCommandQueue);
 }
