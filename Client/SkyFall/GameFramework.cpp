@@ -779,7 +779,6 @@ void CGameFramework::DrawTimer()
     char h[4];
     char c_player[12] = "Player : ";
     char p[3];
-    int  p_num = 20;     // 여기에 남은 플레이어수 넣으면 됨
 	int t = m_pcbMappedFrameworkInfo->m_fCurrentTime;
 
 	_itoa_s(t / 60, h, 10);
@@ -792,7 +791,7 @@ void CGameFramework::DrawTimer()
 	_itoa_s(t % 60, m, 10);
 	strcat_s(str, m);
 
-    _itoa_s(p_num, p, 10);
+    _itoa_s(leftPlayer, p, 10);
     strcat_s(c_player, p);
 	m_pSprite->Begin(m_pd3dCommandList);
 	m_pFont->DrawString(m_pSprite.get(), str, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 10));

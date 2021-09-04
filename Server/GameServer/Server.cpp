@@ -484,6 +484,7 @@ void Server::send_start_packet(int to, int roomID)
     p.pos.x = dis(gen);
     p.pos.y = 500;
     p.pos.z = dis(gen);
+    p.leftplayer = GameRooms[roomID].TotalPlayer;
     sessions[to].f3Position = p.pos;
 
     send_packet(to, reinterpret_cast<char*>(&p), roomID);

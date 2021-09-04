@@ -240,6 +240,7 @@ struct game_start_packet :public Packet {
 	PlayerType weaponType;
 	short ingamekey;
 	XMFLOAT3 pos;
+	short leftplayer;
 };
 
 struct start_ok_packet :public Packet {
