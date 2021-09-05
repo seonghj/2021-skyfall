@@ -817,7 +817,7 @@ void CScene::CheckBehavior(CMonster *pMonster)
 		//printf("range : %f\n", range);
 		// 실제 몬스터의 look 벡터
 		XMFLOAT3 look = Vector3::ScalarProduct(pMonster->GetUp(), -1);
-		//printf(" x : %f / y : %f / z : %f\n", pMonster->GetUp().x, pMonster->GetUp().y, pMonster->GetUp().z);
+		//printf(" x : %f / y : %f / z : %f\n", pMonster->GetUp().x, pMonster->GetUp().y, pMonster->GetUp().z);	
 
 		rotation = acosf(Vector3::DotProduct(subtract, look)) * 180 / PI;
 		//printf("rotation : %f\n", rotation);
@@ -836,7 +836,7 @@ void CScene::CheckBehavior(CMonster *pMonster)
 		/*rotation = Vector3::Angle(subtract, look);
 		printf("rotation2 : %f\n", rotation);*/
 		if (EPSILON <= rotation)
-			pMonster->Rotate(0.0f, 0.0f, -cross.y * rotation / 10);
+			pMonster->Rotate(0.0f, 0.0f, -cross.y * rotation / 10); 
 		//printf("%f, %f, %f\n", cross.y, rotation, -cross.y * rotation / 10);
 	}
 	else

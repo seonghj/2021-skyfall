@@ -517,7 +517,8 @@ float4 PSSkyBox(VS_SKYBOX_CUBEMAP_OUTPUT input) : SV_TARGET
 {
 	float4 cColor = gtxtSkyCubeTexture.Sample(gssClamp, input.positionL);
 	gvFogPos;
-	cColor = Fog(cColor, float3(1200.f, 1200.f, 1200.f));
+	float3 position = input.positionL * 200.f + gvCameraPosition.xyz;
+	cColor = Fog(cColor, position);
 	return(cColor);
 }
 
