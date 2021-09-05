@@ -854,21 +854,22 @@ void CScene::TakeDamage(bool isDamaged)
 
 void CScene::UpdateMap()
 {
-	for (int i = 0; i < m_pMap->m_nMaps; ++i) {
-		if (m_ppTerrain[i / 2]->IsFalling() && m_ppTerrain[1 / 2]->GetTime() < 20) {
-			CGameObject* pObject = m_pMap->GetMap(i)->FindFrame("RootNode")->m_pChild->m_pChild;
-			while (true) {
-				XMFLOAT3 pos = pObject->GetPosition();
-				pos.y = m_ppTerrain[i / 2]->GetHeight(pos.x, pos.z);
-				pObject->SetPosition(pos);
+	//for (int i = 0; i < m_pMap->m_nMaps; ++i) {
+	//	if (m_ppTerrain[i / 2]->IsFalling() && m_ppTerrain[1 / 2]->GetTime() < 20) {
+	//		CGameObject* pObject = m_pMap->GetMap(i)->FindFrame("RootNode")->m_pChild->m_pChild;
+	//		while (true) {
+	//			XMFLOAT3 pos = pObject->GetPosition();
+	//			//pos.y = m_ppTerrain[i / 2]->GetHeight(pos.x, pos.z);
+	//			pos.y += 1000;
+	//			pObject->SetPosition(pos);
 
-				if (pObject->m_pSibling)
-					pObject = pObject->m_pSibling;
-				else
-					break;
-			}
-		}
-	}
+	//			if (pObject->m_pSibling)
+	//				pObject = pObject->m_pSibling;
+	//			else
+	//				break;
+	//		}
+	//	}
+	//}
 }
 
 void CScene::Reset()
@@ -1090,10 +1091,10 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 		{
 		case 'z': case 'Z':
 			//gbShowBoundingBox = !gbShowBoundingBox;
-			m_ppUIObjects[1]->SetAlpha(0.0f);
+			//m_ppUIObjects[1]->SetAlpha(0.0f);
 			break;
 		case 'x':case'X':
-			m_ppUIObjects[1]->SetAlpha(1.0f);
+			//m_ppUIObjects[1]->SetAlpha(1.0f);
 			break;
 
 		/*case 'W': m_ppGameObjects[0]->MoveForward(+3.0f); break;
