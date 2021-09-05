@@ -1153,6 +1153,7 @@ void CGameFramework::ProcessInput()
 			p.ChargeTimer = m_ChargeTimer.GetTotalTime();
             p.dx = m_pPlayer->GetPitch();
             p.dy = m_pPlayer->GetYaw();
+            p.bowPos = m_pPlayer->FindFrame("Bow_Main")->GetPosition();
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 			//printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
 		}

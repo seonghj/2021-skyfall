@@ -334,6 +334,7 @@ struct player_shot_packet : public Packet {
 	float fTimeElapsed;
 	float ChargeTimer;
 	float dx, dy;
+	DirectX::XMFLOAT3 bowPos;
 };
 
 struct player_arrow_packet : public Packet {
