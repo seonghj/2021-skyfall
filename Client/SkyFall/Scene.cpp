@@ -779,7 +779,7 @@ void CScene::CheckCollision(CPacket* pPacket)
 	else if (m_iState == INGAME) {
 		for (auto& a : m_mPlayer) {
 			XMFLOAT3 d = Vector3::Subtract(m_pPlayer->GetPosition(), a->GetPosition());
-			if (m_pPlayer != a && Vector3::Length(d) < 100) {
+			if (m_pPlayer != a && Vector3::Length(d) < 1000) {
 				// check attack& collision: m_pPlayer -> a
 				m_pPlayer->CheckCollision(a, false);
 			}
@@ -1142,7 +1142,7 @@ void CScene::AnimateObjects(float fTimeElapsed)
 
 		for (int i = 0; i < m_nGameObjects; i++)
 		{
-			if (m_ppGameObjects[i])
+			if (m_ppGameObjects[i] && !m_ppTerrain[m_ppGameObjects[i]->GetPlace()]->IsFalling())
 			{
 				m_ppGameObjects[i]->Update(fTimeElapsed);
 			}
@@ -1263,7 +1263,7 @@ void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* p
 
 		for (int i = 0; i < m_nGameObjects; i++)
 		{
-			if (m_ppGameObjects[i])
+			if (m_ppGameObjects[i] && !m_ppTerrain[m_ppGameObjects[i]->GetPlace()]->IsFalling())
 			{
 				m_ppGameObjects[i]->Animate(m_fElapsedTime);
 				m_ppGameObjects[i]->UpdateTransform(NULL);
