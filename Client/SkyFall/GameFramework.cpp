@@ -1158,7 +1158,7 @@ void CGameFramework::ProcessInput()
 			//printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
 		}
 
-        if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
+        if (((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))&& !m_bMouseHold)
         {
             if (cxDelta || cyDelta)
             {
