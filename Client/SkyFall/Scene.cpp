@@ -161,11 +161,11 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 		m_ppUIObjects[0]->SetAlpha(0.8f);
 		m_ppUIObjects[0]->SethPercent(1.f);
 
-		m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
+		m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Win_UI.dds", -1, -1, 1, 1, 0.8);
 		m_ppUIObjects[1]->SetAlpha(0.0f);
 		m_ppUIObjects[1]->SethPercent(1.f);
 
-		m_ppUIObjects[2] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Win_UI.dds", -1, -1, 1, 1, 0.8);
+		m_ppUIObjects[2] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
 		m_ppUIObjects[2]->SetAlpha(0.0f);
 		m_ppUIObjects[2]->SethPercent(1.f);
 
@@ -1090,6 +1090,10 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 		{
 		case 'z': case 'Z':
 			//gbShowBoundingBox = !gbShowBoundingBox;
+			m_ppUIObjects[1]->SetAlpha(0.0f);
+			break;
+		case 'x':case'X':
+			m_ppUIObjects[1]->SetAlpha(1.0f);
 			break;
 
 		/*case 'W': m_ppGameObjects[0]->MoveForward(+3.0f); break;
@@ -1214,10 +1218,10 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	}
 	else if (m_iState == SCENE::ENDGAME)
 	{
-		if (m_pPlayer->GetRate() == 1)
+		if (m_pPlayer->GetRate() == 0)
 		{
-			m_ppUIObjects[3]->UpdateShaderVariables(pd3dCommandList);
-			m_ppUIObjects[3]->Render(pd3dCommandList, pCamera);
+			m_ppUIObjects[1]->UpdateShaderVariables(pd3dCommandList);
+			m_ppUIObjects[1]->Render(pd3dCommandList, pCamera);
 		}
 		else if (m_pPlayer->GetRate() > 1)
 		{
