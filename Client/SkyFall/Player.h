@@ -150,7 +150,6 @@ public:
 
 	virtual void Shot(float fTimeElapsed, float fSpeed) {};
 	virtual void Shot(float fTimeElapsed, float fSpeed, XMFLOAT3 Look) {};
-	virtual void Shot(float fTimeElapsed, float fSpeed, XMFLOAT3 Look, XMFLOAT3 pos) {};
 	virtual void DeleteBullet(const int& idx) {};
 	virtual bool CheckCollision(CGameObject* pObject, bool isMonster = true);
 	virtual void CheckMap(CGameObject* pObject);
@@ -214,7 +213,6 @@ class CBowPlayer : public CTerrainPlayer
 public:
 	void Shot(float fTimeElapsed, float fSpeed);
 	void Shot(float fTimeElapsed, float fSpeed, XMFLOAT3 Look);
-	void Shot(float fTimeElapsed, float fSpeed, XMFLOAT3 Look, XMFLOAT3 pos);
 	void DeleteBullet(const int& idx);
 	void Animate(float fTimeElapsed);
 
