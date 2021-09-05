@@ -244,6 +244,7 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		m_mBowPlayer[i] = new CBowPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel2, (void**)m_ppTerrain);
 		m_m2HswordPlayer[i] = new C2HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel3, (void**)m_ppTerrain);
 		m_m2HspearPlayer[i] = new C2HspearPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel4, (void**)m_ppTerrain);
+		m_mBowPlayer[i]->Rotate(0, 0, -90);
 		if (i % 4 == 0)
 			m_mPlayer[i] = m_mBowPlayer[i];
 		if (i % 4 == 1)

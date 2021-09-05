@@ -334,7 +334,8 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
     }
     case WM_RBUTTONDOWN: {
         if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow")) {
-            m_pPacket->Send_attack_packet(PlayerAttackType::BOWR);
+           /* m_pPacket->Send_attack_packet(PlayerAttackType::BOWR);*/
+            m_pPlayer->RButtonUp();
         }
         else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
         {
@@ -377,8 +378,8 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
         //if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
         if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
             m_pPlayer->SetKeyup(true);
-        if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
-            m_pPlayer->RButtonUp();
+        /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+            m_pPlayer->RButtonUp();*/
         CCamera* pCamera = m_pPlayer->GetCamera();
         m_pCamera = pCamera;
         m_DegreeX = 0;
@@ -1137,8 +1138,8 @@ void CGameFramework::ProcessInput()
                 SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
         }
 
-		if (m_pPlayer->GetAttack() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA &&
-			!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow") && m_ChargeTimer.GetTotalTime() > 1.f)
+		if (m_pPlayer->GetAttack() && !strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow") 
+            && m_ChargeTimer.GetTotalTime() > 1.f)
 		{
 			player_shot_packet p;
             p.key = m_pPacket->Get_clientkey();
