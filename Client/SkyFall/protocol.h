@@ -31,6 +31,8 @@ constexpr float Atack_Distance_Dragon = 80.f;
 constexpr float Atack_Distance_Wolf = 55.f;
 constexpr float Atack_Distance_Metalon = 97.f;
 
+constexpr float ARROW_SPEED_WEIGHT = 300.f;
+
 
 #define SERVERIP   "127.0.0.1"
 //#define SERVERIP   "39.120.192.92"

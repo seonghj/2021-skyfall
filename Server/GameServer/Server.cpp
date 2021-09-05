@@ -1012,6 +1012,8 @@ void Server::process_packet(int key, char* buf, int roomID)
 
             if (!b)
                 p->canmake = false;
+            else
+                p->canmake = true;
             p->type = SC_create_account;
             send_packet(key, reinterpret_cast<char*>(p), INVALIDID);
         }
