@@ -450,7 +450,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
                     break;
                 case VK_F8:
                     m_bMouseHold = !m_bMouseHold;
-                    m_bRotateEnable = !m_bRotateEnable;
+                    //m_bRotateEnable = !m_bRotateEnable;
                     break;
                 case VK_F9:
                     ChangeSwapChainState();
@@ -1063,6 +1063,7 @@ void CGameFramework::ProcessInput()
             if (pKeysBuffer['A'] & 0xF0) { dwDirection |= DIR_LEFT;}
             if (pKeysBuffer['D'] & 0xF0) { dwDirection |= DIR_RIGHT;}
             
+            
             /*if (pKeysBuffer['Q'] & 0xF0) dwDirection |= DIR_UP;
             if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_DOWN;*/
 
@@ -1164,6 +1165,9 @@ void CGameFramework::ProcessInput()
                 if (m_bRotateEnable) {
                     m_fPitch += cyDelta;
                     m_fYaw += cxDelta;
+                    m_pCamera->Rotate(cyDelta, cxDelta, 0);
+                }
+                else if(m_pScene->GetState()==SCENE::INGAME){
                     m_DegreeX += cyDelta;
                     m_DegreeY += cxDelta;
 
@@ -1627,7 +1631,7 @@ void CGameFramework::UpdateShadowMap()
 {
     CCamera* pCamera = m_pShadowMap->GetCamera();
     XMFLOAT3 look = pCamera->GetLookVector();
-    XMFLOAT3 pos = Vector3::Add(m_pPlayer->GetPosition(), m_pPlayer->GetLookVector(), 500);
+    XMFLOAT3 pos = Vector3::Add(m_pPlayer->GetPosition(), m_pPlayer->GetCamera()->GetLookVector(), 500);
 
     pCamera->SetPosition(XMFLOAT3(pos.x, 0, pos.z));
     pCamera->Move(Vector3::ScalarProduct(look, -500, false));
@@ -1646,7 +1650,7 @@ void CGameFramework::StartGame()
     MouseHold(false);
     m_GameTimer.Reset();
     m_pScene->m_ppUIObjects[4]->SetAlpha(0.0f);
-    m_bRotateEnable = true;
+    m_bRotateEnable = false;
     XMFLOAT3 pos = m_pPlayer->GetPosition();
     m_pCamera->SetPosition(Vector3::Add(pos, m_pCamera->GetOffset()));
     pos.y += 60.0f;
