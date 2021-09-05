@@ -596,6 +596,7 @@ public:
 	CGameObject* GetMap(int idx) const;
 	void Update();
 	void Reset();
+	void test();
 
 		
 private:
