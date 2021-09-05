@@ -323,6 +323,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
     case WM_LBUTTONDOWN: {
         if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow")) {
             m_pPacket->Send_attack_packet(PlayerAttackType::BOWL);
+            //m_pScene->m_ppUIObjects[5]->SetAlpha(1.0f);
         }
         else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
             m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL1);
@@ -367,8 +368,10 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
             m_pPlayer->SetKeyup(true);
         ::ReleaseCapture();
         m_ChargeTimer.Stop();
-        if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+        if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow")) {
             m_pPlayer->LButtonUp(m_ChargeTimer.GetTotalTime());
+            //m_pScene->m_ppUIObjects[5]->SetAlpha(0.0f);
+        }
         m_DegreeX = 0;
         m_DegreeY = 0;
 
@@ -415,10 +418,10 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			switch (wParam)
 			{
 				case VK_CONTROL:
-					m_bRotateEnable = false;
-					m_pCamera->Rotate(-m_fPitch, -m_fYaw, 0);
-					m_fPitch = 0;
-					m_fYaw = 0;
+					//m_bRotateEnable = false;
+					//m_pCamera->Rotate(-m_fPitch, -m_fYaw, 0);
+					//m_fPitch = 0;
+					//m_fYaw = 0;
 					break;
 				case VK_ESCAPE:
 					//::PostQuitMessage(0);
@@ -468,7 +471,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
             switch (wParam)
             {
             case VK_CONTROL:
-                m_bRotateEnable = true;
+                //m_bRotateEnable = true;
                 break;
             case VK_UP:
                 XMFLOAT3 pos = m_pPlayer->GetPosition();
@@ -783,6 +786,7 @@ void CGameFramework::DrawTimer()
     char c_player[12] = "Player : ";
     char p[3];
 	int t = m_pcbMappedFrameworkInfo->m_fCurrentTime;
+    char aim_point[2] = "+";
 
 	_itoa_s(t / 60, h, 10);
 	strcat_s(str, h);
@@ -799,6 +803,7 @@ void CGameFramework::DrawTimer()
 	m_pSprite->Begin(m_pd3dCommandList);
 	m_pFont->DrawString(m_pSprite.get(), str, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 10));
     m_pFont->DrawString(m_pSprite.get(), c_player, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 70, 40));
+    m_pFont->DrawString(m_pSprite.get(), aim_point, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 10, FRAME_BUFFER_HEIGHT / 2 - 10));
 	m_pSprite->End();
 	PIXEndEvent(m_pd3dCommandQueue);
 }
