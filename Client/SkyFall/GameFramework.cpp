@@ -1637,6 +1637,11 @@ void CGameFramework::UpdateShadowMap()
 
 void CGameFramework::StartGame()
 {
+    for (int i = 0; i < MAX_PLAYER; i++) {
+        m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(10, 0);
+        m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetAllTrackDisable();
+        m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackEnable(10, true);
+    }
     m_pScene->SetState(SCENE::INGAME);
     MouseHold(false);
     m_GameTimer.Reset();
@@ -1646,6 +1651,7 @@ void CGameFramework::StartGame()
     m_pCamera->SetPosition(Vector3::Add(pos, m_pCamera->GetOffset()));
     pos.y += 60.0f;
     m_pCamera->SetLookAt(pos);
+    m_pPlayer->SetJump(true);
 }
 
 void CGameFramework::TrunOnBGM(int n)
