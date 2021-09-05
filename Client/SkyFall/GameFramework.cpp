@@ -1150,7 +1150,7 @@ void CGameFramework::ProcessInput()
 			p.fTimeElapsed = fTimeElapsed;
 			p.ChargeTimer = m_ChargeTimer.GetTotalTime();
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-			printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
+			//printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
 		}
 
         if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
