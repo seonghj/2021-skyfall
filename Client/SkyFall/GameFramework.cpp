@@ -1149,6 +1149,8 @@ void CGameFramework::ProcessInput()
 			p.Look = m_pCamera->GetLookVector();
 			p.fTimeElapsed = fTimeElapsed;
 			p.ChargeTimer = m_ChargeTimer.GetTotalTime();
+            p.dx = m_pPlayer->GetPitch();
+            p.dy = m_pPlayer->GetYaw();
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 			//printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
 		}
