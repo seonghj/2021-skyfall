@@ -221,7 +221,7 @@ bool DB::Send_player_record(const SESSION& player, int survival_time, int rank)
 
     if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
         != SQL_SUCCESS) {
-        printf("Query invaild\n");
+        //printf("Query invaild\n");
         return false;
     }
     if (hStmt) SQLCloseCursor(hStmt);

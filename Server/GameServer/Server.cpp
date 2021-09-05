@@ -812,9 +812,9 @@ void Server::game_end(int roomnum)
         send_game_end_packet(key, roomnum);
         sessions[key].InGamekey = INVALIDID;
 #ifdef Run_DB
-       /* if (m_pDB->isRun)
+        if (m_pDB->isRun)
             m_pDB->Send_player_record(sessions[key], 0
-                , GameRooms[roomnum].TotalPlayer);*/
+                , GameRooms[roomnum].TotalPlayer);
 #endif 
     }
     delete GameRooms[roomnum].m_pMap;
