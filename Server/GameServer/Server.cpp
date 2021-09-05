@@ -773,7 +773,7 @@ void Server::send_game_end_packet(int key, int roomID)
     p.type = PacketType::SC_game_end;
     p.roomid = roomID;
     send_packet(key, reinterpret_cast<char*>(&p), roomID);
-    printf("send end game to %d\n", key);
+    //printf("send end game to %d\n", key);
 }
 
 void Server::send_player_dead_packet(int ingamekey, int roomID)
