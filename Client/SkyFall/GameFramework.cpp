@@ -690,8 +690,8 @@ void CGameFramework::ShowRoomWindow()
                 /*if (m_pPacket->Get_StartWeapon() != PlayerType::PT_BASIC)
                     m_pPacket->Send_start_packet(m_pPacket->Get_StartWeapon());*/
             }
+            ImGui::SameLine(0, 50);
         }
-		ImGui::SameLine(0, 50);
 		if (ImGui::Button("Exit")) {
 			// 여기서 방을 나감
 			// 임시로 state 변경
