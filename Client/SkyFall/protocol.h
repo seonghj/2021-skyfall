@@ -215,6 +215,7 @@ struct room_create_packet :public Packet {
 struct room_select_packet :public Packet {
 	short room;
 	short ingamekey;
+	bool isMaster;
 };
 
 struct room_list_packet :public Packet {

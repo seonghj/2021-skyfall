@@ -93,6 +93,7 @@ public:
 
 	DWORD MoveDir[MAX_PLAYER];
 	bool isMove[MAX_PLAYER];
+	bool isMaster = false;
 
 private:
 	int client_key = INVALIDID;

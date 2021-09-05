@@ -1144,6 +1144,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         s.size = sizeof(s);
         s.type = SC_select_room;
         s.ingamekey = nkey;
+        s.isMaster = true;
         send_packet(p->key, reinterpret_cast<char*>(&s), -1);
         break;
     }
@@ -1158,7 +1159,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (GameRooms[key].TotalPlayer >= MAX_PLAYER) break;
 
         p->type = SC_select_room;
-
+        p->isMaster = false;
         int nkey = SetInGameKey(p->room);
         if (nkey == INVALIDID) {
             printf("Room %d no empty nkey\n", p->room);
