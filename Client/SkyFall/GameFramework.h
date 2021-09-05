@@ -91,6 +91,7 @@ public:
 	BOOL						PressDirButton = false;
 
 	int							frametime = 0;
+	int							leftPlayer = 0;
 
 private:
 	HINSTANCE					m_hInstance;

@@ -21,7 +21,7 @@ constexpr int MAP_BREAK_TIME = 30;
 
 constexpr int MON_SPAWN_TIME = 10000;
 
-constexpr float VIEWING_DISTANCE = 1000.f;
+constexpr float VIEWING_DISTANCE = 2000.f;
 
 constexpr int INVENTORY_MAX = 20;
 
@@ -240,6 +240,7 @@ struct game_start_packet :public Packet {
 	PlayerType weaponType;
 	short ingamekey;
 	XMFLOAT3 pos;
+	short leftplayer;
 };
 
 struct start_ok_packet :public Packet {
@@ -323,6 +324,7 @@ struct player_equipment_packet : public Packet {
 struct player_attack_packet : public Packet {
 	short ingamekey;
 	char attack_type;
+	float dx, dy;
 };
 
 struct player_shot_packet : public Packet {
@@ -330,6 +332,7 @@ struct player_shot_packet : public Packet {
 	DirectX::XMFLOAT3 Look;
 	float fTimeElapsed;
 	float ChargeTimer;
+	float dx, dy;
 };
 
 struct player_arrow_packet : public Packet {
@@ -349,6 +352,7 @@ struct player_damage_packet : public Packet {
 struct player_stop_packet : public Packet {
 	short ingamekey;
 	DirectX::XMFLOAT3 Position;
+	float dx, dy;
 };
 
 struct player_dead_packet : public Packet {

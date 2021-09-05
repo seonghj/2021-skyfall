@@ -300,6 +300,8 @@ void Server::Disconnected(int key)
         , ntohs(sessions[key].clientaddr.sin_port), key);
     //send_disconnect_player_packet(key);
     closesocket(sessions[key].sock);
+    int roomid = sessions[key].roomID;
+    GameRooms[roomid].TotalPlayer = GameRooms[roomid].TotalPlayer - 1;
     sessions[key].connected = FALSE;
     sessions[key].key = INVALIDID;
     std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
@@ -307,9 +309,9 @@ void Server::Disconnected(int key)
         if (sessions[key].InGamekey == INVALIDID) return;
         --GameRooms[key].TotalPlayer;
         GameRooms[sessions[key].roomID].pkeys[sessions[key].InGamekey] = INVALIDID;
-        int roomid = sessions[key].roomID;
+        sessions[key].roomID = INVALIDID;
 
-        if (GameRooms[key].TotalPlayer < -0){
+        if (GameRooms[roomid].TotalPlayer <= 1){
             GameRooms[roomid].CanJoin = false;
             delete GameRooms[roomid].m_pMap;  
             ZeroMemory(GameRooms[roomid].name, sizeof(GameRooms[roomid].name));
@@ -482,6 +484,7 @@ void Server::send_start_packet(int to, int roomID)
     p.pos.x = dis(gen);
     p.pos.y = 500;
     p.pos.z = dis(gen);
+    p.leftplayer = GameRooms[roomID].TotalPlayer;
     sessions[to].f3Position = p.pos;
 
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
@@ -801,6 +804,7 @@ void Server::game_end(int roomnum)
     if (GameRooms.count(roomnum) == 0) return;
     GameRooms[roomnum].CanJoin = false;
     GameRooms[roomnum].TotalPlayer = 0;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     for (int key : GameRooms[roomnum].pkeys) {
         if (key == INVALIDID) continue;
         //if (sessions[key].connected == false || sessions[key].playing == false) continue;
@@ -820,9 +824,9 @@ void Server::game_end(int roomnum)
     GameRooms.erase(roomnum);
     GameRooms_lock.unlock();
 
-    /*maps_lock.lock();
-    maps.erase(roomnum);
-    maps_lock.unlock();*/
+    //maps_lock.lock();
+    //maps.erase(roomnum);
+    //maps_lock.unlock();
 
     m_pBot->monsters_lock.lock();
     m_pBot->monsters.erase(roomnum);
@@ -1069,13 +1073,13 @@ void Server::process_packet(int key, char* buf, int roomID)
                     }
                 }
 
-                for (int i = 0; i < MAX_MONSTER; ++i) {
-                    if (m_pBot->monsters[p->roomid][i].state == 1) {
-                        //printf("send monster %d\n", i);
-                        send_add_monster(i, p->roomid, client_key);
-                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                    }
-                }
+                //for (int i = 0; i < MAX_MONSTER; ++i) {
+                //    if (m_pBot->monsters[p->roomid][i].state == 1) {
+                //        //printf("send monster %d\n", i);
+                //        send_add_monster(i, p->roomid, client_key);
+                //        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                //    }
+                //}
             }
         }
         break;
@@ -1265,6 +1269,8 @@ void Server::process_packet(int key, char* buf, int roomID)
         player_move_packet* p = reinterpret_cast<player_move_packet*>(buf);
         if (0 > p->ingamekey || p->ingamekey >= 20) break;
         p->type = SC_player_move;
+        sessions[p->ingamekey].m_fPitch.store(p->dx);
+        sessions[p->ingamekey].m_fYaw.store(p->dy);
         send_packet_to_players(p->ingamekey, reinterpret_cast<char*>(p), roomID);
         break;
     }

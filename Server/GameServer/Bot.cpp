@@ -109,7 +109,7 @@ void Bot::Init(int roomID)
 		monsters[roomID][5].speed = 5.f;
 
 		monsters[roomID][6].type = MonsterType::Wolf;
-		monsters[roomID][6].SpawnPos = XMFLOAT3{ 3548, 124, 4500};
+		monsters[roomID][6].SpawnPos = XMFLOAT3{ 3813, 124, 3636};
 		monsters[roomID][6].f3Position = monsters[roomID][6].SpawnPos.load();
 		monsters[roomID][6].Rotate(-90.0f, -40.0f, 0.0f);
 		monsters[roomID][6].state = 1;
@@ -231,7 +231,7 @@ void Bot::CheckBehavior(int roomID)
 					// 외적에 따라 가까운 방향으로 회전하도록
 					XMFLOAT3 cross = Vector3::CrossProduct(subtract, look);
 
-					float rotate_degree = -cross.y * rotation / 10;
+					float rotate_degree = -cross.y * rotation /*/ 10*/;
 					if (EPSILON <= rotation)
 						mon.Rotate(0.0f, 0.0f, rotate_degree);
 					else
