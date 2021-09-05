@@ -1220,7 +1220,7 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	}
 	else if (m_iState == SCENE::ENDGAME)
 	{
-		if (m_pPlayer->GetRate() == 0)
+		if (m_pPlayer->GetRate() <= 1)
 		{
 			m_ppUIObjects[1]->UpdateShaderVariables(pd3dCommandList);
 			m_ppUIObjects[1]->Render(pd3dCommandList, pCamera);

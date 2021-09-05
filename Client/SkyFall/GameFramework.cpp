@@ -1333,7 +1333,6 @@ void CGameFramework::FrameAdvance()
     }
 
 	UpdateShadowMap();
-    m_pScene->UpdateMap();
 	if(m_pScene->GetState() == SCENE::INGAME)
 		UpdateMiniMap();
 
@@ -1612,7 +1611,6 @@ void CGameFramework::Restart()
     m_pScene->m_ppUIObjects[2]->SetAlpha(0.0f);
 
     m_pScene->Reset();
-    //m_pScene->m_pMap->test();
     m_pScene->m_iState = SCENE::LOBBY;
 
     m_pPlayer = m_pScene->m_pPlayer = pBasicPlayer;
