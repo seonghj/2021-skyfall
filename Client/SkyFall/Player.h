@@ -62,6 +62,9 @@ protected:
 
 	PlayerType					m_type = PT_BASIC;
 
+	float						m_fRotate = 0.0f;
+	DWORD						m_dwDirection = 0;
+
 public:
 	CPlayer();
 	virtual ~CPlayer();
