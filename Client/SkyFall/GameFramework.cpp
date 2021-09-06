@@ -1063,7 +1063,7 @@ void CGameFramework::ProcessInput()
             if (pKeysBuffer['A'] & 0xF0) { dwDirection |= DIR_LEFT;}
             if (pKeysBuffer['D'] & 0xF0) { dwDirection |= DIR_RIGHT;}
             
-            
+            printf("%d\n", dwDirection);
             /*if (pKeysBuffer['Q'] & 0xF0) dwDirection |= DIR_UP;
             if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_DOWN;*/
 
@@ -1158,28 +1158,30 @@ void CGameFramework::ProcessInput()
 			//printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
 		}
 
-        if (((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))&& !m_bMouseHold)
+        if (((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f)))
         {
-            if (cxDelta || cyDelta)
-            {
-                if (m_bRotateEnable) {
-                    m_fPitch += cyDelta;
-                    m_fYaw += cxDelta;
-                    m_pCamera->Rotate(cyDelta, cxDelta, 0);
-                }
-                else if(m_pScene->GetState()==SCENE::INGAME){
-                    m_DegreeX += cyDelta;
-                    m_DegreeY += cxDelta;
-
-                    m_pPlayer->Rotate(cyDelta, cxDelta, 0);
-                    if (abs(m_DegreeX) >= 12.f || abs(m_DegreeY) >= 12.f) {
-                        //printf("%f %f\n", m_pCamera->GetPitch(), m_pCamera->GetYaw());
-                        m_DegreeX = 0;
-                        m_DegreeY = 0;
-                        m_pPacket->Send_Rotate(m_pPlayer->GetPitch(), m_pPlayer->GetYaw());
-                        //printf("rotate\n");
+            if (!m_bMouseHold) {
+                if (cxDelta || cyDelta)
+                {
+                    if (m_bRotateEnable) {
+                        m_fPitch += cyDelta;
+                        m_fYaw += cxDelta;
+                        m_pCamera->Rotate(cyDelta, cxDelta, 0);
                     }
-                    //m_pShadowMap->Rotate(cyDelta, cxDelta, 0);
+                    else if (m_pScene->GetState() == SCENE::INGAME) {
+                        m_DegreeX += cyDelta;
+                        m_DegreeY += cxDelta;
+
+                        m_pPlayer->Rotate(cyDelta, cxDelta, 0);
+                        if (abs(m_DegreeX) >= 12.f || abs(m_DegreeY) >= 12.f) {
+                            //printf("%f %f\n", m_pCamera->GetPitch(), m_pCamera->GetYaw());
+                            m_DegreeX = 0;
+                            m_DegreeY = 0;
+                            m_pPacket->Send_Rotate(m_pPlayer->GetPitch(), m_pPlayer->GetYaw());
+                            //printf("rotate\n");
+                        }
+                        //m_pShadowMap->Rotate(cyDelta, cxDelta, 0);
+                    }
                 }
             }
             if (dwDirection && (false == m_pPlayer->GetAttack())){
