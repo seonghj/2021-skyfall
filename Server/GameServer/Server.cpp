@@ -311,6 +311,7 @@ void Server::Disconnected(int key)
         GameRooms[sessions[key].roomID].pkeys[sessions[key].InGamekey] = INVALIDID;
         sessions[key].roomID = INVALIDID;
 
+        if (GameRooms.count(roomid) == 0) return;
         if (GameRooms[roomid].TotalPlayer <= 1){
             GameRooms[roomid].CanJoin = false;
             delete GameRooms[roomid].m_pMap;  
