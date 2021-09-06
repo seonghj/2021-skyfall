@@ -429,7 +429,20 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				case VK_RETURN:
 					break;
 				case VK_F1:
+                    if (m_pScene) {
+                        if (m_pPlayer->GetPlace() > 0 && m_pScene->GetState() == SCENE::INGAME) {
+                            int n = m_pPlayer->GetPlace();
+                            m_pScene->m_ppTerrain[n - 1]->Falling();
 
+                            for (int i = n * 2 - 2; i < (n * 2); i++)
+                            {
+                                CGameObject* pObject = m_pScene->m_pMap->GetMap(i);
+                                XMFLOAT3 pos = pObject->GetPosition();
+                                pos.y += 2000;
+                                pObject->SetPosition(pos);
+                            }
+                        }
+                    }
                     break;
                 case VK_F2:
 
