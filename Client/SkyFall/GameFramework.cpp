@@ -418,10 +418,10 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			switch (wParam)
 			{
 				case VK_CONTROL:
-					//m_bRotateEnable = false;
-					//m_pCamera->Rotate(-m_fPitch, -m_fYaw, 0);
-					//m_fPitch = 0;
-					//m_fYaw = 0;
+					m_bRotateEnable = false;
+					m_pCamera->Rotate(-m_fPitch, -m_fYaw, 0);
+					m_fPitch = 0;
+					m_fYaw = 0;
 					break;
 				case VK_ESCAPE:
 					//::PostQuitMessage(0);
@@ -471,7 +471,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
             switch (wParam)
             {
             case VK_CONTROL:
-                //m_bRotateEnable = true;
+                m_bRotateEnable = true;
                 break;
             case VK_UP:
                 XMFLOAT3 pos = m_pPlayer->GetPosition();
