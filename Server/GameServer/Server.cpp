@@ -793,6 +793,8 @@ void Server::send_player_dead_packet(int ingamekey, int roomID)
 
     sessions[GameRooms[roomID].pkeys[ingamekey]].playing == FALSE;
 
+    printf("%d dead\n", ingamekey);
+
 #ifdef Run_DB
     if (m_pDB->isRun)
         m_pDB->Send_player_record(sessions[GameRooms[roomID].pkeys[ingamekey]]
@@ -1238,7 +1240,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         packet.dy = sessions[p->key].m_fYaw;
         packet.MoveType = p->MoveType;
         packet.dir = p->dir;
-        packet.playertype = sessions[p->key].using_weapon;
+        packet.playertype = sessions[p->key].using_weapon.load();
 
         /*if (sessions[p->key].playing == FALSE) {
             send_packet(p->key, reinterpret_cast<char*>(&packet), roomID);
@@ -1298,6 +1300,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (0 > p->ingamekey || p->ingamekey >= 20) break;
         p->type = SC_player_stop;
         sessions[p->key].f3Position = p->Position;
+        //printf("player %d %d\n", p->key, sessions[p->key].using_weapon.load());
         //p->Position = sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position;
         send_packet_to_allplayers(roomID, reinterpret_cast<char*>(p));
         break;

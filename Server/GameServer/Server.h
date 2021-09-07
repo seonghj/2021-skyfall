@@ -88,7 +88,7 @@ public:
 
     void TakeDamage(int iDamage) { hp -= iDamage * (100 - def) / 100; };
     void AddProficiency() { proficiency += 0.06; }
-    float GetAtkDamage() const { return(att + att * (proficiency * proficiency)); }
+    float GetAtkDamage() const { return(att + att * (proficiency)); }
     void Reset();
 
     void Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity, bool isRun);
