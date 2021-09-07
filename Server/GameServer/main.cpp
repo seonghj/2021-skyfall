@@ -5,7 +5,7 @@
 #include "Bot.h"
 #include "Timer.h"
 
-#define Run_DB
+//#define Run_DB
 #define Run_Bot
 
 Server*		g_pServer = new Server;

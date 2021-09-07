@@ -59,6 +59,7 @@ protected:
 	LPVOID						*m_ppCameraUpdatedContext = NULL;
 
 	CCamera						*m_pCamera = NULL;
+	CPacket						*m_pPacket = NULL;
 
 	PlayerType					m_type = PT_BASIC;
 

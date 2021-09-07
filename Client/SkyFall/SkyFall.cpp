@@ -32,12 +32,12 @@ INT_PTR CALLBACK Login(HWND, UINT, WPARAM, LPARAM);
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
 
-	/*if (AllocConsole())
+	if (AllocConsole())
 	{
 		freopen("CONIN$", "rb", stdin);
 		freopen("CONOUT$", "wb", stdout);
 		freopen("CONOUT$", "wb", stderr);
-	}*/
+	}
 
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);

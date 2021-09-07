@@ -2,7 +2,7 @@
 #pragma warning(disable : 4996)
 #include "Server.h"
 
-#define Run_DB
+//#define Run_DB
 //#define Run_Lobby
 
 void SESSION::init() 
@@ -1300,7 +1300,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (0 > p->ingamekey || p->ingamekey >= 20) break;
         p->type = SC_player_stop;
         sessions[p->key].f3Position = p->Position;
-        //printf("player %d %d\n", p->key, sessions[p->key].using_weapon.load());
+        //printf("playerstop %d %d\n", p->key, sessions[p->key].using_weapon.load());
         //p->Position = sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position;
         send_packet_to_allplayers(roomID, reinterpret_cast<char*>(p));
         break;

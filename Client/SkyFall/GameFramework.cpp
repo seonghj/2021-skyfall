@@ -1009,6 +1009,7 @@ void CGameFramework::BuildObjects()
     m_pPacket->m_pFramework = this;
     m_pPacket->m_pPlayer = m_pPlayer;
     m_pPacket->m_pMap = m_pScene->m_pMap;
+    m_pPlayer->m_pPacket = m_pPacket;
     
 
 
@@ -1056,8 +1057,8 @@ void CGameFramework::ProcessInput()
         && (GetAsyncKeyState('D') & 0x8000) ? 0 : 1){
         if (PressDirButton == true) {
             PressDirButton = false;
-            if (m_pPlayer->GetGround() == true)
-                m_pPacket->Send_stop_packet();
+            /*if (m_pPlayer->GetGround() == true)
+                m_pPacket->Send_stop_packet();*/
         }
     }
 
@@ -1080,8 +1081,7 @@ void CGameFramework::ProcessInput()
             if (pKeysBuffer['S'] & 0xF0) { dwDirection |= DIR_BACKWARD;}
             if (pKeysBuffer['A'] & 0xF0) { dwDirection |= DIR_LEFT;}
             if (pKeysBuffer['D'] & 0xF0) { dwDirection |= DIR_RIGHT;}
-            
-            printf("%d\n", dwDirection);
+           
             /*if (pKeysBuffer['Q'] & 0xF0) dwDirection |= DIR_UP;
             if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_DOWN;*/
 
@@ -1119,8 +1119,11 @@ void CGameFramework::ProcessInput()
                 //printf("move\n");
                 PressDirButton = true;
                 m_pPacket->beforedir = dwDirection;
-                if (m_pScene->GetState() == SCENE::INGAME && m_pPlayer->GetAttack() == false)
+                if (m_pScene->GetState() == SCENE::INGAME && m_pPlayer->GetAttack() == false) {
+                    m_pPacket->isStop = false;
+                    m_pPlayer->SetDamaged(false);
                     m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+                }
             }
 
             // 이동방향 변경
@@ -1131,8 +1134,11 @@ void CGameFramework::ProcessInput()
                 m_pPacket->beforedir = dwDirection;
                 m_pPacket->beforeRun = m_pPlayer->GetRunning();
                 m_pPacket->beforeJump = m_pPlayer->GetJump();
-                if (m_pScene->GetState() == SCENE::INGAME && m_pPlayer->GetAttack() == false)
+                if (m_pScene->GetState() == SCENE::INGAME && m_pPlayer->GetAttack() == false) {
+                    m_pPacket->isStop = false;
+                    m_pPlayer->SetDamaged(false);
                     m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+                }
             }
         }
         
@@ -1346,10 +1352,10 @@ void CGameFramework::FrameAdvance()
     m_pPacket->OtherPlayerMove(m_GameTimer.GetTimeElapsed());
     CheckCollision();
 
-    if ((m_pPacket->beforeJump != m_pPlayer->GetJump()) && m_pPlayer->GetGround()) {
+    /*if ((m_pPacket->beforeJump != m_pPlayer->GetJump()) && m_pPlayer->GetGround()) {
         m_pPacket->beforeJump = m_pPlayer->GetJump();
         m_pPacket->Send_stop_packet();
-    }
+    }*/
 
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
 
