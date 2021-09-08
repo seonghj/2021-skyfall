@@ -498,8 +498,10 @@ void Server::send_start_packet(int to, int roomID)
     p.leftplayer = GameRooms[roomID].TotalPlayer;
     sessions[to].f3Position = p.pos;
 
-    if (sessions[to].using_weapon == PT_BASIC)
+    if (sessions[to].using_weapon == PT_BASIC) {
         p.weaponType = (PlayerType)weapondis(gen);
+        sessions[to].using_weapon = p.weaponType;
+    }
     else
         p.weaponType = sessions[to].using_weapon;
 
@@ -1253,7 +1255,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         packet.dy = sessions[p->key].m_fYaw;
         packet.MoveType = p->MoveType;
         packet.dir = p->dir;
-        packet.playertype = sessions[p->key].using_weapon.load();
+        packet.playertype = sessions[p->key].using_weapon;
 
         /*if (sessions[p->key].playing == FALSE) {
             send_packet(p->key, reinterpret_cast<char*>(&packet), roomID);
@@ -1278,7 +1280,8 @@ void Server::process_packet(int key, char* buf, int roomID)
          Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
          if (0 > p->ingamekey || p->ingamekey >= 20) break;
          p->type = SC_weapon_swap;
-         sessions[p->key].using_weapon = p->weapon;
+         if (p->weapon != 0)
+            sessions[p->key].using_weapon = p->weapon;
          //printf("player %d swap to %d\n", p->key, p->weapon);
          send_packet_to_allplayers(roomID, reinterpret_cast<char*>(p));
          break;
@@ -1286,7 +1289,8 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_weapon_select: {
         Weapon_select_packet* p = reinterpret_cast<Weapon_select_packet*>(buf);
         p->type = SC_weapon_select;
-        sessions[p->key].using_weapon = p->weapon;
+        if (p->weapon != 0)
+            sessions[p->key].using_weapon = p->weapon;
         //printf("player %d swap to %d\n", p->key, p->weapon);
         //send_packet_to_allplayers(roomID, reinterpret_cast<char*>(p));
         break;
@@ -1320,7 +1324,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (0 > p->ingamekey || p->ingamekey >= 20) break;
         p->type = SC_player_stop;
         sessions[p->key].f3Position = p->Position;
-        p->playertype = sessions[p->key].using_weapon.load();
+        p->playertype = sessions[p->key].using_weapon;
         //printf("playerstop %d %d\n", p->key, sessions[p->key].using_weapon.load());
         //p->Position = sessions[GameRooms[p->roomid].pkeys[p->key]].f3Position;
         send_packet_to_allplayers(roomID, reinterpret_cast<char*>(p));

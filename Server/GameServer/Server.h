@@ -76,7 +76,7 @@ public:
     std::atomic<float>      speed = 20;
     std::atomic<float>      proficiency = 0.0f;
 
-    std::atomic<PlayerType>      using_weapon = PlayerType::PT_BASIC;
+    PlayerType              using_weapon = PlayerType::PT_BASIC;
 
     std::atomic<short>      inventory[INVENTORY_MAX]{};
 
