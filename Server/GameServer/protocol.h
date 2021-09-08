@@ -6,7 +6,7 @@ constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
 constexpr int BUFSIZE = 128;
 constexpr int MAX_CLIENT = 3000;
-constexpr int MAX_PLAYER = 20;
+constexpr int MAX_PLAYER = 5;
 constexpr int INVALIDID = -1;
 constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
@@ -103,6 +103,7 @@ enum PacketType {
 	SC_monster_stop,
 	SC_player_record,
 	SC_player_getitem,
+	SC_weapon_select,
 
 
 	CS_create_account,
@@ -128,6 +129,7 @@ enum PacketType {
 	CS_monster_attack,
 	CS_monster_damaged,
 	CS_return_lobby,
+	CS_weapon_select,
 	CS_NONE,
 };
 
@@ -356,6 +358,7 @@ struct player_stop_packet : public Packet {
 	short ingamekey;
 	DirectX::XMFLOAT3 Position;
 	float dx, dy;
+	PlayerType playertype;
 };
 
 struct player_dead_packet : public Packet {

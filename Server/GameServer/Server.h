@@ -108,7 +108,7 @@ class Monster;
 
 class GameRoom {
 public:
-    int pkeys[20];
+    int pkeys[MAX_PLAYER];
     char name[20];
     bool CanJoin = false;
     int TotalPlayer = 0;
