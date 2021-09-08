@@ -48,6 +48,7 @@ public:
 	void Send_return_lobby_packet();
 	void Send_refresh_room_packet();
 	void Send_create_account_packet(char* id, char* pw);
+	void Send_select_weapon(PlayerType t);
 
 	void OtherPlayerMove(float fTimeElapsed);
 	void Send_Rotate(float pitch, float yaw);

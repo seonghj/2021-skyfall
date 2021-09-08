@@ -319,6 +319,11 @@ struct Weapon_swap_packet : public Packet {
 	PlayerType weapon;
 };
 
+struct Weapon_select_packet : public Packet {
+	short ingamekey;
+	PlayerType weapon;
+};
+
 struct player_equipment_packet : public Packet {
 	short ingamekey;
 	char armor;

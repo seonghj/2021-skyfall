@@ -319,7 +319,6 @@ void Server::Disconnected(int key)
                     deleteRoom = false;
                     break;
                 }
-                printf("%d\n", GameRooms[roomid].pkeys[i]);
             }
             if (deleteRoom == true) {
                 //printf("letf : %d\n", GameRooms[roomid].TotalPlayer);
@@ -485,19 +484,24 @@ void Server::send_start_packet(int to, int roomID)
     std::random_device rd;
     std::mt19937_64 gen(rd());
     std::uniform_int_distribution<int> dis(100, MAP_SIZE - 100);
+    std::uniform_int_distribution<int> weapondis(1, 4);
 
     game_start_packet p;
     p.type = PacketType::SC_start_ok;
     p.size = sizeof(p);
     p.key = to;
     p.roomid = roomID;
-    p.weaponType = sessions[to].using_weapon;
     p.ingamekey = sessions[to].InGamekey;
     p.pos.x = dis(gen);
     p.pos.y = 500;
     p.pos.z = dis(gen);
     p.leftplayer = GameRooms[roomID].TotalPlayer;
     sessions[to].f3Position = p.pos;
+
+    if (sessions[to].using_weapon == PT_BASIC)
+        p.weaponType = (PlayerType)weapondis(gen);
+    else
+        p.weaponType = sessions[to].using_weapon;
 
     send_packet(to, reinterpret_cast<char*>(&p), roomID);
 
@@ -1042,15 +1046,12 @@ void Server::process_packet(int key, char* buf, int roomID)
             bool ready = false;
 
             GameRooms[p->roomid].CanJoin = false;
-            sessions[p->key].using_weapon = p->weaponType;
             for (int client_key : GameRooms[p->roomid].pkeys) {
                 if (client_key == INVALIDID) continue;
                 if (sessions[client_key].playing == true) continue;
 
                 sessions[client_key].roomID = p->roomid;
                 sessions[client_key].over.roomID = p->roomid;
-
-                //sessions[client_key].using_weapon = p->weaponType;
 
                 printf("connected to Game: IP =%s, port=%d key = %d Room = %d / nkey: %d\n",
                     inet_ntoa(sessions[client_key].clientaddr.sin_addr)
@@ -1283,11 +1284,11 @@ void Server::process_packet(int key, char* buf, int roomID)
          break;
     }
     case PacketType::CS_weapon_select: {
-        Weapon_swap_packet* p = reinterpret_cast<Weapon_swap_packet*>(buf);
+        Weapon_select_packet* p = reinterpret_cast<Weapon_select_packet*>(buf);
         p->type = SC_weapon_select;
         sessions[p->key].using_weapon = p->weapon;
         //printf("player %d swap to %d\n", p->key, p->weapon);
-        send_packet_to_allplayers(roomID, reinterpret_cast<char*>(p));
+        //send_packet_to_allplayers(roomID, reinterpret_cast<char*>(p));
         break;
     }
     case PacketType::CS_player_move: {
