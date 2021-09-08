@@ -183,6 +183,7 @@ void Bot::CheckBehavior(int roomID)
 		if (player == INVALIDID) continue;
 		if (m_pServer->sessions[player].connected.load() == false) continue;
 		if (m_pServer->sessions[player].state.load() == Death) continue;
+		if (m_pServer->sessions[player].hp.load() <= 0) continue;
 		for (Monster& mon : monsters[roomID]) {
 			if (mon.state.load() == Death) continue;
 			XMFLOAT3 subtract;

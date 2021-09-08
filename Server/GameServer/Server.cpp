@@ -1375,6 +1375,8 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_monster_damaged: {
         mon_damaged_packet* p = reinterpret_cast<mon_damaged_packet*>(buf);
         if (0 > p->ingamekey || p->ingamekey >= 20) break;
+        if (0 > p->target || p->target >= 20) break;
+        if (GameRooms[p->roomid].pkeys[p->target] == INVALIDID) break;
         int key = p->key;
         int target = p->target;
         if (m_pBot->monsters[p->roomid][target].state == 0) break;
@@ -1409,6 +1411,8 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_player_damage: {
         player_damage_packet* p = reinterpret_cast<player_damage_packet*>(buf);
         if (0 > p->ingamekey || p->ingamekey >= 20) break;
+        if (0 > p->target || p->target >= 20) break;
+        if (GameRooms[p->roomid].pkeys[p->target] == INVALIDID) break;
         int key = p->key;
         int ingamekey = p->ingamekey;
         int target = p->target;

@@ -303,6 +303,7 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		//cout << "0" << endl;
 		break;
 	case 1:	// LbuttonUp
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(8, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(1, true);
 		//cout << "1" << endl;
@@ -784,7 +785,8 @@ void CScene::CheckCollision(CPacket* pPacket)
 			XMFLOAT3 d = Vector3::Subtract(m_pPlayer->GetPosition(), a->GetPosition());
 			if (m_pPlayer != a && Vector3::Length(d) < 1000) {
 				// check attack& collision: m_pPlayer -> a
-				m_pPlayer->CheckCollision(a, false);
+				if (a->GetHp() > 0)
+					m_pPlayer->CheckCollision(a, false);
 			}
 		}
 
