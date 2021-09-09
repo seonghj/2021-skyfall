@@ -782,11 +782,11 @@ void CScene::CheckCollision(CPacket* pPacket)
 	}
 	else if (m_iState == INGAME) {
 		for (auto& a : m_mPlayer) {
+			if (a->GetHp() <= 0) continue;
 			XMFLOAT3 d = Vector3::Subtract(m_pPlayer->GetPosition(), a->GetPosition());
 			if (m_pPlayer != a && Vector3::Length(d) < 1000) {
 				// check attack& collision: m_pPlayer -> a
-				if (a->GetHp() > 0)
-					m_pPlayer->CheckCollision(a, false);
+				m_pPlayer->CheckCollision(a, false);
 			}
 		}
 
