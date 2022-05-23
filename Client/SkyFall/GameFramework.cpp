@@ -1544,6 +1544,33 @@ void CGameFramework::FrameAdvance()
 
         }
     }
+
+    //for (int i = 0; i < 15; i++) {
+    //    if (m_pScene->m_ppGameObjects[i]->m_ismove) {
+    //        m_pPacket->MonsterMove(m_pScene->m_ppGameObjects[i], i);
+    //        /* printf("move %d x: %f y: %f z: %f", i
+    //             , m_pScene->m_ppGameObjects[i]->GetPosition().x
+    //             , m_pScene->m_ppGameObjects[i]->GetPosition().y
+    //             , m_pScene->m_ppGameObjects[i]->GetPosition().z);*/
+    //       if (frametime == 60) {
+    //            mon_pos_packet p;
+    //            p.size = sizeof(mon_pos_packet);
+    //            p.type = PacketType::SC_monster_pos;
+    //            p.key = i;
+    //            p.roomid = m_pPacket->roomID;
+    //            p.Position = m_pScene->m_ppGameObjects[i]->GetPosition();
+    //            p.direction = m_pScene->m_ppGameObjects[i]->vDirection;
+    //            p.degree = m_pScene->m_ppGameObjects[i]->m_fRotateDegree;
+    //            p.MoveType = 0;
+    //            p.state = 0;
+    //            p.MonsterType = m_pScene->m_ppGameObjects[i]->type;
+    //            p.target = m_pScene->m_ppGameObjects[i]->target_id;
+
+    //            //printf("%f, %f, %f\n", p->Position.x, p->Position.y, p->Position.z);
+    //            m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+    //        }
+    //    }
+    //}
     
     if (frametime > 60)
         frametime = 0;
@@ -1689,7 +1716,7 @@ void CGameFramework::TrunOnBGM(int n)
     for (int i = 0; i < BGM_NUM; i++) {
         m_bgm[i]->stop();
     }        
-        m_bgm[n]->play();
+        //m_bgm[n]->play();
 }
 
 void CGameFramework::TurnOnSE(int n)

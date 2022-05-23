@@ -46,12 +46,17 @@ public:
     char*                    recv_start;
 
     std::atomic<bool>        connected = false;
+    // 준비확인
     bool                     isready = false;
+    // 플레이여부
     bool                     playing = false;
     int                      prev_size = 0;
+    // 플레이어 키값
     int                      key = -1;
+    // 방번호
     std::atomic<int>         roomID = -1;
     char                     id[50];
+    // 플레이어 인게임 키값
     int                      InGamekey = -1;
 
     // 0 죽음 / 1 생존
@@ -76,6 +81,7 @@ public:
     std::atomic<float>      speed = 20;
     std::atomic<float>      proficiency = 0.0f;
 
+    // 플레이어 무기 타입
     PlayerType              using_weapon = PlayerType::PT_BASIC;
 
     std::atomic<short>      inventory[INVENTORY_MAX]{};
@@ -178,6 +184,7 @@ public:
     void send_add_monster(int key, int roomID, int to);
     void send_remove_monster(int key, int roomID, int to);
     void send_monster_pos(Monster& mon, XMFLOAT3 direction, int target);
+    void send_monster_move(Monster& mon, XMFLOAT3 direction, int target);
     void send_monster_attack(Monster& mon, XMFLOAT3 direction, int target);
     void send_monster_stop(int key, int roomID);
 

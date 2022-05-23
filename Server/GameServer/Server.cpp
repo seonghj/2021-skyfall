@@ -693,6 +693,36 @@ void Server::send_monster_pos(Monster& mon, XMFLOAT3 direction, int target)
     }
 }
 
+void Server::send_monster_move(Monster& mon, XMFLOAT3 direction, int target)
+{
+    if (mon.key >= MAX_MONSTER) return;
+    int roomID = mon.roomID;
+
+    mon_move_packet p;
+    p.size = sizeof(mon_move_packet);
+    p.type = PacketType::SC_monster_move;
+    p.key = mon.key;
+    p.roomid = mon.roomID.load();
+    p.Position = mon.f3Position.load();
+    p.direction = direction;
+    p.degree = mon.m_fRoll.load();
+    p.MoveType = 0;
+    p.state = 0;
+    p.MonsterType = mon.type.load();
+    p.target = target;
+
+    //printf("%d\n", mon.key);
+
+    for (int k : GameRooms[roomID].pkeys) {
+        if (k == INVALIDID) continue;
+        if (sessions[k].connected == FALSE) continue;
+        if (sessions[k].playing == FALSE) continue;
+        if (in_VisualField(mon, sessions[k], roomID)) {
+            send_packet(k, reinterpret_cast<char*>(&p), roomID);
+        }
+    }
+}
+
 void Server::send_monster_attack(Monster& mon, XMFLOAT3 direction, int target)
 {
     if (mon.key >= MAX_MONSTER) return;
@@ -1508,7 +1538,7 @@ void Server::ProcessEvent(OVER_EX* over_ex, int roomID, int key)
         m_pBot->monsters[e->roomid][e->key].Move(e->subtract
             , m_pBot->monsters[e->roomid][e->key].speed);
         send_monster_pos(m_pBot->monsters[e->roomid][e->key]
-            , e->direction, e->target);
+            , e->subtract, e->target);
         delete over_ex;
         break;
     }
@@ -1633,7 +1663,7 @@ void Server::WorkerFunc()
         switch (over_ex->type) {
         case OE_session: {
             // key = 유저번호
-            if (FALSE == retval)
+            if (FALSE == retval || Transferred == 0)
             {
                 //printf("error = %d\n", WSAGetLastError());
                 display_error("GQCS", WSAGetLastError());
@@ -1641,33 +1671,24 @@ void Server::WorkerFunc()
                 continue;
             }
 
-            if ((Transferred == 0)) {
-                display_error("GQCS", WSAGetLastError());
-                Disconnected(key);
-                continue;
-            }
             //printf("%d\n", true);
             if (over_ex->is_recv) {
                 char* packet_ptr = over_ex->messageBuffer;
-                int num_data = Transferred + sessions[key].prev_size;
+                int required_data = Transferred + sessions[key].prev_size;
                 int packet_size = packet_ptr[0];
-                while (num_data >= packet_size) {
-                    if (num_data >= BUFSIZE) break;
+                while (required_data >= packet_size) {
+                    if (required_data >= BUFSIZE) break;
                     if (packet_size <= 0) break;
                     //printf("num_data: %d, packet_size: %d prev_size: %d\n", num_data, packet_size, sessions[key].prev_size);
                     process_packet(key, packet_ptr, roomID);
-                    num_data -= packet_size;
+                    required_data -= packet_size;
                     packet_ptr += packet_size;
                     packet_size = packet_ptr[0];
-                    if (0 >= num_data) {
-                        //ZeroMemory(packet_ptr, sizeof(packet_ptr));
-                        packet_size = 0;
-                        break;
-                    }
                 }
+                packet_size = 0;
                 sessions[key].prev_size = 0;
-                if (0 != num_data)
-                    memcpy(over_ex->messageBuffer, packet_ptr, num_data);
+                if (0 != required_data)
+                    memcpy(over_ex->messageBuffer, packet_ptr, required_data);
                 do_recv(key, roomID);
             }
             else {

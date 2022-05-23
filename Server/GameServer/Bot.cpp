@@ -282,6 +282,10 @@ void Bot::CheckBehavior(int roomID)
 					else if (range > distance) {
 						/*mon.Move(subtract, mon.speed);
 						m_pServer->send_monster_pos(mon, cross, player);*/
+						/*if (mon.before_dir.load().x == cross.x
+							&& mon.before_dir.load().y == cross.y
+							&& mon.before_dir.load().z == cross.z)
+							break;*/
 						mon_move_event me;
 						me.size = sizeof(me);
 						me.type = EventType::Mon_move_to_player;
@@ -292,6 +296,7 @@ void Bot::CheckBehavior(int roomID)
 						me.direction = cross;
 						me.target = player;
 						m_pTimer->push_event(roomID, OE_gEvent, 60, reinterpret_cast<char*>(&me));
+						//mon.before_dir.store(cross);
 					}
 				}
 			}

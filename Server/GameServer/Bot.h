@@ -39,6 +39,8 @@ public:
     std::atomic<float>      att = 10;
     std::atomic<float>      speed = 20;
 
+    std::atomic<DirectX::XMFLOAT3>      before_dir = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+
     bool                    CanAttack = TRUE;
     short                   TraceTarget = INVALIDID;
 

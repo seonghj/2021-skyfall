@@ -56,6 +56,7 @@ public:
 	void Map_set(map_block_set* p);
 	bool CheckCollision(CMonster* mon);
 	int MonsterAttackCheck(CMonster* mon);
+	void MonsterMove(CMonster* mon, int key);
 
 	void ProcessPacket(char* buf);
 

@@ -64,8 +64,8 @@ enum PacketType {
 	SC_NONE,
 	SC_create_account,
 	SC_player_Lobbykey,
-	SC_player_LobbyloginOK,
-	SC_player_LobbyloginFail,
+	/*SC_player_LobbyloginOK,
+	SC_player_LobbyloginFail,*/
 	SC_create_room,
 	SC_room_list,
 	SC_select_room,
@@ -395,6 +395,16 @@ struct mon_remove_packet : public Packet {
 };
 
 struct mon_pos_packet : public Packet {
+	char state;
+	DirectX::XMFLOAT3 Position;
+	DirectX::XMFLOAT3 direction;
+	float degree;
+	DWORD MoveType;
+	short MonsterType;
+	short target;
+};
+
+struct mon_move_packet : public Packet {
 	char state;
 	DirectX::XMFLOAT3 Position;
 	DirectX::XMFLOAT3 direction;

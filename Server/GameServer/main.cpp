@@ -19,7 +19,6 @@ int main(int argc, char* argv[])
 
 #ifdef Run_DB
 	bool DB_Connected;
-
 	DB_Connected = g_pDB->Connection_ODBC();
 	if (DB_Connected) std::cout << "DB connected\n";
 	else {
