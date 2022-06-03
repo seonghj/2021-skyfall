@@ -7,10 +7,9 @@ void Map::init_Map(Server* s, Timer* t)
 	m_pTimer = t;
 
 	memset(&over, 0, sizeof(over));
-	over.is_recv = true;
 	over.dataBuffer.len = BUFSIZE;
 	over.dataBuffer.buf = over.messageBuffer;
-	over.type = 1;
+	over.type = OE_gEvent;
 	over.roomID = roomnum;
 	game_start = true;
 

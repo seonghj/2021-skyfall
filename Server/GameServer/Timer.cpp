@@ -15,7 +15,7 @@ void Timer::init(HANDLE h_cp)
 	Timer_main();
 }
 
-void Timer::push_event(int key, int event_type, int delaytime_ms, char* message)
+void Timer::push_event(int key, OVER_EX_Type event_type, int delaytime_ms, char* message)
 {
 	std::lock_guard <std::mutex> lg{ m_timer_lock };
 	Timer_event te;

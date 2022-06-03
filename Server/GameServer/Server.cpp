@@ -8,6 +8,9 @@
 void SESSION::init() 
 {
    //memset(this, 0x00, sizeof(SESSION));
+    ZeroMemory(&over.overlapped, sizeof(over.overlapped));
+
+    roomID = INVALUED_ID;
     addrlen = 0;
     memset(packet_buf, 0, sizeof(packet_buf));
     prev_size = 0;
@@ -40,6 +43,10 @@ void SESSION::init()
 
     for (int i = 0; i < INVENTORY_MAX; i++)
         inventory[i] = 0;
+
+    over.dataBuffer.len = BUFSIZE;
+    over.dataBuffer.buf = over.messageBuffer;
+    over.roomID = INVALUED_ID;
 }
 
 void SESSION::Reset()
@@ -141,46 +148,6 @@ int Server::SetLobbyKey()
     }
 }
 
-int Server::SetroomID()
-{
-    //int cnt = 1;
-    //while (1) {
-    //    if (sessions.find(cnt) == sessions.end()) {
-    //        sessions_lock.lock();
-    //        //std::array<SESSION, 20> s{};
-    //        sessions.emplace(cnt, std::array<SESSION, 20>{});
-    //        sessions_lock.unlock();
-
-    //        maps_lock.lock();
-    //        maps.emplace(cnt, Map(cnt));
-    //        maps[cnt].SetNum(cnt);
-    //        //maps[cnt].init_Map(this, m_pTimer);
-    //        maps_lock.unlock();
-
-    //        m_pBot->monsters.emplace(cnt, std::array<Monster, MAX_MONSTER>{});
-    //        m_pBot->monsterRun.emplace(cnt, false);
-    //        m_pBot->Init(cnt);
-
-    //        /*m_pBot->monsters[cnt][0].SetPosition(2000, 197.757935, 5000);
-    //        m_pBot->monsters[cnt][0].state = 1;
-    //        m_pBot->monsters[cnt][0].type = MonsterType::Dragon;
-    //        m_pBot->monsters[cnt][0].Rotate(-90.0f, 20.0f, 0.0f);
-    //        m_pBot->monsters[cnt][0].key = 0;*/
-
-    //        m_pBot->RunBot(cnt);
-
-    //        printf("create game room - %d\n", cnt);
-    //        return cnt;
-    //    }
-    //    if (FALSE == sessions[cnt][MAX_PLAYER - 1].connected)
-    //        return cnt;
-    //    else {
-    //       ++cnt;
-    //    }
-    //}
-    return 0;
-}
-
 int Server::CreateRoom(int key, char* name)
 {
     if (GameRooms.count(key) != 0) return 1;
@@ -263,11 +230,10 @@ void Server::Accept()
 
         ZeroMemory(&sessions[client_key].over.overlapped
             , sizeof(sessions[client_key].over.overlapped));
-        sessions[client_key].over.type = 0;
+        sessions[client_key].over.type = OE_recv;
         sessions[client_key].over.dataBuffer.len = BUFSIZE;
         sessions[client_key].over.dataBuffer.buf =
             sessions[client_key].over.messageBuffer;
-        sessions[client_key].over.is_recv = true;
         sessions[client_key].over.roomID = INVALUED_ID;
 
 
@@ -384,15 +350,15 @@ void Server::send_packet(int to, char* packet, int roomID)
     over->dataBuffer.len = packet[0];
 
     memcpy(over->messageBuffer, packet, packet[0]);
-    over->is_recv = false;
+    over->type = OE_send;
     ZeroMemory(&over->overlapped, sizeof(over->overlapped));
 
     if (WSASend(client_s, &over->dataBuffer, 1, NULL,
         0, &(over->overlapped), NULL)) {
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
-            //printf("to: %d packet: %d send error: %d\n", to, packet[1], err_no);
-            //Disconnected(to, sessions[to].over.roomID);
+            printf("to: %d packet: %d send error: %d\n", to, packet[1], err_no);
+            Disconnected(to);
         }
     }
     //printf("to: %d packet: %d send\n", to, packet[1]);
@@ -1649,51 +1615,86 @@ void Server::ProcessEvent(OVER_EX* over_ex, int roomID, int key)
 void Server::WorkerFunc()
 {
     DWORD Transferred;
-    SOCKET client_sock;
     ULONG key;
     WSAOVERLAPPED* over;
 
     while (1) {
         BOOL retval = GetQueuedCompletionStatus(hcp, &Transferred,
-            (PULONG_PTR)&key, (LPOVERLAPPED*)&over, INFINITE);
+            (PULONG_PTR)&key, &over, INFINITE);
 
         //std::thread::key Thread_key = std::this_thread::get_key();
         OVER_EX* over_ex = reinterpret_cast<OVER_EX*>(over);
         int roomID = over_ex->roomID;
-        switch (over_ex->type) {
-        case OE_session: {
-            // key = 유저번호
-            if (FALSE == retval || Transferred == 0)
-            {
-                //printf("error = %d\n", WSAGetLastError());
-                display_error("GQCS", WSAGetLastError());
-                Disconnected(key);
-                continue;
-            }
 
-            //printf("%d\n", true);
-            if (over_ex->is_recv) {
-                char* packet_ptr = over_ex->messageBuffer;
-                int required_data = Transferred + sessions[key].prev_size;
-                int packet_size = packet_ptr[0];
-                while (required_data >= packet_size) {
-                    if (required_data >= BUFSIZE) break;
-                    if (packet_size <= 0) break;
-                    //printf("num_data: %d, packet_size: %d prev_size: %d\n", num_data, packet_size, sessions[key].prev_size);
-                    process_packet(key, packet_ptr, roomID);
-                    required_data -= packet_size;
-                    packet_ptr += packet_size;
-                    packet_size = packet_ptr[0];
-                }
-                packet_size = 0;
-                sessions[key].prev_size = 0;
-                if (0 != required_data)
-                    memcpy(over_ex->messageBuffer, packet_ptr, required_data);
-                do_recv(key, roomID);
+        if (false == retval) {
+            if (SERVER_ID == key) {
+                display_error("GQCS: ", WSAGetLastError());
             }
             else {
-                delete over_ex;
+                display_error("GQCS: ", WSAGetLastError());
             }
+
+        }
+
+        switch (over_ex->type) {
+        case OE_accept: {
+            int client_key = SetLobbyKey();
+            if (client_key != -1) {
+                sessions[client_key].sock = over_ex->csocket;
+                sessions[client_key].over.type = OE_recv;
+                sessions[client_key].prev_size = 0;
+                sessions[client_key].init();
+                sessions[client_key].connected = TRUE;
+                sessions[client_key].key = client_key;
+                CreateIoCompletionPort((HANDLE)sessions[client_key].sock, hcp, client_key, 0);
+                send_Lobby_key_packet(client_key);
+                do_recv(client_key, INVALUED_ID);
+            }
+            else
+                closesocket(over_ex->csocket);
+
+            ZeroMemory(&over_ex->overlapped, sizeof(over_ex->overlapped));
+            SOCKET c_socket = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+            over_ex->csocket = c_socket;
+            BOOL ret = AcceptEx(listenSocket, c_socket
+                , over_ex->messageBuffer
+                , 0, 32, 32, NULL, &over_ex->overlapped);
+            if (false == ret) {
+                int err_num = WSAGetLastError();
+                if (err_num != WSA_IO_PENDING)
+                {
+                    display_error("AcceptEx_error ", err_num);
+                    printf("%d\n", err_num);
+                }
+            }
+            /*getpeername(sessions[client_key].sock, (SOCKADDR*)&sessions[client_key].clientaddr
+                , &sessions[client_key].addrlen);*/
+            break;
+        }
+        case OE_recv: {
+            // key = 유저번호
+            printf("sda\n");
+            char* packet_ptr = over_ex->messageBuffer;
+            int required_data = Transferred + sessions[key].prev_size;
+            int packet_size = packet_ptr[0];
+            while (required_data >= packet_size) {
+                if (required_data >= BUFSIZE) break;
+                if (packet_size <= 0) break;
+                //printf("num_data: %d, packet_size: %d prev_size: %d\n", num_data, packet_size, sessions[key].prev_size);
+                process_packet(key, packet_ptr, roomID);
+                required_data -= packet_size;
+                packet_ptr += packet_size;
+                packet_size = packet_ptr[0];
+            }
+            packet_size = 0;
+            sessions[key].prev_size = 0;
+            if (0 != required_data)
+                memcpy(over_ex->messageBuffer, packet_ptr, required_data);
+            do_recv(key, roomID);
+            break;
+        }
+        case OE_send: {
+            delete over_ex;
             break;
         }
         case OE_gEvent: {
@@ -1703,7 +1704,6 @@ void Server::WorkerFunc()
             ProcessEvent(over_ex, roomID, key);
             break;
         }
-        break;
         }
 
     }
@@ -1728,6 +1728,30 @@ bool Server::Init()
     hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
     if (hcp == NULL) return 0;
 
+    listenSocket = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+    CreateIoCompletionPort(reinterpret_cast<HANDLE>(listenSocket), hcp, 0, 0);
+    SOCKADDR_IN serverAddr;
+    memset(&serverAddr, 0, sizeof(SOCKADDR_IN));
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(GAMESERVERPORT);
+    serverAddr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
+    ::bind(listenSocket, (struct sockaddr*)&serverAddr, sizeof(SOCKADDR_IN));
+    listen(listenSocket, SOMAXCONN);
+
+    OVER_EX accept_over;
+    accept_over.type = OE_accept;
+    memset(&accept_over.overlapped, 0, sizeof(accept_over.overlapped));
+    SOCKET c_socket = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+    accept_over.csocket = c_socket;
+    BOOL ret = AcceptEx(listenSocket, c_socket, accept_over.messageBuffer
+        , SERVER_ID, 32, 32, NULL, &accept_over.overlapped);
+    if (false == ret) {
+        int err_num = WSAGetLastError();
+        if (err_num != WSA_IO_PENDING)
+            display_error("AcceptEx_error", err_num);
+    }
+    printf("ready\n");
+
     // CPU ���� Ȯ��
     SYSTEM_INFO si;
     GetSystemInfo(&si);
@@ -1735,16 +1759,13 @@ bool Server::Init()
     for (int i = 0; i <(int)si.dwNumberOfProcessors; i++)
         working_threads.emplace_back(std::thread(&Server::WorkerFunc, this));
 
-
     timer_thread = std::thread(&Timer::init, m_pTimer, Gethcp());
-    accept_thread = std::thread(&Server::Accept, this);
 
     return 1;
 }
 
 void Server::Thread_join()
 {
-    accept_thread.join();
     timer_thread.join();
 
     for (auto& t : working_threads)

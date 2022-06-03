@@ -7,6 +7,7 @@
 #include "Bot.h"
 
 constexpr int INVALUED_ID = -1;
+constexpr int SERVER_ID = 0;
 
 constexpr int Death = 0;
 constexpr int Alive = 1;
@@ -209,6 +210,7 @@ public:
     std::array<SESSION, 1000> sessions;
 
 private:
+    SOCKET                         listenSocket;
     HANDLE                         hcp;
     Timer*                         m_pTimer = NULL;
     Bot*                           m_pBot = NULL;

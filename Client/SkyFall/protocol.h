@@ -37,20 +37,22 @@ constexpr float ARROW_SPEED_WEIGHT = 300.f;
 #define SERVERIP   "127.0.0.1"
 //#define SERVERIP   "39.120.192.92"
 
+enum OVER_EX_Type {
+	OE_accept,
+	OE_send,
+	OE_recv,
+	OE_gEvent
+};
+
 struct OVER_EX
 {
 	WSAOVERLAPPED	overlapped;
 	WSABUF			dataBuffer;
 	char			messageBuffer[BUFSIZE];
-	bool			is_recv;
-	int             type;
+	SOCKET			csocket;
+	OVER_EX_Type    type;
 	int				roomID;
 	// 0 = session 1 = map
-};
-
-enum OVER_EX_Type {
-	OE_session,
-	OE_gEvent
 };
 
 enum terrain {
