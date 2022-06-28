@@ -148,28 +148,41 @@ int Server::SetLobbyKey()
     }
 }
 
+// 여기
 int Server::CreateRoom(int key, char* name)
 {
-    if (GameRooms.count(key) != 0) return 1;
+    int cnt = 0;
+    int key;
+
+    while (true) {
+        if (cnt == 1000) return 1;
+        GameRooms[cnt].r_lock.lock();
+        if (FALSE == GameRooms[cnt].isMade) {
+            key = cnt;
+            GameRooms[cnt].r_lock.unlock();
+            break;
+        }
+        GameRooms[cnt].r_lock.unlock();
+    }
+
+    //if (GameRooms.count(key) != 0) return 1;
 
     for (auto& g : GameRooms) {
-        if (strcmp(g.second.name, name) == 0) {
+        if (strcmp(g.name, name) == 0) {
             return 2;
         }
     }
 
-    GameRooms.emplace(key, GameRoom{});
+    //GameRooms.emplace(key, GameRoom{});
 
     for (int i = 0; i < MAX_PLAYER; ++i)
         GameRooms[key].pkeys[i] = INVALIDID;
 
     strcpy_s(GameRooms[key].name, name);
 
-    maps_lock.lock();
     GameRooms[key].m_pMap = new Map;
     GameRooms[key].m_pMap->SetNum(key);
     //maps[key].init_Map(this, m_pTimer);
-    maps_lock.unlock();
 
     m_pBot->monsters.emplace(key, std::array<Monster, MAX_MONSTER>{});
     //m_pBot->monsterRun = TRUE;
@@ -258,7 +271,7 @@ void Server::Accept()
     WSACleanup();
 }
 
-
+// 여기
 void Server::Disconnected(int key)
 {
     printf("client_end: IP =%s, port=%d Lobby key = %d\n",
@@ -270,13 +283,13 @@ void Server::Disconnected(int key)
 
     sessions[key].connected = FALSE;
     sessions[key].key = INVALIDID;
-    std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
+    //std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
     if (sessions[key].roomID != INVALIDID) {
         if (sessions[key].InGamekey == INVALIDID) return;
         GameRooms[sessions[key].roomID].pkeys[sessions[key].InGamekey] = INVALIDID;
         sessions[key].roomID = INVALIDID;
-
-        if (GameRooms.count(roomid) != 0) {
+        GameRooms[roomid].r_lock.lock();
+        if (GameRooms[roomid].isMade == true) {
             bool deleteRoom = false;
             for (int i = 0; i < MAX_PLAYER; i++) {
                 if (GameRooms[roomid].pkeys[i] == -1)
@@ -291,7 +304,7 @@ void Server::Disconnected(int key)
                 GameRooms[roomid].CanJoin = false;
                 delete GameRooms[roomid].m_pMap;
                 ZeroMemory(GameRooms[roomid].name, sizeof(GameRooms[roomid].name));
-                GameRooms.erase(roomid);
+                GameRooms[roomid].isMade = false;
                 m_pBot->monsters_lock.lock();
                 m_pBot->monsters.erase(roomid);
                 m_pBot->monsterRun.erase(roomid);
@@ -300,6 +313,7 @@ void Server::Disconnected(int key)
                 printf("delete Room: %d\n", roomid);
             }
         }
+        GameRooms[roomid].r_lock.unlock();
     }
     //printf("disconnected %d\n", gameroom[roomID].ID[i]);
 
@@ -402,11 +416,12 @@ void Server::send_Lobby_loginOK_packet(int key)
     send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
 }
 
+// 여기
 void Server::send_room_list_packet(int key)
 {
     for (int i = 0; i < MAX_ROOM; ++i) {
         if (sessions[key].playing == true) break;
-        if (GameRooms.count(i) == 0) continue;
+        if (GameRooms[i].isMade == false) continue;
         if (GameRooms[i].CanJoin == false) continue;
         if (GameRooms[i].name == NULL) continue;
         room_list_packet p;
@@ -816,9 +831,12 @@ void Server::send_player_dead_packet(int ingamekey, int roomID)
 #endif 
 }
 
+// 여기
 void Server::game_end(int roomnum)
 {
-    if (GameRooms.count(roomnum) == 0) return;
+    if (GameRooms[roomnum].isMade == false) return;
+    GameRooms[roomnum].r_lock.lock();
+    GameRooms[roomnum].isMade = false;
     GameRooms[roomnum].CanJoin = false;
     GameRooms[roomnum].TotalPlayer = 0;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -836,10 +854,10 @@ void Server::game_end(int roomnum)
     }
     delete GameRooms[roomnum].m_pMap;
     ZeroMemory(GameRooms[roomnum].name, sizeof(GameRooms[roomnum].name));
-    GameRooms_lock.lock();
+    //GameRooms_lock.lock();
     GameRooms[roomnum].master = INVALIDID;
-    GameRooms.erase(roomnum);
-    GameRooms_lock.unlock();
+    GameRooms[roomnum].r_lock.unlock();
+    //GameRooms_lock.unlock();
 
     //maps_lock.lock();
     //maps.erase(roomnum);
@@ -854,19 +872,19 @@ void Server::game_end(int roomnum)
     printf("Room %d Game End\n", roomnum);
 }
 
+// 여기
 void Server::Delete_room(int roomID)
 {
+    GameRooms[roomID].r_lock.lock();
     GameRooms[roomID].CanJoin = false;
     GameRooms[roomID].TotalPlayer = 0;
-    GameRooms_lock.lock();
     delete GameRooms[roomID].m_pMap;
     ZeroMemory(GameRooms[roomID].name, sizeof(GameRooms[roomID].name));
     for (auto& key : GameRooms[roomID].pkeys)
         if (key != -1)
             send_room_list_packet(key);
-    GameRooms.erase(roomID);
-
-    GameRooms_lock.unlock();
+    GameRooms[roomID].isMade = false;
+    GameRooms[roomID].r_lock.unlock();
 
     /*maps_lock.lock();
     maps.erase(roomnum);
@@ -881,10 +899,11 @@ void Server::Delete_room(int roomID)
     printf("delete room %d\n", roomID);
 }
 
+// 여기
 void Server::player_go_lobby(int key, int roomID)
 {
     //send_game_end_packet(key, roomID);
-    if (GameRooms.count(roomID) != 0)
+    if (GameRooms[roomID].isMade == true)
         GameRooms[roomID].pkeys[sessions[key].InGamekey] = INVALIDID;
 
     sessions[key].Reset();
@@ -1101,62 +1120,57 @@ void Server::process_packet(int key, char* buf, int roomID)
         break;
     }
     case PacketType::CS_create_room: {
+        // 여기
         room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
         int key = p->key;
         //if (sizeof(p->name) <= 0) break;
-        if (GameRooms.size() >= MAX_ROOM) break;
-        GameRooms_lock.lock();
-        if (GameRooms.size() > 0) {
-            for (int i = 1; i <= MAX_ROOM; i++) {
-                if (GameRooms.count(i) > 0) {
+        if (GameRooms[MAX_ROOM-1].isMade == true) break;
+        //GameRooms_lock.lock();
+        if (GameRooms[0].isMade == true) {
+            for (int i = 1; i < MAX_ROOM; i++) {
+                if (GameRooms[i].isMade == true) {
                     if (GameRooms[i].TotalPlayer <= 0)
-                        GameRooms.erase(i);
+                        GameRooms[i].isMade = false;
                }
             }
         }
-        GameRooms_lock.unlock();
-        int cnt = 0;
+        //GameRooms_lock.unlock();
         // 0 = 정상 1 = 꽉참 2 = 방이름 같음
+        int roomid = 0;
         int error = 0;
-        while (cnt <= MAX_ROOM) {
-            GameRooms_lock.lock();
-            error = CreateRoom(cnt, p->name);
-            GameRooms_lock.unlock();
-            if (error == 0) break;
-            if (error == 2) {
-                room_list_packet r;
-                r.key = key;
-                r.size = sizeof(r);
-                r.type = PacketType::SC_room_list;
-                r.roomid = INVALIDID;
-                r.idx = INVALIDID;
-                send_packet(key, reinterpret_cast<char*>(&r), INVALIDID);
-                break;
-            }
-
-            ++cnt;
+        error = CreateRoom(roomid, p->name);
+        if (error == 0) break;
+        if (error == 2) {
+            room_list_packet r;
+            r.key = key;
+            r.size = sizeof(r);
+            r.type = PacketType::SC_room_list;
+            r.roomid = INVALIDID;
+            r.idx = INVALIDID;
+            send_packet(key, reinterpret_cast<char*>(&r), INVALIDID);
+            break;
         }
         if (error == 2) break;
 
-        GameRooms[cnt].master = key;
-        ++GameRooms[cnt].TotalPlayer;
+        GameRooms[roomid].master = key;
+        ++GameRooms[roomid].TotalPlayer;
 
-        int nkey = SetInGameKey(cnt);
+        int nkey = SetInGameKey(roomid);
         if (nkey == INVALIDID) {
-            printf("Room %d no empty nkey\n", cnt);
+            printf("Room %d no empty nkey\n", roomid);
             Disconnected(key);
             break;
         }
-        GameRooms[cnt].pkeys[nkey] = key;
+        GameRooms[roomid].pkeys[nkey] = key;
         sessions[key].InGamekey = nkey;
-        sessions[key].roomID = cnt;
-        sessions[key].over.roomID = cnt;
-        printf("player key: %d create game room - %d nkey %d\n", key, cnt, nkey);
+        sessions[key].roomID = roomid;
+        sessions[key].over.roomID = roomid;
+        printf("player key: %d create game room - %d nkey %d\n", key, roomid, nkey);
         //printf("Left room %d\n", (int)GameRooms.size());
         room_select_packet s;
         s.key = nkey;
-        s.room = cnt;
-        s.roomid = cnt;
+        s.room = roomid;
+        s.roomid = roomid;
         s.size = sizeof(s);
         s.type = SC_select_room;
         s.ingamekey = nkey;
@@ -1165,11 +1179,11 @@ void Server::process_packet(int key, char* buf, int roomID)
         break;
     }
     case PacketType::CS_room_select: {
+        // 여기
         room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
         std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
-        if (GameRooms.find(p->room) == GameRooms.end()) {
-            break;
-        }
+        if (p->room < 0) break;
+        if (GameRooms[p->room].isMade == false) break;
 
         if (GameRooms[p->room].CanJoin == false) break;
         if (GameRooms[key].TotalPlayer >= MAX_PLAYER) break;
@@ -1672,8 +1686,6 @@ void Server::WorkerFunc()
             break;
         }
         case OE_recv: {
-            // key = 유저번호
-            printf("sda\n");
             char* packet_ptr = over_ex->messageBuffer;
             int required_data = Transferred + sessions[key].prev_size;
             int packet_size = packet_ptr[0];

@@ -115,12 +115,14 @@ class Monster;
 
 class GameRoom {
 public:
-    int pkeys[MAX_PLAYER];
-    char name[20];
-    bool CanJoin = false;
-    int TotalPlayer = 0;
-    int master = INVALIDID;
-    Map* m_pMap;
+    bool        isMade = false;
+    int         pkeys[MAX_PLAYER];
+    char        name[20];
+    bool        CanJoin = false;
+    int         TotalPlayer = 0;
+    int         master = INVALIDID;
+    Map*        m_pMap;
+    std::mutex  r_lock;
 };
 
 class Server {
@@ -206,8 +208,8 @@ public:
 
     //std::unordered_map <int, SESSION> Lobby_sessions;
     //std::unordered_map <int, std::array<SESSION, 20>> sessions; // ¹æID, Player¹è¿­
-    std::unordered_map <int, GameRoom> GameRooms;
-    std::array<SESSION, 1000> sessions;
+    std::array <GameRoom, 1000> GameRooms;
+    std::array <SESSION, 1000> sessions;
 
 private:
     SOCKET                         listenSocket;
