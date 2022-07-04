@@ -152,7 +152,6 @@ int Server::SetLobbyKey()
 int Server::CreateRoom(int key, char* name)
 {
     int cnt = 0;
-    int key;
 
     while (true) {
         if (cnt == 1000) return 1;
@@ -1139,7 +1138,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         int roomid = 0;
         int error = 0;
         error = CreateRoom(roomid, p->name);
-        if (error == 0) break;
+        if (error == 1) break;
         if (error == 2) {
             room_list_packet r;
             r.key = key;

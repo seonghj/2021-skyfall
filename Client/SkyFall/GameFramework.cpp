@@ -1520,7 +1520,7 @@ void CGameFramework::FrameAdvance()
     }
 
     float fLength = sqrtf(m_pPlayer->GetVelocity().x * m_pPlayer->GetVelocity().x + m_pPlayer->GetVelocity().z * m_pPlayer->GetVelocity().z);
-    if (frametime == 60) {
+    if (frametime == 60 && m_pPacket->isMove[m_pPacket->InGamekey]) {
         /*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
             m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
         if (false == m_pPlayer->GetAttack()) {
