@@ -43,6 +43,8 @@ public:
 
 	bool game_start = false;
 
+	std::chrono::system_clock::time_point StartTime;
+
 private:
 	int game_time;
 	Server* m_pServer = NULL; 

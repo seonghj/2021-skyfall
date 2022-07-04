@@ -7,6 +7,7 @@
 #include "Bot.h"
 
 constexpr int INVALUED_ID = -1;
+constexpr int SERVER_ID = 0;
 
 constexpr int Death = 0;
 constexpr int Alive = 1;
@@ -46,19 +47,27 @@ public:
     char*                    recv_start;
 
     std::atomic<bool>        connected = false;
+    // 준비확인
     bool                     isready = false;
+    // 플레이여부
     bool                     playing = false;
     int                      prev_size = 0;
-    std::atomic<int>         key = -1;
+    // 플레이어 키값
+    int                      key = -1;
+    // 방번호
     std::atomic<int>         roomID = -1;
     char                     id[50];
-    std::atomic<int>         InGamekey = -1;
+    // 플레이어 인게임 키값
+    int                      InGamekey = -1;
 
     // 0 죽음 / 1 생존
     std::atomic<bool>       state = 0;
     std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<float>      m_fPitch = 0;
     std::atomic<float>      m_fYaw = 0;
+    XMFLOAT3			    m_xmf3Right = XMFLOAT3(1.0f, 0.0f, 0.0f);
+    XMFLOAT3				m_xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
+    XMFLOAT3				m_xmf3Look = XMFLOAT3(0.0f, 0.0f, 1.0f);
     
     std::atomic<PlayerType>      weapon1 = PlayerType::PT_BASIC;
     std::atomic<PlayerType>      weapon2 = PlayerType::PT_BASIC;
@@ -73,7 +82,8 @@ public:
     std::atomic<float>      speed = 20;
     std::atomic<float>      proficiency = 0.0f;
 
-    std::atomic<PlayerType>      using_weapon = PlayerType::PT_BASIC;
+    // 플레이어 무기 타입
+    PlayerType              using_weapon = PlayerType::PT_BASIC;
 
     std::atomic<short>      inventory[INVENTORY_MAX]{};
 
@@ -85,8 +95,11 @@ public:
 
     void TakeDamage(int iDamage) { hp -= iDamage * (100 - def) / 100; };
     void AddProficiency() { proficiency += 0.06; }
-    float GetAtkDamage() const { return(att + att * (proficiency * proficiency)); }
+    float GetAtkDamage() const { return(att + att * (proficiency)); }
     void Reset();
+
+    void Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity, bool isRun);
+    void Move(const XMFLOAT3& xmf3Shift, bool bUpdateVelocity, bool isRun);
 
 public:
     std::unordered_set<int> near_monster;
@@ -102,11 +115,14 @@ class Monster;
 
 class GameRoom {
 public:
-    int pkeys[20];
-    char name[20];
-    bool CanJoin = false;
-    int TotalPlayer = 0;
-    Map* m_pMap;
+    bool        isMade = false;
+    int         pkeys[MAX_PLAYER];
+    char        name[20];
+    bool        CanJoin = false;
+    int         TotalPlayer = 0;
+    int         master = INVALIDID;
+    Map*        m_pMap;
+    std::mutex  r_lock;
 };
 
 class Server {
@@ -140,6 +156,7 @@ public:
     void do_recv(int key, int roomID);
     void send_packet(int to, char* packet, int roomID);
     void process_packet(int key, char* buf, int roomID);
+    void ProcessEvent(OVER_EX* over_ex, int roomID, int key);
 
     void send_Lobby_key_packet(int key);
     void send_Lobby_loginOK_packet(int key);
@@ -169,27 +186,33 @@ public:
 
     void send_add_monster(int key, int roomID, int to);
     void send_remove_monster(int key, int roomID, int to);
-    void send_monster_pos(const Monster& mon, XMFLOAT3 direction);
-    void send_monster_attack(const Monster& mon, XMFLOAT3 direction, int target);
+    void send_monster_pos(Monster& mon, XMFLOAT3 direction, int target);
+    void send_monster_move(Monster& mon, XMFLOAT3 direction, int target);
+    void send_monster_attack(Monster& mon, XMFLOAT3 direction, int target);
     void send_monster_stop(int key, int roomID);
 
     void send_player_record(int key, int roomID, const SESSION& s, int time, int rank);
     void send_map_packet(int to, int roomID);
 
-    void game_end(int roomnum, OVER_EX* over_ex);
+    void game_end(int roomnum);
 
-    bool in_VisualField(SESSION a, SESSION b, int roomID);
-    bool in_VisualField(Monster a, SESSION b, int roomID);
+    void Delete_room(int roomID);
+
+    bool in_VisualField(SESSION& a, SESSION& b, int roomID);
+    bool in_VisualField(Monster& a, SESSION& b, int roomID);
     unsigned short calc_attack(int key, char attacktype);
+
+    float CalcDamageToMon(int att, int def) { return (att * (100 - def) / 100); }
 
     void player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy);
 
     //std::unordered_map <int, SESSION> Lobby_sessions;
     //std::unordered_map <int, std::array<SESSION, 20>> sessions; // 방ID, Player배열
-    std::unordered_map <int, GameRoom> GameRooms;
-    std::array<SESSION, 1000> sessions;
+    std::array <GameRoom, 1000> GameRooms;
+    std::array <SESSION, 1000> sessions;
 
 private:
+    SOCKET                         listenSocket;
     HANDLE                         hcp;
     Timer*                         m_pTimer = NULL;
     Bot*                           m_pBot = NULL;

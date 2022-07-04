@@ -48,11 +48,15 @@ public:
 	void Send_return_lobby_packet();
 	void Send_refresh_room_packet();
 	void Send_create_account_packet(char* id, char* pw);
+	void Send_select_weapon(PlayerType t);
 
+	void OtherPlayerMove(float fTimeElapsed);
+	void Send_Rotate(float pitch, float yaw);
 	void Swap_weapon(int key, PlayerType weapon);
 	void Map_set(map_block_set* p);
-	void CheckCollision(CMonster* mon);
+	bool CheckCollision(CMonster* mon);
 	int MonsterAttackCheck(CMonster* mon);
+	void MonsterMove(CMonster* mon, int key);
 
 	void ProcessPacket(char* buf);
 
@@ -84,6 +88,16 @@ public:
 	int InGamekey = INVALIDID;
 
 	bool isfalling = false;
+
+	DWORD beforedir;
+	bool beforeRun = false;
+	bool beforeJump = false;
+
+	DWORD MoveDir[MAX_PLAYER];
+	bool isMove[MAX_PLAYER];
+	bool isMaster = false;
+	bool isStop = true;
+
 private:
 	int client_key = INVALIDID;
 	char userID[50];

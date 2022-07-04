@@ -1,6 +1,6 @@
 #include "DB.h"
 
-//#define Test_DB
+#define Test_DB
 
 bool DB::Connection()
 {
@@ -57,8 +57,8 @@ bool DB::Connection_ODBC()
     // Á¢¼Ó
     SQLSetConnectAttr(hDbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0);
     if (SQLConnect(hDbc, (SQLWCHAR*)L"skyfall", SQL_NTS
-        , (SQLWCHAR*)L"admin", SQL_NTS
-        , (SQLWCHAR*)L"tjdwo1034", SQL_NTS)
+        , (SQLWCHAR*)L"root", SQL_NTS
+        , (SQLWCHAR*)L"tjdwo@1034", SQL_NTS)
         != SQL_SUCCESS)
         return false;
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
@@ -82,8 +82,8 @@ void DB::Disconnection_ODBC()
 
 bool DB::Search_ID(char* id, char* pw)
 {
-    wchar_t query1[512] = L"SELECT isLogin FROM skyfall.UserInfo WHERE ID = '";
-    wchar_t query2[512] = L"SELECT PassWord FROM skyfall.UserInfo WHERE ID = '";
+    wchar_t query1[512] = L"SELECT isLogin FROM skyfall.userinfo WHERE ID = '";
+    wchar_t query2[512] = L"SELECT PassWord FROM skyfall.userinfo WHERE ID = '";
     wchar_t wcID[20];
     wchar_t wcPW[20];
 
@@ -139,7 +139,7 @@ bool DB::Search_ID(char* id, char* pw)
 
 bool DB::Insert_ID(char* id, char* pw)
 {
-    wchar_t query[512] = L"insert into skyfall.UserInfo VALUES ('";
+    wchar_t query[512] = L"insert into skyfall.userinfo VALUES ('";
     wchar_t wcID[20];
     wchar_t wcPW[20];
 
@@ -221,7 +221,7 @@ bool DB::Send_player_record(const SESSION& player, int survival_time, int rank)
 
     if (SQLExecDirect(hStmt, (SQLWCHAR*)query, SQL_NTS)
         != SQL_SUCCESS) {
-        printf("Query invaild\n");
+        //printf("Query invaild\n");
         return false;
     }
     if (hStmt) SQLCloseCursor(hStmt);

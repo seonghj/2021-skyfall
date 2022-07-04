@@ -78,6 +78,19 @@ int CSound::volumeDown() {
     return 0;
 }
 
+void CSound::turnoff()
+{
+    m_beforevolume = m_volume;
+    m_volume = SOUND_MIN;
+    FMOD_Channel_SetVolume(m_channel, m_volume);
+}
+
+void CSound::turnon()
+{
+    m_volume = m_beforevolume;
+    FMOD_Channel_SetVolume(m_channel, m_volume);
+}
+
 
 int CSound::Update() {
 	FMOD_Channel_IsPlaying(m_channel, &m_bool);

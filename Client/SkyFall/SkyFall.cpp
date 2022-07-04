@@ -13,7 +13,7 @@
 
 HINSTANCE						ghAppInstance;
 
-bool							gbShowBoundingBox = true;
+bool							gbShowBoundingBox = false;
 TCHAR							szTitle[MAX_LOADSTRING];
 TCHAR							szWindowClass[MAX_LOADSTRING];
 

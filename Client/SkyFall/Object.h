@@ -358,6 +358,7 @@ public:
 	void SetAllTrackDisable();
 	void SetTrackType(int nAnimationTrack, int nType);
 	bool IsTrackFinish(int nAnimationTrack);
+	bool IsTrackPlaying();
 	float GetTrackPosition(int nAnimationTrack);
 };
 
@@ -692,6 +693,14 @@ public:
 	bool m_iReady = false;
 
 	float m_fRotateDegree = 0.0f;
+
+	XMFLOAT3 vDirection;
+	float fSpeed;
+	short type;
+	XMFLOAT3 recv_pos;
+	float recv_degree;
+	int target_id;
+	bool m_ismove = false;
 };
 
 

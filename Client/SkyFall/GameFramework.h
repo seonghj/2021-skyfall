@@ -87,7 +87,11 @@ public:
 	CCamera*					m_pCamera = NULL;
 	CScene*						m_pScene = NULL;
 
-	int frametime = 0;
+	bool						m_bRotateEnable = 0;
+	BOOL						PressDirButton = false;
+
+	int							frametime = 0;
+	int							leftPlayer = 0;
 
 private:
 	HINSTANCE					m_hInstance;
@@ -137,7 +141,6 @@ private:
 
 	_TCHAR						m_pszFrameRate[70];
 
-	bool						m_bRotateEnable = 0;
 	float						m_fPitch = 0;
 	float						m_fYaw = 0;
 
@@ -155,7 +158,6 @@ private:
 	CB_FOG_INFO					*m_pcbMappedFog = NULL;
 
 	DWORD						dwDirection = 0;
-	BOOL						PressDirButton = false;
 
 	//Font
 	unique_ptr<SpriteBatch>		m_pSprite;

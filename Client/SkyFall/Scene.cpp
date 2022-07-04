@@ -121,7 +121,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 		{
 			m_ppTerrain[i] = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/Snow_0807.raw"), 257, 257, xmf3Scale, xmf4Color, 2);
 		}
-		m_ppTerrain[i]->SetPosition(2048.0f * arrange[i][0], 0.0f, 2048.0f * arrange[i][1]);
+		m_ppTerrain[i]->SetPosition(2045.0f * arrange[i][0], 0.0f, 2045.0f * arrange[i][1]);
 		m_ppTerrain[i]->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 		if (i >= 6) m_ppTerrain[i]->MoveUp(125.f);
 	}
@@ -161,11 +161,11 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 		m_ppUIObjects[0]->SetAlpha(0.8f);
 		m_ppUIObjects[0]->SethPercent(1.f);
 
-		m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
+		m_ppUIObjects[1] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Win_UI.dds", -1, -1, 1, 1, 0.8);
 		m_ppUIObjects[1]->SetAlpha(0.0f);
 		m_ppUIObjects[1]->SethPercent(1.f);
 
-		m_ppUIObjects[2] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Win_UI.dds", -1, -1, 1, 1, 0.8);
+		m_ppUIObjects[2] = new CUIObject(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, L"Model/Textures/Player_Die_UI.dds", -1, -1, 1, 1, 0.8);
 		m_ppUIObjects[2]->SetAlpha(0.0f);
 		m_ppUIObjects[2]->SethPercent(1.f);
 
@@ -240,16 +240,19 @@ void CScene::AddPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3d
 		CLoadedModelInfo* pModel2 = new CLoadedModelInfo(*pBowModel);
 		CLoadedModelInfo* pModel3 = new CLoadedModelInfo(*p2HSwordModel);
 		CLoadedModelInfo* pModel4 = new CLoadedModelInfo(*p2HSpearModel);
-		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, p1HSwordModel, (void**)m_ppTerrain);
+		m_m1HswordPlayer[i] = new C1HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel1, (void**)m_ppTerrain);
 		m_mBowPlayer[i] = new CBowPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel2, (void**)m_ppTerrain);
 		m_m2HswordPlayer[i] = new C2HswordPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel3, (void**)m_ppTerrain);
 		m_m2HspearPlayer[i] = new C2HspearPlayer(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, pModel4, (void**)m_ppTerrain);
-		if (i % 3 == 0)
+		m_mBowPlayer[i]->Rotate(0, 0, -90);
+		if (i % 4 == 0)
 			m_mPlayer[i] = m_mBowPlayer[i];
-		if (i % 3 == 1)
+		if (i % 4 == 1)
 			m_mPlayer[i] = m_m2HswordPlayer[i];
-		if (i % 3 == 2)
+		if (i % 4 == 2)
 			m_mPlayer[i] = m_m2HspearPlayer[i];
+		if (i % 4 == 3)
+			m_mPlayer[i] = m_m1HswordPlayer[i];
 		m_mPlayer[i]->m_nkey = i;
 		delete pModel1;
 		delete pModel2;
@@ -300,6 +303,7 @@ void CScene::AnimatePlayer(int id, int animation_num)
 		//cout << "0" << endl;
 		break;
 	case 1:	// LbuttonUp
+		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackPosition(8, 0);
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetAllTrackDisable();
 		m_mPlayer[id]->m_pSkinnedAnimationController->SetTrackEnable(1, true);
 		//cout << "1" << endl;
@@ -742,8 +746,13 @@ void CScene::ReleaseUploadBuffers()
 
 void CScene::CheckCollision(CPacket* pPacket)
 {
-	if (m_pMap)
+	if (m_pMap) {
 		m_pMap->CheckCollision(m_pPlayer);
+		for (int i = 0; i < MAX_PLAYER; i++) {
+			if (pPacket->isMove[i] == true)
+				m_pMap->CheckCollision(m_mPlayer[i]);
+		}
+	}
 
 	if (m_iState == INROOM) {
 		for (int i = 0; i < 4; ++i) {
@@ -755,7 +764,10 @@ void CScene::CheckCollision(CPacket* pPacket)
 					// m_iState = INGAME;
 					//for (int i = 0; i < 4; ++i)
 					//	m_ppWeapons[i]->Release();
-					pPacket->Set_StartWeapon((PlayerType)i);
+					if (i+1 != pPacket->Get_StartWeapon()) {
+						pPacket->Send_select_weapon((PlayerType)(i + 1));
+						pPacket->Set_StartWeapon((PlayerType)(i + 1));
+					}
 					//pPacket->Send_ready_packet((PlayerType)i);
 				}
 				pHpBar->m_bActive = true;
@@ -770,8 +782,9 @@ void CScene::CheckCollision(CPacket* pPacket)
 	}
 	else if (m_iState == INGAME) {
 		for (auto& a : m_mPlayer) {
+			if (a->GetHp() <= 0) continue;
 			XMFLOAT3 d = Vector3::Subtract(m_pPlayer->GetPosition(), a->GetPosition());
-			if (m_pPlayer != a && Vector3::Length(d) < 100) {
+			if (m_pPlayer != a && Vector3::Length(d) < 1000) {
 				// check attack& collision: m_pPlayer -> a
 				m_pPlayer->CheckCollision(a, false);
 			}
@@ -809,7 +822,7 @@ void CScene::CheckBehavior(CMonster *pMonster)
 		//printf("range : %f\n", range);
 		// 실제 몬스터의 look 벡터
 		XMFLOAT3 look = Vector3::ScalarProduct(pMonster->GetUp(), -1);
-		//printf(" x : %f / y : %f / z : %f\n", pMonster->GetUp().x, pMonster->GetUp().y, pMonster->GetUp().z);
+		//printf(" x : %f / y : %f / z : %f\n", pMonster->GetUp().x, pMonster->GetUp().y, pMonster->GetUp().z);	
 
 		rotation = acosf(Vector3::DotProduct(subtract, look)) * 180 / PI;
 		//printf("rotation : %f\n", rotation);
@@ -828,7 +841,7 @@ void CScene::CheckBehavior(CMonster *pMonster)
 		/*rotation = Vector3::Angle(subtract, look);
 		printf("rotation2 : %f\n", rotation);*/
 		if (EPSILON <= rotation)
-			pMonster->Rotate(0.0f, 0.0f, -cross.y * rotation / 10);
+			pMonster->Rotate(0.0f, 0.0f, -cross.y * rotation / 10); 
 		//printf("%f, %f, %f\n", cross.y, rotation, -cross.y * rotation / 10);
 	}
 	else
@@ -847,21 +860,22 @@ void CScene::TakeDamage(bool isDamaged)
 
 void CScene::UpdateMap()
 {
-	for (int i = 0; i < m_pMap->m_nMaps; ++i) {
-		if (m_ppTerrain[i / 3]->IsFalling() && m_ppTerrain[1 / 3]->GetTime() < 20) {
-			CGameObject* pObject = m_pMap->GetMap(i)->FindFrame("RootNode")->m_pChild->m_pChild;
-			while (true) {
-				XMFLOAT3 pos = pObject->GetPosition();
-				pos.y = m_ppTerrain[i / 3]->GetHeight(pos.x, pos.z);
-				pObject->SetPosition(pos);
+	//for (int i = 0; i < m_pMap->m_nMaps; ++i) {
+	//	if (m_ppTerrain[i / 2]->IsFalling() && m_ppTerrain[1 / 2]->GetTime() < 20) {
+	//		CGameObject* pObject = m_pMap->GetMap(i)->FindFrame("RootNode")->m_pChild->m_pChild;
+	//		while (true) {
+	//			XMFLOAT3 pos = pObject->GetPosition();
+	//			//pos.y = m_ppTerrain[i / 2]->GetHeight(pos.x, pos.z);
+	//			pos.y += 1000;
+	//			pObject->SetPosition(pos);
 
-				if (pObject->m_pSibling)
-					pObject = pObject->m_pSibling;
-				else
-					break;
-			}
-		}
-	}
+	//			if (pObject->m_pSibling)
+	//				pObject = pObject->m_pSibling;
+	//			else
+	//				break;
+	//		}
+	//	}
+	//}
 }
 
 void CScene::Reset()
@@ -871,6 +885,15 @@ void CScene::Reset()
 	m_pMap->Reset();
 	for (int i = 0; i < MAX_PLAYER; ++i) {
 		m_mPlayer[i]->Reset();
+		m_m1HswordPlayer[i]->Reset();
+		m_mBowPlayer[i]->Reset();
+		m_m2HswordPlayer[i]->Reset();
+		m_m2HspearPlayer[i]->Reset();
+	}
+	for (int i = 0; i < 4; ++i) {
+		CGameObject* pHpBar = m_ppWeapons[i]->FindFrame("HpBar");
+		pHpBar->m_iHp = 0;
+		pHpBar->m_bActive = false;
 	}
 }
 
@@ -1073,7 +1096,11 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wPar
 		switch (wParam)
 		{
 		case 'z': case 'Z':
-			gbShowBoundingBox = !gbShowBoundingBox;
+			//gbShowBoundingBox = !gbShowBoundingBox;
+			//m_ppUIObjects[1]->SetAlpha(0.0f);
+			break;
+		case 'x':case'X':
+			//m_ppUIObjects[1]->SetAlpha(1.0f);
 			break;
 
 		/*case 'W': m_ppGameObjects[0]->MoveForward(+3.0f); break;
@@ -1120,7 +1147,7 @@ void CScene::AnimateObjects(float fTimeElapsed)
 
 		for (int i = 0; i < m_nGameObjects; i++)
 		{
-			if (m_ppGameObjects[i])
+			if (m_ppGameObjects[i] && !m_ppTerrain[m_ppGameObjects[i]->GetPlace()]->IsFalling())
 			{
 				m_ppGameObjects[i]->Update(fTimeElapsed);
 			}
@@ -1198,10 +1225,10 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	}
 	else if (m_iState == SCENE::ENDGAME)
 	{
-		if (m_pPlayer->GetRate() == 1)
+		if (m_pPlayer->GetRate() <= 1)
 		{
-			m_ppUIObjects[3]->UpdateShaderVariables(pd3dCommandList);
-			m_ppUIObjects[3]->Render(pd3dCommandList, pCamera);
+			m_ppUIObjects[1]->UpdateShaderVariables(pd3dCommandList);
+			m_ppUIObjects[1]->Render(pd3dCommandList, pCamera);
 		}
 		else if (m_pPlayer->GetRate() > 1)
 		{
@@ -1241,7 +1268,7 @@ void CScene::RenderShadow(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* p
 
 		for (int i = 0; i < m_nGameObjects; i++)
 		{
-			if (m_ppGameObjects[i])
+			if (m_ppGameObjects[i] && !m_ppTerrain[m_ppGameObjects[i]->GetPlace()]->IsFalling())
 			{
 				m_ppGameObjects[i]->Animate(m_fElapsedTime);
 				m_ppGameObjects[i]->UpdateTransform(NULL);

@@ -11,6 +11,7 @@
 #include <random>
 #include <cmath>
 #include <algorithm>
+#include <MSWSock.h>
 
 #include <thread>
 #include <unordered_map>
@@ -25,6 +26,7 @@
 #include <chrono>
 #include <unordered_set>
 
+#pragma comment(lib,"mswsock.lib")
 #pragma comment(lib, "libmySQL.lib")
 
 #include <d3d12.h>

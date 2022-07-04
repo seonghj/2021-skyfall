@@ -8,10 +8,6 @@ class SESSION;
 class Server;
 class Timer;
 
-constexpr float Atack_Distance_Dragon = 72.6425f;
-constexpr float Atack_Distance_Wolf = 48.9831f;
-constexpr float Atack_Distance_Metalon = 96.9755f;
-
 class Monster{
 public:
 
@@ -43,8 +39,10 @@ public:
     std::atomic<float>      att = 10;
     std::atomic<float>      speed = 20;
 
+    std::atomic<DirectX::XMFLOAT3>      before_dir = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+
     bool                    CanAttack = TRUE;
-    bool                    isTrace = false;
+    short                   TraceTarget = INVALIDID;
 
     void init();
     void SetPosition(float x, float y, float z);
@@ -72,7 +70,7 @@ public:
 
     void RunBot(int roomID);
 
-    std::unordered_map <int, std::array<Monster, 15>> monsters;
+    std::unordered_map <int, std::array<Monster, MAX_MONSTER>> monsters;
 
     std::unordered_map <int, bool> monsterRun;
 
@@ -80,6 +78,8 @@ public:
     std::chrono::system_clock::time_point end;
 
     std::mutex               monsters_lock;
+
+    std::unordered_map <int, std::chrono::system_clock::time_point> StartTime;
 
 private:
     Server* m_pServer = NULL;

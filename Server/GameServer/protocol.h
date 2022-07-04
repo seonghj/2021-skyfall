@@ -6,44 +6,53 @@ constexpr int GAMESERVERPORT = 3500;
 constexpr int LOBBYPORT = 4000;
 constexpr int BUFSIZE = 128;
 constexpr int MAX_CLIENT = 3000;
-constexpr int MAX_PLAYER = 20;
+constexpr int MAX_PLAYER = 5;
 constexpr int INVALIDID = -1;
 constexpr int LOBBY_ID = 0;
 constexpr int GAMESERVER_ID = 0;
 constexpr int AI_ID = 5000;
 constexpr int MAX_STAMINA = 100;
+constexpr int MAX_MONSTER = 15;
 
 constexpr int MAX_MAP_BLOCK = 9;
-constexpr int MAP_SIZE = 6144;
-constexpr int MAP_BLOCK_SIZE = 2048;
-constexpr int MAP_BREAK_TIME = 30000;
+constexpr int MAP_SIZE = 6135;
+constexpr int MAP_BLOCK_SIZE = 2045;
+constexpr int MAP_BREAK_TIME = 90000;
 
 constexpr int MON_SPAWN_TIME = 10000;
 
-constexpr float VIEWING_DISTANCE = 1000.f;
+constexpr float VIEWING_DISTANCE = 2000.f;
 
 constexpr int INVENTORY_MAX = 20;
 
 constexpr int MAX_ROOM = 20;
 
+constexpr float Atack_Distance_Dragon = 80.f;
+constexpr float Atack_Distance_Wolf = 55.f;
+constexpr float Atack_Distance_Metalon = 97.f;
+
+constexpr float ARROW_SPEED_WEIGHT = 300.f;
+
 
 #define SERVERIP   "127.0.0.1"
 //#define SERVERIP   "39.120.192.92"
+
+enum OVER_EX_Type {
+	OE_accept,
+	OE_send,
+	OE_recv,
+	OE_gEvent
+};
 
 struct OVER_EX
 {
 	WSAOVERLAPPED	overlapped;
 	WSABUF			dataBuffer;
 	char			messageBuffer[BUFSIZE];
-	bool			is_recv;
-	int             type;
+	SOCKET			csocket;
+	OVER_EX_Type    type;
 	int				roomID;
 	// 0 = session 1 = map
-};
-
-enum OVER_EX_Type {
-	OE_session,
-	OE_gEvent
 };
 
 enum terrain {
@@ -57,11 +66,12 @@ enum PacketType {
 	SC_NONE,
 	SC_create_account,
 	SC_player_Lobbykey,
-	SC_player_LobbyloginOK,
-	SC_player_LobbyloginFail,
+	/*SC_player_LobbyloginOK,
+	SC_player_LobbyloginFail,*/
 	SC_create_room,
 	SC_room_list,
 	SC_select_room,
+	SC_return_lobby,
 	SC_player_InGamekey,
 	SC_player_loginOK,
 	SC_player_loginFail,
@@ -95,6 +105,7 @@ enum PacketType {
 	SC_monster_stop,
 	SC_player_record,
 	SC_player_getitem,
+	SC_weapon_select,
 
 
 	CS_create_account,
@@ -120,6 +131,7 @@ enum PacketType {
 	CS_monster_attack,
 	CS_monster_damaged,
 	CS_return_lobby,
+	CS_weapon_select,
 	CS_NONE,
 };
 
@@ -127,9 +139,12 @@ enum EventType {
 	Mapset,
 	Cloud_move,
 	game_end,
+	Mon_behavior,
 	Mon_move_to_player,
 	Mon_attack_cooltime,
 	Mon_respawn,
+	Mon_attack,
+	Mon_stop,
 	MapBreak,
 };
 
@@ -150,11 +165,11 @@ enum PlayerAttackType {
 };
 
 enum PlayerType {
+	PT_BASIC,
 	PT_SWORD1H,
 	PT_BOW,
 	PT_SWORD2H,
-	PT_SPEAR2H,
-	PT_BASIC,
+	PT_SPEAR2H
 };
 
 enum MonsterType {
@@ -205,6 +220,8 @@ struct room_create_packet :public Packet {
 
 struct room_select_packet :public Packet {
 	short room;
+	short ingamekey;
+	bool isMaster;
 };
 
 struct room_list_packet :public Packet {
@@ -229,6 +246,8 @@ struct game_ready_packet :public Packet {
 struct game_start_packet :public Packet {
 	PlayerType weaponType;
 	short ingamekey;
+	XMFLOAT3 pos;
+	short leftplayer;
 };
 
 struct start_ok_packet :public Packet {
@@ -258,6 +277,7 @@ struct player_info_packet : public Packet {
 };
 
 struct player_pos_packet : public Packet {
+	short ingamekey;
 	char state;
 	DirectX::XMFLOAT3 Position;
 	float dx, dy;
@@ -271,52 +291,70 @@ struct player_start_pos : public Packet {
 };
 
 struct player_move_packet : public Packet {
+	short ingamekey;
 	char state;
+	DirectX::XMFLOAT3 Position;
 	DWORD MoveType;
 	DWORD direction;
 	float dx, dy;
 };
 
 struct player_rotate_packet : public Packet {
+	short ingamekey;
 	float dx, dy;
 };
 
 struct player_status_packet : public Packet {
+	short ingamekey;
 	char state;
 };
 
 struct player_stat_packet : public Packet {
+	short ingamekey;
 	float hp;
 	float lv;
 	float speed;
 };
 
 struct Weapon_swap_packet : public Packet {
+	short ingamekey;
+	PlayerType weapon;
+};
+
+struct Weapon_select_packet : public Packet {
+	short ingamekey;
 	PlayerType weapon;
 };
 
 struct player_equipment_packet : public Packet {
+	short ingamekey;
 	char armor;
 	char helmet;
 	char shoes;
 };
 
 struct player_attack_packet : public Packet {
+	short ingamekey;
 	char attack_type;
+	float dx, dy;
 };
 
 struct player_shot_packet : public Packet {
+	short ingamekey;
 	DirectX::XMFLOAT3 Look;
 	float fTimeElapsed;
 	float ChargeTimer;
+	float dx, dy;
 };
 
 struct player_arrow_packet : public Packet {
+	short ingamekey;
 	char attack_type;
 	float fSpeed;
 };
 
 struct player_damage_packet : public Packet {
+	short ingamekey;
 	unsigned short damage;
 	short target;
 	short nAttack;
@@ -324,16 +362,19 @@ struct player_damage_packet : public Packet {
 };
 
 struct player_stop_packet : public Packet {
+	short ingamekey;
 	DirectX::XMFLOAT3 Position;
+	float dx, dy;
+	PlayerType playertype;
 };
 
 struct player_dead_packet : public Packet {
-
+	short ingamekey;
 };
 
 struct map_block_set : public Packet {
 	char block_type[9];
-
+	std::chrono::system_clock::time_point GameStartTime;
 };
 
 struct map_collapse_packet : public Packet {
@@ -343,6 +384,7 @@ struct map_collapse_packet : public Packet {
 
 struct cloud_move_packet : public Packet {
 	float x, z;
+	std::chrono::system_clock::time_point GameStartTime;
 };
 
 struct mon_add_packet : public Packet {
@@ -361,6 +403,17 @@ struct mon_pos_packet : public Packet {
 	float degree;
 	DWORD MoveType;
 	short MonsterType;
+	short target;
+};
+
+struct mon_move_packet : public Packet {
+	char state;
+	DirectX::XMFLOAT3 Position;
+	DirectX::XMFLOAT3 direction;
+	float degree;
+	DWORD MoveType;
+	short MonsterType;
+	short target;
 };
 
 struct mon_attack_packet : public Packet {
@@ -369,9 +422,11 @@ struct mon_attack_packet : public Packet {
 	DWORD MoveType;
 	int target;
 	float PlayerLeftHp;
+	float attack_dis;
 };
 
 struct mon_damaged_packet : public Packet {
+	short ingamekey;
 	unsigned short damage;
 	short target;
 	short nAttack;
@@ -412,23 +467,40 @@ struct create_account_packet :public Packet {
 	bool canmake;
 };
 
-struct mon_move_to_player_event : public Packet {
+struct mon_behavior_event : public Packet {
+	std::chrono::system_clock::time_point GameStartTime;
+};
 
+struct mon_move_event : public Packet {
+	XMFLOAT3 subtract;
+	XMFLOAT3 direction;
+	short target;
+	std::chrono::system_clock::time_point GameStartTime;
 };
 
 struct mon_attack_cooltime_event : public Packet {
-
+	std::chrono::system_clock::time_point GameStartTime;
 };
 
 struct mon_respawn_event : public Packet {
+	std::chrono::system_clock::time_point GameStartTime;
+};
 
+struct mon_attack_event : public Packet {
+	XMFLOAT3 direction;
+	short target;
+	std::chrono::system_clock::time_point GameStartTime;
+};
+
+struct mon_stop_event : public Packet {
+	std::chrono::system_clock::time_point GameStartTime;
 };
 
 struct Mapbreak_event : public Packet {
-
+	std::chrono::system_clock::time_point GameStartTime;
 };
 
 struct game_end_event : public Packet {
-
+	std::chrono::system_clock::time_point GameStartTime;
 };
 #pragma pack(pop)

@@ -52,14 +52,19 @@ protected:
 	int							m_nPlace;
 	bool						m_bHit = false;
 	float						m_fStamina;
+	bool						m_bKeyup = false;
 	// stat
 
 	LPVOID						*m_ppPlayerUpdatedContext = NULL;
 	LPVOID						*m_ppCameraUpdatedContext = NULL;
 
 	CCamera						*m_pCamera = NULL;
+	CPacket						*m_pPacket = NULL;
 
-	PlayerType					m_type = PT_SWORD1H;
+	PlayerType					m_type = PT_BASIC;
+
+	float						m_fRotate = 0.0f;
+	DWORD						m_dwDirection = 0;
 
 public:
 	CPlayer();
@@ -89,6 +94,7 @@ public:
 	void SetRate(int rate) { m_iRate = rate; }
 	void SetPro(int pro) { m_iProficiency = pro; }
 	void SetStamina(float sta) { m_fStamina = sta; }
+	void SetKeyup(bool key) { m_bKeyup = key; }
 	void Reset();
 
 	virtual void RButtonDown() {};
@@ -184,7 +190,6 @@ public:
 	virtual void Animate(float fTimeElapsed);
 	void SetBasicAnimation();
 
-#ifdef _WITH_SOUND_CALLBACK
 	virtual void SetAnimationSound();
 	virtual void Move(DWORD dwDirection, float fDistance, bool bVelocity = false);
 	virtual void Update(float fTimeElapsed);
@@ -193,7 +198,6 @@ public:
 
 protected:
 	CGameObject* pWeapon;
-#endif
 	enum PlayerState {
 		Idle = 0,
 		Death,

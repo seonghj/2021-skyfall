@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include "GameFramework.h"
+#include <random>
 
 #define NO_FOG 0.0f
 #define LINEAR_FOG 1.0f
@@ -320,35 +321,36 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
     switch (nMessageID)
     {
     case WM_LBUTTONDOWN: {
-        if (!strcmp(m_pPlayer->m_pstrFrameName,"Player_Bow"))
+        if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow")) {
             m_pPacket->Send_attack_packet(PlayerAttackType::BOWL);
+            //m_pScene->m_ppUIObjects[5]->SetAlpha(1.0f);
+        }
         else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
             m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HL1);
         ::SetCapture(hWnd);
         ::GetCursorPos(&m_ptOldCursorPos);
-        if (!m_bRotateEnable) {
-            m_ChargeTimer.Reset();
-            m_ChargeTimer.Start();
-            //m_pPlayer->LButtonDown();
-        }
+        m_ChargeTimer.Reset();
+        m_ChargeTimer.Start();
         break;
     }
     case WM_RBUTTONDOWN: {
-        if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
-            m_pPacket->Send_attack_packet(PlayerAttackType::BOWR);
+        if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow")) {
+           /* m_pPacket->Send_attack_packet(PlayerAttackType::BOWR);*/
+            m_pPlayer->RButtonUp();
+        }
         else /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))*/
         {
             if (m_pPlayer->GetGround() && m_pPlayer->GetRunning())
             {
-                if (m_pPlayer->GetStamina() < 20.0f)
+                if (m_pPlayer->GetStamina() < 5.0f)
                     break;
-                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 20.0f);
+                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 5.0f);
             }
             else if (m_pPlayer->GetGround() && !m_pPlayer->GetRunning())
             {
-                if (m_pPlayer->GetStamina() < 30.0f)
+                if (m_pPlayer->GetStamina() < 10.0f)
                     break;
-                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 30.0f);
+                m_pPlayer->SetStamina(m_pPlayer->GetStamina() - 10.0f);
             }
             m_pPacket->Send_attack_packet(PlayerAttackType::SWORD1HR);
         }
@@ -362,20 +364,25 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
     }
     case WM_LBUTTONUP: {
         //if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
-        if(strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
-            m_pPacket->Send_stop_packet();
+        if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
+            m_pPlayer->SetKeyup(true);
         ::ReleaseCapture();
         m_ChargeTimer.Stop();
-        m_pPlayer->LButtonUp(m_ChargeTimer.GetTotalTime());
+        if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow")) {
+            m_pPlayer->LButtonUp(m_ChargeTimer.GetTotalTime());
+            //m_pScene->m_ppUIObjects[5]->SetAlpha(0.0f);
+        }
         m_DegreeX = 0;
         m_DegreeY = 0;
+
         break;
     }
     case WM_RBUTTONUP: {
         //if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_1Hsword"))
         if (strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))	// not player_bow
-            m_pPacket->Send_stop_packet();
-        m_pPlayer->RButtonUp();
+            m_pPlayer->SetKeyup(true);
+        /*if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+            m_pPlayer->RButtonUp();*/
         CCamera* pCamera = m_pPlayer->GetCamera();
         m_pCamera = pCamera;
         m_DegreeX = 0;
@@ -422,7 +429,20 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				case VK_RETURN:
 					break;
 				case VK_F1:
+                    if (m_pScene) {
+                        if (m_pPlayer->GetPlace() > 0 && m_pScene->GetState() == SCENE::INGAME) {
+                            int n = m_pPlayer->GetPlace();
+                            m_pScene->m_ppTerrain[n - 1]->Falling();
 
+                            for (int i = n * 2 - 2; i < (n * 2); i++)
+                            {
+                                CGameObject* pObject = m_pScene->m_pMap->GetMap(i);
+                                XMFLOAT3 pos = pObject->GetPosition();
+                                pos.y += 2000;
+                                pObject->SetPosition(pos);
+                            }
+                        }
+                    }
                     break;
                 case VK_F2:
 
@@ -433,19 +453,20 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
                     /*m_pCamera = m_pPlayer->ChangeCamera((DWORD)(wParam - VK_F1 + 1), m_GameTimer.GetTimeElapsed());*/
                     break;
                 case VK_F4: 
-                    m_pPacket->Send_swap_weapon_packet(PT_BOW);
+                    //m_pPacket->Send_swap_weapon_packet(PT_BOW);
                     break;
                 case VK_F5: 
-                    m_pPacket->Send_swap_weapon_packet(PT_SWORD1H);
+                    //m_pPacket->Send_swap_weapon_packet(PT_SWORD1H);
                     break;
                 case VK_F6:
-                    m_pPacket->Send_swap_weapon_packet(PT_SWORD2H);
+                    //m_pPacket->Send_swap_weapon_packet(PT_SWORD2H);
                     break;
                 case VK_F7:
-                    m_pPacket->Send_swap_weapon_packet(PT_SPEAR2H);
+                    //m_pPacket->Send_swap_weapon_packet(PT_SPEAR2H);
                     break;
                 case VK_F8:
                     m_bMouseHold = !m_bMouseHold;
+                    //m_bRotateEnable = !m_bRotateEnable;
                     break;
                 case VK_F9:
                     ChangeSwapChainState();
@@ -480,6 +501,21 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
             case 'r':
                 if (m_pScene->GetState() == SCENE::ENDGAME)
                     Restart();
+                break;
+            case 'T':
+            case 't':
+                for (int i = 0; i < BGM_NUM; i++)
+                    m_bgm[i]->turnoff();
+                for (int i = 0; i < SE_NUM; i++)
+                    m_se[i]->turnoff();
+                break;
+            case 'Y':
+            case'y':
+                for (int i = 0; i < BGM_NUM; i++)
+                    m_bgm[i]->turnon();
+                for (int i = 0; i < SE_NUM; i++)
+                    m_se[i]->turnon();
+                break;
             }
             break;
         default:
@@ -506,6 +542,15 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 {
     //if (m_pScene->GetState() != SCENE::INGAME || m_pScene->GetState() != SCENE::INROOM) return(0);
 
+    //if (!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow"))
+    //{
+    //    for (int i = 0; i < 13; i++)
+    //        if (m_pPlayer->m_pSkinnedAnimationController->IsTrackFinish(i))
+    //        {
+    //            cout << i << "번째 " << "드디어 리턴 했다." << endl;
+    //            return(0);
+    //        }
+    //}
     switch (nMessageID)
     {
     case WM_ACTIVATE:
@@ -580,7 +625,6 @@ void CGameFramework::ShowLoginWindow()
 		}
 		ImGui::SameLine(0, 10);
 		if (ImGui::Button("Create Account")) {
-			// 여기서 회원가입 창 띄워서 거기서 아이디 비번 넣고 보내고 할거임
 			m_bShowAccountWindow = true;
 		}
 	}
@@ -645,21 +689,29 @@ void CGameFramework::ShowRoomWindow()
     ImGui::Begin("Room", false, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
 
 	{
+        std::random_device rd;
+        std::mt19937_64 gen(rd());
+        std::uniform_int_distribution<int> dis(1, 4);
 		ImGui::SetCursorPosX(80);
-		if (ImGui::Button("Start")) {
-			// 여기서 게임 시작
-			// 모든 플레이어가 무기를 골랐다면, 시작 버튼을 누르면 게임 시작
-			// 임시로 state 변경해놓음
-			// m_pScene->SetState(SCENE::INGAME);
-            if (m_pPacket->Get_StartWeapon() < PlayerType::PT_BASIC)
-			    m_pPacket->Send_start_packet(m_pPacket->Get_StartWeapon());
-		}
-		ImGui::SameLine(0, 50);
+        if (m_pPacket->isMaster == TRUE) {
+            if (ImGui::Button("Start")) {
+                // 여기서 게임 시작
+                // 모든 플레이어가 무기를 골랐다면, 시작 버튼을 누르면 게임 시작
+                // 임시로 state 변경해놓음
+                // m_pScene->SetState(SCENE::INGAME);
+                if (m_pPacket->Get_StartWeapon() == PlayerType::PT_BASIC)
+                    m_pPacket->Set_StartWeapon((PlayerType)dis(gen));
+                m_pPacket->Send_start_packet(m_pPacket->Get_StartWeapon());
+
+                /*if (m_pPacket->Get_StartWeapon() != PlayerType::PT_BASIC)
+                    m_pPacket->Send_start_packet(m_pPacket->Get_StartWeapon());*/
+            }
+            ImGui::SameLine(0, 50);
+        }
 		if (ImGui::Button("Exit")) {
 			// 여기서 방을 나감
 			// 임시로 state 변경
-			m_pScene->SetState(SCENE::LOBBY);
-
+            m_pPacket->Send_return_lobby_packet();
 		}
 	}
 	ImGui::End();
@@ -743,9 +795,12 @@ void CGameFramework::DrawTimer()
 {
 	PIXBeginEvent(m_pd3dCommandList, PIX_COLOR_DEFAULT, L"Draw sprite");
 	char str[6] = "";
+    char h[4];
+    char c_player[12] = "Player : ";
+    char p[3];
 	int t = m_pcbMappedFrameworkInfo->m_fCurrentTime;
+    char aim_point[2] = "+";
 
-	char h[4];
 	_itoa_s(t / 60, h, 10);
 	strcat_s(str, h);
 	strcat_s(str, ":");
@@ -755,8 +810,13 @@ void CGameFramework::DrawTimer()
 	char m[3];
 	_itoa_s(t % 60, m, 10);
 	strcat_s(str, m);
+
+    _itoa_s(leftPlayer, p, 10);
+    strcat_s(c_player, p);
 	m_pSprite->Begin(m_pd3dCommandList);
 	m_pFont->DrawString(m_pSprite.get(), str, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 50, 10));
+    m_pFont->DrawString(m_pSprite.get(), c_player, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 70, 40));
+    m_pFont->DrawString(m_pSprite.get(), aim_point, XMFLOAT2(FRAME_BUFFER_WIDTH / 2 - 10, FRAME_BUFFER_HEIGHT / 2 - 10));
 	m_pSprite->End();
 	PIXEndEvent(m_pd3dCommandQueue);
 }
@@ -939,16 +999,17 @@ void CGameFramework::BuildObjects()
 
 	m_pScene->AddPlayer(m_pd3dDevice, m_pd3dCommandList);
 	m_pScene->AddWeapon(m_pd3dDevice, m_pd3dCommandList);
-	m_pPlayer = m_pScene->m_pPlayer = pBasicPlayer;
-	pBasicPlayer->Rotate(20.0f, -90.f, 0);
 	//m_pPlayer->SetPlace(4);
-	
+    m_pPlayer = m_pScene->m_pPlayer = pBasicPlayer;
 	m_pCamera = pBasicPlayer->GetCamera();
+    pBasicPlayer->Rotate(20.0f, -90.f, 0);
+    m_pScene->Reset();
 
     m_pPacket->m_pScene = m_pScene;
     m_pPacket->m_pFramework = this;
     m_pPacket->m_pPlayer = m_pPlayer;
     m_pPacket->m_pMap = m_pScene->m_pMap;
+    m_pPlayer->m_pPacket = m_pPacket;
     
 
 
@@ -989,6 +1050,19 @@ void CGameFramework::ProcessInput()
     static UCHAR pKeysBuffer[256];
     bool bProcessedByScene = true;
     if (GetKeyboardState(pKeysBuffer) && m_pScene) bProcessedByScene = m_pScene->ProcessInput(pKeysBuffer);
+    
+    if ((GetAsyncKeyState('W') & 0x8000) ? 0 : 1
+        && (GetAsyncKeyState('A') & 0x8000) ? 0 : 1
+        && (GetAsyncKeyState('S') & 0x8000) ? 0 : 1
+        && (GetAsyncKeyState('D') & 0x8000) ? 0 : 1){
+        if (PressDirButton == true) {
+            PressDirButton = false;
+            /*if (m_pPlayer->GetGround() == true)
+                m_pPacket->Send_stop_packet();*/
+        }
+    }
+
+
     if (!bProcessedByScene)
     {
         dwDirection = 0;
@@ -1003,32 +1077,68 @@ void CGameFramework::ProcessInput()
         //if (m_pScene->GetState() != SCENE::INGAME || m_pScene->GetState() != SCENE::INROOM) return;
         if (m_pPlayer->GetGround()&&!m_pPlayer->GetCharging()) {
 
-            if (pKeysBuffer['W'] & 0xF0) { dwDirection |= DIR_FORWARD; PressDirButton = true;}
-            if (pKeysBuffer['S'] & 0xF0) { dwDirection |= DIR_BACKWARD; PressDirButton = true;}
-            if (pKeysBuffer['A'] & 0xF0) { dwDirection |= DIR_LEFT; PressDirButton = true;}
-            if (pKeysBuffer['D'] & 0xF0) { dwDirection |= DIR_RIGHT; PressDirButton = true;}
-            
+            if (pKeysBuffer['W'] & 0xF0) { dwDirection |= DIR_FORWARD;}
+            if (pKeysBuffer['S'] & 0xF0) { dwDirection |= DIR_BACKWARD;}
+            if (pKeysBuffer['A'] & 0xF0) { dwDirection |= DIR_LEFT;}
+            if (pKeysBuffer['D'] & 0xF0) { dwDirection |= DIR_RIGHT;}
+           
             /*if (pKeysBuffer['Q'] & 0xF0) dwDirection |= DIR_UP;
             if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_DOWN;*/
 
+            player_move_packet p;
+            p.key = m_pPacket->Get_clientkey();
+            p.ingamekey = m_pPacket->InGamekey;
+            p.dx = m_pPlayer->GetPitch();
+            p.dy = m_pPlayer->GetYaw();
+            p.size = sizeof(p);
+            p.state = 1;
+            p.type = CS_player_move;
+            p.direction = dwDirection;
+            p.Position = m_pPlayer->GetPosition();
+
             if (pKeysBuffer[VK_SPACE] & 0xF0)
             {
-                m_pPlayer->SetJump(true);
-                player_move_packet p;
-                p.key = m_pPacket->InGamekey;
-                p.dx = m_DegreeX;
-                p.dy = m_DegreeY;
-                //p.MoveType = dwDirection;
-                p.size = sizeof(p);
-                p.state = 1;
-                p.MoveType = PlayerMove::JUMP;
-                p.type = CS_player_move;
-                m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-                m_pPlayer->SetFriction(0.f);
+                if (m_pPlayer->GetGround() == true) {
+                    m_pPlayer->SetJump(true);
+                    p.MoveType = PlayerMove::JUMP;
+                    m_pPlayer->SetFriction(0.f);
+                    PressDirButton = true;
+                }
             }
             else if (pKeysBuffer[VK_SHIFT] & 0xF0 && m_pPlayer->GetStamina() > 10.0f)
             {
+                p.MoveType = PlayerMove::RUNNING;
                 m_pPlayer->SetRunning(true);
+            }
+            else {
+                p.MoveType = PlayerMove::WALKING;
+            }
+            
+            // 이동 시작
+            if (PressDirButton == false && dwDirection != 0 && (false == m_pPlayer->GetAttack())) {
+                //printf("move\n");
+                PressDirButton = true;
+                m_pPacket->beforedir = dwDirection;
+                if (m_pScene->GetState() == SCENE::INGAME && m_pPlayer->GetAttack() == false) {
+                    m_pPacket->isStop = false;
+                    m_pPlayer->SetDamaged(false);
+                    m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+                }
+            }
+
+            // 이동방향 변경
+            if ((m_pPacket->beforedir != dwDirection && PressDirButton == true)
+                || (m_pPacket->beforeRun != m_pPlayer->GetRunning() && PressDirButton == true)
+                || (m_pPacket->beforeJump != m_pPlayer->GetJump() && PressDirButton == true)
+                && (false == m_pPlayer->GetAttack())) {
+                m_pPacket->beforedir = dwDirection;
+                m_pPacket->beforeRun = m_pPlayer->GetRunning();
+                m_pPacket->beforeJump = m_pPlayer->GetJump();
+                if (m_pScene->GetState() == SCENE::INGAME && m_pPlayer->GetAttack() == false) {
+                    m_pPacket->isStop = false;
+                    m_pPlayer->SetDamaged(false);
+                    m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+                }
             }
         }
         
@@ -1055,67 +1165,81 @@ void CGameFramework::ProcessInput()
                 SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
         }
 
-		if (m_pPlayer->GetAttack() && m_pCamera->GetMode() == THIRD_PERSON_CAMERA &&
-			!strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow") && m_ChargeTimer.GetTotalTime() > 1.f)
+		if (m_pPlayer->GetAttack() && !strcmp(m_pPlayer->m_pstrFrameName, "Player_Bow") 
+            && m_ChargeTimer.GetTotalTime() > 1.f)
 		{
 			player_shot_packet p;
-            p.key = m_pPacket->InGamekey;
+            p.key = m_pPacket->Get_clientkey();
+            p.ingamekey = m_pPacket->InGamekey;
 			p.size = sizeof(p);
 			p.type = CS_allow_shot;
 			p.Look = m_pCamera->GetLookVector();
 			p.fTimeElapsed = fTimeElapsed;
 			p.ChargeTimer = m_ChargeTimer.GetTotalTime();
+            p.dx = m_pPlayer->GetPitch();
+            p.dy = m_pPlayer->GetYaw();
 			m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
 			//printf("Look - X : %f Y : %f Z : %f\n", m_pCamera->GetLookVector().x, m_pCamera->GetLookVector().y, m_pCamera->GetLookVector().z);
 		}
 
-        if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
+        if (((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f)))
         {
-            if (cxDelta || cyDelta)
-            {
-                if (m_bRotateEnable) {
-                    m_fPitch += cyDelta;
-                    m_fYaw += cxDelta;
-                    m_pCamera->Rotate(cyDelta, cxDelta, 0);
-                    //m_pShadowMap->Rotate(cyDelta, cxDelta, 0);
-                }
-                else {
-                    m_DegreeX = cyDelta;
-                    m_DegreeY = cxDelta;
+            if (!m_bMouseHold) {
+                if (cxDelta || cyDelta)
+                {
+                    if (m_bRotateEnable) {
+                        m_fPitch += cyDelta;
+                        m_fYaw += cxDelta;
+                        m_pCamera->Rotate(cyDelta, cxDelta, 0);
+                    }
+                    else if (m_pScene->GetState() == SCENE::INGAME) {
+                        m_DegreeX += cyDelta;
+                        m_DegreeY += cxDelta;
+
+                        m_pPlayer->Rotate(cyDelta, cxDelta, 0);
+                        if (abs(m_DegreeX) >= 12.f || abs(m_DegreeY) >= 12.f) {
+                            //printf("%f %f\n", m_pCamera->GetPitch(), m_pCamera->GetYaw());
+                            m_DegreeX = 0;
+                            m_DegreeY = 0;
+                            m_pPacket->Send_Rotate(m_pPlayer->GetPitch(), m_pPlayer->GetYaw());
+                            //printf("rotate\n");
+                        }
+                        //m_pShadowMap->Rotate(cyDelta, cxDelta, 0);
+                    }
                 }
             }
-            if (dwDirection && (false == m_pPlayer->GetAttack())) {
+            if (dwDirection && (false == m_pPlayer->GetAttack())){
                 m_pPlayer->Move(dwDirection, 50.25f, true);
-                TurnOnSE(SE::Walk);
-                //int Yaw = 0;
-                //if (dwDirection & DIR_BACKWARD) {
-                //	Yaw = 180;
-                //	if (dwDirection & DIR_LEFT) {
-                //		Yaw += 45;
-                //	}
-                //	else if (dwDirection & DIR_RIGHT) {
-                //		Yaw -= 45;
-                //	}
-                //}
-                //else if (dwDirection & DIR_FORWARD) {
-                //	Yaw = 0.f;
-                //	if (dwDirection & DIR_LEFT) {
-                //		Yaw -= 45;
-                //	}
-                //	else if (dwDirection & DIR_RIGHT) {
-                //		Yaw += 45;
-                //	}
-                //}
-                //else if (dwDirection & DIR_RIGHT) {
-                //	Yaw = 90;
-                //}
-                //else if (dwDirection & DIR_LEFT) {
-                //	Yaw = -90;
-                //}
-                //if (m_pPlayer->m_iRotate != Yaw) {
-                //	//m_pPlayer->RotatePlayer(Yaw - m_pPlayer->m_iRotate);
-                //	m_pPlayer->m_iRotate = Yaw;
-                //}
+                //TurnOnSE(SE::Walk);
+                /*int Yaw = 0;
+                if (dwDirection & DIR_BACKWARD) {
+                	Yaw = 180;
+                	if (dwDirection & DIR_LEFT) {
+                		Yaw += 45;
+                	}
+                	else if (dwDirection & DIR_RIGHT) {
+                		Yaw -= 45;
+                	}
+                }
+                else if (dwDirection & DIR_FORWARD) {
+                	Yaw = 0.f;
+                	if (dwDirection & DIR_LEFT) {
+                		Yaw -= 45;
+                	}
+                	else if (dwDirection & DIR_RIGHT) {
+                		Yaw += 45;
+                	}
+                }
+                else if (dwDirection & DIR_RIGHT) {
+                	Yaw = 90;
+                }
+                else if (dwDirection & DIR_LEFT) {
+                	Yaw = -90;
+                }
+                if (m_pPlayer->m_iRotate != Yaw) {
+                	m_pPlayer->RotatePlayer(Yaw - m_pPlayer->m_iRotate);
+                	m_pPlayer->m_iRotate = Yaw;
+                }*/
             }
         }
     }
@@ -1131,17 +1255,18 @@ void CGameFramework::AnimateObjects()
         XMFLOAT3 pos = m_pPlayer->GetPosition();
         
         int nPlace = m_pPlayer->GetPlace();
-        if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+        //cout << "현재 플레이스 : " << nPlace << endl;
+        if (pos.x < m_vMapArrange[nPlace][0] * 2045 && nPlace % 3>0) {
             m_pPlayer->SetPlace(nPlace - 1);
         }
-        else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+        else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2045 && nPlace % 3 < 2) {
             m_pPlayer->SetPlace(nPlace + 1);
         }
 
-        if (pos.z < m_vMapArrange[nPlace][1] * 2048&&nPlace>2) {
+        if (pos.z < m_vMapArrange[nPlace][1] * 2045&&nPlace>2) {
             m_pPlayer->SetPlace(nPlace - 3);
         }
-        else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+        else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2045 && nPlace < 6) {
             m_pPlayer->SetPlace(nPlace + 3);
         }
 
@@ -1149,18 +1274,39 @@ void CGameFramework::AnimateObjects()
         {
             pos = m_pScene->m_ppGameObjects[i]->GetPosition();
             nPlace = m_pScene->m_ppGameObjects[i]->GetPlace();
-            if (pos.x < m_vMapArrange[nPlace][0] * 2048 && nPlace % 3>0) {
+            if (pos.x < m_vMapArrange[nPlace][0] * 2045 && nPlace % 3>0) {
                 m_pScene->m_ppGameObjects[i]->SetPlace(nPlace - 1);
             }
-            else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2048 && nPlace % 3 < 2) {
+            else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2045 && nPlace % 3 < 2) {
                 m_pScene->m_ppGameObjects[i]->SetPlace(nPlace + 1);
             }
 
-            if (pos.z < m_vMapArrange[nPlace][1] * 2048 && nPlace>2) {
+            if (pos.z < m_vMapArrange[nPlace][1] * 2045 && nPlace>2) {
                 m_pScene->m_ppGameObjects[i]->SetPlace(nPlace - 3);
             }
-            else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2048 && nPlace < 6) {
+            else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2045 && nPlace < 6) {
                 m_pScene->m_ppGameObjects[i]->SetPlace(nPlace + 3);
+            }
+        }
+
+        for (int i = 0; i < MAX_PLAYER; i++) {
+            if (m_pPacket->isMove[i] == true) {
+                XMFLOAT3 pos = m_pScene->m_mPlayer[i]->GetPosition();
+
+                int nPlace = m_pScene->m_mPlayer[i]->GetPlace();
+                if (pos.x < m_vMapArrange[nPlace][0] * 2045 && nPlace % 3>0) {
+                    m_pScene->m_mPlayer[i]->SetPlace(nPlace - 1);
+                }
+                else if (pos.x > (m_vMapArrange[nPlace][0] + 1) * 2045 && nPlace % 3 < 2) {
+                    m_pScene->m_mPlayer[i]->SetPlace(nPlace + 1);
+                }
+
+                if (pos.z < m_vMapArrange[nPlace][1] * 2045 && nPlace>2) {
+                    m_pScene->m_mPlayer[i]->SetPlace(nPlace - 3);
+                }
+                else if (pos.z > (m_vMapArrange[nPlace][1] + 1) * 2045 && nPlace < 6) {
+                    m_pScene->m_mPlayer[i]->SetPlace(nPlace + 3);
+                }
             }
         }
     }
@@ -1202,12 +1348,25 @@ void CGameFramework::FrameAdvance()
 {
     m_GameTimer.Tick(60.0f);
     ++frametime;
-	ProcessInput();
-	CheckCollision();
+    ProcessInput();
+    m_pPacket->OtherPlayerMove(m_GameTimer.GetTimeElapsed());
+    CheckCollision();
+
+    /*if ((m_pPacket->beforeJump != m_pPlayer->GetJump()) && m_pPlayer->GetGround()) {
+        m_pPacket->beforeJump = m_pPlayer->GetJump();
+        m_pPacket->Send_stop_packet();
+    }*/
 
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
+
+    for (int i = 0; i < MAX_PLAYER; ++i) {
+        if (m_pPacket->isMove[i] == true && i != m_pPacket->InGamekey) {
+            m_pScene->m_mPlayer[i]->SetStamina(MAX_STAMINA);
+            m_pScene->m_mPlayer[i]->Update(m_GameTimer.GetTimeElapsed());
+        }
+    }
+
 	UpdateShadowMap();
-    m_pScene->UpdateMap();
 	if(m_pScene->GetState() == SCENE::INGAME)
 		UpdateMiniMap();
 
@@ -1351,7 +1510,8 @@ void CGameFramework::FrameAdvance()
     if (m_pPlayer->GetPosition().y <= -10 && m_pPacket->isfalling == false) {
         m_pPacket->isfalling = true;
         player_dead_packet p;
-        p.key = m_pPacket->InGamekey;
+        p.key = m_pPacket->Get_clientkey();
+        p.ingamekey = m_pPacket->InGamekey;
         p.type = CS_player_dead;
         p.roomid = m_pPacket->roomID;
         p.size = sizeof(p);
@@ -1360,61 +1520,66 @@ void CGameFramework::FrameAdvance()
     }
 
     float fLength = sqrtf(m_pPlayer->GetVelocity().x * m_pPlayer->GetVelocity().x + m_pPlayer->GetVelocity().z * m_pPlayer->GetVelocity().z);
-    if (::IsZero(fLength) && m_pPlayer->GetGround())
-        PressDirButton = false;
-    XMFLOAT3 NowPosition = m_pPlayer->GetPosition();
-    if (floor(m_BeforePosition.x) != floor(NowPosition.x) || floor(m_BeforePosition.y) != floor(NowPosition.y) || floor(m_BeforePosition.z) != floor(NowPosition.z)
-        || floor(m_DegreeX) != 0.0f || floor(m_DegreeY) != 0.0f)
-    {
-        //if (frametime % 2 == 0) {
-            /*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
-                m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
-            if (false == m_pPlayer->GetAttack()) {
-                player_pos_packet p;
-                p.key = m_pPacket->InGamekey;
-                p.roomid = m_pPacket->roomID;
-                p.Position.x = floor(NowPosition.x);
-                p.Position.y = floor(NowPosition.y);
-                p.Position.z = floor(NowPosition.z);
-                p.dx = floor(m_DegreeX); //* 1.2f;
-                p.dy = floor(m_DegreeY); //* 1.2f;
-                p.dir = dwDirection;
-                p.size = sizeof(player_pos_packet);
-                p.state = 1;
-                if (m_BeforePosition.x == NowPosition.x && m_BeforePosition.y == NowPosition.y && m_BeforePosition.z == NowPosition.z) {
-                    p.MoveType = PlayerMove::STAND;
-                    m_pPlayer->SetStanding(true);
-                }
-                else {
-                    p.MoveType = m_pPlayer->GetRunning();
-                    if (m_pPlayer->GetJump() == true || m_pPlayer->GetGround() == false)
-                        p.MoveType = PlayerMove::JUMP;
-                    m_pPlayer->SetStanding(false);
-                }
-                p.type = CS_player_pos;
+    if (frametime == 60 && m_pPacket->isMove[m_pPacket->InGamekey]) {
+        /*printf("N: %f, %f, %f | B: %f, %f, %f\n", NowPosition.x, NowPosition.y, NowPosition.z,
+            m_BeforePosition.x, m_BeforePosition.y, m_BeforePosition.z);*/
+        if (false == m_pPlayer->GetAttack()) {
+            player_pos_packet p;
+            p.key = m_pPacket->Get_clientkey();
+            p.ingamekey = m_pPacket->InGamekey;
+            p.roomid = m_pPacket->roomID;
+            p.Position = m_pPlayer->GetPosition();
+            p.dx = m_pPlayer->GetPitch();
+            p.dy = m_pPlayer->GetYaw();
+            p.dir = dwDirection;
+            p.size = sizeof(player_pos_packet);
+            p.state = 1;
+            p.type = CS_player_pos;
 
-                if (m_pPacket->canmove == TRUE && m_bMouseHold == FALSE) {
-                    m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
-                    //printf("frame: %d dx = %f dy = %f", frametime, p.dx, p.dy);
-                }
-
-                m_BeforePosition = NowPosition;
-
-                m_DegreeX = 0.0f;
-                m_DegreeY = 0.0f;
-
+            if (m_pPacket->canmove == TRUE && m_bMouseHold == FALSE) {
+                m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
             }
-       // }
-    }
-    else {
-        if (m_pPlayer->GetGround() == true && false == m_pPlayer->GetStanding() && false == PressDirButton) {
-            dwDirection = 0;
-            m_pPlayer->SetStanding(true);
-            m_pPacket->Send_stop_packet();
+            m_DegreeX = 0.0f;
+            m_DegreeY = 0.0f;
+
         }
     }
+
+    //for (int i = 0; i < 15; i++) {
+    //    if (m_pScene->m_ppGameObjects[i]->m_ismove) {
+    //        m_pPacket->MonsterMove(m_pScene->m_ppGameObjects[i], i);
+    //        /* printf("move %d x: %f y: %f z: %f", i
+    //             , m_pScene->m_ppGameObjects[i]->GetPosition().x
+    //             , m_pScene->m_ppGameObjects[i]->GetPosition().y
+    //             , m_pScene->m_ppGameObjects[i]->GetPosition().z);*/
+    //       if (frametime == 60) {
+    //            mon_pos_packet p;
+    //            p.size = sizeof(mon_pos_packet);
+    //            p.type = PacketType::SC_monster_pos;
+    //            p.key = i;
+    //            p.roomid = m_pPacket->roomID;
+    //            p.Position = m_pScene->m_ppGameObjects[i]->GetPosition();
+    //            p.direction = m_pScene->m_ppGameObjects[i]->vDirection;
+    //            p.degree = m_pScene->m_ppGameObjects[i]->m_fRotateDegree;
+    //            p.MoveType = 0;
+    //            p.state = 0;
+    //            p.MonsterType = m_pScene->m_ppGameObjects[i]->type;
+    //            p.target = m_pScene->m_ppGameObjects[i]->target_id;
+
+    //            //printf("%f, %f, %f\n", p->Position.x, p->Position.y, p->Position.z);
+    //            m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
+    //        }
+    //    }
+    //}
+    
     if (frametime > 60)
         frametime = 0;
+
+    if (m_pPlayer->GetGround() == true && false == PressDirButton) {
+        dwDirection = 0;
+        m_pPlayer->SetStanding(true);
+        //m_pPacket->Send_stop_packet();
+    }
 
     m_GameTimer.GetFrameRate(m_pszFrameRate + 9, 37);
     size_t nLength = _tcslen(m_pszFrameRate);
@@ -1487,12 +1652,14 @@ void CGameFramework::Restart()
     m_ChargeTimer.Reset();
     m_pPlayer->Reset();
     m_pPlayer->SetHp(m_pPlayer->m_iMaxHp);
+    pBasicPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
     //m_pPlayer->SetPosition(XMFLOAT3(5366, 136, 1480));
     //XMFLOAT3 pos = m_pPlayer->GetPosition();
     //m_pCamera->SetPosition(Vector3::Add(pos, m_pCamera->GetOffset()));
     //pos.y += 50.0f;
     //m_pCamera->SetLookAt(pos);
     m_bMouseHold = true;
+    m_bRotateEnable = false;
     m_pScene->rate = MAX_PLAYER;
     for (int i = 0; i < m_pScene->m_nGameObjects; i++)
     {
@@ -1501,39 +1668,23 @@ void CGameFramework::Restart()
         pHpBar->m_iHp = m_pScene->m_ppGameObjects[i]->m_iMaxHp;
         pHpBar->m_bActive = false;
     }
-    for (int i = 0; i < MAX_PLAYER; i++)
-    {
-        m_pScene->m_mPlayer[i]->SetHp(m_pScene->m_mPlayer[i]->m_iMaxHp);
-        m_pScene->m_mPlayer[i]->Reset();
-    }
     m_pScene->m_ppUIObjects[1]->SetAlpha(0.0f);
     m_pScene->m_ppUIObjects[2]->SetAlpha(0.0f);
-    CLoadedModelInfo* pModel = CGameObject::LoadGeometryAndAnimationFromFile(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), "Model/Player/Player_Basic.bin", NULL);
-    CTerrainPlayer* pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList, m_pScene->GetGraphicsRootSignature(), pModel, (void**)m_pScene->m_ppTerrain);
-    delete pModel;
-    m_pPlayer = m_pScene->m_pPlayer = pPlayer;
-    pPlayer->Rotate(20.0f, -90.f, 0);
-    m_pCamera = pPlayer->GetCamera();
 
     m_pScene->Reset();
     m_pScene->m_iState = SCENE::LOBBY;
 
+    m_pPlayer = m_pScene->m_pPlayer = pBasicPlayer;
+    m_pCamera = m_pPlayer->GetCamera();
+
     m_pPacket->Send_return_lobby_packet();
-    //cout << "패킷 룸 아이디 : " << m_pPacket->roomID << endl;
-    //for (int i = 0; i < MAX_ROOM; i++) {
-    //    cout << i << "번째 : " << m_vRooms[i].first << endl;
-    //    if (m_vRooms[i].first == m_pPacket->roomID) {
-    //        m_vRooms.erase(m_vRooms.begin() + i);
-    //        break;
-    //    }
-    //}
 }
 
 void CGameFramework::UpdateShadowMap()
 {
     CCamera* pCamera = m_pShadowMap->GetCamera();
     XMFLOAT3 look = pCamera->GetLookVector();
-    XMFLOAT3 pos = Vector3::Add(m_pPlayer->GetPosition(), m_pPlayer->GetLookVector(), 500);
+    XMFLOAT3 pos = Vector3::Add(m_pPlayer->GetPosition(), m_pPlayer->GetCamera()->GetLookVector(), 500);
 
     pCamera->SetPosition(XMFLOAT3(pos.x, 0, pos.z));
     pCamera->Move(Vector3::ScalarProduct(look, -500, false));
@@ -1543,19 +1694,29 @@ void CGameFramework::UpdateShadowMap()
 
 void CGameFramework::StartGame()
 {
+    for (int i = 0; i < MAX_PLAYER; i++) {
+        m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackPosition(10, 0);
+        m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetAllTrackDisable();
+        m_pScene->m_mPlayer[i]->m_pSkinnedAnimationController->SetTrackEnable(10, true);
+    }
     m_pScene->SetState(SCENE::INGAME);
     MouseHold(false);
     m_GameTimer.Reset();
     m_pScene->m_ppUIObjects[4]->SetAlpha(0.0f);
+    m_bRotateEnable = false;
+    XMFLOAT3 pos = m_pPlayer->GetPosition();
+    m_pCamera->SetPosition(Vector3::Add(pos, m_pCamera->GetOffset()));
+    pos.y += 60.0f;
+    m_pCamera->SetLookAt(pos);
+    m_pPlayer->SetJump(true);
 }
 
 void CGameFramework::TrunOnBGM(int n)
 {
     for (int i = 0; i < BGM_NUM; i++) {
         m_bgm[i]->stop();
-    }
-    if(!m_bgm[n]->playing)
-        m_bgm[n]->play();
+    }        
+        //m_bgm[n]->play();
 }
 
 void CGameFramework::TurnOnSE(int n)
