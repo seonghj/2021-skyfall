@@ -19,7 +19,7 @@ constexpr int Alive = 1;
 //    char			messageBuffer[BUFSIZE];
 //    bool			is_recv;
 //    int             type;
-//    // 0 = session 1 = map
+//    // 0 = Player 1 = map
 //};
 
 class Arrow {
@@ -28,14 +28,14 @@ public:
 
 };
 
-class SESSION
+class Player
 {
 public:
 
-    SESSION() {}
-    SESSION(const SESSION& session) {}
-    SESSION(BOOL b) : connected(b) {}
-    ~SESSION() {}
+    Player() {}
+    Player(const Player& Player) {}
+    Player(BOOL b) : connected(b) {}
+    ~Player() {}
 
     OVER_EX                  over;
     SOCKET                   sock;
@@ -148,14 +148,14 @@ public:
 
     bool Init();
     void Thread_join();
-    void Disconnected(int key);
+    void Disconnect(int key);
 
     void Accept();
     void WorkerFunc();
 
     void do_recv(int key, int roomID);
     void send_packet(int to, char* packet, int roomID);
-    void process_packet(int key, char* buf, int roomID);
+    void ProcessPacket(int key, char* buf, int roomID);
     void ProcessEvent(OVER_EX* over_ex, int roomID, int key);
 
     void send_Lobby_key_packet(int key);
@@ -191,25 +191,25 @@ public:
     void send_monster_attack(Monster& mon, XMFLOAT3 direction, int target);
     void send_monster_stop(int key, int roomID);
 
-    void send_player_record(int key, int roomID, const SESSION& s, int time, int rank);
+    void send_player_record(int key, int roomID, const Player& s, int time, int rank);
     void send_map_packet(int to, int roomID);
 
     void game_end(int roomnum);
 
     void Delete_room(int roomID);
 
-    bool in_VisualField(SESSION& a, SESSION& b, int roomID);
-    bool in_VisualField(Monster& a, SESSION& b, int roomID);
+    bool in_VisualField(Player& a, Player& b, int roomID);
+    bool in_VisualField(Monster& a, Player& b, int roomID);
     unsigned short calc_attack(int key, char attacktype);
 
     float CalcDamageToMon(int att, int def) { return (att * (100 - def) / 100); }
 
     void player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy);
 
-    //std::unordered_map <int, SESSION> Lobby_sessions;
-    //std::unordered_map <int, std::array<SESSION, 20>> sessions; // 방ID, Player배열
+    //std::unordered_map <int, Player> Lobby_Players;
+    //std::unordered_map <int, std::array<Player, 20>> Players; // 방ID, Player배열
     std::array <GameRoom, 1000> GameRooms;
-    std::array <SESSION, 1000> sessions;
+    std::array <Player, 1000> Players;
 
 private:
     SOCKET                         listenSocket;
@@ -224,7 +224,7 @@ private:
     std::thread                    timer_thread;
 
     std::mutex                     accept_lock;
-    std::mutex                     sessions_lock;
+    std::mutex                     Players_lock;
     std::mutex                     GameRooms_lock;
     std::mutex                     maps_lock;
 };

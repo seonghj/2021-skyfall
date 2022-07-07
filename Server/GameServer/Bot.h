@@ -4,7 +4,7 @@
 #include "Server.h"
 #include "Timer.h"
 
-class SESSION;
+class Player;
 class Server;
 class Timer;
 

@@ -12,9 +12,9 @@ bool DB::Connection()
     connection = mysql_real_connect(&conn, DB_HOST, DB_USER
         , DB_PW, DB_NAME, 3306, (const char*)NULL, 0);
 
-    mysql_query(connection, "set session character_set_connection=euckr;");
-    mysql_query(connection, "set session character_set_results=euckr;");
-    mysql_query(connection, "set session character_set_client=euckr;");
+    mysql_query(connection, "set Player character_set_connection=euckr;");
+    mysql_query(connection, "set Player character_set_results=euckr;");
+    mysql_query(connection, "set Player character_set_client=euckr;");
 
     if (connection == NULL)
     {
@@ -198,7 +198,7 @@ bool DB::Logout_player(char* id)
     return true;
 }
 
-bool DB::Send_player_record(const SESSION& player, int survival_time, int rank)
+bool DB::Send_player_record(const Player& player, int survival_time, int rank)
 {
     wchar_t query[512] = L"insert into skyfall.UserRecord VALUES (";
 
@@ -229,7 +229,7 @@ bool DB::Send_player_record(const SESSION& player, int survival_time, int rank)
     return true;
 }
 
-bool DB::Get_player_record(char* ID, SESSION& session, int* survival_time, int* rank)
+bool DB::Get_player_record(char* ID, Player& Player, int* survival_time, int* rank)
 {
     wchar_t query[512] = L"SELECT * FROM skyfall.UserRecord WHERE User_ID = '";
     wchar_t wcID[20];
@@ -252,21 +252,21 @@ bool DB::Get_player_record(char* ID, SESSION& session, int* survival_time, int* 
         printf("Query invaild\n");
         return false;
     }
-    SQLBindCol(hStmt, 1, SQL_C_CHAR, session.id, sizeof(session.id), &len);
+    SQLBindCol(hStmt, 1, SQL_C_CHAR, Player.id, sizeof(Player.id), &len);
     SQLBindCol(hStmt, 2, SQL_INTEGER, survival_time, sizeof(int), &len);
     SQLBindCol(hStmt, 3, SQL_INTEGER, rank, sizeof(int), &len);
-    SQLBindCol(hStmt, 4, SQL_INTEGER, &session.weapon1, sizeof(int), &len);
-    SQLBindCol(hStmt, 5, SQL_INTEGER, &session.weapon2, sizeof(int), &len);
-    SQLBindCol(hStmt, 6, SQL_INTEGER, &session.helmet, sizeof(int), &len);
-    SQLBindCol(hStmt, 7, SQL_INTEGER, &session.shoes, sizeof(int), &len);
-    SQLBindCol(hStmt, 8, SQL_INTEGER, &session.armor, sizeof(int), &len);
+    SQLBindCol(hStmt, 4, SQL_INTEGER, &Player.weapon1, sizeof(int), &len);
+    SQLBindCol(hStmt, 5, SQL_INTEGER, &Player.weapon2, sizeof(int), &len);
+    SQLBindCol(hStmt, 6, SQL_INTEGER, &Player.helmet, sizeof(int), &len);
+    SQLBindCol(hStmt, 7, SQL_INTEGER, &Player.shoes, sizeof(int), &len);
+    SQLBindCol(hStmt, 8, SQL_INTEGER, &Player.armor, sizeof(int), &len);
     if (SQLFetch(hStmt) == SQL_NO_DATA) return false;
     if (hStmt) SQLCloseCursor(hStmt);
 
 #ifdef Test_DB 
-    printf("%s, %d, %d, %d, %d, %d, %d, %d\n", session.id, *survival_time, *rank
-        , session.weapon1.load(), session.weapon2.load(), session.helmet.load()
-        , session.shoes.load(), session.armor.load());
+    printf("%s, %d, %d, %d, %d, %d, %d, %d\n", Player.id, *survival_time, *rank
+        , Player.weapon1.load(), Player.weapon2.load(), Player.helmet.load()
+        , Player.shoes.load(), Player.armor.load());
 #endif
 
     return true;

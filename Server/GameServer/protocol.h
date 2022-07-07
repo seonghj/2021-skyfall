@@ -52,7 +52,7 @@ struct OVER_EX
 	SOCKET			csocket;
 	OVER_EX_Type    type;
 	int				roomID;
-	// 0 = session 1 = map
+	// 0 = Player 1 = map
 };
 
 enum terrain {
