@@ -148,7 +148,6 @@ int Server::SetLobbyKey()
     }
 }
 
-// 여기
 int Server::CreateRoom(int key, char* name)
 {
     int cnt = 0;
@@ -271,7 +270,6 @@ void Server::Accept()
     WSACleanup();
 }
 
-// 여기
 void Server::Disconnect(int key)
 {
     if (key == SERVER_ID) {
@@ -421,7 +419,6 @@ void Server::send_Lobby_loginOK_packet(int key)
     send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
 }
 
-// 여기
 void Server::send_room_list_packet(int key)
 {
     for (int i = 0; i < MAX_ROOM; ++i) {
@@ -836,7 +833,6 @@ void Server::send_player_dead_packet(int ingamekey, int roomID)
 #endif 
 }
 
-// 여기
 void Server::game_end(int roomnum)
 {
     if (GameRooms[roomnum].isMade == false) return;
@@ -862,11 +858,6 @@ void Server::game_end(int roomnum)
     //GameRooms_lock.lock();
     GameRooms[roomnum].master = INVALIDID;
     GameRooms[roomnum].r_lock.unlock();
-    //GameRooms_lock.unlock();
-
-    //maps_lock.lock();
-    //maps.erase(roomnum);
-    //maps_lock.unlock();
 
     m_pBot->monsters_lock.lock();
     m_pBot->monsters.erase(roomnum);
@@ -877,7 +868,6 @@ void Server::game_end(int roomnum)
     printf("Room %d Game End\n", roomnum);
 }
 
-// 여기
 void Server::Delete_room(int roomID)
 {
     GameRooms[roomID].r_lock.lock();
@@ -904,7 +894,6 @@ void Server::Delete_room(int roomID)
     printf("delete room %d\n", roomID);
 }
 
-// 여기
 void Server::player_go_lobby(int key, int roomID)
 {
     //send_game_end_packet(key, roomID);
@@ -1125,7 +1114,6 @@ void Server::ProcessPacket(int key, char* buf, int roomID)
         break;
     }
     case PacketType::CS_create_room: {
-        // 여기
         room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
         int key = p->key;
         //if (sizeof(p->name) <= 0) break;
@@ -1183,7 +1171,6 @@ void Server::ProcessPacket(int key, char* buf, int roomID)
         break;
     }
     case PacketType::CS_room_select: {
-        // 여기
         room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
         std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
         if (p->room < 0) break;
@@ -1483,14 +1470,6 @@ void Server::ProcessEvent(OVER_EX* over_ex, int roomID, int key)
         map_block_set* p = reinterpret_cast<map_block_set*>(over_ex->messageBuffer);
         if (p->GameStartTime != GameRooms[roomID].m_pMap->StartTime) break;
         GameRooms[roomID].m_pMap->Set_map();
-
-        /* game_end_event ep;
-         ep.roomid = key;
-         ep.size = sizeof(ep);
-         ep.type = EventType::game_end;
-         ep.GameStartTime = p->GameStartTime;
-         m_pTimer->push_event(ep.roomid, OE_gEvent, (MAP_BREAK_TIME*9), reinterpret_cast<char*>(&ep));*/
-         //delete over_ex;
         break;
     }
     case EventType::Cloud_move: {
@@ -1649,23 +1628,18 @@ void Server::WorkerFunc()
         BOOL retval = GetQueuedCompletionStatus(hcp, &Transferred,
             (PULONG_PTR)&key, &over, INFINITE);
 
-        //std::thread::key Thread_key = std::this_thread::get_key();
         OVER_EX* over_ex = reinterpret_cast<OVER_EX*>(over);
         int roomID = over_ex->roomID;
 
         if (false == retval) {
-            if (SERVER_ID == key) {
+            if (SERVER_ID != key) {
                 display_error("GQCS: ", WSAGetLastError());
             }
-            else {
-                display_error("GQCS: ", WSAGetLastError());
-            }
-            if (Transferred == 0)
-                Disconnect(key);
-
         }
-        if (Transferred == 0)
+        if (Transferred == 0) {
             Disconnect(key);
+            continue;
+        }
 
         switch (over_ex->type) {
         case OE_accept: {
@@ -1707,7 +1681,6 @@ void Server::WorkerFunc()
             while (required_data >= packet_size) {
                 if (required_data >= BUFSIZE) break;
                 if (packet_size <= 0) break;
-                //printf("num_data: %d, packet_size: %d prev_size: %d\n", num_data, packet_size, Players[key].prev_size);
                 ProcessPacket(key, packet_ptr, roomID);
                 required_data -= packet_size;
                 packet_ptr += packet_size;
@@ -1725,7 +1698,6 @@ void Server::WorkerFunc()
             break;
         }
         case OE_gEvent: {
-            // key = 방번호
             if (FALSE == retval)
                 continue;
             ProcessEvent(over_ex, roomID, key);
