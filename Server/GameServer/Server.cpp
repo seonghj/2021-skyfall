@@ -164,15 +164,11 @@ int Server::CreateRoom(int* key, char* name)
         cnt++;
     }
 
-    //if (GameRooms.count(key) != 0) return 1;
-
     for (auto& g : GameRooms) {
         if (strcmp(g.name, name) == 0) {
             return 2;
         }
     }
-
-    //GameRooms.emplace(key, GameRoom{});
 
     for (int i = 0; i < MAX_PLAYER; ++i)
         GameRooms[cnt].pkeys[i] = INVALIDID;
@@ -181,12 +177,10 @@ int Server::CreateRoom(int* key, char* name)
 
     GameRooms[cnt].m_pMap = new Map;
     GameRooms[cnt].m_pMap->SetNum(*key);
-    //maps[key].init_Map(this, m_pTimer);
 
     m_pBot->monsters.emplace(cnt, std::array<Monster, MAX_MONSTER>{});
-    //m_pBot->monsterRun = TRUE;
     m_pBot->Init(cnt);
-    //m_pBot->RunBot(key);
+
     GameRooms[cnt].isMade = true;
     GameRooms[cnt].CanJoin = true;
     GameRooms[cnt].TotalPlayer = 0;
@@ -195,84 +189,6 @@ int Server::CreateRoom(int* key, char* name)
     return 0;
 }
 
-void Server::Accept()
-{
-    // socket()
-    SOCKET listen_sock = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-
-    // bind()
-    SOCKADDR_IN serveraddr;
-    ZeroMemory(&serveraddr, sizeof(serveraddr));
-    serveraddr.sin_family = AF_INET;
-    serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serveraddr.sin_port = htons(GAMESERVERPORT);
-    int retval = bind(listen_sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
-  
-    // listen()
-    retval = listen(listen_sock, MAX_CLIENT);
-
-    // ������ ��ſ� ����� ����
-    SOCKET client_sock;
-    SOCKADDR_IN clientaddr;
-    int addrlen = sizeof(SOCKADDR_IN);
-    DWORD flags;
-
-    printf("ready\n");
-
-    while (1) {
-        accept_lock.lock();
-        client_sock = accept(listen_sock, (struct sockaddr*)&clientaddr, &addrlen);
-        if (client_sock == INVALID_SOCKET) {
-            printf("accept error: %d", WSAGetLastError());
-            break;
-        }
-
-        int client_key = SetLobbyKey();
-        if (client_key == -1) {
-            closesocket(client_sock);
-            break;
-        }
-
-        sessions[client_key].init();
-        sessions[client_key].connected = TRUE;
-        sessions[client_key].key = client_key;
-        sessions[client_key].roomID = INVALUED_ID;
-        sessions[client_key].sock = client_sock;
-        sessions[client_key].clientaddr = clientaddr;
-        getpeername(client_sock, (SOCKADDR*)&sessions[client_key].clientaddr
-            , &sessions[client_key].addrlen);
-
-        ZeroMemory(&sessions[client_key].over.overlapped
-            , sizeof(sessions[client_key].over.overlapped));
-        sessions[client_key].over.type = OE_recv;
-        sessions[client_key].over.dataBuffer.len = BUFSIZE;
-        sessions[client_key].over.dataBuffer.buf =
-            sessions[client_key].over.messageBuffer;
-        sessions[client_key].over.roomID = INVALUED_ID;
-
-
-        /*for (int i = 0; i < 20; i++)
-            Lobby_sessions[client_key].near_monster.insert(i);*/
-
-        accept_lock.unlock();
-        // ���ϰ� ����� �Ϸ� ��Ʈ ����
-
-        CreateIoCompletionPort((HANDLE)client_sock, hcp, client_key, 0);
-
-        //printf("client_key: %d\n", client_key);
-        send_Lobby_key_packet(client_key);
-
-        do_recv(client_key, -1);
-    }
-
-    // closesocket()
-    closesocket(listen_sock); 
-
-    // ���� ����
-    WSACleanup();
-}
-
-// 여기
 void Server::Disconnect(int key)
 {
     printf("client_end: IP =%s, port=%d Lobby key = %d\n",
@@ -1121,26 +1037,22 @@ void Server::process_packet(int key, char* buf, int roomID)
         break;
     }
     case PacketType::CS_create_room: {
-        // 여기
         room_create_packet* p = reinterpret_cast<room_create_packet*>(buf);
         int key = p->key;
-        //if (sizeof(p->name) <= 0) break;
-        if (GameRooms[MAX_ROOM-1].isMade == true) break;
-        //GameRooms_lock.lock();
-        /*if (GameRooms[0].isMade == true) {
-            for (int i = 1; i < MAX_ROOM; i++) {
-                if (GameRooms[i].isMade == true) {
-                    if (GameRooms[i].TotalPlayer <= 0)
-                        GameRooms[i].isMade = false;
-               }
-            }
-        }*/
-        //GameRooms_lock.unlock();
+        if (sizeof(p->name) <= 0) break;
+        GameRooms_lock.lock();
+        if (GameRooms[MAX_ROOM - 1].isMade == true) {
+            GameRooms_lock.unlock();
+            break;
+        }
         // 0 = 정상 1 = 꽉참 2 = 방이름 같음
         int roomid = 0;
         int error = 0;
         error = CreateRoom(&roomid, p->name);
-        if (error == 1) break;
+        if (error == 1) {
+            GameRooms_lock.unlock();
+            break;
+        }
         if (error == 2) {
             room_list_packet r;
             r.key = key;
@@ -1149,9 +1061,9 @@ void Server::process_packet(int key, char* buf, int roomID)
             r.roomid = INVALIDID;
             r.idx = INVALIDID;
             send_packet(key, reinterpret_cast<char*>(&r), INVALIDID);
+            GameRooms_lock.unlock();
             break;
         }
-        if (error == 2) break;
 
         GameRooms[roomid].master = key;
         ++GameRooms[roomid].TotalPlayer;
@@ -1177,10 +1089,10 @@ void Server::process_packet(int key, char* buf, int roomID)
         s.ingamekey = nkey;
         s.isMaster = true;
         send_packet(p->key, reinterpret_cast<char*>(&s), -1);
+        GameRooms_lock.unlock();
         break;
     }
     case PacketType::CS_room_select: {
-        // 여기
         room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
         std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
         if (p->room < 0) break;

@@ -223,7 +223,6 @@ private:
     std::thread                    accept_thread;
     std::thread                    timer_thread;
 
-    std::mutex                     accept_lock;
     std::mutex                     sessions_lock;
     std::mutex                     GameRooms_lock;
     std::mutex                     maps_lock;
