@@ -29,7 +29,6 @@ void Timer::push_event(int key, OVER_EX_Type event_type, int delaytime_ms, char*
 void Timer::Timer_main()
 {
 	while (m_isRun) {
-		//std::lock_guard <std::mutex> lg{ m_timer_lock };
 		m_timer_lock.lock();
 		if ((m_Timer_queue.empty() == FALSE)
 			&& (m_Timer_queue.top().start_time <= system_clock::now())) {
