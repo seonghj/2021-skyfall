@@ -139,7 +139,7 @@ public:
     int SetroomID();
     int SetLobbyKey();
 
-    int CreateRoom(int key, char* name);
+    int CreateRoom(int* key, char* name);
 
     void Set_pTimer(Timer* t) { m_pTimer = t; }
     void Set_pBot(Bot* b) { m_pBot = b; }
@@ -148,7 +148,7 @@ public:
 
     bool Init();
     void Thread_join();
-    void Disconnected(int key);
+    void Disconnect(int key);
 
     void Accept();
     void WorkerFunc();

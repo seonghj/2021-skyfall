@@ -149,19 +149,19 @@ int Server::SetLobbyKey()
 }
 
 // 여기
-int Server::CreateRoom(int key, char* name)
+int Server::CreateRoom(int* key, char* name)
 {
     int cnt = 0;
 
     while (true) {
-        if (cnt == 1000) return 1;
+        if (cnt == MAX_ROOM) return 1;
         GameRooms[cnt].r_lock.lock();
         if (FALSE == GameRooms[cnt].isMade) {
-            key = cnt;
             GameRooms[cnt].r_lock.unlock();
             break;
         }
         GameRooms[cnt].r_lock.unlock();
+        cnt++;
     }
 
     //if (GameRooms.count(key) != 0) return 1;
@@ -175,20 +175,22 @@ int Server::CreateRoom(int key, char* name)
     //GameRooms.emplace(key, GameRoom{});
 
     for (int i = 0; i < MAX_PLAYER; ++i)
-        GameRooms[key].pkeys[i] = INVALIDID;
+        GameRooms[cnt].pkeys[i] = INVALIDID;
 
-    strcpy_s(GameRooms[key].name, name);
+    strcpy_s(GameRooms[cnt].name, name);
 
-    GameRooms[key].m_pMap = new Map;
-    GameRooms[key].m_pMap->SetNum(key);
+    GameRooms[cnt].m_pMap = new Map;
+    GameRooms[cnt].m_pMap->SetNum(*key);
     //maps[key].init_Map(this, m_pTimer);
 
-    m_pBot->monsters.emplace(key, std::array<Monster, MAX_MONSTER>{});
+    m_pBot->monsters.emplace(cnt, std::array<Monster, MAX_MONSTER>{});
     //m_pBot->monsterRun = TRUE;
-    m_pBot->Init(key);
+    m_pBot->Init(cnt);
     //m_pBot->RunBot(key);
-    GameRooms[key].CanJoin = true;
-    GameRooms[key].TotalPlayer = 0;
+    GameRooms[cnt].isMade = true;
+    GameRooms[cnt].CanJoin = true;
+    GameRooms[cnt].TotalPlayer = 0;
+    *key = cnt;
 
     return 0;
 }
@@ -271,7 +273,7 @@ void Server::Accept()
 }
 
 // 여기
-void Server::Disconnected(int key)
+void Server::Disconnect(int key)
 {
     printf("client_end: IP =%s, port=%d Lobby key = %d\n",
         inet_ntoa(sessions[key].clientaddr.sin_addr)
@@ -314,7 +316,7 @@ void Server::Disconnected(int key)
         }
         GameRooms[roomid].r_lock.unlock();
     }
-    //printf("disconnected %d\n", gameroom[roomID].ID[i]);
+    //printf("Disconnect %d\n", gameroom[roomID].ID[i]);
 
 #ifdef Run_DB
     if(m_pDB->isRun)
@@ -341,11 +343,11 @@ void Server::do_recv(int key, int roomID)
             /*if (over->dataBuffer.buf[1] != 0) {
                 printf("key: %d recv error: %d / packet: %d\n", key, err_no
                     , over->dataBuffer.buf[1]);
-                Disconnected(key, sessions[key].over.roomID);
+                Disconnect(key, sessions[key].over.roomID);
             }*/
             printf("key: %d room: %d recv error: %d / packet: %d\n", key, roomID, err_no
                 , over->dataBuffer.buf[1]);
-            Disconnected(key);
+            Disconnect(key);
         }
     }
 }
@@ -371,7 +373,7 @@ void Server::send_packet(int to, char* packet, int roomID)
         int err_no = WSAGetLastError();
         if (err_no != WSA_IO_PENDING){
             printf("to: %d packet: %d send error: %d\n", to, packet[1], err_no);
-            Disconnected(to);
+            Disconnect(to);
         }
     }
     //printf("to: %d packet: %d send\n", to, packet[1]);
@@ -538,7 +540,7 @@ void Server::send_remove_player_packet(int ingamekey, int roomID)
         if (sessions[k].connected == TRUE)
             send_packet(sessions[k].key, reinterpret_cast<char*>(&p), roomID);
     }
-    Disconnected(GameRooms[roomID].pkeys[ingamekey]);
+    Disconnect(GameRooms[roomID].pkeys[ingamekey]);
 }
 
 void Server::send_disconnect_player_packet(int ingamekey, int roomID)
@@ -554,7 +556,7 @@ void Server::send_disconnect_player_packet(int ingamekey, int roomID)
         if (sessions[k].connected == TRUE)
             send_packet(sessions[k].key, reinterpret_cast<char*>(&p), roomID);
     }
-    Disconnected(GameRooms[roomID].pkeys[ingamekey]);
+    Disconnect(GameRooms[roomID].pkeys[ingamekey]);
 }
 
 void Server::send_packet_to_players(int ingamekey, char* buf, int roomID)
@@ -1125,19 +1127,19 @@ void Server::process_packet(int key, char* buf, int roomID)
         //if (sizeof(p->name) <= 0) break;
         if (GameRooms[MAX_ROOM-1].isMade == true) break;
         //GameRooms_lock.lock();
-        if (GameRooms[0].isMade == true) {
+        /*if (GameRooms[0].isMade == true) {
             for (int i = 1; i < MAX_ROOM; i++) {
                 if (GameRooms[i].isMade == true) {
                     if (GameRooms[i].TotalPlayer <= 0)
                         GameRooms[i].isMade = false;
                }
             }
-        }
+        }*/
         //GameRooms_lock.unlock();
         // 0 = 정상 1 = 꽉참 2 = 방이름 같음
         int roomid = 0;
         int error = 0;
-        error = CreateRoom(roomid, p->name);
+        error = CreateRoom(&roomid, p->name);
         if (error == 1) break;
         if (error == 2) {
             room_list_packet r;
@@ -1157,7 +1159,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         int nkey = SetInGameKey(roomid);
         if (nkey == INVALIDID) {
             printf("Room %d no empty nkey\n", roomid);
-            Disconnected(key);
+            Disconnect(key);
             break;
         }
         GameRooms[roomid].pkeys[nkey] = key;
@@ -1192,7 +1194,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         int nkey = SetInGameKey(p->room);
         if (nkey == INVALIDID) {
             printf("Room %d no empty nkey\n", p->room);
-            Disconnected(key);
+            Disconnect(key);
             break;
         }
         printf("player key: %d in game room - %d nkey %d\n", key, p->room, nkey);
@@ -1640,14 +1642,10 @@ void Server::WorkerFunc()
         int roomID = over_ex->roomID;
 
         if (false == retval) {
-            if (SERVER_ID == key) {
-                display_error("GQCS: ", WSAGetLastError());
-            }
-            else {
-                display_error("GQCS: ", WSAGetLastError());
-            }
-
+            display_error("GQCS: ", WSAGetLastError());
         }
+        if (SERVER_ID != key && Transferred == 0)
+            Disconnect(key);
 
         switch (over_ex->type) {
         case OE_accept: {
