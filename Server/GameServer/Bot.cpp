@@ -181,9 +181,9 @@ void Bot::CheckBehavior(int roomID)
 {
 	for (int& player : m_pServer->GameRooms[roomID].pkeys) {
 		if (player == INVALIDID) continue;
-		if (m_pServer->Players[player].connected.load() == false) continue;
-		if (m_pServer->Players[player].state.load() == Death) continue;
-		if (m_pServer->Players[player].hp.load() <= 0) continue;
+		if (m_pServer->sessions[player].connected.load() == false) continue;
+		if (m_pServer->sessions[player].state.load() == Death) continue;
+		if (m_pServer->sessions[player].hp.load() <= 0) continue;
 		for (Monster& mon : monsters[roomID]) {
 			if (mon.state.load() == Death) continue;
 			XMFLOAT3 subtract;
@@ -191,7 +191,7 @@ void Bot::CheckBehavior(int roomID)
 			float range;
 			float distance;
 
-			XMFLOAT3 player_pos = (XMFLOAT3&)m_pServer->Players[player].f3Position.load();
+			XMFLOAT3 player_pos = (XMFLOAT3&)m_pServer->sessions[player].f3Position.load();
 			XMFLOAT3 mon_pos = (XMFLOAT3&)mon.GetPosition();
 
 			player_pos.y = 0;
@@ -249,10 +249,10 @@ void Bot::CheckBehavior(int roomID)
 							ae.roomid = roomID;
 							ae.GameStartTime = StartTime[roomID];
 							ae.direction = cross;
-							ae.target = m_pServer->Players[player].InGamekey;
+							ae.target = m_pServer->sessions[player].InGamekey;
 							m_pTimer->push_event(roomID, OE_gEvent, 60, reinterpret_cast<char*>(&ae));
 
-							//m_pServer->send_monster_attack(mon, cross, m_pServer->Players[player].InGamekey);
+							//m_pServer->send_monster_attack(mon, cross, m_pServer->sessions[player].InGamekey);
 
 							mon.CanAttack = false;
 

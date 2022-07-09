@@ -9,7 +9,7 @@
 #define DB_PW "tjdwo@1034"
 #define DB_NAME "skyfall"
 
-class Player;
+class SESSION;
 
 class DB
 {
@@ -38,7 +38,7 @@ public:
 	bool Search_ID(char* id, char* pw);
 	bool Insert_ID(char* id, char* pw);
 	bool Logout_player(char* id);
-	bool Send_player_record(const Player& player, int survival_time, int rank);
-	bool Get_player_record(char* ID, Player& Player, int* survival_time, int* rank);
+	bool Send_player_record(const SESSION& player, int survival_time, int rank);
+	bool Get_player_record(char* ID, SESSION& session, int* survival_time, int* rank);
 };
 
