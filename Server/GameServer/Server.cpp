@@ -148,7 +148,6 @@ int Server::SetLobbyKey()
     }
 }
 
-// 여기
 int Server::CreateRoom(int* key, char* name)
 {
     int cnt = 0;
@@ -333,7 +332,6 @@ void Server::send_Lobby_loginOK_packet(int key)
     send_packet(key, reinterpret_cast<char*>(&p), INVALIDID);
 }
 
-// 여기
 void Server::send_room_list_packet(int key)
 {
     for (int i = 0; i < MAX_ROOM; ++i) {
@@ -748,7 +746,6 @@ void Server::send_player_dead_packet(int ingamekey, int roomID)
 #endif 
 }
 
-// 여기
 void Server::game_end(int roomnum)
 {
     if (GameRooms[roomnum].isMade == false) return;
@@ -789,7 +786,6 @@ void Server::game_end(int roomnum)
     printf("Room %d Game End\n", roomnum);
 }
 
-// 여기
 void Server::Delete_room(int roomID)
 {
     GameRooms[roomID].r_lock.lock();
@@ -816,7 +812,6 @@ void Server::Delete_room(int roomID)
     printf("delete room %d\n", roomID);
 }
 
-// 여기
 void Server::player_go_lobby(int key, int roomID)
 {
     //send_game_end_packet(key, roomID);
@@ -1140,15 +1135,6 @@ void Server::process_packet(int key, char* buf, int roomID)
                 Delete_room(p->roomid);
             player_go_lobby(p->key, p->roomid);
         }
-        /*if (GameRooms.count(p->roomid) != 0) {
-            if (GameRooms[p->roomid].master != INVALIDID) {
-                GameRooms[p->roomid].pkeys[sessions[p->key].InGamekey] = INVALIDID;
-                --GameRooms[p->roomid].TotalPlayer;
-                if (GameRooms[p->roomid].TotalPlayer == 0)
-                    Delete_room(p->roomid);
-            }
-        }*/
-        //player_go_lobby(p->key, p->roomid);
         break;
     }
     case PacketType::CS_refresh_lobby: {
@@ -1449,29 +1435,6 @@ void Server::ProcessEvent(OVER_EX* over_ex, int roomID, int key)
         if (e->GameStartTime != m_pBot->StartTime[roomID]) break;
         send_monster_attack(m_pBot->monsters[e->roomid][e->key]
             , e->direction, e->target);
-
-        /*mon_attack_cooltime_event ce;
-        ce.size = sizeof(e);
-        ce.type = EventType::Mon_attack_cooltime;
-        ce.key = e->key;
-        ce.roomid = e->roomid;
-        ce.GameStartTime = m_pBot->StartTime[e->roomid];
-
-        int cooltime = 0;
-
-        switch (m_pBot->monsters[e->roomid][e->key].type) {
-        case MonsterType::Dragon:
-            cooltime = 1000;
-            break;
-        case MonsterType::Wolf:
-            cooltime = 2000;
-            break;
-        case MonsterType::Metalon:
-            cooltime = 3000;
-            break;
-        }
-        m_pTimer->push_event(e->roomid, OE_gEvent, cooltime, reinterpret_cast<char*>(&ce));*/
-
         delete over_ex;
         break;
     }
@@ -1549,15 +1512,16 @@ void Server::WorkerFunc()
         BOOL retval = GetQueuedCompletionStatus(hcp, &Transferred,
             (PULONG_PTR)&key, &over, INFINITE);
 
-        //std::thread::key Thread_key = std::this_thread::get_key();
         OVER_EX* over_ex = reinterpret_cast<OVER_EX*>(over);
         int roomID = over_ex->roomID;
 
         if (false == retval) {
             display_error("GQCS: ", WSAGetLastError());
-        }
-        if (SERVER_ID != key && Transferred == 0)
             Disconnect(key);
+        }
+        if (SERVER_ID != key && Transferred == 0) {
+            Disconnect(key);
+        }
 
         switch (over_ex->type) {
         case OE_accept: {
