@@ -6,7 +6,7 @@
 
 #define DB_HOST "127.0.0.1"
 #define DB_USER "root"
-#define DB_PW "tjdwo@1034"
+#define DB_PW "123456789"
 #define DB_NAME "skyfall"
 
 class SESSION;
@@ -30,7 +30,7 @@ public:
 
 	SQLCHAR* name = (SQLCHAR*)"skyfall";
 	SQLCHAR* user = (SQLCHAR*)"root";
-	SQLCHAR* pw = (SQLCHAR*)"tjdwo@1034";
+	SQLCHAR* pw = (SQLCHAR*)"123456789";
 
 	bool Connection_ODBC();
 	void Disconnection_ODBC();
