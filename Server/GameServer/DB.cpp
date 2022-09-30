@@ -1,6 +1,6 @@
 #include "DB.h"
 
-#define Test_DB
+//#define Test_DB
 
 bool DB::Connection()
 {
@@ -98,7 +98,7 @@ bool DB::Search_ID(char* id, char* pw)
 
 #ifdef Test_DB 
     wprintf(L"%s\n", query);
-#endif
+#endif 
 
     // ID °Ë»ö
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
