@@ -81,22 +81,6 @@ void SESSION::Move(DWORD dwDirection, float fDistance, bool bUpdateVelocity, boo
 
 void SESSION::Move(const XMFLOAT3& xmf3Shift, bool bUpdateVelocity, bool isRun)
 {
-    /*if (bUpdateVelocity)
-    {
-        m_xmf3Velocity.x = 0;
-        m_xmf3Velocity.z = 0;
-        m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, xmf3Shift);
-        if (m_isRunning)
-        {
-            m_xmf3Velocity.x *= 3.3;
-            m_xmf3Velocity.z *= 3.3;
-        }
-    }
-    else
-    {
-        m_xmf3Position = Vector3::Add(m_xmf3Position, xmf3Shift);
-        m_pCamera->Move(xmf3Shift);
-    }*/
 }
 
 Server::Server()
@@ -577,8 +561,6 @@ void Server::send_monster_pos(Monster& mon, XMFLOAT3 direction, int target)
     p.MonsterType = mon.type.load();
     p.target = target;
 
-    //printf("%d\n", mon.key);
-
     for (int k : GameRooms[roomID].pkeys) {
         if (k == INVALIDID) continue;
         if (sessions[k].connected == FALSE) continue;
@@ -606,8 +588,6 @@ void Server::send_monster_move(Monster& mon, XMFLOAT3 direction, int target)
     p.state = 0;
     p.MonsterType = mon.type.load();
     p.target = target;
-
-    //printf("%d\n", mon.key);
 
     for (int k : GameRooms[roomID].pkeys) {
         if (k == INVALIDID) continue;
@@ -1067,6 +1047,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         if (nkey == INVALIDID) {
             printf("Room %d no empty nkey\n", roomid);
             Disconnect(key);
+            GameRooms_lock.unlock();
             break;
         }
         GameRooms[roomid].pkeys[nkey] = key;
@@ -1089,7 +1070,7 @@ void Server::process_packet(int key, char* buf, int roomID)
     }
     case PacketType::CS_room_select: {
         room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
-        std::lock_guard<std::mutex> lock_guard(GameRooms_lock);
+        GameRooms_lock.lock();
         if (p->room < 0) break;
         if (GameRooms[p->room].isMade == false) break;
 
@@ -1111,7 +1092,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         sessions[p->key].over.roomID = p->room;
         p->ingamekey = nkey;
         ++GameRooms[p->room].TotalPlayer;
-
+        GameRooms_lock.unlock();
         send_packet(p->key, reinterpret_cast<char*>(p), -1);
         break;
     }
