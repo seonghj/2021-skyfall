@@ -1020,8 +1020,8 @@ void Server::process_packet(int key, char* buf, int roomID)
             GameRooms_lock.unlock();
             break;
         }
-        // 0 = 정상 1 = 꽉참 2 = 방이름 같음
         int roomid = 0;
+        // 0 = 정상 1 = 꽉참 2 = 방이름 같음
         int error = 0;
         error = CreateRoom(&roomid, p->name);
         if (error == 1) {
@@ -1045,7 +1045,6 @@ void Server::process_packet(int key, char* buf, int roomID)
 
         int nkey = SetInGameKey(roomid);
         if (nkey == INVALIDID) {
-            printf("Room %d no empty nkey\n", roomid);
             Disconnect(key);
             GameRooms_lock.unlock();
             break;
@@ -1054,7 +1053,7 @@ void Server::process_packet(int key, char* buf, int roomID)
         sessions[key].InGamekey = nkey;
         sessions[key].roomID = roomid;
         sessions[key].over.roomID = roomid;
-        printf("player key: %d create game room - %d nkey %d\n", key, roomid, nkey);
+        //printf("player key: %d create game room - %d nkey %d\n", key, roomid, nkey);
         //printf("Left room %d\n", (int)GameRooms.size());
         room_select_packet s;
         s.key = nkey;
@@ -1071,21 +1070,19 @@ void Server::process_packet(int key, char* buf, int roomID)
     case PacketType::CS_room_select: {
         room_select_packet* p = reinterpret_cast<room_select_packet*>(buf);
         GameRooms_lock.lock();
-        if (p->room < 0) break;
-        if (GameRooms[p->room].isMade == false) break;
-
-        if (GameRooms[p->room].CanJoin == false) break;
-        if (GameRooms[key].TotalPlayer >= MAX_PLAYER) break;
+        if (p->room < 0) { GameRooms_lock.unlock(); break; }
+        if (GameRooms[p->room].isMade == false) { GameRooms_lock.unlock(); break; }
+        if (GameRooms[p->room].CanJoin == false) { GameRooms_lock.unlock(); break; }
+        if (GameRooms[key].TotalPlayer >= MAX_PLAYER) {GameRooms_lock.unlock();break;}
 
         p->type = SC_select_room;
         p->isMaster = false;
         int nkey = SetInGameKey(p->room);
         if (nkey == INVALIDID) {
-            printf("Room %d no empty nkey\n", p->room);
             Disconnect(key);
+            GameRooms_lock.unlock();
             break;
         }
-        printf("player key: %d in game room - %d nkey %d\n", key, p->room, nkey);
         GameRooms[p->room].pkeys[nkey] = p->key;
         sessions[p->key].InGamekey = nkey;
         sessions[p->key].roomID = p->room;

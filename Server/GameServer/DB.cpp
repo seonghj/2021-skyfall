@@ -99,7 +99,6 @@ bool DB::Search_ID(char* id, char* pw)
     wprintf(L"%s\n", query);
 #endif 
 
-    // ID °Ë»ö
     if (SQLAllocHandle(SQL_HANDLE_STMT, hDbc, &hStmt)
         != SQL_SUCCESS)
         return false;
