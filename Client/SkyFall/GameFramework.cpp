@@ -618,7 +618,6 @@ void CGameFramework::ShowLoginWindow()
 				m_bError = true;
 			}
 			else {
-                // 여기서 서버에 로그인
 				m_pPacket->Set_UserID(m_bufID);
 				m_pPacket->Send_login_packet(m_bufID, m_bufPW);
 			}

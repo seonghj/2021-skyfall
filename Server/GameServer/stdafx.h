@@ -57,6 +57,17 @@ enum GameState {
 	
 };
 
+enum ObjectState {
+	Death = 0,
+	Alive = 1
+};
+
+enum ErrorCode {
+	MakeRoomSuccess = 0,
+	FullRoom = 1,
+	AlreayExistRoom = 2
+};
+
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 

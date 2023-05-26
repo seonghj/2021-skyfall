@@ -27,9 +27,9 @@ constexpr int INVENTORY_MAX = 20;
 
 constexpr int MAX_ROOM = 20;
 
-constexpr float Atack_Distance_Dragon = 80.f;
-constexpr float Atack_Distance_Wolf = 55.f;
-constexpr float Atack_Distance_Metalon = 97.f;
+constexpr float Attack_Distance_Dragon = 80.f;
+constexpr float Attack_Distance_Wolf = 55.f;
+constexpr float Attack_Distance_Metalon = 97.f;
 
 constexpr float ARROW_SPEED_WEIGHT = 300.f;
 

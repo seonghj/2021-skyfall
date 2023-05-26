@@ -9,19 +9,6 @@
 constexpr int INVALUED_ID = -1;
 constexpr int SERVER_ID = 0;
 
-constexpr int Death = 0;
-constexpr int Alive = 1;
-
-//struct OVER_EX
-//{
-//    WSAOVERLAPPED	overlapped;
-//    WSABUF			dataBuffer;
-//    char			messageBuffer[BUFSIZE];
-//    bool			is_recv;
-//    int             type;
-//    // 0 = session 1 = map
-//};
-
 class Arrow {
 public:
     DirectX::XMFLOAT3       f3Position;
@@ -47,20 +34,19 @@ public:
     char*                    recv_start;
 
     std::atomic<bool>        connected = false;
-    // 준비확인
+
     bool                     isready = false;
-    // 플레이여부
+
     bool                     playing = false;
     int                      prev_size = 0;
-    // 플레이어 키값
+
     int                      key = -1;
-    // 방번호
+
     std::atomic<int>         roomID = -1;
     char                     id[50];
-    // 플레이어 인게임 키값
+
     int                      InGamekey = -1;
 
-    // 0 죽음 / 1 생존
     std::atomic<bool>       state = 0;
     std::atomic<DirectX::XMFLOAT3>  f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<float>      m_fPitch = 0;
@@ -82,7 +68,6 @@ public:
     std::atomic<float>      speed = 20;
     std::atomic<float>      proficiency = 0.0f;
 
-    // 플레이어 무기 타입
     PlayerType              using_weapon = PlayerType::PT_BASIC;
 
     std::atomic<short>      inventory[INVENTORY_MAX]{};
@@ -140,6 +125,8 @@ public:
     int SetLobbyKey();
 
     int CreateRoom(int* key, char* name);
+
+
 
     void Set_pTimer(Timer* t) { m_pTimer = t; }
     void Set_pBot(Bot* b) { m_pBot = b; }
@@ -206,8 +193,6 @@ public:
 
     void player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy);
 
-    //std::unordered_map <int, SESSION> Lobby_sessions;
-    //std::unordered_map <int, std::array<SESSION, 20>> sessions; // 방ID, Player배열
     std::array <GameRoom, 1000> GameRooms;
     std::array <SESSION, 1000> sessions;
 
