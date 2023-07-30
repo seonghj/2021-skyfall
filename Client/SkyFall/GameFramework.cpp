@@ -1085,32 +1085,24 @@ void CGameFramework::ProcessInput()
             if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_DOWN;*/
 
             player_move_packet p;
-            p.key = m_pPacket->Get_clientkey();
-            p.ingamekey = m_pPacket->InGamekey;
-            p.dx = m_pPlayer->GetPitch();
-            p.dy = m_pPlayer->GetYaw();
-            p.size = sizeof(p);
-            p.state = 1;
-            p.type = CS_player_move;
-            p.direction = dwDirection;
-            p.Position = m_pPlayer->GetPosition();
+            DWORD movetype;
 
             if (pKeysBuffer[VK_SPACE] & 0xF0)
             {
                 if (m_pPlayer->GetGround() == true) {
                     m_pPlayer->SetJump(true);
-                    p.MoveType = PlayerMove::JUMP;
+                    movetype = PlayerMove::JUMP;
                     m_pPlayer->SetFriction(0.f);
                     PressDirButton = true;
                 }
             }
             else if (pKeysBuffer[VK_SHIFT] & 0xF0 && m_pPlayer->GetStamina() > 10.0f)
             {
-                p.MoveType = PlayerMove::RUNNING;
+                movetype = PlayerMove::RUNNING;
                 m_pPlayer->SetRunning(true);
             }
             else {
-                p.MoveType = PlayerMove::WALKING;
+                movetype = PlayerMove::WALKING;
             }
             
             // 이동 시작
@@ -1121,6 +1113,7 @@ void CGameFramework::ProcessInput()
                 if (m_pScene->GetState() == SCENE::INGAME && m_pPlayer->GetAttack() == false) {
                     m_pPacket->isStop = false;
                     m_pPlayer->SetDamaged(false);
+                    p = m_pPacket->MakePlayerMovePacket(movetype, dwDirection);
                     m_pPacket->SendPacket(reinterpret_cast<char*>(&p));
                 }
             }

@@ -66,8 +66,6 @@ enum PacketType {
 	SC_NONE,
 	SC_create_account,
 	SC_player_Lobbykey,
-	/*SC_player_LobbyloginOK,
-	SC_player_LobbyloginFail,*/
 	SC_create_room,
 	SC_room_list,
 	SC_select_room,

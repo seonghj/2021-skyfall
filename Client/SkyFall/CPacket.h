@@ -50,6 +50,8 @@ public:
 	void Send_create_account_packet(char* id, char* pw);
 	void Send_select_weapon(PlayerType t);
 
+	player_move_packet MakePlayerMovePacket(DWORD type, DWORD direction);
+
 	void OtherPlayerMove(float fTimeElapsed);
 	void Send_Rotate(float pitch, float yaw);
 	void Swap_weapon(int key, PlayerType weapon);

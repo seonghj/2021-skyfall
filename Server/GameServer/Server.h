@@ -126,8 +126,6 @@ public:
 
     int CreateRoom(int* key, char* name);
 
-
-
     void Set_pTimer(Timer* t) { m_pTimer = t; }
     void Set_pBot(Bot* b) { m_pBot = b; }
     void Set_pDB(DB* d) { m_pDB = d; }
@@ -141,7 +139,7 @@ public:
     void WorkerFunc();
 
     void do_recv(int key, int roomID);
-    void send_packet(int to, char* packet, int roomID);
+    void send_packet(int to, char* packet);
     void process_packet(int key, char* buf, int roomID);
     void ProcessEvent(OVER_EX* over_ex, int roomID, int key);
 
@@ -192,6 +190,41 @@ public:
     float CalcDamageToMon(int att, int def) { return (att * (100 - def) / 100); }
 
     void player_move(int key, int roomID, DirectX::XMFLOAT3 pos, float dx, float dy);
+
+    void CS_PlayerLobbylogin(char* buf);
+    void CS_CreateAccount(char* buf);
+    void CS_GameStart(char* buf);
+    void CS_CreateRoom(char* buf);
+    void CS_RoomSelect(char* buf);
+    void CS_ReturnLobby(char* buf);
+    void CS_RefreshLobby(char* buf);
+    void CS_PlayerInfo(char* buf);
+    void CS_PlayerPos(char* buf);
+    void CS_StartPos(char* buf);
+    void CS_WeaponSwap(char* buf);
+    void CS_WeaponSelect(char* buf);
+    void CS_PlayerMove(char* buf);
+    void CS_PlayerAttack(char* buf);
+    void CS_PlayerStop(char* buf);
+    void CS_AllowShot(char* buf);
+    void CS_PlayerGetItem(char* buf);
+    void CS_MonsterPos(char* buf);
+    void CS_MonsterAttack(char* buf);
+    void CS_MonsterDamaged(char* buf);
+    void CS_PlayerDamaged(char* buf);
+    void CS_PlayerDead(char* buf);
+
+    void Event_MapSet(int roomID, char* buf);
+    void Event_CloudMove(int roomID, char* buf);
+    void Event_MonBehavior(int roomID, char* buf);
+    void Event_MonMoveToPlayer(int roomID, char* buf);
+    void Event_MonAttack(int roomID, char* buf);
+    void Event_MonAttackCooltime(int roomID, char* buf);
+    void Event_MonStop(int roomID, char* buf);
+    void Event_MapBreak(int roomID, char* buf);
+    void Event_MonRespawn(int roomID, char* buf);
+    void Event_GameEnd(int roomID, char* buf);
+
 
     std::array <GameRoom, 1000> GameRooms;
     std::array <SESSION, 1000> sessions;
