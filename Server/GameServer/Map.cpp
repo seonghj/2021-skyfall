@@ -32,30 +32,12 @@ void Map::init_Map(Server* s, Timer* t)
 		}
 	}
 
-	// 맵생성 이벤트 전달
-	map_block_set p;
-	p.type = EventType::Mapset;
-	p.size = sizeof(p);
-	p.key = roomnum;
-	p.GameStartTime = StartTime;
-	over.dataBuffer.len = sizeof(p);
-	memcpy(over.dataBuffer.buf, reinterpret_cast<char*>(&p), sizeof(p));
-	DWORD Transferred = 0;
-	BOOL ret = PostQueuedCompletionStatus(m_pServer->Gethcp(), Transferred
-		,roomnum, &over.overlapped);
+	push_map_set_event();
 
 	game_time = 0;
 
 	ismove = true;
-	//cloud_move();
-
-	// 테스트용
-	/*game_end_event e;
-	e.type = EventType::game_end;
-	e.size = sizeof(e);
-	e.key = roomnum;
-	e.roomid = roomnum;
-	m_pTimer->push_event(roomnum, OE_gEvent, 30000, reinterpret_cast<char*>(&e));*/
+	
 }
 
 void Map::Set_map()
@@ -80,7 +62,6 @@ void Map::Set_map()
 	ismove = true;
 	Set_wind();
 	Set_cloudpos();
-	//print_Map();
 
 	cloud_move();
 }
@@ -130,7 +111,6 @@ void Map::print_Map()
 		printf("%d | %f\n", i, wind[i]);
 
 	printf("\n");
-	//printf("x: %f | y: %f\n", Cloud.x, Cloud.y);
 }
 
 float Map::calc_windpower(float a, float b)
@@ -147,13 +127,11 @@ void Map::cloud_move()
 			if (0 < Cloud.x && Cloud.x <= MAP_BLOCK_SIZE * 1.5f)
 			{
 				Cloud.x += wind[i * 2];
-				//printf("%d", i * 2);
 
 			}
 			else if (MAP_BLOCK_SIZE * 1.5f < Cloud.x && Cloud.x < MAP_BLOCK_SIZE * 3)
 			{
 				Cloud.x += wind[i * 2 + 1];
-				//printf("%d", i * 2 + 1);
 
 			}
 		}
@@ -166,13 +144,11 @@ void Map::cloud_move()
 			if (0 < Cloud.y && Cloud.y <= MAP_BLOCK_SIZE * 1.5f)
 			{
 				Cloud.y += wind[i + 6];
-				//printf("%d", i + 6);
 
 			}
 			else if (MAP_BLOCK_SIZE * 1.5f < Cloud.y && Cloud.y < MAP_BLOCK_SIZE * 3)
 			{
 				Cloud.y += wind[i + 9];
-				//printf("%d", i + 9);
 
 			}
 		}
@@ -182,25 +158,7 @@ void Map::cloud_move()
 		Set_cloudpos();
 	}
 
-	//printf("%f,%f\n", Cloud.x, Cloud.y);
-
-	cloud_move_packet p;
-	p.type = EventType::Cloud_move;
-	p.size = sizeof(cloud_move_packet);
-	p.key = roomnum;
-	p.roomid = roomnum;
-	p.x = Cloud.x;
-	p.z = Cloud.y;
-	p.GameStartTime = StartTime;
-	m_pTimer->push_event(roomnum, OE_gEvent, 1000, reinterpret_cast<char*>(&p));
-	
-	/*++game_time;
-	if (game_time % MAP_BREAK_TIME == 0)
-		Map_collapse();*/
-		/*DWORD Transferred = 0;
-		BOOL ret = PostQueuedCompletionStatus(m_pServer->Gethcp(), Transferred
-			, (ULONG_PTR) & (roomnum), (LPOVERLAPPED)&over.overlapped);
-		ismove = true;*/
+	push_cloud_move_event();
 }
 
 void Map::Map_collapse()
@@ -221,38 +179,40 @@ void Map::Map_collapse()
 	}
 
 	printf("Room: %d collapse block: %d\n", roomnum, num);
-	//printf("cloud x: %f | y: %f\n\n", Cloud.x, Cloud.y);
 	atm[num] = 1000;
 	Set_wind();
 
-	/*if (num%2 == 0)
-	{
-		if (num == 0)
-			wind[0] = 0, wind[6] = 0;
-		else if (num == 2)
-			wind[1] = 0, wind[8] = 0;
-		else if (num == 4)
-			wind[2] = 0, wind[3] = 0, wind[7] = 0, wind[10] = 0;
-		else if (num == 6)
-			wind[4] = 0, wind[9] = 0;
-		else if (num == 8)
-			wind[5] = 0, wind[11] = 0;
-	}
-	else
-	{
-		if (num == 1)
-			wind[0] = 0, wind[1] = 0, wind[7] = 0;
-		else if (num == 3)
-			wind[2] = 0, wind[6] = 0, wind[9] = 0;
-		else if (num == 5)
-			wind[3] = 0, wind[8] = 0, wind[11] = 0;
-		else if (num == 7)
-			wind[4] = 0, wind[5] = 0, wind[10] = 0;
-	}*/
+	
 	m_pServer->send_map_collapse_packet(num, roomnum);
-	//print_Map();
 
 	if (num == 9) {
 		m_pServer->game_end(roomnum);
 	}
+}
+
+void Map::push_cloud_move_event()
+{
+	cloud_move_packet p;
+	p.type = EventType::Cloud_move;
+	p.size = sizeof(cloud_move_packet);
+	p.key = roomnum;
+	p.roomid = roomnum;
+	p.x = Cloud.x;
+	p.z = Cloud.y;
+	p.GameStartTime = StartTime;
+	m_pTimer->push_event(roomnum, OE_gEvent, 1000, reinterpret_cast<char*>(&p));
+}
+
+void Map::push_map_set_event()
+{
+	map_block_set p;
+	p.type = EventType::Mapset;
+	p.size = sizeof(p);
+	p.key = roomnum;
+	p.GameStartTime = StartTime;
+	over.dataBuffer.len = sizeof(p);
+	memcpy(over.dataBuffer.buf, reinterpret_cast<char*>(&p), sizeof(p));
+	DWORD Transferred = 0;
+	BOOL ret = PostQueuedCompletionStatus(m_pServer->Gethcp(), Transferred
+		, roomnum, &over.overlapped);
 }

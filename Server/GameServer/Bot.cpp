@@ -6,7 +6,7 @@ void Monster::init()
 	m_xmf4x4World = Matrix4x4::Identity();
 
 	state = 1;
-	type = 0;
+	type = MonsterType::None;
 	f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_fPitch = 0;
 	m_fYaw = 0;
@@ -234,71 +234,105 @@ void Bot::CheckBehavior(int roomID)
 
 					if (range <= distance && rotation <= 5) {
 						if (mon.CanAttack == TRUE) {
-							mon_attack_event ae;
-							ae.size = sizeof(ae);
-							ae.type = EventType::Mon_attack;
-							ae.key = mon.key;
-							ae.roomid = roomID;
-							ae.GameStartTime = StartTime[roomID];
-							ae.direction = cross;
-							ae.target = m_pServer->sessions[player].InGamekey;
-							m_pTimer->push_event(roomID, OE_gEvent, 60, reinterpret_cast<char*>(&ae));
+
+							push_mon_attack_event(mon.key, player, roomID, cross);
 
 							mon.CanAttack = false;
 
-							mon_attack_cooltime_event e;
-							e.size = sizeof(e);
-							e.type = EventType::Mon_attack_cooltime;
-							e.key = mon.key;
-							e.roomid = roomID;
-							e.GameStartTime = StartTime[roomID];
-
-							int cooltime = 0;
-
-							switch (mon.type) {
-							case MonsterType::Dragon:
-								cooltime = 1000;
-								break;
-							case MonsterType::Wolf:
-								cooltime = 2000;
-								break;
-							case MonsterType::Metalon:
-								cooltime = 3000;
-								break;
-							}
-							m_pTimer->push_event(roomID, OE_gEvent, cooltime, reinterpret_cast<char*>(&e));
+							push_mon_attack_cooltime_event(mon.key, roomID, mon.type);
 						}
 					}
 					else if (range > distance) {
-						mon_move_event me;
-						me.size = sizeof(me);
-						me.type = EventType::Mon_move_to_player;
-						me.key = mon.key;
-						me.roomid = roomID;
-						me.GameStartTime = StartTime[roomID];
-						me.subtract = subtract;
-						me.direction = cross;
-						me.target = player;
-						m_pTimer->push_event(roomID, OE_gEvent, 60, reinterpret_cast<char*>(&me));
 						
+						push_mon_move_event(mon.key, player, roomID, cross, subtract);
 					}
 				}
 			}
 			else {
 				if (mon.TraceTarget == player) {
-					mon_stop_event se;
-					se.size = sizeof(se);
-					se.type = EventType::Mon_stop;
-					se.key = mon.key;
-					se.roomid = roomID;
-					se.GameStartTime = StartTime[roomID];
-					m_pTimer->push_event(roomID, OE_gEvent, 60, reinterpret_cast<char*>(&se));
+					push_mon_stop_event(mon.key, roomID);
 					mon.TraceTarget = INVALIDID;
 				}
 			}
 		}
 	}
 
+	push_mon_behavior_event(roomID);
+}
+
+void Bot::RunBot(int roomID)
+{
+	if (monsterRun[roomID]) {
+		push_mon_behavior_event(roomID);
+		monsterRun[roomID] = true;
+	}
+}
+
+void Bot::push_mon_attack_event(int monsterKey, int target, int roomID, DirectX::XMFLOAT3 direction)
+{
+	mon_attack_event e;
+	e.size = sizeof(e);
+	e.type = EventType::Mon_attack;
+	e.key = monsterKey;
+	e.roomid = roomID;
+	e.GameStartTime = StartTime[roomID];
+	e.direction = direction;
+	e.target = m_pServer->sessions[target].InGamekey;
+	m_pTimer->push_event(roomID, OE_gEvent, 60, reinterpret_cast<char*>(&e));
+}
+
+void Bot::push_mon_attack_cooltime_event(int monsterKey, int roomID, MonsterType type)
+{
+	mon_attack_cooltime_event e;
+	e.size = sizeof(e);
+	e.type = EventType::Mon_attack_cooltime;
+	e.key = monsterKey;
+	e.roomid = roomID;
+	e.GameStartTime = StartTime[roomID];
+
+	int cooltime = 0;
+
+	switch (type) {
+	case MonsterType::Dragon:
+		cooltime = 1000;
+		break;
+	case MonsterType::Wolf:
+		cooltime = 2000;
+		break;
+	case MonsterType::Metalon:
+		cooltime = 3000;
+		break;
+	}
+	m_pTimer->push_event(roomID, OE_gEvent, cooltime, reinterpret_cast<char*>(&e));
+}
+
+void Bot::push_mon_move_event(int monsterKey, int target, int roomID, DirectX::XMFLOAT3 direction, DirectX::XMFLOAT3 subtract)
+{
+	mon_move_event e;
+	e.size = sizeof(e);
+	e.type = EventType::Mon_move_to_player;
+	e.key = monsterKey;
+	e.roomid = roomID;
+	e.GameStartTime = StartTime[roomID];
+	e.subtract = subtract;
+	e.direction = direction;
+	e.target = m_pServer->sessions[target].InGamekey;
+	m_pTimer->push_event(roomID, OE_gEvent, 60, reinterpret_cast<char*>(&e));
+}
+
+void Bot::push_mon_stop_event(int monsterKey, int roomID)
+{
+	mon_stop_event e;
+	e.size = sizeof(e);
+	e.type = EventType::Mon_stop;
+	e.key = monsterKey;
+	e.roomid = roomID;
+	e.GameStartTime = StartTime[roomID];
+	m_pTimer->push_event(roomID, OE_gEvent, 60, reinterpret_cast<char*>(&e));
+}
+
+void Bot::push_mon_behavior_event(int roomID)
+{
 	mon_behavior_event e;
 	e.size = sizeof(e);
 	e.type = EventType::Mon_behavior;
@@ -306,19 +340,5 @@ void Bot::CheckBehavior(int roomID)
 	e.roomid = roomID;
 	e.GameStartTime = StartTime[roomID];
 	m_pTimer->push_event(roomID, OE_gEvent, 60, reinterpret_cast<char*>(&e));
-}
-
-void Bot::RunBot(int roomID)
-{
-	if (monsterRun[roomID]) {
-		mon_behavior_event e;
-		e.size = sizeof(e);
-		e.type = EventType::Mon_behavior;
-		e.key = 0;
-		e.roomid = roomID;
-		e.GameStartTime = StartTime[roomID];
-		m_pTimer->push_event(roomID, OE_gEvent, 60, reinterpret_cast<char*>(&e));
-		monsterRun[roomID] = true;
-	}
 }
 

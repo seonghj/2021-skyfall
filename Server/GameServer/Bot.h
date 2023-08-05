@@ -26,7 +26,7 @@ public:
 
     // 0 Á×À½ / 1 »ýÁ¸
     std::atomic<bool>       state = 0;
-    std::atomic<int>        type = 0;
+    MonsterType             type = MonsterType::None;
     std::atomic<DirectX::XMFLOAT3>       f3Position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<DirectX::XMFLOAT3>       SpawnPos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
     std::atomic<float>      m_fPitch = 0;
@@ -69,6 +69,13 @@ public:
     void CheckBehavior(int roomID);
 
     void RunBot(int roomID);
+
+    void push_mon_attack_event(int monsterKey, int target, int roomID, DirectX::XMFLOAT3 direction);
+    void push_mon_attack_cooltime_event(int monsterKey, int roomID, MonsterType type);
+    void push_mon_move_event(int monsterKey, int target, int roomID
+        , DirectX::XMFLOAT3 direction, DirectX::XMFLOAT3 subtract);
+    void push_mon_stop_event(int monsterKey, int roomID);
+    void push_mon_behavior_event(int roomID);
 
     std::unordered_map <int, std::array<Monster, MAX_MONSTER>> monsters;
 

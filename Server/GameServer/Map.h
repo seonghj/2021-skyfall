@@ -41,6 +41,9 @@ public:
 	void cloud_move();
 	void Map_collapse();
 
+	void push_cloud_move_event();
+	void push_map_set_event();
+
 	bool game_start = false;
 
 	std::chrono::system_clock::time_point StartTime;

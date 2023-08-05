@@ -171,6 +171,7 @@ enum PlayerType {
 };
 
 enum MonsterType {
+	None,
 	Metalon,
 	Wolf,
 	Dragon

@@ -540,7 +540,7 @@ void Server::send_monster_pos(Monster& mon, XMFLOAT3 direction, int target)
     p.degree = mon.m_fRoll.load();
     p.MoveType = 0;
     p.state = 0;
-    p.MonsterType = mon.type.load();
+    p.MonsterType = mon.type;
     p.target = target;
 
     for (int k : GameRooms[roomID].pkeys) {
@@ -568,7 +568,7 @@ void Server::send_monster_move(Monster& mon, XMFLOAT3 direction, int target)
     p.degree = mon.m_fRoll.load();
     p.MoveType = 0;
     p.state = 0;
-    p.MonsterType = mon.type.load();
+    p.MonsterType = mon.type;
     p.target = target;
 
     for (int k : GameRooms[roomID].pkeys) {
@@ -1534,8 +1534,6 @@ void Server::CS_MonsterDamaged(char* buf)
     m_pBot->monsters[p->roomid][target].TraceTarget = key;
 
     send_packet_to_players(p->ingamekey, reinterpret_cast<char*>(p), p->roomid);
-
-    std::cout << "tl;qkf\n";
 
     if (m_pBot->monsters[p->roomid][target].hp <= 0) {
         m_pBot->monsters[p->roomid][target].state = 0;
